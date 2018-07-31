@@ -243,21 +243,49 @@ void dbs_account::update_owner_authority(const account_object& account, const au
                      });
 }
 
-void dbs_account::increase_balance(const account_object& account, const asset& scorums)
+void dbs_account::increase_balance(const account_object& account, const asset& amount)
 {
-    FC_ASSERT(scorums.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
-    update(account, [&](account_object& acnt) { acnt.balance += scorums; });
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    update(account, [&](account_object& acnt) { acnt.balance += amount; });
+
+    db_impl().obtain_service<dbs_dynamic_global_property>().update(
+        [&](dynamic_global_property_object& props) { props.circulating_capital += amount; });
 }
 
-void dbs_account::decrease_balance(const account_object& account, const asset& scorums)
+void dbs_account::decrease_balance(const account_object& account, const asset& amount)
 {
-    increase_balance(account, -scorums);
+    increase_balance(account, -amount);
 }
 
 void dbs_account::increase_scorumpower(const account_object& account, const asset& amount)
 {
     FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
     update(account, [&](account_object& a) { a.scorumpower += amount; });
+
+    db_impl().obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& props) {
+        props.circulating_capital += asset(amount.amount, SCORUM_SYMBOL);
+        props.total_scorumpower += amount;
+    });
+
+    adjust_proxied_witness_votes(account, amount.amount);
+}
+
+void dbs_account::decrease_scorumpower(const account_object& account, const asset& amount)
+{
+    increase_scorumpower(account, -amount);
+}
+
+const asset dbs_account::create_scorumpower(const account_object& to_account, const asset& scorum)
+{
+    try
+    {
+        asset new_scorumpower = asset(scorum.amount, SP_SYMBOL);
+
+        increase_scorumpower(to_account, new_scorumpower);
+
+        return new_scorumpower;
+    }
+    FC_CAPTURE_AND_RETHROW((to_account.name)(scorum))
 }
 
 void dbs_account::increase_delegated_scorumpower(const account_object& account, const asset& amount)
@@ -484,24 +512,6 @@ void dbs_account::update_voting_proxy(const account_object& account, const optio
     }
 }
 
-const asset dbs_account::create_scorumpower(const account_object& to_account, const asset& scorum)
-{
-    try
-    {
-        asset new_scorumpower = asset(scorum.amount, SP_SYMBOL);
-
-        update(to_account, [&](account_object& to) { to.scorumpower += new_scorumpower; });
-
-        db_impl().obtain_service<dbs_dynamic_global_property>().update(
-            [&](dynamic_global_property_object& props) { props.total_scorumpower += new_scorumpower; });
-
-        adjust_proxied_witness_votes(to_account, new_scorumpower.amount);
-
-        return new_scorumpower;
-    }
-    FC_CAPTURE_AND_RETHROW((to_account.name)(scorum))
-}
-
 void dbs_account::clear_witness_votes(const account_object& account)
 {
     const auto& vidx = db_impl().get_index<witness_vote_index>().indices().get<by_account_witness>();
@@ -603,7 +613,7 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
     return new_account;
 }
 
-std::vector<account_service_i::cref_type> dbs_account::get_active_sp_holders() const
+dbs_account::account_refs_type dbs_account::get_active_sp_holders() const
 {
     const auto& dprops_service = db_impl().obtain_service<dbs_dynamic_global_property>();
 
@@ -612,5 +622,11 @@ std::vector<account_service_i::cref_type> dbs_account::get_active_sp_holders() c
     return get_range_by<by_last_vote_cashout_time>(min_vote_time_for_cashout < boost::lambda::_1,
                                                    boost::multi_index::unbounded);
 }
+
+void dbs_account::foreach_account(account_call_type&& call) const
+{
+    foreach_by<by_id>(call);
+}
+
 } // namespace chain
 } // namespace scorum

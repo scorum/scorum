@@ -154,7 +154,7 @@ struct by_permlink;
 struct by_root;
 struct by_parent;
 struct by_last_update;
-struct by_author_last_update;
+struct by_author_created;
 
 typedef shared_multi_index_container<comment_object,
                                      indexed_by<
@@ -214,17 +214,20 @@ typedef shared_multi_index_container<comment_object,
 /// NON_CONSENSUS INDICIES - used by APIs
 #ifndef IS_LOW_MEM
                                          ,
-                                         ordered_unique<tag<by_author_last_update>,
+                                         ordered_unique<tag<by_author_created>,
                                                         composite_key<comment_object,
                                                                       member<comment_object,
                                                                              account_name_type,
                                                                              &comment_object::author>,
                                                                       member<comment_object,
                                                                              time_point_sec,
-                                                                             &comment_object::last_update>,
+                                                                             &comment_object::created>,
                                                                       member<comment_object,
                                                                              comment_id_type,
-                                                                             &comment_object::id>>>
+                                                                             &comment_object::id>>,
+                                                        composite_key_compare<std::less<account_name_type>,
+                                                                              std::greater<time_point_sec>,
+                                                                              std::less<comment_id_type>>>
 #endif
                                          >>
     comment_index;

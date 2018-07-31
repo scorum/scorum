@@ -15,16 +15,34 @@
 
 using namespace database_fixture;
 
-struct withdraw_scorumpower_tests_fixture : public database_default_integration_fixture
+struct total_reward_visitor
+{
+    typedef void result_type;
+
+    share_type total_reward;
+
+    void operator()(const producer_reward_operation& op)
+    {
+        total_reward += op.reward.amount;
+    }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
+};
+
+struct withdraw_scorumpower_tests_fixture : public database_default_integration_fixture, public total_reward_visitor
 {
     withdraw_scorumpower_tests_fixture()
         : account_service(db.account_service())
         , withdraw_scorumpower_service(db.withdraw_scorumpower_service())
+        , dynamic_global_property_service(db.dynamic_global_property_service())
     {
     }
 
     account_service_i& account_service;
     withdraw_scorumpower_service_i& withdraw_scorumpower_service;
+    dynamic_global_property_service_i& dynamic_global_property_service;
     private_key_type sign_key;
 };
 
@@ -48,6 +66,10 @@ BOOST_FIXTURE_TEST_SUITE(withdraw_scorumpower_apply_tests, withdraw_scorumpower_
 SCORUM_TEST_CASE(withdraw_scorumpower_apply)
 {
     const auto& alice = account_service.get_account("alice");
+
+    db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(*this); });
+
+    auto old_circulating_capital = dynamic_global_property_service.get().circulating_capital;
 
     BOOST_TEST_MESSAGE("--- Test withdraw of existing SP");
 
@@ -141,19 +163,25 @@ SCORUM_TEST_CASE(withdraw_scorumpower_apply)
 
     BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(alice.id));
     validate_database();
+
+    BOOST_CHECK_EQUAL(dynamic_global_property_service.get().circulating_capital.amount - total_reward,
+                      old_circulating_capital.amount);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-struct withdraw_scorumpower_withdrawals_tests_fixture : public database_trx_integration_fixture
+struct withdraw_scorumpower_withdrawals_tests_fixture : public database_trx_integration_fixture,
+                                                        public total_reward_visitor
 {
     account_service_i& account_service;
     withdraw_scorumpower_service_i& withdraw_scorumpower_service;
+    dynamic_global_property_service_i& dynamic_global_property_service;
     private_key_type sign_key;
 
     withdraw_scorumpower_withdrawals_tests_fixture()
         : account_service(db.account_service())
         , withdraw_scorumpower_service(db.withdraw_scorumpower_service())
+        , dynamic_global_property_service(db.dynamic_global_property_service())
     {
         open_database();
 
@@ -188,22 +216,26 @@ struct withdraw_operation_hook
     {
     }
 
-    void operator()(const fill_vesting_withdraw_operation& op)
+    void operator()(const acc_to_acc_vesting_withdraw_operation& op)
     {
         _op = op;
     }
 
-    const fill_vesting_withdraw_operation& get_last_withdraw_operation() const
+    const acc_to_acc_vesting_withdraw_operation& get_last_withdraw_operation() const
     {
         return _op;
     }
 
-    fill_vesting_withdraw_operation _op;
+    acc_to_acc_vesting_withdraw_operation _op;
 };
 
 SCORUM_TEST_CASE(vesting_withdrawals)
 {
     const auto& alice = account_service.get_account("alice");
+
+    db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(*this); });
+
+    auto old_circulating_capital = dynamic_global_property_service.get().circulating_capital;
 
     withdraw_operation_hook hook(db);
 
@@ -325,6 +357,9 @@ SCORUM_TEST_CASE(vesting_withdrawals)
 
     BOOST_REQUIRE(account_service.get_account("alice").scorumpower.amount.value
                   == (original_sp - op.scorumpower).amount.value);
+
+    BOOST_CHECK_EQUAL(dynamic_global_property_service.get().circulating_capital.amount - total_reward,
+                      old_circulating_capital.amount);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -357,6 +392,10 @@ SCORUM_TEST_CASE(vesting_withdraw_route)
     const auto& alice = account_service.get_account("alice");
     const auto& bob = account_service.get_account("bob");
     const auto& sam = account_service.get_account("sam");
+
+    db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(*this); });
+
+    auto old_circulating_capital = dynamic_global_property_service.get().circulating_capital;
 
     BOOST_TEST_MESSAGE("Setup vesting withdraw");
     withdraw_scorumpower_operation wv;
@@ -471,6 +510,9 @@ SCORUM_TEST_CASE(vesting_withdraw_route)
             == old_sam_balance
                 + asset((vesting_withdraw_rate.amount * SCORUM_1_PERCENT * 50) / SCORUM_100_PERCENT, SCORUM_SYMBOL));
     }
+
+    BOOST_CHECK_EQUAL(dynamic_global_property_service.get().circulating_capital.amount - total_reward,
+                      old_circulating_capital.amount);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

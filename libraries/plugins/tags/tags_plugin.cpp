@@ -11,6 +11,7 @@
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/comment.hpp>
+#include <scorum/utils/string_algorithm.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
@@ -73,20 +74,20 @@ public:
         if (meta.categories.begin()->empty() || meta.domains.begin()->empty())
             return;
 
-        comment_metadata meta_in_lower = meta.to_lower_copy();
+        auto normalized_meta = meta.to_lower_copy().truncate_copy();
 
         const auto& idx = db_impl().get_index<category_stats_index, by_category_tag>();
         // TODO: add support for multiple domains and categories
         auto it_pair
-            = idx.equal_range(std::make_tuple(*meta_in_lower.domains.begin(), *meta_in_lower.categories.begin()));
+            = idx.equal_range(std::make_tuple(*normalized_meta.domains.begin(), *normalized_meta.categories.begin()));
 
         std::vector<std::reference_wrapper<const category_stats_object>> stats;
         std::copy(it_pair.first, it_pair.second, std::back_inserter(stats));
 
         for (const category_stats_object& s : stats)
         {
-            auto found_it = std::find(meta_in_lower.tags.begin(), meta_in_lower.tags.end(), s.tag);
-            if (found_it == meta_in_lower.tags.end())
+            auto found_it = std::find(normalized_meta.tags.begin(), normalized_meta.tags.end(), s.tag);
+            if (found_it == normalized_meta.tags.end())
                 continue;
 
             if (s.tags_count == 1)
@@ -103,11 +104,11 @@ public:
         if (meta.categories.begin()->empty() || meta.domains.begin()->empty())
             return;
 
-        comment_metadata meta_in_lower = meta.to_lower_copy();
-        const auto& domain = *meta_in_lower.domains.begin();
-        const auto& category = *meta_in_lower.categories.begin();
+        auto normalized_meta = meta.to_lower_copy().truncate_copy();
+        const auto& domain = *normalized_meta.domains.begin();
+        const auto& category = *normalized_meta.categories.begin();
 
-        auto rng = meta_in_lower.tags | boost::adaptors::filtered([&](const std::string& t) {
+        auto rng = normalized_meta.tags | boost::adaptors::filtered([&](const std::string& t) {
                        return !t.empty() && t != category && t != domain;
                    });
         for (const std::string& tag : rng)
@@ -252,7 +253,8 @@ struct post_operation_visitor
         auto rhs = join(meta.locales, meta.tags);
         auto rng = join(lhs, rhs)
                 | boost::adaptors::filtered([](const std::string& t) { return !t.empty(); })
-                | boost::adaptors::transformed(fc::to_lower);
+                | boost::adaptors::transformed(utils::to_lower_copy)
+                | boost::adaptors::transformed([](const std::string& s){ return utils::substring(s, 0, TAG_LENGTH_MAX); });
         // clang-format on
 
         std::set<std::string> tags_in_lower;
@@ -429,50 +431,6 @@ struct post_operation_visitor
             });
         }
         return *itr;
-    }
-
-    void update_indirect_vote(account_id_type a, account_id_type b, int positive) const
-    {
-        if (a == b)
-            return;
-        const auto& ab = get_or_create_peer_stats(a, b);
-        const auto& ba = get_or_create_peer_stats(b, a);
-        _db.modify(ab, [&](peer_stats_object& o) {
-            o.indirect_positive_votes += positive;
-            o.indirect_votes++;
-            o.update_rank();
-        });
-        _db.modify(ba, [&](peer_stats_object& o) {
-            o.indirect_positive_votes += positive;
-            o.indirect_votes++;
-            o.update_rank();
-        });
-    }
-
-    void update_peer_stats(const account_object& voter,
-                           const account_object& author,
-                           const comment_object& c,
-                           int vote) const
-    {
-        if (voter.id == author.id)
-            return; /// ignore votes for yourself
-        if (c.parent_author.size())
-            return; /// only count top level posts
-
-        const auto& stat = get_or_create_peer_stats(voter.id, author.id);
-        _db.modify(stat, [&](peer_stats_object& obj) {
-            obj.direct_votes++;
-            obj.direct_positive_votes += vote > 0;
-            obj.update_rank();
-        });
-
-        const auto& voteidx = _db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
-        auto itr = voteidx.lower_bound(boost::make_tuple(comment_id_type(c.id), account_id_type()));
-        while (itr != voteidx.end() && itr->comment == c.id)
-        {
-            update_indirect_vote(voter.id, itr->voter, (itr->vote_percent > 0) == (vote > 0));
-            ++itr;
-        }
     }
 
     void operator()(const comment_operation& op) const

@@ -135,8 +135,9 @@ int main(int argc, char** argv)
 
         std::cout << "Logging RPC to file: " << ac.filename.string() << std::endl;
 
-        cfg.appenders.push_back(fc::appender_config("default", "console", fc::variant(fc::console_appender::config())));
-        cfg.appenders.push_back(fc::appender_config("rpc", "file", fc::variant(ac)));
+        cfg.appenders.push_back(fc::appender_config::create_config<fc::console_appender>(
+            "default", fc::variant(fc::console_appender::config())));
+        cfg.appenders.push_back(fc::appender_config::create_config<fc::file_appender>("rpc", fc::variant(ac)));
 
         cfg.loggers = { fc::logger_config("default"), fc::logger_config("rpc") };
         cfg.loggers.front().level = fc::log_level::info;

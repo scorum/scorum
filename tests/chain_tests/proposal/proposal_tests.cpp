@@ -450,4 +450,214 @@ SCORUM_TEST_CASE(development_committee_operations_test)
 
 BOOST_AUTO_TEST_SUITE_END()
 
+class dev_committee_fixture : public database_fixture::database_trx_integration_fixture
+{
+public:
+    dev_committee_fixture()
+    {
+        initdelegate.scorum(TEST_ACCOUNTS_INITIAL_SUPPLY);
+        alice.scorum(TEST_ACCOUNTS_INITIAL_SUPPLY);
+        bob.scorum(TEST_ACCOUNTS_INITIAL_SUPPLY);
+
+        auto genesis = Genesis::create()
+                           .accounts_supply(TEST_ACCOUNTS_INITIAL_SUPPLY * 3)
+                           .rewards_supply(TEST_REWARD_INITIAL_SUPPLY)
+                           .witnesses(initdelegate)
+                           .accounts(alice, bob)
+                           .dev_committee(alice)
+                           .development_scr_supply(asset(1e5, SCORUM_SYMBOL))
+                           .development_sp_supply(asset(1e5, SP_SYMBOL))
+                           .generate();
+        open_database(genesis);
+
+        actor(initdelegate).give_sp(alice, 1e5);
+        actor(initdelegate).give_sp(bob, 1e5);
+    }
+
+    Actor alice = "alice";
+    Actor bob = "bob";
+};
+
+struct dev_committee_operation_visitor
+{
+    using result_type = void;
+
+    void operator()(const proposal_virtual_operation& op)
+    {
+        op.proposal_op.weak_visit([&](const development_committee_transfer_operation& op) {
+            transfer_ops.emplace_back(op.to_account, op.amount);
+        });
+    }
+
+    void operator()(const devpool_to_devpool_vesting_withdraw_operation& op)
+    {
+        withdraw_ops.emplace_back(op.withdrawn);
+    }
+
+    template <typename Op> void operator()(Op&&) const
+    {
+    } /// ignore all other ops
+
+    std::vector<std::tuple<account_name_type, asset>> transfer_ops;
+    std::vector<asset> withdraw_ops;
+};
+
+BOOST_FIXTURE_TEST_SUITE(dev_committee_tests, dev_committee_fixture)
+
+SCORUM_TEST_CASE(dev_committee_transfer_operation_circulating_capital_should_increase)
+{
+    unsigned transfer_amount = 1e5;
+
+    development_committee_transfer_operation proposal_inner_op;
+    proposal_inner_op.amount = asset(transfer_amount, SCORUM_SYMBOL);
+    proposal_inner_op.to_account = bob.name;
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.creator = alice.name;
+    proposal_create_op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+    proposal_create_op.operation = proposal_inner_op;
+
+    push_operation(proposal_create_op, initdelegate.private_key);
+
+    const auto& dpo = db.dynamic_global_property_service().get();
+    auto circulating_capital_before = dpo.circulating_capital;
+
+    proposal_vote_operation proposal_vote_op;
+    proposal_vote_op.voting_account = alice.name;
+    proposal_vote_op.proposal_id = 0;
+
+    push_operation(proposal_vote_op, initdelegate.private_key);
+
+    auto circulating_capital_after = dpo.circulating_capital;
+
+    auto active_sp_holder_reward = 10;
+    BOOST_REQUIRE_EQUAL(circulating_capital_before + transfer_amount + active_sp_holder_reward,
+                        circulating_capital_after);
+}
+
+SCORUM_TEST_CASE(dev_committee_withdraw_operation_circulating_capital_should_not_increase)
+{
+    unsigned transfer_amount = 1e5;
+
+    development_committee_withdraw_vesting_operation proposal_inner_op;
+    proposal_inner_op.vesting_shares = asset(transfer_amount, SP_SYMBOL);
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.creator = alice.name;
+    proposal_create_op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+    proposal_create_op.operation = proposal_inner_op;
+
+    push_operation(proposal_create_op, initdelegate.private_key);
+
+    const auto& dpo = db.dynamic_global_property_service().get();
+    auto circulating_capital_before = dpo.circulating_capital;
+
+    proposal_vote_operation proposal_vote_op;
+    proposal_vote_op.voting_account = alice.name;
+    proposal_vote_op.proposal_id = 0;
+
+    push_operation(proposal_vote_op, initdelegate.private_key, false);
+    generate_blocks(db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS));
+
+    auto circulating_capital_after = dpo.circulating_capital;
+
+    auto active_sp_holder_reward = 10;
+    // circulating capital do not increate on 'transfer_amount' cuz withdraw was from devpool to devpool
+    BOOST_REQUIRE_EQUAL(circulating_capital_before + 2 * active_sp_holder_reward, circulating_capital_after);
+}
+
+SCORUM_TEST_CASE(dev_committee_withdraw_operation_not_enough_sp)
+{
+    auto transfer = genesis_state.development_sp_supply + 1;
+
+    development_committee_withdraw_vesting_operation proposal_inner_op;
+    proposal_inner_op.vesting_shares = transfer;
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.creator = alice.name;
+    proposal_create_op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+    proposal_create_op.operation = proposal_inner_op;
+
+    push_operation(proposal_create_op, initdelegate.private_key);
+
+    proposal_vote_operation proposal_vote_op;
+    proposal_vote_op.voting_account = alice.name;
+    proposal_vote_op.proposal_id = 0;
+
+    BOOST_REQUIRE_THROW(push_operation(proposal_vote_op, initdelegate.private_key, false), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(dev_committee_transfer_virtual_op_should_be_raised)
+{
+    dev_committee_operation_visitor visitor;
+
+    db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
+
+    unsigned transfer_amount = 1e5;
+
+    development_committee_transfer_operation proposal_inner_op;
+    proposal_inner_op.amount = asset(transfer_amount, SCORUM_SYMBOL);
+    proposal_inner_op.to_account = bob.name;
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.creator = alice.name;
+    proposal_create_op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+    proposal_create_op.operation = proposal_inner_op;
+
+    BOOST_REQUIRE_EQUAL(visitor.transfer_ops.size(), 0u);
+
+    push_operation(proposal_create_op, initdelegate.private_key);
+
+    BOOST_REQUIRE_EQUAL(visitor.transfer_ops.size(), 0u);
+
+    proposal_vote_operation proposal_vote_op;
+    proposal_vote_op.voting_account = alice.name;
+    proposal_vote_op.proposal_id = 0;
+
+    push_operation(proposal_vote_op, initdelegate.private_key);
+
+    BOOST_REQUIRE_EQUAL(visitor.transfer_ops.size(), 3u); // 1-push_tx; 2-gen_block(check for except); 3-apply_block
+    BOOST_REQUIRE_EQUAL(std::get<0>(visitor.transfer_ops[0]), bob.name);
+    BOOST_REQUIRE_EQUAL(std::get<1>(visitor.transfer_ops[0]).amount, transfer_amount);
+}
+
+SCORUM_TEST_CASE(dev_committee_withdraw_virtual_op_should_be_raised)
+{
+    dev_committee_operation_visitor visitor;
+
+    db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
+
+    unsigned withdraw_amount = 1e4;
+
+    development_committee_withdraw_vesting_operation proposal_inner_op;
+    proposal_inner_op.vesting_shares = asset(withdraw_amount, SP_SYMBOL);
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.creator = alice.name;
+    proposal_create_op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+    proposal_create_op.operation = proposal_inner_op;
+
+    BOOST_REQUIRE_EQUAL(visitor.withdraw_ops.size(), 0u);
+
+    push_operation(proposal_create_op, initdelegate.private_key);
+
+    BOOST_REQUIRE_EQUAL(visitor.withdraw_ops.size(), 0u);
+
+    generate_blocks(db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS));
+
+    BOOST_REQUIRE_EQUAL(visitor.withdraw_ops.size(), 0u);
+
+    proposal_vote_operation proposal_vote_op;
+    proposal_vote_op.voting_account = alice.name;
+    proposal_vote_op.proposal_id = 0;
+
+    push_operation(proposal_vote_op, initdelegate.private_key, false);
+    generate_blocks(db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS));
+
+    BOOST_REQUIRE_EQUAL(visitor.withdraw_ops.size(), 1u);
+    BOOST_REQUIRE_EQUAL(visitor.withdraw_ops[0].amount, withdraw_amount / SCORUM_VESTING_WITHDRAW_INTERVALS);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 } // namespace proposal_tests

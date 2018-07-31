@@ -344,7 +344,9 @@ public:
 
             if (_options->count("shared-file-dir"))
             {
-                _shared_dir = _data_dir / fc::path(_options->at("shared-file-dir").as<boost::filesystem::path>());
+                _shared_dir = fc::path(_options->at("shared-file-dir").as<boost::filesystem::path>());
+                if (_shared_dir.is_relative())
+                    _shared_dir = _data_dir / _shared_dir;
             }
             else
             {

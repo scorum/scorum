@@ -13,6 +13,8 @@ namespace database_ns {
 
 void process_fifa_world_cup_2018_bounty_initialize::on_apply(block_task_context& ctx)
 {
+    debug_log(ctx.get_block_info(), "process_fifa_world_cup_2018_bounty_initialize BEGIN");
+
     data_service_factory_i& services = ctx.services();
 
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
@@ -47,6 +49,8 @@ void process_fifa_world_cup_2018_bounty_initialize::on_apply(block_task_context&
         rfo.activity_reward_balance -= balance;
         rfo.recent_claims += fc::uint128_t(balance.amount.value);
     });
+
+    debug_log(ctx.get_block_info(), "process_fifa_world_cup_2018_bounty_initialize END");
 }
 }
 }

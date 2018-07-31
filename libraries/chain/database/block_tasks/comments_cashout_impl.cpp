@@ -113,14 +113,6 @@ asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& c
     // newest, with bigger depth comments first
     comment_refs_type comments_with_parents = collect_parents(comments);
 
-    fc_ilog(fc::logger::get("comments_with_parents"), "--- begin");
-    for (size_t i = 0; i < comments_with_parents.size(); ++i)
-    {
-        fc_ilog(fc::logger::get("comments_with_parents"), "${i}=${comment}",
-                ("i", i)("comment", comments_with_parents[i].get()));
-    }
-    fc_ilog(fc::logger::get("comments_with_parents"), "--- end");
-
     for (const comment_object& comment : comments_with_parents)
     {
         const auto& reward = comment_rewards[comment_key{ comment.author, get_permlink(comment.permlink) }];
@@ -202,13 +194,9 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         _ctx.push_virtual_operation(
             author_reward_operation(comment.author, fc::to_string(comment.permlink), author_reward));
 
-        comment_reward_operation op(comment.author, fc::to_string(comment.permlink), payout_result.total_claimed_reward,
-                                    author_reward, curators_reward, total_beneficiary, fund_reward,
-                                    children_comments_reward);
-        _ctx.push_virtual_operation(op);
-
-        fc_ilog(fc::logger::get("comment_reward_operation"), "comment_reward_operation=${comment_reward_operation}",
-                ("comment_reward_operation", op));
+        _ctx.push_virtual_operation(comment_reward_operation(
+            comment.author, fc::to_string(comment.permlink), payout_result.total_claimed_reward, author_reward,
+            curators_reward, total_beneficiary, fund_reward, children_comments_reward));
 
         accumulate_statistic(comment, author, author_reward, curators_reward, total_beneficiary, fund_reward,
                              children_comments_reward, reward_symbol);
@@ -366,6 +354,21 @@ comment_refs_type process_comments_cashout_impl::collect_parents(const comment_r
 
     return comments_with_parents;
 }
+
+fc::shared_string process_comments_cashout_impl::get_permlink(const fc::shared_string& str) const
+{
+    if (hardfork_service.has_hardfork(SCORUM_HARDFORK_0_1))
+        return str;
+    else
+        return fc::shared_string("", str.get_allocator());
+}
+
+// Explicit template instantiation
+// clang-format off
+template void process_comments_cashout_impl::reward<content_reward_fund_scr_service_i>(content_reward_fund_scr_service_i&, const comment_refs_type&);
+template void process_comments_cashout_impl::reward<content_reward_fund_sp_service_i>(content_reward_fund_sp_service_i&, const comment_refs_type&);
+template void process_comments_cashout_impl::reward<content_fifa_world_cup_2018_bounty_reward_fund_service_i>( content_fifa_world_cup_2018_bounty_reward_fund_service_i&, const comment_refs_type&);
+// clang-format on
 
 fc::shared_string process_comments_cashout_impl::get_permlink(const fc::shared_string& str) const
 {

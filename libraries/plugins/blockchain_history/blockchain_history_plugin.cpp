@@ -49,6 +49,7 @@ public:
         db.add_plugin_index<account_operations_full_history_index>();
         db.add_plugin_index<transfers_to_scr_history_index>();
         db.add_plugin_index<transfers_to_sp_history_index>();
+        db.add_plugin_index<withdrawals_to_scr_history_index>();
         db.add_plugin_index<filtered_not_virt_operations_history_index>();
         db.add_plugin_index<filtered_virt_operations_history_index>();
         db.add_plugin_index<filtered_market_operations_history_index>();
@@ -100,11 +101,45 @@ public:
         push_history<transfers_to_sp_history_object>(_obj);
     }
 
+    void operator()(const withdraw_scorumpower_operation& op) const
+    {
+        push_history<account_history_object>(_obj);
+
+        if (_item == op.account)
+            push_progress<withdrawals_to_scr_history_object>(_obj);
+
+        push_history<withdrawals_to_scr_history_object>(_obj);
+    }
+
+    void operator()(const acc_to_acc_vesting_withdraw_operation& op) const
+    {
+        push_history<account_history_object>(_obj);
+
+        if (_item == op.from_account)
+            push_progress<withdrawals_to_scr_history_object>(_obj);
+    }
+
+    void operator()(const acc_to_devpool_vesting_withdraw_operation& op) const
+    {
+        push_history<account_history_object>(_obj);
+
+        if (_item == op.from_account)
+            push_progress<withdrawals_to_scr_history_object>(_obj);
+    }
+
+    void operator()(const acc_finished_vesting_withdraw_operation& op) const
+    {
+        push_history<account_history_object>(_obj);
+
+        if (_item == op.from_account)
+            push_progress<withdrawals_to_scr_history_object>(_obj);
+    }
+
 private:
     template <typename history_object_type> void push_history(const operation_object& op) const
     {
-        const auto& hist_idx = _db.get_index<history_index<history_object_type>>().indices().get<by_account>();
-        auto hist_itr = hist_idx.lower_bound(boost::make_tuple(_item, uint32_t(-1)));
+        const auto& hist_idx = _db.get_index<history_index<history_object_type>, by_account>();
+        auto hist_itr = hist_idx.lower_bound(_item);
         uint32_t sequence = 0;
         if (hist_itr != hist_idx.end() && hist_itr->account == _item)
             sequence = hist_itr->sequence + 1;
@@ -114,6 +149,16 @@ private:
             ahist.sequence = sequence;
             ahist.op = op.id;
         });
+    }
+
+    template <typename history_object_type> void push_progress(const operation_object& op) const
+    {
+        const auto& idx = _db.get_index<history_index<history_object_type>, by_account>();
+        auto it = idx.lower_bound(_item);
+        if (it != idx.end() && it->account == _item)
+        {
+            _db.modify<history_object_type>(*it, [&](history_object_type& h) { h.progress.push_back(op.id); });
+        }
     }
 };
 

@@ -98,7 +98,10 @@ struct chain_capital_api_obj
     // total SCR and SP on circulating (on account balances). circulating_capital <= total_supply
     asset circulating_capital = asset(0, SCORUM_SYMBOL);
 
-    // total SP on accounts scorumpower
+    // total SCR on accounts
+    asset total_scr = asset(0, SCORUM_SYMBOL);
+
+    // total SP on accounts
     asset total_scorumpower = asset(0, SP_SYMBOL);
 
     asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
@@ -121,20 +124,51 @@ struct chain_capital_api_obj
 }
 }
 
+// clang-format off
 FC_REFLECT(scorum::app::reward_fund_api_obj,
-           (activity_reward_balance)(recent_claims)(last_update)(author_reward_curve)(curation_reward_curve))
+           (activity_reward_balance)
+           (recent_claims)
+           (last_update)
+           (author_reward_curve)
+           (curation_reward_curve))
 
-FC_REFLECT(scorum::app::scheduled_hardfork_api_obj, (hf_version)(live_time))
+FC_REFLECT(scorum::app::scheduled_hardfork_api_obj,
+           (hf_version)
+           (live_time))
 
 FC_REFLECT_DERIVED(scorum::app::chain_properties_api_obj,
                    (scorum::witness::reserve_ratio_object),
-                   (chain_id)(head_block_id)(head_block_number)(last_irreversible_block_number)(current_aslot)(time)(
-                       current_witness)(median_chain_props)(majority_version)(hf_version))
+                   (chain_id)
+                   (head_block_id)
+                   (head_block_number)
+                   (last_irreversible_block_number)
+                   (current_aslot)
+                   (time)
+                   (current_witness)
+                   (median_chain_props)
+                   (majority_version)
+                   (hf_version))
 
-FC_REFLECT(
-    scorum::app::chain_capital_api_obj,
-    (head_block_number)(head_block_id)(head_block_time)(current_witness)(total_supply)(circulating_capital)(
-        total_scorumpower)(registration_pool_balance)(fund_budget_balance)(dev_pool_scr_balance)(dev_pool_sp_balance)(
-        content_balancer_scr)(active_voters_balancer_scr)(active_voters_balancer_sp)(content_reward_fund_scr_balance)(
-        content_reward_fund_sp_balance)(content_reward_fifa_world_cup_2018_bounty_fund_sp_balance)(
-        total_witness_reward_scr)(total_witness_reward_sp)(witness_reward_in_sp_migration_fund))
+FC_REFLECT(scorum::app::chain_capital_api_obj,
+           (head_block_number)
+           (head_block_id)
+           (head_block_time)
+           (current_witness)
+           (total_supply)
+           (circulating_capital)
+           (total_scr)
+           (total_scorumpower)
+           (registration_pool_balance)
+           (fund_budget_balance)
+           (dev_pool_scr_balance)
+           (dev_pool_sp_balance)
+           (content_balancer_scr)
+           (active_voters_balancer_scr)
+           (active_voters_balancer_sp)
+           (content_reward_fund_scr_balance)
+           (content_reward_fund_sp_balance)
+           (content_reward_fifa_world_cup_2018_bounty_fund_sp_balance)
+           (total_witness_reward_scr)
+           (total_witness_reward_sp)
+           (witness_reward_in_sp_migration_fund))
+// clang-format on

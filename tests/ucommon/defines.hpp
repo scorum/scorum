@@ -175,6 +175,10 @@ template <class T> T make_test_index_object()
 
 #endif
 
+#define SCORUM_MESSAGE(M)                                                                                              \
+    BOOST_MESSAGE(M);                                                                                                  \
+    ilog(M)
+
 #define SCORUM_TEST_CASE(test_name)                                                                                    \
     struct test_name : public BOOST_AUTO_TEST_CASE_FIXTURE                                                             \
     {                                                                                                                  \

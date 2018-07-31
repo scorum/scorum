@@ -55,8 +55,8 @@ SCORUM_TEST_CASE(check_filtered_by_author_name)
 
     BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
 
-    BOOST_REQUIRE_EQUAL(discussions[0].permlink, a1.permlink());
-    BOOST_REQUIRE_EQUAL(discussions[1].permlink, a2.permlink());
+    BOOST_REQUIRE_EQUAL(discussions[0].permlink, a2.permlink());
+    BOOST_REQUIRE_EQUAL(discussions[1].permlink, a1.permlink());
 }
 
 SCORUM_TEST_CASE(check_filtered_by_permlink)
@@ -92,7 +92,7 @@ SCORUM_TEST_CASE(check_filtered_by_permlink)
     BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
 
     BOOST_REQUIRE_EQUAL(discussions[0].permlink, a2.permlink());
-    BOOST_REQUIRE_EQUAL(discussions[1].permlink, a3.permlink());
+    BOOST_REQUIRE_EQUAL(discussions[1].permlink, a1.permlink());
 }
 
 SCORUM_TEST_CASE(check_filtered_by_limit)
@@ -127,7 +127,7 @@ SCORUM_TEST_CASE(check_filtered_by_limit)
 
     BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
 
-    BOOST_REQUIRE_EQUAL(discussions[0].permlink, a1.permlink());
+    BOOST_REQUIRE_EQUAL(discussions[0].permlink, a3.permlink());
     BOOST_REQUIRE_EQUAL(discussions[1].permlink, a2.permlink());
 }
 
@@ -159,14 +159,44 @@ SCORUM_TEST_CASE(check_filtered_by_permlink_and_limit)
 
     api::discussion_query q;
     q.start_author = alice.name;
-    q.start_permlink = a2.permlink();
+    q.start_permlink = a3.permlink();
     q.limit = 2;
     auto discussions = _api.get_discussions_by_author(q);
 
     BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
 
-    BOOST_REQUIRE_EQUAL(discussions[0].permlink, a2.permlink());
-    BOOST_REQUIRE_EQUAL(discussions[1].permlink, a3.permlink());
+    BOOST_REQUIRE_EQUAL(discussions[0].permlink, a3.permlink());
+    BOOST_REQUIRE_EQUAL(discussions[1].permlink, a2.permlink());
+}
+
+SCORUM_TEST_CASE(check_returned_by_created_in_desc_order)
+{
+    auto a1 = create_post(alice).in_block_with_delay();
+    create_post(bob).in_block_with_delay();
+    auto a2 = create_post(alice).in_block_with_delay();
+
+    api::discussion_query q;
+    q.start_author = alice.name;
+    q.start_permlink = "";
+    q.limit = MAX_DISCUSSIONS_LIST_SIZE;
+
+    {
+        auto discussions = _api.get_discussions_by_author(q);
+
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
+        BOOST_CHECK_EQUAL(discussions[0].permlink, a2.permlink());
+        BOOST_CHECK_EQUAL(discussions[1].permlink, a1.permlink());
+    }
+
+    create_post(alice).set_permlink(a1.permlink()).set_body("new-body").in_block_with_delay();
+
+    {
+        auto discussions = _api.get_discussions_by_author(q);
+
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
+        BOOST_CHECK_EQUAL(discussions[0].permlink, a2.permlink());
+        BOOST_CHECK_EQUAL(discussions[1].permlink, a1.permlink());
+    }
 }
 
 SCORUM_TEST_CASE(check_return_nothing)

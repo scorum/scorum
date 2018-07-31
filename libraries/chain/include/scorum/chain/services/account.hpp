@@ -74,6 +74,9 @@ struct account_service_i : public base_service_i<account_object>
     virtual void decrease_balance(const account_object& account, const asset& amount) = 0;
 
     virtual void increase_scorumpower(const account_object& account, const asset& amount) = 0;
+    virtual void decrease_scorumpower(const account_object& account, const asset& amount) = 0;
+
+    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) = 0;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) = 0;
 
@@ -108,8 +111,6 @@ struct account_service_i : public base_service_i<account_object>
 
     virtual void update_voting_proxy(const account_object& account, const optional<account_object>& proxy_account) = 0;
 
-    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) = 0;
-
     virtual void clear_witness_votes(const account_object& account) = 0;
 
     virtual void adjust_proxied_witness_votes(const account_object& account,
@@ -120,8 +121,15 @@ struct account_service_i : public base_service_i<account_object>
     virtual void adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0)
         = 0;
 
-    using cref_type = std::reference_wrapper<const account_object>;
-    virtual std::vector<cref_type> get_active_sp_holders() const = 0;
+    using cref_type = typename base_service_i::object_cref_type;
+
+    using account_refs_type = std::vector<cref_type>;
+
+    virtual account_refs_type get_active_sp_holders() const = 0;
+
+    using account_call_type = typename base_service_i::call_type;
+
+    virtual void foreach_account(account_call_type&&) const = 0;
 };
 
 // DB operations with account_*** objects
@@ -195,6 +203,9 @@ public:
     virtual void decrease_balance(const account_object& account, const asset& amount) override;
 
     virtual void increase_scorumpower(const account_object& account, const asset& amount) override;
+    virtual void decrease_scorumpower(const account_object& account, const asset& amount) override;
+
+    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) override;
 
@@ -227,14 +238,6 @@ public:
     virtual void update_voting_proxy(const account_object& account,
                                      const optional<account_object>& proxy_account) override;
 
-    /**
-     * @param to_account - the account to receive the new scorumpower
-     * @param scorum - SCR to be converted to SP
-     * @param to_reward_balance
-     * @return the SP created and deposited to account
-     */
-    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
-
     /** clears all vote records for a particular account but does not update the
      * witness vote totals.  Vote totals should be updated first via a call to
      * adjust_proxied_witness_votes( a, -a.witness_vote_weight() )
@@ -250,7 +253,9 @@ public:
     virtual void
     adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth = 0) override;
 
-    virtual std::vector<cref_type> get_active_sp_holders() const override;
+    virtual account_refs_type get_active_sp_holders() const override;
+
+    virtual void foreach_account(account_call_type&&) const override;
 
 private:
     const account_object& _create_account_objects(const account_name_type& new_account_name,
