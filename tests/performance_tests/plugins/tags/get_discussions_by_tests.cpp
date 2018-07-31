@@ -95,7 +95,7 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
         q.limit = 100;
         auto posts = _api.get_discussions_by_created(q);
 
-        auto ms = prof.elapses();
+        auto ms = prof.elapsed();
         BOOST_TEST_MESSAGE("get_discussions_by_created' time: " << ms << "ms");
 
         BOOST_CHECK(

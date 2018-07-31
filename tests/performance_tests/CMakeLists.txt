@@ -4,6 +4,7 @@ set( SOURCES
     main.cpp
     plugins/tags/get_discussions_by_tests.cpp
     multiply_by_fractional_tests.cpp
+    performance_common.cpp
 )
 
 add_executable(performance_tests
