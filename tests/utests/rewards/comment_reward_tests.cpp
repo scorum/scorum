@@ -67,7 +67,8 @@ struct pay_for_comments_fixture : public shared_memory_fixture
         mocks.OnCall(services, data_service_factory_i::hardfork_property_service).ReturnByRef(*hardfork_service);
         mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
 
-        ctx = std::make_shared<block_task_context>(*services, *virt_op_emitter, 1u);
+        block_info empty_info;
+        ctx = std::make_shared<block_task_context>(*services, *virt_op_emitter, 1u, empty_info);
     }
 
     std::vector<comment_object> create_comments()

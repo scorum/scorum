@@ -94,6 +94,44 @@ public:
         return result;
     }
 
+    template <typename IndexType>
+    result_type get_ops_history_by_time(const fc::time_point_sec& from,
+                                        const fc::time_point_sec& to,
+                                        uint32_t from_op,
+                                        uint32_t limit) const
+    {
+        FC_ASSERT(from <= to, "'From' is greater than 'to'");
+        FC_ASSERT((to - from).to_seconds() <= MAX_TIMESTAMP_RANGE_IN_S,
+                  "Timestamp range can't be more then ${t} seconds", ("t", MAX_TIMESTAMP_RANGE_IN_S));
+        FC_ASSERT(limit > 0, "Limit must be greater than zero");
+        FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));
+        FC_ASSERT(from_op >= limit, "From must be greater than limit");
+
+        result_type result;
+
+        const auto& idx = _db->get_index<IndexType>().indices().get<by_timestamp>();
+        if (idx.empty())
+            return result;
+
+        auto range = idx.range(::boost::lambda::_1 >= std::make_tuple(from, 0),
+                               ::boost::lambda::_1 <= std::make_tuple(to, ALL_IDS));
+
+        for (auto it = range.first; limit && it != range.second; ++it)
+        {
+            auto id = it->id;
+            FC_ASSERT(id._id >= 0, "Invalid operation_object id");
+            const operation_object& op = (*it);
+            if (id > from_op)
+                continue;
+
+            --limit;
+            result[(uint32_t)id._id] = get_operation(op);
+        }
+
+        return result;
+    }
+
     template <typename Filter> result_type get_ops_in_block(uint32_t block_num, Filter operation_filter) const
     {
         const auto& idx = _db->get_index<operation_index>().indices().get<by_location>();
@@ -211,6 +249,15 @@ std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history(
 
         return _impl->get_ops_history<operation_index>(from_op, limit);
     });
+}
+
+std::map<uint32_t, applied_operation> blockchain_history_api::get_ops_history_by_time(const fc::time_point_sec& from,
+                                                                                      const fc::time_point_sec& to,
+                                                                                      uint32_t from_op,
+                                                                                      uint32_t limit) const
+{
+    return _impl->_app.chain_database()->with_read_lock(
+        [&]() { return _impl->get_ops_history_by_time<operation_index>(from, to, from_op, limit); });
 }
 
 std::map<uint32_t, applied_operation>

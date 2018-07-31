@@ -116,12 +116,10 @@ void founders_initializator_impl::feed_account(initializator_context& ctx,
                                                const account_name_type& name,
                                                const asset& sp)
 {
-    dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
     account_service_i& account_service = ctx.services().account_service();
 
     const auto& founder_obj = account_service.get_account(name);
     account_service.increase_scorumpower(founder_obj, sp);
-    dgp_service.update([&](dynamic_global_property_object& props) { props.total_scorumpower += sp; });
 }
 }
 }

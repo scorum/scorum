@@ -5,6 +5,10 @@
 #include <scorum/protocol/operations.hpp>
 
 #include <string>
+#include <fc/log/logger.hpp>
+
+#include <vector>
+#include <algorithm>
 
 using namespace scorum;
 using namespace scorum::chain;
@@ -13,9 +17,9 @@ using namespace scorum::app;
 
 namespace operation_tests {
 
-struct check_saved_opetations_visitor
+struct check_opetation_visitor
 {
-    check_saved_opetations_visitor(const operation& input_op)
+    check_opetation_visitor(const operation& input_op)
         : _input_op(input_op)
     {
     }
@@ -61,5 +65,50 @@ struct check_saved_opetations_visitor
 
 private:
     const operation& _input_op;
+};
+
+using opetations_type = std::vector<operation>;
+
+struct check_opetations_list_visitor
+{
+    check_opetations_list_visitor(const opetations_type& input_ops)
+        : _input_ops(input_ops)
+    {
+        FC_ASSERT(!_input_ops.empty());
+    }
+
+    using result_type = void;
+
+    template <typename Op> void operator()(const Op& op) const
+    {
+        auto it = std::find(std::begin(_input_ops), std::end(_input_ops), op);
+        if (it != _input_ops.end())
+        {
+            check_opetation_visitor check(*it);
+            check(op);
+            _input_ops.erase(it);
+        }
+    }
+
+    bool successed() const
+    {
+        return _input_ops.empty();
+    }
+
+private:
+    mutable opetations_type _input_ops;
+};
+
+struct view_opetation_visitor
+{
+    using result_type = void;
+
+    template <typename Op> void operator()(const Op& op) const
+    {
+        fc::variant vo;
+        fc::to_variant(op, vo);
+
+        ilog("${j}", ("j", fc::json::to_pretty_string(vo)));
+    }
 };
 }

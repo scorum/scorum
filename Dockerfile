@@ -23,6 +23,7 @@ RUN \
             doxygen \
             git \
             libboost-all-dev \
+            libicu-dev \
             libreadline-dev \
             libssl-dev \
             libtool \
@@ -54,7 +55,7 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
-        -FORCE_REBUILD_GENESIS=ON \
+        -DLIVE_TESTNET=${UPLOAD_PATH} \
         -DCMAKE_BUILD_TYPE=Debug \
         -DENABLE_COVERAGE_TESTING=ON \
         -DLOW_MEMORY_NODE=OFF \
@@ -81,7 +82,7 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
-        -FORCE_REBUILD_GENESIS=ON \
+        -DLIVE_TESTNET=${UPLOAD_PATH} \
         -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
         -DCMAKE_BUILD_TYPE=Release \
         -DLOW_MEMORY_NODE=ON \
@@ -95,14 +96,14 @@ RUN \
     ./tests/wallet_tests/wallet_tests && \
     ./programs/util/test_fixed_string && \
     make install && \
-	rm -rf /usr/local/src/scorum/build
+    rm -rf /usr/local/src/scorum/build
 
 RUN \
-	cd /usr/local/src/scorum && \
-	mkdir build && \
+    cd /usr/local/src/scorum && \
+    mkdir build && \
     cd build && \
     cmake \
-        -FORCE_REBUILD_GENESIS=ON \
+        -DLIVE_TESTNET=${UPLOAD_PATH} \
         -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
         -DCMAKE_BUILD_TYPE=Release \
         -DLOW_MEMORY_NODE=OFF \
@@ -138,6 +139,7 @@ RUN \
             doxygen \
             dpkg-dev \
             git \
+            libicu-dev \
             libboost-all-dev \
             libc6-dev \
             libexpat1-dev \
@@ -190,9 +192,6 @@ VOLUME ["/var/lib/scorumd"]
 EXPOSE 8090
 # p2p service:
 EXPOSE 2001
-
-# add seednodes from documentation to image
-ADD doc/seednodes.txt /etc/scorumd/seednodes.txt
 
 # the following adds lots of logging info to stdout
 ADD contrib/fullnode.config.ini /etc/scorumd/fullnode.config.ini

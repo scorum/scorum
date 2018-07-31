@@ -53,9 +53,6 @@ public:
             if (new_vesting_withdraw_rate.amount == 0)
                 new_vesting_withdraw_rate.amount = 1;
 
-            FC_ASSERT(vesting_withdraw_rate != new_vesting_withdraw_rate,
-                      "This operation would not change the vesting withdraw rate.");
-
             auto lmbNewVesting = [&](withdraw_scorumpower_object& wv) {
                 wv.from_id = from_object.id;
                 wv.vesting_withdraw_rate = new_vesting_withdraw_rate;
@@ -144,6 +141,8 @@ void withdraw_scorumpower_dev_pool_task::on_apply(withdraw_scorumpower_context& 
     dev_pool_service_i& dev_pool_service = ctx.services().dev_pool_service();
 
     const auto& pool = dev_pool_service.get();
+
+    FC_ASSERT(pool.sp_balance >= ctx.scorumpower(), "Dev pool does not have sufficient Scorum Power for withdraw.");
 
     impl.do_apply(pool, ctx.scorumpower());
 }

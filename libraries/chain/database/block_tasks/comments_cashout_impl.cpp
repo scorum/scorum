@@ -369,6 +369,21 @@ template void process_comments_cashout_impl::reward<content_reward_fund_scr_serv
 template void process_comments_cashout_impl::reward<content_reward_fund_sp_service_i>(content_reward_fund_sp_service_i&, const comment_refs_type&);
 template void process_comments_cashout_impl::reward<content_fifa_world_cup_2018_bounty_reward_fund_service_i>( content_fifa_world_cup_2018_bounty_reward_fund_service_i&, const comment_refs_type&);
 // clang-format on
+
+fc::shared_string process_comments_cashout_impl::get_permlink(const fc::shared_string& str) const
+{
+    if (dgp_service.get().head_block_number >= SCORUM_FIFA_BOUNTY_DISTRIBUTION_TEST_BLOCK)
+        return str;
+    else
+        return fc::shared_string("", str.get_allocator());
+}
+
+// Explicit template instantiation
+// clang-format off
+template void process_comments_cashout_impl::reward<content_reward_fund_scr_service_i>(content_reward_fund_scr_service_i&, const comment_refs_type&);
+template void process_comments_cashout_impl::reward<content_reward_fund_sp_service_i>(content_reward_fund_sp_service_i&, const comment_refs_type&);
+template void process_comments_cashout_impl::reward<content_fifa_world_cup_2018_bounty_reward_fund_service_i>( content_fifa_world_cup_2018_bounty_reward_fund_service_i&, const comment_refs_type&);
+// clang-format on
 }
 }
 }

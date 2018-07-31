@@ -52,6 +52,74 @@ SCORUM_TEST_CASE(check_comment_with_category_and_domain_in_upper_case)
     BOOST_REQUIRE_EQUAL(cat1_tags.size(), 3u);
 }
 
+SCORUM_TEST_CASE(check_comment_with_russian_in_tags)
+{
+    create_post(alice, "c1")
+        .set_json(R"({"domains": ["Домен1"], "categories": ["Категория1"], "tags": ["Тег1","Тег2"]})")
+        .in_block();
+
+    auto tags_lowercase = _api.get_tags_by_category("домен1", "категория1");
+    auto tags_uppercase = _api.get_tags_by_category("ДОМЕН1", "КАТЕГОРИЯ1");
+
+    std::vector<std::pair<std::string, uint32_t>> expected = { { "тег2", 1 }, { "тег1", 1 } };
+
+    BOOST_REQUIRE_EQUAL(tags_lowercase.size(), 2u);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(tags_lowercase.begin(), tags_lowercase.end(), expected.begin(), expected.end());
+
+    BOOST_REQUIRE_EQUAL(tags_uppercase.size(), 2u);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(tags_uppercase.begin(), tags_uppercase.end(), expected.begin(), expected.end());
+}
+
+SCORUM_TEST_CASE(check_tag_should_be_truncated_to_24symbols)
+{
+    create_post(alice, "c")
+        .set_json(R"({"domains": ["d"], "categories": ["c"], "tags": ["ТеГ12ТеГ12ТеГ12ТеГ12ТеГ12ТеГ12"]})")
+        .in_block();
+
+    auto tags = _api.get_tags_by_category("d", "c");
+
+    // expected tags should be <=24 symbols of length
+    std::vector<std::pair<std::string, uint32_t>> expected = { { "тег12тег12тег12тег12тег1", 1 } };
+
+    BOOST_REQUIRE_EQUAL(tags.size(), 1u);
+    BOOST_CHECK_EQUAL_COLLECTIONS(tags.begin(), tags.end(), expected.begin(), expected.end());
+}
+
+SCORUM_TEST_CASE(check_category_should_be_truncated_to_24symbols)
+{
+    create_post(alice, "c")
+        .set_json(
+            R"({"domains": ["d"], "categories": ["手手手手手田田田田田手手手手手田田田田田手手手手手"], "tags": ["tag"]})")
+        .in_block();
+
+    BOOST_CHECK_EQUAL(_api.get_tags_by_category("d", "手手手手手田田田田田手手手手手田田田田田手手手手手").size(), 1u);
+    BOOST_CHECK_EQUAL(_api.get_tags_by_category("d", "手手手手手田田田田田手手手手手田田田田田手手手手").size(), 1u);
+    BOOST_CHECK_EQUAL(_api.get_tags_by_category("d", "手手手手手田田田田田手手手手手田田田田田手手手").size(), 0u);
+}
+
+SCORUM_TEST_CASE(check_domain_should_be_truncated_to_24symbols)
+{
+    create_post(alice, "cat")
+        .set_json(R"({"domains": ["домендомендомендомендомен"], "categories": ["cat"], "tags": ["tag"]})")
+        .in_block();
+
+    BOOST_CHECK_EQUAL(_api.get_tags_by_category("домендомендомендомендомен", "cat").size(), 1u); // 25 symbols domain
+    BOOST_CHECK_EQUAL(_api.get_tags_by_category("домендомендомендомендоме", "cat").size(), 1u); // 24 symbols domain
+    BOOST_CHECK_EQUAL(_api.get_tags_by_category("домендомендомендомендом", "cat").size(), 0u); // 23 symbols domain
+}
+
+SCORUM_TEST_CASE(check_comment_with_chinese_in_tags)
+{
+    create_post(alice, "c1").set_json(R"({"domains": ["水"], "categories": ["田"], "tags": ["手手"]})").in_block();
+
+    auto tags = _api.get_tags_by_category("水", "田");
+
+    std::vector<std::pair<std::string, uint32_t>> expected = { { "手手", 1 } };
+
+    BOOST_REQUIRE_EQUAL(tags.size(), 1u);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(tags.begin(), tags.end(), expected.begin(), expected.end());
+}
+
 SCORUM_TEST_CASE(check_comment_with_tags_in_upper_case)
 {
     create_post(alice, "c1")

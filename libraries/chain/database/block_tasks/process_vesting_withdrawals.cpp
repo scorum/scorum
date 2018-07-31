@@ -14,6 +14,8 @@ namespace database_ns {
 
 void process_vesting_withdrawals::on_apply(block_task_context& ctx)
 {
+    debug_log(ctx.get_block_info(), "process_vesting_withdrawals BEGIN");
+
     withdraw_scorumpower_service_i& withdraw_scorumpower_service = ctx.services().withdraw_scorumpower_service();
     withdraw_scorumpower_route_service_i& withdraw_scorumpower_route_service
         = ctx.services().withdraw_scorumpower_route_service();
@@ -60,7 +62,6 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
                 {
                     actors_impl.update_statistic(wvro.from_id, wvro.to_id, to_deposit);
                     actors_impl.increase_sp(wvro.to_id, to_deposit);
-                    actors_impl.update_global_sp_properties(wvro.from_id, wvro.to_id, to_deposit);
                 }
                 else // convert SP to SCR and withdraw SCR
                 {
@@ -68,7 +69,6 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
 
                     actors_impl.update_statistic(wvro.from_id, wvro.to_id, converted_scorum);
                     actors_impl.increase_scr(wvro.to_id, converted_scorum);
-                    actors_impl.update_global_scr_properties(wvro.from_id, wvro.to_id, converted_scorum);
                 }
             }
         }
@@ -82,7 +82,6 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
 
         actors_impl.update_statistic(wvo.from_id, wvo.from_id, converted_scorum);
         actors_impl.increase_scr(wvo.from_id, converted_scorum);
-        actors_impl.update_global_scr_properties(wvo.from_id, wvo.from_id, converted_scorum);
 
         scorumpower -= to_withdraw;
 
@@ -93,9 +92,12 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
 
         if (wvo.withdrawn >= wvo.to_withdraw || scorumpower.amount == 0)
         {
+            actors_impl.update_statistic(wvo.from_id);
             withdraw_scorumpower_service.remove(wvo);
         }
     }
+
+    debug_log(ctx.get_block_info(), "process_vesting_withdrawals END");
 }
 }
 }

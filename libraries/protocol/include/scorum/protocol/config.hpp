@@ -18,13 +18,16 @@ namespace detail {
 
         const uint32_t blockid_pool_size;
 
+        const uint32_t vesting_withdraw_intervals;
+        const uint32_t vesting_withdraw_interval_seconds;
+
         const uint32_t cashout_window_seconds;
 
         const fc::microseconds reverse_auction_window_seconds;
 
-        const fc::microseconds vote_regeneration_seconds;
-
         const fc::microseconds upvote_lockout;
+
+        const fc::microseconds vote_regeneration_seconds;
 
         const fc::microseconds owner_auth_recovery_period;
         const fc::microseconds account_recovery_request_expiration_period;
@@ -43,9 +46,6 @@ namespace detail {
 
         const uint32_t atomicswap_limit_requested_contracts_per_owner;
         const uint32_t atomicswap_limit_requested_contracts_per_recipient;
-
-        const uint32_t vesting_withdraw_intervals;
-        const uint32_t vesting_withdraw_interval_seconds;
 
         const uint32_t min_vote_interval_sec;
 
@@ -76,7 +76,8 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 1, 0) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 1, 1) )
+
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"

@@ -197,9 +197,19 @@ struct get_impacted_account_visitor
         _impacted.insert(op.author);
     }
 
-    void operator()(const fill_vesting_withdraw_operation& op)
+    void operator()(const acc_to_acc_vesting_withdraw_operation& op)
     {
         _impacted.insert(op.from_account);
+        _impacted.insert(op.to_account);
+    }
+
+    void operator()(const acc_to_devpool_vesting_withdraw_operation& op)
+    {
+        _impacted.insert(op.from_account);
+    }
+
+    void operator()(const devpool_to_acc_vesting_withdraw_operation& op)
+    {
         _impacted.insert(op.to_account);
     }
 
@@ -216,6 +226,11 @@ struct get_impacted_account_visitor
     void operator()(const comment_payout_update_operation& op)
     {
         _impacted.insert(op.author);
+    }
+
+    void operator()(const active_sp_holders_reward_operation& op)
+    {
+        _impacted.insert(op.sp_holder);
     }
 
     void operator()(const return_scorumpower_delegation_operation& op)
@@ -237,6 +252,17 @@ struct get_impacted_account_visitor
     void operator()(const expired_contract_refund_operation& op)
     {
         _impacted.insert(op.owner);
+    }
+
+    void operator()(const proposal_virtual_operation& op)
+    {
+        op.proposal_op.weak_visit(
+            [&](const development_committee_transfer_operation& op) { _impacted.insert(op.to_account); });
+    }
+
+    void operator()(const acc_finished_vesting_withdraw_operation& op)
+    {
+        _impacted.insert(op.from_account);
     }
 
 private:

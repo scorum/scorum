@@ -16,6 +16,7 @@ set(SOURCES
     genesis/initializator_tests.cpp
     genesis/accounts_tests.cpp
     genesis/founders_tests.cpp
+    logger/logger_config_tests.cpp
     signed_transaction_serialization_tests.cpp
     serialization_tests.cpp
     proposal/proposal_operations_tests.cpp
@@ -30,8 +31,8 @@ set(SOURCES
     rewards_math/calculate_abs_reward_shares_tests.cpp
     rewards_math/calculate_voting_power_tests.cpp
     rewards/comment_reward_tests.cpp
+    utils/string_algorithm_tests.cpp
     tasks_base_tests.cpp
-    block_tasks_tests.cpp
     app_tests.cpp
 )
 
@@ -43,7 +44,17 @@ target_link_libraries(utests
                       ucommon_test
                       scorum_app
                       scorum_rewards_math
-                      scorum_egenesis_none)
+                      scorum_egenesis_none
+                      scorum_utils)
 
 target_include_directories(utests PUBLIC
                            "${CMAKE_CURRENT_SOURCE_DIR}")
+
+OPTION(UTESTS_LOG_MESSAGES "Show logs for u-tests (ON or OFF)" ON)
+
+MESSAGE( STATUS "UTESTS_LOG_MESSAGES: ${UTESTS_LOG_MESSAGES}" )
+if( UTESTS_LOG_MESSAGES )
+   SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_MESSAGES" )
+   SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOG_MESSAGES" )
+endif()
+

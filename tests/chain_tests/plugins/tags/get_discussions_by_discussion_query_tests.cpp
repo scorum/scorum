@@ -44,8 +44,9 @@ SCORUM_TEST_CASE(no_votes_should_return_nothing)
 
 SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
 {
-    auto p1
-        = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})").in_block();
+    auto p1 = create_post(alice)
+                  .set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C"]})")
+                  .in_block();
     p1.vote(alice).in_block();
 
     discussion_query q;
@@ -132,6 +133,31 @@ SCORUM_TEST_CASE(should_return_voted_tags_intersection)
         BOOST_REQUIRE_EQUAL(discussions[0].permlink, p3.permlink());
         BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
     }
+}
+
+SCORUM_TEST_CASE(should_return_tags_intersection_contains_same_tags_in_diff_case)
+{
+    auto p1 = create_post(alice)
+                  .set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["РУС1","рус1","Рус2","рус2"]})")
+                  .in_block();
+    auto p2 = create_post(bob)
+                  .set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["Рус1","РУС1"]})")
+                  .in_block();
+
+    p1.vote(sam).in_block();
+
+    p2.vote(sam).in_block();
+    p2.vote(bob).in_block();
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+    q.tags = { "рус1", "рУс1" };
+
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 2u);
+
+    q.tags = { "рус2", "рУс2" };
+    BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
 }
 
 SCORUM_TEST_CASE(should_return_voted_tags_union)
@@ -293,6 +319,83 @@ SCORUM_TEST_CASE(no_votes_should_return_union)
     BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
     BOOST_REQUIRE_EQUAL(discussions[0].permlink, p2.permlink());
     BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
+}
+
+SCORUM_TEST_CASE(should_return_two_posts_from_same_block_ordered_by_id_desc)
+{
+    auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B"]})").push();
+    auto p2 = create_post(bob).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})").in_block();
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = false;
+    q.tags = { "A", "B" };
+    std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+
+    BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
+    BOOST_REQUIRE_EQUAL(discussions[0].permlink, p2.permlink());
+    BOOST_REQUIRE_EQUAL(discussions[1].permlink, p1.permlink());
+}
+
+SCORUM_TEST_CASE(check_tag_should_be_truncated_to_24symbols)
+{
+    auto json
+        = R"({"domains": ["d"], "categories": ["c"], "tags":["手手手手手田田田田田手手手手手田田田田田手手手手手"]})";
+    auto p1 = create_post(alice).set_json(json).in_block();
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = false;
+
+    q.tags = { "手手手手手田田田田田手手手手手田田田田田手手手手手田田田田田" }; // 30 symbols
+    std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+    BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
+    BOOST_CHECK_EQUAL(discussions[0].json_metadata, json);
+
+    q.tags = { "手手手手手田田田田田手手手手手田田田田田手手手手" }; // 24 symbols
+    BOOST_CHECK_EQUAL(_api.get_discussions_by_created(q).size(), 1u);
+
+    q.tags = { "手手手手手田田田田田手手手手手田田田田田手手手" }; // 23 symbols
+    BOOST_CHECK_EQUAL(_api.get_discussions_by_created(q).size(), 0u);
+}
+
+SCORUM_TEST_CASE(check_domain_should_be_truncated_to_24symbols)
+{
+    // mixed russian and english which means that size of strings in bytes is not a multiple of theirs length in symbols
+    auto json = R"({"domains": ["domaiдоменdomaidomaiдомен"], "categories": ["c"], "tags":["t"]})";
+    auto p1 = create_post(alice).set_json(json).in_block();
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = false;
+
+    q.tags = { "domaiдоменdomaidomaiдомен" }; // 25 symbols
+    BOOST_CHECK_EQUAL(_api.get_discussions_by_created(q).size(), 1u);
+
+    q.tags = { "domaiдоменdomaidomaiдоме" }; // 24 symbols
+    BOOST_CHECK_EQUAL(_api.get_discussions_by_created(q).size(), 1u);
+
+    q.tags = { "domaiдоменdomaidomaiдом" }; // 23 symbols
+    BOOST_CHECK_EQUAL(_api.get_discussions_by_created(q).size(), 0u);
+}
+
+SCORUM_TEST_CASE(check_category_should_be_truncated_to_24symbols)
+{
+    auto json = R"({"domains": ["d"], "categories": ["categcategcategcategcateg"], "tags":["t"]})";
+    auto p1 = create_post(alice).set_json(json).in_block();
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = false;
+
+    q.tags = { "categcategcategcategcateg" }; // 25 symbols
+    BOOST_CHECK_EQUAL(_api.get_discussions_by_created(q).size(), 1u);
+
+    q.tags = { "categcategcategcategcate" }; // 24 symbols
+    BOOST_CHECK_EQUAL(_api.get_discussions_by_created(q).size(), 1u);
+
+    q.tags = { "categcategcategcategcat" }; // 23 symbols
+    BOOST_CHECK_EQUAL(_api.get_discussions_by_created(q).size(), 0u);
 }
 
 SCORUM_TEST_CASE(check_comments_should_not_be_returned)

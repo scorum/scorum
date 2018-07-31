@@ -24,12 +24,7 @@ public:
     asset get_available_scorumpower(const withdrawable_id_type& from);
 
     void update_statistic(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
-
-    void
-    update_global_scr_properties(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
-
-    void
-    update_global_sp_properties(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
+    void update_statistic(const withdrawable_id_type& from);
 
     void increase_scr(const withdrawable_id_type& id, const asset& amount);
 

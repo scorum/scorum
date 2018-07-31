@@ -8,9 +8,11 @@ namespace database_ns {
 
 void process_fifa_world_cup_2018_bounty_cashout::on_apply(block_task_context& ctx)
 {
+    debug_log(ctx.get_block_info(), "process_fifa_world_cup_2018_bounty_cashout BEGIN");
+
     dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
 
-    if (dprops_service.head_block_time() < SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE)
+    if (dprops_service.get().head_block_number < SCORUM_FIFA_BOUNTY_DISTRIBUTION_TEST_BLOCK)
     {
         return;
     }
@@ -36,6 +38,13 @@ void process_fifa_world_cup_2018_bounty_cashout::on_apply(block_task_context& ct
     const auto fn_filter
         = [&](const comment_object& c) { return c.net_rshares > 0 && c.cashout_time == fc::time_point_sec::maximum(); };
     auto comments = comment_service.get_by_create_time(SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE, fn_filter);
+
+    fc_ilog(fc::logger::get("comments"), "--- begin");
+    for (size_t i = 0; i < comments.size(); ++i)
+    {
+        fc_ilog(fc::logger::get("comments"), "${i}=${comment}", ("i", i)("comment", comments[i].get()));
+    }
+    fc_ilog(fc::logger::get("comments"), "--- end");
 
     process_comments_cashout_impl impl(ctx);
 
@@ -68,6 +77,8 @@ void process_fifa_world_cup_2018_bounty_cashout::on_apply(block_task_context& ct
 
         reward_fund_service.update([&](content_reward_fund_sp_object& rfo) { rfo.activity_reward_balance += balance; });
     }
+
+    debug_log(ctx.get_block_info(), "process_fifa_world_cup_2018_bounty_cashout END");
 }
 }
 }
