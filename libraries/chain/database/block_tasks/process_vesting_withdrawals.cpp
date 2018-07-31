@@ -61,7 +61,6 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
                 {
                     actors_impl.update_statistic(wvro.from_id, wvro.to_id, to_deposit);
                     actors_impl.increase_sp(wvro.to_id, to_deposit);
-                    actors_impl.update_global_sp_properties(wvro.from_id, wvro.to_id, to_deposit);
                 }
                 else // convert SP to SCR and withdraw SCR
                 {
@@ -69,7 +68,6 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
 
                     actors_impl.update_statistic(wvro.from_id, wvro.to_id, converted_scorum);
                     actors_impl.increase_scr(wvro.to_id, converted_scorum);
-                    actors_impl.update_global_scr_properties(wvro.from_id, wvro.to_id, converted_scorum);
                 }
             }
         }
@@ -83,7 +81,6 @@ void process_vesting_withdrawals::on_apply(block_task_context& ctx)
 
         actors_impl.update_statistic(wvo.from_id, wvo.from_id, converted_scorum);
         actors_impl.increase_scr(wvo.from_id, converted_scorum);
-        actors_impl.update_global_scr_properties(wvo.from_id, wvo.from_id, converted_scorum);
 
         scorumpower -= to_withdraw;
 

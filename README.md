@@ -58,7 +58,7 @@ To stop/start/restart node use
 
     docker stop my_node
     docker start my_node
-    docker restart my_node    
+    docker restart my_node
 
 # Seed Nodes
 

@@ -38,10 +38,10 @@ config::config() /// production config
 
     , upvote_lockout(fc::hours(12))
 #endif
+
     , reverse_auction_window_seconds(fc::minutes(30))
 
     , vote_regeneration_seconds(fc::days(5))
-
     , owner_auth_recovery_period(fc::days(30))
     , account_recovery_request_expiration_period(fc::days(1))
     , owner_update_limit(fc::minutes(60))

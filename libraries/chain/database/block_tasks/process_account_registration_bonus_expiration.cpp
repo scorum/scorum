@@ -34,7 +34,6 @@ void process_account_registration_bonus_expiration::return_funds(block_task_cont
 {
     registration_pool_service_i& registration_pool_service = ctx.services().registration_pool_service();
     account_service_i& account_service = ctx.services().account_service();
-    dynamic_global_property_service_i& dgp_service = ctx.services().dynamic_global_property_service();
 
     asset bonus = account.bonus;
 
@@ -48,12 +47,7 @@ void process_account_registration_bonus_expiration::return_funds(block_task_cont
              ("a", account_obj.name)("f", bonus)("r", actual_returned_bonus));
     }
 
-    account_service.update(account_obj, [&](account_object& a) { a.scorumpower -= actual_returned_bonus; });
-
-    dgp_service.update([&](dynamic_global_property_object& o) {
-        o.circulating_capital -= asset(actual_returned_bonus.amount, SCORUM_SYMBOL);
-        o.total_scorumpower -= actual_returned_bonus;
-    });
+    account_service.decrease_scorumpower(account_obj, actual_returned_bonus);
 
     registration_pool_service.update(
         [&](registration_pool_object& r) { r.balance += asset(actual_returned_bonus.amount, SCORUM_SYMBOL); });

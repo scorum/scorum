@@ -194,18 +194,21 @@ void database::open(const fc::path& data_dir,
             FC_ASSERT(genesis_state.initial_chain_id == chain_id,
                       "Current chain id is not equal initial chain id = ${id}", ("id", chain_id));
         }
-        catch (fc::exception& er)
+        catch (fc::exception& err)
         {
-            throw std::logic_error(std::string("Invalid chain id: ") + er.to_detail_string());
+            throw std::logic_error(std::string("Invalid chain id: ") + err.to_detail_string());
         }
 
-        with_read_lock([&]() {
-            init_hardforks(genesis_state.initial_timestamp); // Writes to local state, but reads from db
-        });
-    }
-    catch (fc::assert_exception&)
-    {
-        reindex(data_dir, shared_mem_dir, shared_file_size, get_reindex_skip_flags(), genesis_state);
+        try
+        {
+            with_read_lock([&]() {
+                init_hardforks(genesis_state.initial_timestamp); // Writes to local state, but reads from db
+            });
+        }
+        catch (fc::exception& err)
+        {
+            throw std::logic_error(std::string("Can't initialize hardforks: ") + err.to_detail_string());
+        }
     }
     FC_CAPTURE_LOG_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size))
 }
@@ -1101,6 +1104,8 @@ void database::expire_escrow_ratification()
     const auto& escrow_idx = get_index<escrow_index>().indices().get<by_ratification_deadline>();
     auto escrow_itr = escrow_idx.lower_bound(false);
 
+    dbs_account& account_service = obtain_service<dbs_account>();
+
     while (escrow_itr != escrow_idx.end() && !escrow_itr->is_approved()
            && escrow_itr->ratification_deadline <= head_block_time())
     {
@@ -1108,8 +1113,7 @@ void database::expire_escrow_ratification()
         ++escrow_itr;
 
         const auto& from_account = obtain_service<dbs_account>().get_account(old_escrow.from);
-        adjust_balance(from_account, old_escrow.scorum_balance);
-        adjust_balance(from_account, old_escrow.pending_fee);
+        account_service.increase_balance(from_account, old_escrow.scorum_balance + old_escrow.pending_fee);
 
         remove(old_escrow);
     }
@@ -1939,20 +1943,6 @@ void database::clear_expired_delegations()
 const genesis_persistent_state_type& database::genesis_persistent_state() const
 {
     return _my->_genesis_persistent_state;
-}
-
-void database::adjust_balance(const account_object& a, const asset& delta)
-{
-    modify(a, [&](account_object& acnt) {
-        switch (delta.symbol())
-        {
-        case SCORUM_SYMBOL:
-            acnt.balance += delta;
-            break;
-        default:
-            FC_ASSERT(false, "invalid symbol");
-        }
-    });
 }
 
 void database::init_hardforks(time_point_sec genesis_time)
