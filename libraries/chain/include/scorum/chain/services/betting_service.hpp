@@ -24,9 +24,14 @@ struct betting_service_i
                                          const asset& stake)
         = 0;
 
+    // match bet with existen pending bets or create pending bet
     virtual void match(const bet_object& bet) = 0;
 
-    virtual void get_matched_stake(const bet_object& bet) = 0;
+    // how many assets win and returned to accunt
+    virtual asset get_gain(const bet_object& bet) const = 0;
+
+    // how many asset returned to accunt
+    virtual asset get_rest(const bet_object& bet) const = 0;
 };
 
 using scorum::protocol::odds;
@@ -36,6 +41,11 @@ struct betting_property_service_i;
 struct bet_service_i;
 struct pending_bet_service_i;
 struct matched_bet_service_i;
+
+asset calculate_matched_stake(const asset& bet1_stake,
+                              const asset& bet2_stake,
+                              const odds& bet1_odds,
+                              const odds& bet2_odds);
 
 class dbs_betting : public dbs_base, public betting_service_i
 {
@@ -55,9 +65,9 @@ public:
 
     virtual void match(const bet_object& bet) override;
 
-    virtual asset get_matched_stake(const bet_object& bet) override;
+    virtual asset get_gain(const bet_object& bet) const override;
 
-    virtual asset get_rest_stake(const bet_object& bet) override;
+    virtual asset get_rest(const bet_object& bet) const override;
 
 private:
     bool is_bets_matched(const bet_object& bet1, const bet_object& bet2);

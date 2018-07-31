@@ -7,12 +7,13 @@ void odds::initialize(const odds_value_type& base_n, const odds_value_type& base
 {
     FC_ASSERT(base_n > 0, "Numerator must be positive and non zero");
     FC_ASSERT(base_d > 0, "Denominator must be positive and non zero");
+    FC_ASSERT(base_n > base_d, "Numerator must be more then denominator (inverted probability = (0, 1))");
     auto base = utils::make_fraction(base_n, base_d);
     _base = std::tie(base.numerator, base.denominator);
     auto simplified = base.simplify();
     _simplified = std::tie(simplified.numerator, simplified.denominator);
-    auto inverted = simplified.invert();
-    _inverted = std::tie(inverted.numerator, inverted.denominator);
+    auto inverted = simplified.coup().invert();
+    _inverted = std::tie(inverted.denominator, inverted.numerator);
 }
 
 odds_fraction_type odds::base() const

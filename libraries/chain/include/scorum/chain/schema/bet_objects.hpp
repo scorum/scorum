@@ -66,7 +66,7 @@ public:
 
     asset stake = asset(0, SCORUM_SYMBOL);
 
-    asset rest_potential_return = asset(0, SCORUM_SYMBOL);
+    asset rest_stake = asset(0, SCORUM_SYMBOL);
 };
 
 class pending_bet_object : public object<pending_bet_object_type, pending_bet_object>
@@ -121,13 +121,23 @@ typedef shared_multi_index_container<pending_bet_object,
                                                                                      std::less<bet_id_type>>>>>
     pending_bet_index;
 
-struct by_matched_bets_id; // TODO
+struct by_matched_bets_id;
 
 typedef shared_multi_index_container<matched_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<matched_bet_object,
                                                                       matched_bet_id_type,
-                                                                      &matched_bet_object::id>>>>
+                                                                      &matched_bet_object::id>>,
+                                                ordered_unique<tag<by_matched_bets_id>,
+                                                               composite_key<matched_bet_object,
+                                                                             member<matched_bet_object,
+                                                                                    bet_id_type,
+                                                                                    &matched_bet_object::bet1>,
+                                                                             member<matched_bet_object,
+                                                                                    bet_id_type,
+                                                                                    &matched_bet_object::bet2>>,
+                                                               composite_key_compare<std::less<bet_id_type>,
+                                                                                     std::less<bet_id_type>>>>>
     matched_bet_index;
 }
 }
@@ -141,7 +151,7 @@ FC_REFLECT(scorum::chain::bet_object,
            (wincase)
            (value)
            (stake)
-           (rest_potential_return))
+           (rest_stake))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::bet_object, scorum::chain::bet_index)
 
