@@ -9,6 +9,10 @@ namespace raw_block {
 
 using scorum::app::application;
 
+/**
+ * @ingroup plugins
+ * @defgroup raw_block_plugin Raw block plugin
+ */
 class raw_block_plugin : public scorum::app::plugin
 {
 public:

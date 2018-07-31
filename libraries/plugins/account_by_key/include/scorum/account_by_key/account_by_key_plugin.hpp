@@ -11,6 +11,12 @@ namespace detail {
 class account_by_key_plugin_impl;
 }
 
+/**
+ * @brief This plugin tracks accounts and its keys
+ *
+ * @ingroup plugins
+ * @addtogroup account_by_key_plugin Account by key plugin
+ */
 class account_by_key_plugin : public scorum::app::plugin
 {
 public:
