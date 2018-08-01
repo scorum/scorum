@@ -10,6 +10,11 @@ struct threshold_type
     static constexpr int16_t factor = 1000;
 
     int16_t value;
+
+    threshold_type(int16_t value)
+        : value(value)
+    {
+    }
 };
 
 inline bool operator<(const threshold_type& lhs, int16_t value)

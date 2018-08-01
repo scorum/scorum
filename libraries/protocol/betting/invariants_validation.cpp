@@ -4,6 +4,7 @@
 #include <boost/range/algorithm/transform.hpp>
 #include <scorum/protocol/betting/invariants_validation.hpp>
 #include <scorum/protocol/betting/wincase_serialization.hpp>
+#include <scorum/protocol/betting/wincase_comparison.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -46,18 +47,23 @@ void validate_market(const market_type& market)
 {
     FC_ASSERT((!market.wincases.empty()), "Wincases list cannot be empty (market '${m}')", ("m", market.kind));
 
-    for (const auto& wincase : market.wincases)
+    for (const auto& pair : market.wincases)
     {
-        auto market_from_wincase = wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });
-        FC_ASSERT(market_from_wincase == market.kind,
-                  "Market '${wm}' from wincase doesn't equal specified market '${m}'",
-                  ("wm", market_from_wincase)("m", market.kind));
-        validate_wincase(wincase);
+        validate_wincase(pair.first, market.kind);
+        validate_wincase(pair.second, market.kind);
+
+        auto is_valid_pair = pair.first.visit([&](const auto& fst) { return fst.create_opposite() == pair.second; });
+
+        FC_ASSERT(is_valid_pair, "Wincases '${1}' and '${2}' cannot be paired", ("1", pair.first)("2", pair.second));
     }
 }
 
-void validate_wincase(const wincase_type& wincase)
+void validate_wincase(const wincase_type& wincase, market_kind market)
 {
+    auto market_from_wincase = wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });
+    FC_ASSERT(market_from_wincase == market, "Market '${wm}' from wincase doesn't equal specified market '${m}'",
+              ("wm", market_from_wincase)("m", market));
+
     auto check_threshold = [](auto threshold) { return threshold.value % (threshold_type::factor / 2) == 0; };
     auto check_positive_threshold = [&](auto threshold) { return check_threshold(threshold) && threshold > 0; };
 
