@@ -5,28 +5,28 @@ namespace scorum {
 namespace protocol {
 namespace betting {
 
-const int16_t threshold_factor = 1000;
-
 struct threshold_type
 {
+    static constexpr int16_t factor = 1000;
+
     int16_t value;
 };
 
 inline bool operator<(const threshold_type& lhs, int16_t value)
 {
-    return lhs.value < threshold_factor * value;
+    return lhs.value < threshold_type::factor * value;
 }
 inline bool operator<(int16_t value, const threshold_type& rhs)
 {
-    return threshold_factor * value < rhs.value;
+    return threshold_type::factor * value < rhs.value;
 }
 inline bool operator>(const threshold_type& lhs, int16_t value)
 {
-    return lhs.value > threshold_factor * value;
+    return lhs.value > threshold_type::factor * value;
 }
 inline bool operator>(int16_t value, const threshold_type& rhs)
 {
-    return threshold_factor * value > rhs.value;
+    return threshold_type::factor * value > rhs.value;
 }
 inline bool operator<(const threshold_type& lhs, const threshold_type& rhs)
 {

@@ -48,8 +48,8 @@ template <market_kind kind, typename tag = void> struct score_yes
     static constexpr market_kind kind_v = kind;
     using opposite_type = score_no<kind>;
 
-    int16_t home;
-    int16_t away;
+    uint16_t home;
+    uint16_t away;
 };
 
 template <market_kind kind, typename tag> struct score_no
@@ -57,8 +57,8 @@ template <market_kind kind, typename tag> struct score_no
     static constexpr market_kind kind_v = kind;
     using opposite_type = score_yes<kind>;
 
-    int16_t home;
-    int16_t away;
+    uint16_t home;
+    uint16_t away;
 };
 
 using result_home = yes<market_kind::result, home_tag>;
@@ -124,6 +124,7 @@ using wincase_type = fc::static_variant<result_home,
                                         goal_away_no,
                                         total_over,
                                         total_under,
+                                        // v2.0
                                         total_goals_home_over,
                                         total_goals_home_under,
                                         total_goals_away_over,
@@ -162,8 +163,3 @@ FC_REFLECT(scorum::protocol::betting::total_goals_home_over, (threshold))
 FC_REFLECT(scorum::protocol::betting::total_goals_home_under, (threshold))
 FC_REFLECT(scorum::protocol::betting::total_goals_away_over, (threshold))
 FC_REFLECT(scorum::protocol::betting::total_goals_away_under, (threshold))
-
-namespace fc {
-class variant;
-void to_variant(const scorum::protocol::betting::wincase_type& wincase, fc::variant& variant);
-}
