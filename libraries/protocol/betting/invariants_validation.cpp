@@ -3,6 +3,7 @@
 #include <boost/range/algorithm/set_algorithm.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <scorum/protocol/betting/invariants_validation.hpp>
+#include <scorum/protocol/betting/wincase_serialization.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -43,15 +44,34 @@ void validate_markets(const std::vector<market_type>& markets)
 
 void validate_market(const market_type& market)
 {
-    FC_ASSERT((!market.wincases.empty()), "Wincases list cannot be empty (market ${m})", ("m", market.kind));
+    FC_ASSERT((!market.wincases.empty()), "Wincases list cannot be empty (market '${m}')", ("m", market.kind));
 
     for (const auto& wincase : market.wincases)
     {
-        auto market_from_wincase = wincase.visit([](auto w) { return decltype(w)::kind_v; });
+        auto market_from_wincase = wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });
         FC_ASSERT(market_from_wincase == market.kind,
-                  "Market ${wm} from wincase ${w} doesn't equal specified market ${m}",
-                  ("w", wincase)("wm", market_from_wincase)("m", market.kind));
+                  "Market '${wm}' from wincase doesn't equal specified market '${m}'",
+                  ("wm", market_from_wincase)("m", market.kind));
+        validate_wincase(wincase);
     }
+}
+
+void validate_wincase(const wincase_type& wincase)
+{
+    auto check_threshold = [](auto threshold) { return threshold.value % (threshold_type::factor / 2) == 0; };
+    auto check_positive_threshold = [&](auto threshold) { return check_threshold(threshold) && threshold > 0; };
+
+    auto is_valid
+        = wincase.weak_visit([&](const total_over& w) { return check_positive_threshold(w.threshold); },
+                             [&](const total_under& w) { return check_positive_threshold(w.threshold); },
+                             [&](const handicap_home_over& w) { return check_threshold(w.threshold); },
+                             [&](const handicap_home_under& w) { return check_threshold(w.threshold); },
+                             [&](const total_goals_home_over& w) { return check_positive_threshold(w.threshold); },
+                             [&](const total_goals_home_under& w) { return check_positive_threshold(w.threshold); },
+                             [&](const total_goals_away_over& w) { return check_positive_threshold(w.threshold); },
+                             [&](const total_goals_away_under& w) { return check_positive_threshold(w.threshold); });
+
+    FC_ASSERT(is_valid.value_or(true), "Wincase '${w}' is invalid", ("w", wincase));
 }
 }
 }
