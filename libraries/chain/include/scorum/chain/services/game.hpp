@@ -17,6 +17,7 @@ struct game_service_i : public base_service_i<game_object>
         = 0;
 
     virtual const game_object* find(const std::string& game_name) const = 0;
+    virtual const game_object* find(int64_t game_id) const = 0;
 };
 
 class dbs_game : public dbs_service_base<game_service_i>
@@ -33,6 +34,7 @@ public:
                                       const betting::game_type& game,
                                       const std::vector<betting::market_type>& markets) override;
     virtual const game_object* find(const std::string& game_name) const override;
+    virtual const game_object* find(int64_t game_id) const override;
 };
 }
 }
