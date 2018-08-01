@@ -8,7 +8,7 @@ dbs_bet::dbs_bet(database& db)
 {
 }
 
-const bet_object& dbs_bet::get(const bet_id_type& bet_id) const
+const bet_object& dbs_bet::get_bet(const bet_id_type& bet_id) const
 {
     try
     {

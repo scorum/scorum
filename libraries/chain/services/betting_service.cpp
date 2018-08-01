@@ -9,6 +9,14 @@
 namespace scorum {
 namespace chain {
 
+asset calculate_gain(const asset& bet_stake, const odds& bet_odds)
+{
+    auto result = bet_stake;
+    result *= bet_odds;
+    result -= bet_stake;
+    return result;
+}
+
 asset calculate_matched_stake(const asset& bet1_stake,
                               const asset& bet2_stake,
                               const odds& bet1_odds,
@@ -27,16 +35,16 @@ asset calculate_matched_stake(const asset& bet1_stake,
     {
         auto result = r2;
         result *= odds_fraction_type(bet1_odds).coup();
-        return bet1_stake - result; // return positive value
+        return result; // return positive value
     }
     else if (r1 < r2)
     {
         auto result = r1;
         result *= odds_fraction_type(bet2_odds).coup();
-        return result - bet2_stake; // return negative value to check side
+        return -result; // return negative value to check side
     }
 
-    return asset(0, bet1_stake.symbol());
+    return bet1_stake;
 }
 
 dbs_betting::dbs_betting(database& db)
@@ -73,7 +81,8 @@ const bet_object& dbs_betting::create_bet(const account_name_type& better,
             obj.wincase = wincase;
             obj.value = odds::from_string(odds_value);
             obj.stake = stake;
-            obj.rest_stake = obj.stake;
+            obj.rest_stake = stake;
+            obj.potential_gain = calculate_gain(obj.stake, obj.value);
         });
     }
     FC_CAPTURE_LOG_AND_RETHROW((better)(game)(odds_value)(stake)) // TODO: wincase reflection
@@ -84,7 +93,7 @@ void dbs_betting::match(const bet_object& bet)
     try
     {
 
-        FC_ASSERT(bet.rest_stake.amount > 0);
+        FC_ASSERT(is_need_matching(bet));
 
         using pending_bets_type = std::vector<pending_bet_service_i::object_cref_type>;
 
@@ -92,23 +101,33 @@ void dbs_betting::match(const bet_object& bet)
 
         _pending_bet.foreach_pending_bets(bet.game, [&](const pending_bet_object& pending) -> bool {
 
-            const bet_object& pending_bet = _bet.get(pending.bet);
+            const bet_object& pending_bet = _bet.get_bet(pending.bet);
 
             if (is_bets_matched(bet, pending_bet))
             {
                 auto matched_stake
                     = calculate_matched_stake(bet.rest_stake, pending_bet.rest_stake, bet.value, pending_bet.value);
-                if (matched_stake.amount > 0)
+                if (matched_stake.amount >= 0)
                 {
-                    removing_pending_bets.emplace_back(std::cref(pending));
-
-                    _bet.update(bet, [&](bet_object& obj) { obj.rest_stake.amount = matched_stake.amount; });
-                    _bet.update(pending_bet, [&](bet_object& obj) { obj.rest_stake.amount = 0; });
+                    _bet.update(pending_bet, [&](bet_object& obj) {
+                        obj.rest_stake.amount = 0;
+                        obj.gain += matched_stake.amount;
+                    });
+                    _bet.update(bet, [&](bet_object& obj) {
+                        obj.rest_stake.amount -= matched_stake.amount;
+                        obj.gain += pending_bet.stake;
+                    });
                 }
                 else if (matched_stake.amount < 0)
                 {
-                    _bet.update(bet, [&](bet_object& obj) { obj.rest_stake.amount = 0; });
-                    _bet.update(pending_bet, [&](bet_object& obj) { obj.rest_stake.amount = -matched_stake.amount; });
+                    _bet.update(bet, [&](bet_object& obj) {
+                        obj.rest_stake.amount = 0;
+                        obj.gain -= matched_stake.amount;
+                    });
+                    _bet.update(pending_bet, [&](bet_object& obj) {
+                        obj.rest_stake.amount += matched_stake.amount;
+                        obj.gain += bet.stake;
+                    });
                 }
 
                 _matched_bet.create([&](matched_bet_object& obj) {
@@ -117,13 +136,18 @@ void dbs_betting::match(const bet_object& bet)
                     obj.bet2 = pending_bet.id;
                 });
 
-                return bet.rest_stake.amount > 0;
+                if (!is_need_matching(pending_bet))
+                {
+                    removing_pending_bets.emplace_back(std::cref(pending));
+                }
+
+                return is_need_matching(bet);
             }
 
             return true;
         });
 
-        if (bet.rest_stake.amount > 0)
+        if (is_need_matching(bet))
         {
             _pending_bet.create([&](pending_bet_object& obj) {
                 obj.game = bet.game;
@@ -141,15 +165,7 @@ void dbs_betting::match(const bet_object& bet)
 
 asset dbs_betting::get_gain(const bet_object& bet) const
 {
-    try
-    {
-        FC_ASSERT(bet.stake.amount >= bet.rest_stake.amount);
-
-        asset result = bet.stake - bet.rest_stake;
-        result *= bet.value;
-        return result;
-    }
-    FC_CAPTURE_LOG_AND_RETHROW(()) // TODO: bet.wincase reflection
+    return bet.gain;
 }
 
 asset dbs_betting::get_rest(const bet_object& bet) const
@@ -157,11 +173,16 @@ asset dbs_betting::get_rest(const bet_object& bet) const
     return bet.rest_stake;
 }
 
-bool dbs_betting::is_bets_matched(const bet_object& bet1, const bet_object& bet2)
+bool dbs_betting::is_bets_matched(const bet_object& bet1, const bet_object& bet2) const
 {
     FC_ASSERT(bet1.game == bet2.game);
     return bet1.better != bet2.better && match_wincases(bet1.wincase, bet2.wincase)
         && bet1.value.inverted() == bet2.value;
+}
+
+bool dbs_betting::is_need_matching(const bet_object& bet) const
+{
+    return bet.gain.amount < bet.potential_gain.amount;
 }
 }
 }

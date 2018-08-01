@@ -14,7 +14,7 @@ using namespace scorum::chain;
 
 BOOST_AUTO_TEST_SUITE(betting_math_tests)
 
-BOOST_AUTO_TEST_CASE(more_than_matched_check)
+SCORUM_TEST_CASE(more_than_matched_check) // to catch and log exceptions in calculate_matched_stake
 {
     const asset stake_my = ASSET_SCR(1e+9);
     const asset stake_other = ASSET_SCR(2e+9);
@@ -28,16 +28,12 @@ BOOST_AUTO_TEST_CASE(more_than_matched_check)
     BOOST_CHECK_EQUAL(odds_my.simplified(), odds_other.inverted());
     BOOST_CHECK_EQUAL(odds_other.simplified(), odds_my.inverted());
 
-    try
-    {
-        auto matched = calculate_matched_stake(stake_my, stake_other, odds_my, odds_other);
+    auto matched = calculate_matched_stake(stake_my, stake_other, odds_my, odds_other);
 
-        BOOST_REQUIRE_EQUAL(matched.amount.value, 777'777'778);
-    }
-    FC_CAPTURE_LOG_AND_RETHROW(())
+    BOOST_REQUIRE_EQUAL(matched.amount.value, 777'777'778);
 }
 
-BOOST_AUTO_TEST_CASE(less_than_matched_check)
+SCORUM_TEST_CASE(less_than_matched_check)
 {
     const asset stake_my = ASSET_SCR(0.1e+9);
     const asset stake_other = ASSET_SCR(2e+9);
@@ -53,7 +49,7 @@ BOOST_AUTO_TEST_CASE(less_than_matched_check)
     BOOST_REQUIRE_EQUAL(matched.amount.value, -1'100'000'000);
 }
 
-BOOST_AUTO_TEST_CASE(equal_matched_check)
+SCORUM_TEST_CASE(equal_matched_check)
 {
     const asset stake_my = ASSET_SCR(1e+9);
     const asset stake_other = ASSET_SCR(9e+9);

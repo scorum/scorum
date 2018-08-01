@@ -60,6 +60,7 @@ add_library( scorum_chain
              services/betting_service.cpp
              services/pending_bet.cpp
              services/bet.cpp
+             services/matched_bet.cpp
 
              data_service_factory.cpp
 

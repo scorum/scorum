@@ -66,7 +66,12 @@ public:
 
     asset stake = asset(0, SCORUM_SYMBOL);
 
-    asset rest_stake = asset(0, SCORUM_SYMBOL);
+    asset rest_stake = asset(0, SCORUM_SYMBOL); // not participated (not matched) stake
+
+    asset potential_gain
+        = asset(0, SCORUM_SYMBOL); // can calculated each time when we need but saved to improve productivity
+
+    asset gain = asset(0, SCORUM_SYMBOL); // actial gain to control matched stake calculation accuracy lag
 };
 
 class pending_bet_object : public object<pending_bet_object_type, pending_bet_object>
@@ -151,7 +156,9 @@ FC_REFLECT(scorum::chain::bet_object,
            (wincase)
            (value)
            (stake)
-           (rest_stake))
+           (rest_stake)
+           (potential_gain)
+           (gain))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::bet_object, scorum::chain::bet_index)
 

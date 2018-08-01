@@ -42,6 +42,8 @@ struct bet_service_i;
 struct pending_bet_service_i;
 struct matched_bet_service_i;
 
+asset calculate_gain(const asset& bet_stake, const odds& bet_odds);
+
 asset calculate_matched_stake(const asset& bet1_stake,
                               const asset& bet2_stake,
                               const odds& bet1_odds,
@@ -70,7 +72,8 @@ public:
     virtual asset get_rest(const bet_object& bet) const override;
 
 private:
-    bool is_bets_matched(const bet_object& bet1, const bet_object& bet2);
+    bool is_bets_matched(const bet_object& bet1, const bet_object& bet2) const;
+    bool is_need_matching(const bet_object& bet) const;
 
     dynamic_global_property_service_i& _dgp_property;
     betting_property_service_i& _betting_property;

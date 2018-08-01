@@ -7,8 +7,18 @@ namespace chain {
 
 struct matched_bet_service_i : public base_service_i<matched_bet_object>
 {
+    virtual const matched_bet_object& get_matched_bets(const matched_bet_id_type&) const = 0;
 };
 
-using dbs_matched_bet = dbs_service_base<matched_bet_service_i>;
+class dbs_matched_bet : public dbs_service_base<matched_bet_service_i>
+{
+    friend class dbservice_dbs_factory;
+
+protected:
+    explicit dbs_matched_bet(database& db);
+
+public:
+    virtual const matched_bet_object& get_matched_bets(const matched_bet_id_type&) const override;
+};
 }
 }

@@ -20,10 +20,16 @@ ModifyingValue multiply_by_fractional(const ModifyingValue& val,
                   "Only unsigned and non zero denominator accepted");
         if (denominator == static_cast<FractionalDenominator>(1))
         {
+#if 0
             using safe_type = fc::safe<ModifyingValue>;
             safe_type ret(val);
             ret *= numerator;
             return ret.value;
+#else
+            fc::uint128_t extra_hi = val;
+            extra_hi *= numerator;
+            return static_cast<ModifyingValue>(extra_hi.to_uint64());
+#endif
         }
         else
         {
