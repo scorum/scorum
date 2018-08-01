@@ -18,7 +18,12 @@ template <market_kind kind, typename tag = void> struct over
     static constexpr market_kind kind_v = kind;
     using opposite_type = under<kind, tag>;
 
-    threshold_type threshold;
+    threshold_type threshold = 0;
+
+    opposite_type create_opposite() const
+    {
+        return opposite_type{ threshold };
+    }
 };
 
 template <market_kind kind, typename tag> struct under
@@ -26,7 +31,12 @@ template <market_kind kind, typename tag> struct under
     static constexpr market_kind kind_v = kind;
     using opposite_type = over<kind, tag>;
 
-    threshold_type threshold;
+    threshold_type threshold = 0;
+
+    opposite_type create_opposite() const
+    {
+        return opposite_type{ threshold };
+    }
 };
 
 template <market_kind kind, typename tag = void> struct no;
@@ -34,12 +44,22 @@ template <market_kind kind, typename tag = void> struct yes
 {
     static constexpr market_kind kind_v = kind;
     using opposite_type = no<kind, tag>;
+
+    opposite_type create_opposite() const
+    {
+        return opposite_type{};
+    }
 };
 
 template <market_kind kind, typename tag> struct no
 {
     static constexpr market_kind kind_v = kind;
     using opposite_type = yes<kind, tag>;
+
+    opposite_type create_opposite() const
+    {
+        return opposite_type{};
+    }
 };
 
 template <market_kind kind, typename tag = void> struct score_no;
@@ -50,6 +70,11 @@ template <market_kind kind, typename tag = void> struct score_yes
 
     uint16_t home;
     uint16_t away;
+
+    opposite_type create_opposite() const
+    {
+        return opposite_type{ home, away };
+    }
 };
 
 template <market_kind kind, typename tag> struct score_no
@@ -59,6 +84,11 @@ template <market_kind kind, typename tag> struct score_no
 
     uint16_t home;
     uint16_t away;
+
+    opposite_type create_opposite() const
+    {
+        return opposite_type{ home, away };
+    }
 };
 
 using result_home = yes<market_kind::result, home_tag>;
@@ -129,6 +159,8 @@ using wincase_type = fc::static_variant<result_home,
                                         total_goals_home_under,
                                         total_goals_away_over,
                                         total_goals_away_under>;
+
+using wincase_pair = std::pair<wincase_type, wincase_type>;
 }
 }
 }
@@ -163,3 +195,4 @@ FC_REFLECT(scorum::protocol::betting::total_goals_home_over, (threshold))
 FC_REFLECT(scorum::protocol::betting::total_goals_home_under, (threshold))
 FC_REFLECT(scorum::protocol::betting::total_goals_away_over, (threshold))
 FC_REFLECT(scorum::protocol::betting::total_goals_away_under, (threshold))
+FC_REFLECT_TYPENAME(scorum::protocol::betting::wincase_pair)

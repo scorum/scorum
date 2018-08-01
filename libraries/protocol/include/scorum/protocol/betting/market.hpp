@@ -7,7 +7,7 @@ namespace betting {
 struct market_type
 {
     market_kind kind;
-    std::vector<wincase_type> wincases;
+    std::vector<wincase_pair> wincases;
 };
 }
 }

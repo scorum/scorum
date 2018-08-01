@@ -1,6 +1,7 @@
 #pragma once
 #include <fc/variant.hpp>
 #include <fc/reflect/variant.hpp>
+#include <fc/exception/exception.hpp>
 
 namespace scorum {
 namespace utils {
