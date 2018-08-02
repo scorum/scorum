@@ -35,6 +35,15 @@ struct check_authority_signature_result
     std::vector<protocol::public_key_type> keys;
 };
 
+/**
+ * @brief The auth_util_api class
+ *
+ * Require: auth_util_plugin
+ *
+ * @ingroup api
+ * @ingroup auth_util_plugin
+ * @defgroup auth_util_api Auth util API
+ */
 class auth_util_api
 {
 public:
@@ -42,7 +51,18 @@ public:
 
     void on_api_startup();
 
+    /// @name Public API
+    /// @addtogroup auth_util_api
+    /// @{
+
+    /**
+     * @brief check_authority_signature
+     * @param args
+     * @return return array of public keys
+     */
     check_authority_signature_result check_authority_signature(check_authority_signature_params args);
+
+    /// @}
 
 private:
     std::shared_ptr<detail::auth_util_api_impl> my;

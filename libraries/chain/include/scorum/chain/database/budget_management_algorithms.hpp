@@ -260,18 +260,12 @@ private:
 
     void take_cash_from_owner(const account_name_type& owner, const asset& cash)
     {
-        this->_account_service.update(this->_account_service.get_account(owner),
-                                      [&](account_object& acnt) { acnt.balance -= cash; });
-
-        this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital -= cash; });
+        this->_account_service.decrease_balance(this->_account_service.get_account(owner), cash);
     }
 
     void give_cash_back_to_owner(const account_name_type& owner, const asset& cash)
     {
-        this->_account_service.update(this->_account_service.get_account(owner),
-                                      [&](account_object& acnt) { acnt.balance += cash; });
-
-        this->_dgp_service.update([&](dynamic_global_property_object& p) { p.circulating_capital += cash; });
+        this->_account_service.increase_balance(this->_account_service.get_account(owner), cash);
     }
 
     account_service_i& _account_service;

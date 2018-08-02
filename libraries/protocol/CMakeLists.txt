@@ -18,6 +18,7 @@ add_library( scorum_protocol
              types.cpp
              version.cpp
              proposal_operations.cpp
+             odds.cpp
              betting/invariants_validation.cpp
              betting/market_kind.cpp
              betting/wincase_serialization.cpp

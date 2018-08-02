@@ -49,6 +49,13 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Provide interface for debugging blockchain node
+ *
+ * @ingroup plugins
+ * @defgroup debug_node_plugin Debug node plugin
+ */
 class debug_node_plugin : public scorum::app::plugin
 {
 public:

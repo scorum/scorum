@@ -9,6 +9,12 @@ namespace auth_util {
 
 using scorum::app::application;
 
+/**
+ * @brief The auth_util_plugin class
+ *
+ * @ingroup plugins
+ * @addtogroup auth_util_plugin Auth util plugin
+ */
 class auth_util_plugin : public scorum::app::plugin
 {
 public:

@@ -19,6 +19,8 @@ boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[])
 
 #ifdef LOG_MESSAGES
     tests::initialize_logger(fc::log_level::info);
+#else
+    tests::initialize_logger(fc::log_level::error);
 #endif
 
     return nullptr;
