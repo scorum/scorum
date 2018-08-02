@@ -37,11 +37,18 @@ odds odds::from_string(const std::string& from)
     std::string s = fc::trim(from);
     auto slash_pos = s.find('/');
     FC_ASSERT(std::string::npos != slash_pos);
+
     auto n_str = s.substr(0, slash_pos);
     FC_ASSERT(!n_str.empty());
+    auto n = fc::to_int64(n_str);
+    FC_ASSERT(n > 0 && n <= (int64_t)std::numeric_limits<odds_value_type>::max());
+
     auto d_str = s.substr(slash_pos + 1);
     FC_ASSERT(!d_str.empty());
-    return utils::make_fraction((odds_value_type)fc::to_int64(n_str), (odds_value_type)fc::to_int64(d_str));
+    auto d = fc::to_int64(d_str);
+    FC_ASSERT(d > 0 && d <= (int64_t)std::numeric_limits<odds_value_type>::max());
+
+    return utils::make_fraction((odds_value_type)n, (odds_value_type)d);
 }
 
 std::string odds::to_string() const

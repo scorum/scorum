@@ -46,6 +46,8 @@ BOOST_AUTO_TEST_CASE(odds_str_check)
     BOOST_CHECK_THROW(odds::from_string(""), fc::exception);
     BOOST_CHECK_THROW(odds::from_string("230"), fc::exception);
     BOOST_CHECK_THROW(odds::from_string("aaaaaaaaa/30"), fc::exception);
+    BOOST_CHECK_THROW(odds::from_string("10000000/30"), fc::exception);
+    BOOST_CHECK_THROW(odds::from_string("30/10000000"), fc::exception);
 
     const std::string str = "30/2";
 

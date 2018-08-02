@@ -11,10 +11,11 @@ namespace chain {
 
 asset calculate_gain(const asset& bet_stake, const odds& bet_odds)
 {
+    FC_ASSERT(bet_stake.symbol() == SCORUM_SYMBOL, "Invalid sumbol for stake");
     auto result = bet_stake;
     result *= bet_odds;
     result -= bet_stake;
-    return result;
+    return std::max(result, asset(1, result.symbol()));
 }
 
 asset calculate_matched_stake(const asset& bet1_stake,
@@ -35,13 +36,13 @@ asset calculate_matched_stake(const asset& bet1_stake,
     {
         auto result = r2;
         result *= odds_fraction_type(bet1_odds).coup();
-        return result; // return positive value
+        return std::max(result, asset(1, result.symbol())); // return positive value
     }
     else if (r1 < r2)
     {
         auto result = r1;
         result *= odds_fraction_type(bet2_odds).coup();
-        return -result; // return negative value to check side
+        return -std::max(result, asset(1, result.symbol())); // return negative value to check site
     }
 
     return bet1_stake;
@@ -92,7 +93,6 @@ void dbs_betting::match(const bet_object& bet)
 {
     try
     {
-
         FC_ASSERT(is_need_matching(bet));
 
         using pending_bets_type = std::vector<pending_bet_service_i::object_cref_type>;
@@ -107,7 +107,7 @@ void dbs_betting::match(const bet_object& bet)
             {
                 auto matched_stake
                     = calculate_matched_stake(bet.rest_stake, pending_bet.rest_stake, bet.value, pending_bet.value);
-                if (matched_stake.amount >= 0)
+                if (matched_stake.amount > 0)
                 {
                     _bet.update(pending_bet, [&](bet_object& obj) {
                         obj.rest_stake.amount = 0;
@@ -130,11 +130,14 @@ void dbs_betting::match(const bet_object& bet)
                     });
                 }
 
-                _matched_bet.create([&](matched_bet_object& obj) {
-                    obj.matched = _dgp_property.head_block_time();
-                    obj.bet1 = bet.id;
-                    obj.bet2 = pending_bet.id;
-                });
+                if (matched_stake.amount != 0)
+                {
+                    _matched_bet.create([&](matched_bet_object& obj) {
+                        obj.matched = _dgp_property.head_block_time();
+                        obj.bet1 = bet.id;
+                        obj.bet2 = pending_bet.id;
+                    });
+                }
 
                 if (!is_need_matching(pending_bet))
                 {
