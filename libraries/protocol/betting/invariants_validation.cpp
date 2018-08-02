@@ -22,14 +22,14 @@ const bf::map<bf::pair<soccer_game, std::set<market_kind>>, bf::pair<hockey_game
 
 void validate_game(const game_type& game, const fc::flat_set<market_type>& markets)
 {
-    const auto& actual_markets
+    const auto& expected_markets
         = game.visit([&](const auto& g) { return bf::at_key<std::decay_t<decltype(g)>>(game_markets); });
 
-    std::vector<market_kind> market_kinds;
-    boost::transform(markets, std::back_inserter(market_kinds), [](const market_type& m) { return m.kind; });
+    std::vector<market_kind> actual_markets;
+    boost::transform(markets, std::back_inserter(actual_markets), [](const market_type& m) { return m.kind; });
 
     std::vector<market_kind> diff;
-    boost::set_difference(market_kinds, actual_markets, std::back_inserter(diff));
+    boost::set_difference(actual_markets, expected_markets, std::back_inserter(diff));
 
     FC_ASSERT(diff.empty(), "Markets [$(m)] cannot be used with specified game", ("m", diff));
 }
