@@ -66,12 +66,14 @@ public:
 
     asset stake = asset(0, SCORUM_SYMBOL);
 
-    asset rest_stake = asset(0, SCORUM_SYMBOL); // not participated (not matched) stake
+    // how much assets returned back to account
+    asset rest_stake = asset(0, SCORUM_SYMBOL);
 
-    asset potential_gain
-        = asset(0, SCORUM_SYMBOL); // can calculated each time when we need but saved to improve productivity
+    // potential gain can calculated each time when we need but saved to improve productivity
+    asset potential_gain = asset(0, SCORUM_SYMBOL);
 
-    asset gain = asset(0, SCORUM_SYMBOL); // actual gain to control matched stake calculation accuracy lag
+    // how much assets win and gain to account
+    asset gain = asset(0, SCORUM_SYMBOL);
 };
 
 class pending_bet_object : public object<pending_bet_object_type, pending_bet_object>

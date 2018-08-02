@@ -26,7 +26,7 @@ SCORUM_TEST_CASE(diff_with_optimized_check)
         }
 
         case1 = prof.elapsed();
-        BOOST_TEST_MESSAGE("multiply_by_fractional' with uint128 use: " << case1 << "ms");
+        BOOST_TEST_MESSAGE("multiply_by_fractional' with division use: " << case1 << "ms");
     }
 
     size_t case2 = 0u;
@@ -39,7 +39,7 @@ SCORUM_TEST_CASE(diff_with_optimized_check)
         }
 
         case2 = prof.elapsed();
-        BOOST_TEST_MESSAGE("multiply_by_fractional' with safe use: " << case2 << "ms");
+        BOOST_TEST_MESSAGE("multiply_by_fractional' without division use: " << case2 << "ms");
     }
 
     BOOST_REQUIRE_LT(case2, case1);

@@ -117,7 +117,7 @@ SCORUM_TEST_CASE(is_betting_moderator_check)
     BOOST_CHECK(service.is_betting_moderator(moderator));
 }
 
-SCORUM_TEST_CASE(create_bet_check)
+SCORUM_TEST_CASE(create_bet_positive_check)
 {
     const auto& new_bet = create_bet();
 
@@ -130,6 +130,14 @@ SCORUM_TEST_CASE(create_bet_check)
     BOOST_CHECK_EQUAL(new_bet.rest_stake, test_bet_stake);
     BOOST_CHECK_EQUAL(new_bet.potential_gain, test_bet_stake * new_bet.value - new_bet.stake);
     BOOST_CHECK_EQUAL(new_bet.gain, ASSET_NULL_SCR);
+}
+
+SCORUM_TEST_CASE(create_bet_negative_check)
+{
+    BOOST_CHECK_THROW(create_bet("alice", test_bet_game, wincase11(), "10/1", ASSET_SP(1e+9)), fc::exception);
+    BOOST_CHECK_THROW(create_bet("alice", test_bet_game, wincase11(), "10/1", ASSET_NULL_SCR), fc::exception);
+    BOOST_CHECK_THROW(create_bet("alice", test_bet_game, wincase11(), "10/1", ASSET_NULL_SP), fc::exception);
+    BOOST_CHECK_THROW(create_bet("alice", test_bet_game, wincase11(), "10000000/1", ASSET_SCR(1e+9)), fc::exception);
 }
 
 SCORUM_TEST_CASE(matching_not_found_and_created_pending_check)

@@ -24,14 +24,8 @@ struct betting_service_i
                                          const asset& stake)
         = 0;
 
-    // match bet with existen pending bets or create new pending bet
+    // match bet with existen pending bets or create new one
     virtual void match(const bet_object& bet) = 0;
-
-    // how much assets win and gain to account
-    virtual asset get_gain(const bet_object& bet) const = 0;
-
-    // how much assets returned back to account
-    virtual asset get_rest(const bet_object& bet) const = 0;
 };
 
 using scorum::protocol::odds;
@@ -66,10 +60,6 @@ public:
                                          const asset& stake) override;
 
     virtual void match(const bet_object& bet) override;
-
-    virtual asset get_gain(const bet_object& bet) const override;
-
-    virtual asset get_rest(const bet_object& bet) const override;
 
 private:
     bool is_bets_matched(const bet_object& bet1, const bet_object& bet2) const;

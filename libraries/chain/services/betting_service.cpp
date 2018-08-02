@@ -168,16 +168,6 @@ void dbs_betting::match(const bet_object& bet)
     FC_CAPTURE_LOG_AND_RETHROW(()) // TODO: bet.wincase reflection
 }
 
-asset dbs_betting::get_gain(const bet_object& bet) const
-{
-    return bet.gain;
-}
-
-asset dbs_betting::get_rest(const bet_object& bet) const
-{
-    return bet.rest_stake;
-}
-
 bool dbs_betting::is_bets_matched(const bet_object& bet1, const bet_object& bet2) const
 {
     FC_ASSERT(bet1.game == bet2.game);
