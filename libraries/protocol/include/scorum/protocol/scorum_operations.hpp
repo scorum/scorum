@@ -773,7 +773,7 @@ struct create_game_operation : public base_operation
     std::string name;
     time_point_sec start;
     betting::game_type game;
-    std::vector<betting::market_type> markets;
+    fc::flat_set<betting::market_type> markets;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -798,7 +798,7 @@ struct update_game_markets_operation : public base_operation
 {
     int64_t game_id;
     account_name_type moderator;
-    std::vector<betting::market_type> markets;
+    fc::flat_set<betting::market_type> markets;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const

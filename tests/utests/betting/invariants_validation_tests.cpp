@@ -104,7 +104,7 @@ SCORUM_TEST_CASE(validate_market_wincase_list_empty_should_throw)
 
 SCORUM_TEST_CASE(validate_game_empty_market_list_should_throw)
 {
-    std::vector<market_type> markets;
+    fc::flat_set<market_type> markets;
 
     BOOST_REQUIRE_THROW(validate_markets(markets), fc::assert_exception);
 }
@@ -112,7 +112,7 @@ SCORUM_TEST_CASE(validate_game_empty_market_list_should_throw)
 SCORUM_TEST_CASE(validate_game_full_market_list_test_positive)
 {
     soccer_game game;
-    std::vector<market_type> markets
+    fc::flat_set<market_type> markets
         = { { market_kind::result, { { result_home{}, result_draw_away{} } } },
             { market_kind::round, { { round_home{}, round_away{} } } },
             { market_kind::handicap, { { handicap_home_over{ 500 }, handicap_home_over{ 500 } } } },
@@ -126,7 +126,7 @@ SCORUM_TEST_CASE(validate_game_full_market_list_test_positive)
 SCORUM_TEST_CASE(validate_game_invalid_market_should_throw)
 {
     soccer_game game;
-    std::vector<market_type> markets
+    fc::flat_set<market_type> markets
         = { { market_kind::total_goals, { { total_goals_home_over{ 500 }, total_goals_home_under{ 500 } } } },
             { market_kind::handicap, { { handicap_home_over{ 500 }, handicap_home_under{ 500 } } } } };
 
