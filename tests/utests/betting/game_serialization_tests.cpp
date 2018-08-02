@@ -68,14 +68,14 @@ struct game_serialization_test_fixture
         BOOST_CHECK(obj.markets.nth(2)->kind == market_kind::handicap);
         BOOST_CHECK_EQUAL(obj.markets.nth(2)->wincases.size(), 3u);
         BOOST_CHECK_EQUAL(obj.markets.nth(2)->wincases.nth(0)->first.get<handicap_home_over>().threshold.value, -500);
-        BOOST_CHECK_EQUAL(obj.markets.nth(2)->wincases.nth(0)->first.get<handicap_home_under>().threshold.value, -500);
+        BOOST_CHECK_EQUAL(obj.markets.nth(2)->wincases.nth(0)->second.get<handicap_home_under>().threshold.value, -500);
 
         BOOST_CHECK(obj.markets.nth(3)->kind == market_kind::correct_score);
         BOOST_CHECK_EQUAL(obj.markets.nth(3)->wincases.size(), 5u);
-        BOOST_CHECK_EQUAL(obj.markets.nth(3)->wincases.nth(1)->first.get<correct_score_no>().home, 1);
-        BOOST_CHECK_EQUAL(obj.markets.nth(3)->wincases.nth(1)->first.get<correct_score_no>().away, 0);
-        BOOST_CHECK_EQUAL(obj.markets.nth(3)->wincases.nth(1)->first.get<correct_score_yes>().home, 1);
-        BOOST_CHECK_EQUAL(obj.markets.nth(3)->wincases.nth(1)->first.get<correct_score_yes>().away, 0);
+        BOOST_CHECK_EQUAL(obj.markets.nth(3)->wincases.nth(0)->first.get<correct_score_no>().home, 1);
+        BOOST_CHECK_EQUAL(obj.markets.nth(3)->wincases.nth(0)->first.get<correct_score_no>().away, 0);
+        BOOST_CHECK_EQUAL(obj.markets.nth(3)->wincases.nth(0)->second.get<correct_score_yes>().home, 1);
+        BOOST_CHECK_EQUAL(obj.markets.nth(3)->wincases.nth(0)->second.get<correct_score_yes>().away, 0);
 
         BOOST_CHECK(obj.markets.nth(4)->kind == market_kind::goal);
         BOOST_CHECK_EQUAL(obj.markets.nth(4)->wincases.size(), 3u);
@@ -95,7 +95,7 @@ SCORUM_TEST_CASE(create_game_json_serialization_test)
 
     BOOST_CHECK_EQUAL(
         json,
-        R"({"moderator":"moderator_name","name":"game_name","start":"2016-04-25T17:30:00","game":["soccer_game",{}],"markets":[{"kind":"result","wincases":[[["result_home",{}],["result_draw_away",{}]],[["result_draw",{}],["result_home_away",{}]],[["result_away",{}],["result_home_draw",{}]]]},{"kind":"round","wincases":[[["round_home",{}],["round_away",{}]]]},{"kind":"handicap","wincases":[[["handicap_home_over",{"threshold":{"value":-500}}],["handicap_home_under",{"threshold":{"value":-500}}]],[["handicap_home_over",{"threshold":{"value":0}}],["handicap_home_under",{"threshold":{"value":0}}]],[["handicap_home_over",{"threshold":{"value":1000}}],["handicap_home_under",{"threshold":{"value":1000}}]]]},{"kind":"correct_score","wincases":[[["correct_score_yes",{"home":1,"away":1}],["correct_score_no",{"home":1,"away":1}]],[["correct_score_no",{"home":1,"away":0}],["correct_score_yes",{"home":1,"away":0}]],[["correct_score_home_yes",{}],["correct_score_home_no",{}]],[["correct_score_draw_yes",{}],["correct_score_draw_no",{}]],[["correct_score_away_no",{}],["correct_score_away_yes",{}]]]},{"kind":"goal","wincases":[[["goal_home_yes",{}],["goal_home_no",{}]],[["goal_both_yes",{}],["goal_both_no",{}]],[["goal_away_yes",{}],["goal_away_no",{}]]]},{"kind":"total","wincases":[[["total_over",{"threshold":{"value":0}}],["total_under",{"threshold":{"value":0}}]],[["total_over",{"threshold":{"value":500}}],["total_under",{"threshold":{"value":500}}]],[["total_over",{"threshold":{"value":1000}}],["total_under",{"threshold":{"value":1000}}]]]}]})");
+        R"({"moderator":"moderator_name","name":"game_name","start":"2016-04-25T17:30:00","game":["soccer_game",{}],"markets":[{"kind":"result","wincases":[[["result_home",{}],["result_draw_away",{}]],[["result_draw",{}],["result_home_away",{}]],[["result_away",{}],["result_home_draw",{}]]]},{"kind":"round","wincases":[[["round_home",{}],["round_away",{}]]]},{"kind":"handicap","wincases":[[["handicap_home_over",{"threshold":{"value":-500}}],["handicap_home_under",{"threshold":{"value":-500}}]],[["handicap_home_over",{"threshold":{"value":0}}],["handicap_home_under",{"threshold":{"value":0}}]],[["handicap_home_over",{"threshold":{"value":1000}}],["handicap_home_under",{"threshold":{"value":1000}}]]]},{"kind":"correct_score","wincases":[[["correct_score_no",{"home":1,"away":0}],["correct_score_yes",{"home":1,"away":0}]],[["correct_score_yes",{"home":1,"away":1}],["correct_score_no",{"home":1,"away":1}]],[["correct_score_home_yes",{}],["correct_score_home_no",{}]],[["correct_score_draw_yes",{}],["correct_score_draw_no",{}]],[["correct_score_away_no",{}],["correct_score_away_yes",{}]]]},{"kind":"goal","wincases":[[["goal_home_yes",{}],["goal_home_no",{}]],[["goal_both_yes",{}],["goal_both_no",{}]],[["goal_away_yes",{}],["goal_away_no",{}]]]},{"kind":"total","wincases":[[["total_over",{"threshold":{"value":0}}],["total_under",{"threshold":{"value":0}}]],[["total_over",{"threshold":{"value":500}}],["total_under",{"threshold":{"value":500}}]],[["total_over",{"threshold":{"value":1000}}],["total_under",{"threshold":{"value":1000}}]]]}]})");
 }
 
 SCORUM_TEST_CASE(create_game_binary_serialization_test)
@@ -106,14 +106,14 @@ SCORUM_TEST_CASE(create_game_binary_serialization_test)
 
     BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e57000600000000000000000300030104020"
                            "50100000000000000010607020000000000000003080cfe090cfe08000009000008e80309e80303000000000000"
-                           "00050a010001000b010001000b010000000a010000000c0d0e0f111004000000000000000312131415161705000"
+                           "00050b010000000a010000000a010001000b010001000c0d0e0f111004000000000000000312131415161705000"
                            "000000000000318000019000018f40119f40118e80319e803");
 }
 
 SCORUM_TEST_CASE(create_game_json_deserialization_test)
 {
     auto json
-        = R"({"moderator":"moderator_name","name":"game_name","start":"2016-04-25T17:30:00","game":["soccer_game",{}],"markets":[{"kind":"result","wincases":[[["result_home",{}],["result_draw_away",{}]],[["result_draw",{}],["result_home_away",{}]],[["result_away",{}],["result_home_draw",{}]]]},{"kind":"round","wincases":[[["round_home",{}],["round_away",{}]]]},{"kind":"handicap","wincases":[[["handicap_home_over",{"threshold":{"value":1000}}],["handicap_home_under",{"threshold":{"value":1000}}]],[["handicap_home_over",{"threshold":{"value":-500}}],["handicap_home_under",{"threshold":{"value":-500}}]],[["handicap_home_over",{"threshold":{"value":0}}],["handicap_home_under",{"threshold":{"value":0}}]]]},{"kind":"correct_score","wincases":[[["correct_score_yes",{"home":1,"away":1}],["correct_score_no",{"home":1,"away":1}]],[["correct_score_no",{"home":1,"away":0}],["correct_score_yes",{"home":1,"away":0}]],[["correct_score_home_yes",{}],["correct_score_home_no",{}]],[["correct_score_draw_yes",{}],["correct_score_draw_no",{}]],[["correct_score_away_no",{}],["correct_score_away_yes",{}]]]},{"kind":"goal","wincases":[[["goal_home_yes",{}],["goal_home_no",{}]],[["goal_both_yes",{}],["goal_both_no",{}]],[["goal_away_yes",{}],["goal_away_no",{}]]]},{"kind":"total","wincases":[[["total_over",{"threshold":{"value":0}}],["total_under",{"threshold":{"value":0}}]],[["total_over",{"threshold":{"value":500}}],["total_under",{"threshold":{"value":500}}]],[["total_over",{"threshold":{"value":1000}}],["total_under",{"threshold":{"value":1000}}]]]}]})";
+        = R"({"moderator":"moderator_name","name":"game_name","start":"2016-04-25T17:30:00","game":["soccer_game",{}],"markets":[{"kind":"result","wincases":[[["result_home",{}],["result_draw_away",{}]],[["result_draw",{}],["result_home_away",{}]],[["result_away",{}],["result_home_draw",{}]]]},{"kind":"round","wincases":[[["round_home",{}],["round_away",{}]]]},{"kind":"handicap","wincases":[[["handicap_home_over",{"threshold":{"value":-500}}],["handicap_home_under",{"threshold":{"value":-500}}]],[["handicap_home_over",{"threshold":{"value":0}}],["handicap_home_under",{"threshold":{"value":0}}]],[["handicap_home_over",{"threshold":{"value":1000}}],["handicap_home_under",{"threshold":{"value":1000}}]]]},{"kind":"correct_score","wincases":[[["correct_score_no",{"home":1,"away":0}],["correct_score_yes",{"home":1,"away":0}]],[["correct_score_yes",{"home":1,"away":1}],["correct_score_no",{"home":1,"away":1}]],[["correct_score_home_yes",{}],["correct_score_home_no",{}]],[["correct_score_draw_yes",{}],["correct_score_draw_no",{}]],[["correct_score_away_no",{}],["correct_score_away_yes",{}]]]},{"kind":"goal","wincases":[[["goal_home_yes",{}],["goal_home_no",{}]],[["goal_both_yes",{}],["goal_both_no",{}]],[["goal_away_yes",{}],["goal_away_no",{}]]]},{"kind":"total","wincases":[[["total_over",{"threshold":{"value":0}}],["total_under",{"threshold":{"value":0}}]],[["total_over",{"threshold":{"value":500}}],["total_under",{"threshold":{"value":500}}]],[["total_over",{"threshold":{"value":1000}}],["total_under",{"threshold":{"value":1000}}]]]}]})";
 
     auto obj = fc::json::from_string(json).as<create_game_operation>();
 
@@ -124,7 +124,7 @@ SCORUM_TEST_CASE(create_game_binary_deserialization_test)
 {
     auto hex = "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e57000600000000000000000300030104020"
                "50100000000000000010607020000000000000003080cfe090cfe08000009000008e80309e80303000000000000"
-               "00050a010001000b010001000b010000000a010000000c0d0e0f111004000000000000000312131415161705000"
+               "00050b010000000a010000000a010001000b010001000c0d0e0f111004000000000000000312131415161705000"
                "000000000000318000019000018f40119f40118e80319e803";
 
     char buffer[1000];
@@ -164,7 +164,7 @@ SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
     op.game = soccer_game{};
     op.markets = { { market_kind::correct_score,
                      { { correct_score_yes{ 1, 1 }, correct_score_no{ 1, 1 } },
-                       { correct_score_yes{ 1, 1 }, correct_score_no{ 1, 1 } },
+                       { correct_score_no{ 1, 1 }, correct_score_yes{ 1, 1 } },
                        { correct_score_home_yes{}, correct_score_home_no{} },
                        { correct_score_home_yes{}, correct_score_home_no{} } } } };
 
