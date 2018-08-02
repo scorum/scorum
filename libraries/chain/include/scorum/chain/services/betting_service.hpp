@@ -24,13 +24,13 @@ struct betting_service_i
                                          const asset& stake)
         = 0;
 
-    // match bet with existen pending bets or create pending bet
+    // match bet with existen pending bets or create new pending bet
     virtual void match(const bet_object& bet) = 0;
 
-    // how many assets win and returned to accunt
+    // how much assets win and gain to account
     virtual asset get_gain(const bet_object& bet) const = 0;
 
-    // how many asset returned to accunt
+    // how much assets returned back to account
     virtual asset get_rest(const bet_object& bet) const = 0;
 };
 

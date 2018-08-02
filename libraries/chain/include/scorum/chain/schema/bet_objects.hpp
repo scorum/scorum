@@ -71,7 +71,7 @@ public:
     asset potential_gain
         = asset(0, SCORUM_SYMBOL); // can calculated each time when we need but saved to improve productivity
 
-    asset gain = asset(0, SCORUM_SYMBOL); // actial gain to control matched stake calculation accuracy lag
+    asset gain = asset(0, SCORUM_SYMBOL); // actual gain to control matched stake calculation accuracy lag
 };
 
 class pending_bet_object : public object<pending_bet_object_type, pending_bet_object>
@@ -102,12 +102,13 @@ public:
     bet_id_type bet2;
 };
 
+// struct by_better; --TODO
+struct by_game_id;
+
 typedef shared_multi_index_container<bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<bet_object, bet_id_type, &bet_object::id>>>>
     bet_index;
-
-struct by_game_id;
 
 typedef shared_multi_index_container<pending_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,

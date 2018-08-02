@@ -18,26 +18,13 @@ ModifyingValue multiply_by_fractional(const ModifyingValue& val,
         FC_ASSERT(numerator >= static_cast<FractionalNumerator>(0), "Only unsigned numerator accepted");
         FC_ASSERT(denominator > static_cast<FractionalDenominator>(0),
                   "Only unsigned and non zero denominator accepted");
-        if (denominator == static_cast<FractionalDenominator>(1))
+        fc::uint128_t extra_hi = val;
+        extra_hi *= numerator;
+        if (denominator != static_cast<FractionalDenominator>(1))
         {
-#if 0
-            using safe_type = fc::safe<ModifyingValue>;
-            safe_type ret(val);
-            ret *= numerator;
-            return ret.value;
-#else
-            fc::uint128_t extra_hi = val;
-            extra_hi *= numerator;
-            return static_cast<ModifyingValue>(extra_hi.to_uint64());
-#endif
-        }
-        else
-        {
-            fc::uint128_t extra_hi = val;
-            extra_hi *= numerator;
             extra_hi /= denominator;
-            return static_cast<ModifyingValue>(extra_hi.to_uint64());
         }
+        return static_cast<ModifyingValue>(extra_hi.to_uint64());
     }
     FC_CAPTURE_AND_RETHROW((val)(numerator)(denominator))
 }

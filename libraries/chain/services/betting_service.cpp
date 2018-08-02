@@ -75,6 +75,8 @@ const bet_object& dbs_betting::create_bet(const account_name_type& better,
 {
     try
     {
+        FC_ASSERT(stake.amount > 0);
+        FC_ASSERT(stake.symbol() == SCORUM_SYMBOL);
         return _bet.create([&](bet_object& obj) {
             obj.created = _dgp_property.head_block_time();
             obj.better = better;
