@@ -13,8 +13,10 @@ struct game_service_i : public base_service_i<game_object>
                                       const std::string& game_name,
                                       fc::time_point_sec start,
                                       const betting::game_type& game,
-                                      const std::vector<betting::market_type>& markets)
+                                      const fc::flat_set<betting::market_type>& markets)
         = 0;
+
+    virtual void update_markets(const game_object& game, const fc::flat_set<betting::market_type>& markets) = 0;
 
     virtual const game_object* find(const std::string& game_name) const = 0;
     virtual const game_object* find(int64_t game_id) const = 0;
@@ -32,7 +34,9 @@ public:
                                       const std::string& game_name,
                                       fc::time_point_sec start,
                                       const betting::game_type& game,
-                                      const std::vector<betting::market_type>& markets) override;
+                                      const fc::flat_set<betting::market_type>& markets) override;
+    virtual void update_markets(const game_object& game, const fc::flat_set<betting::market_type>& markets) override;
+
     virtual const game_object* find(const std::string& game_name) const override;
     virtual const game_object* find(int64_t game_id) const override;
 };

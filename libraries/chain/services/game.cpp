@@ -13,7 +13,7 @@ const game_object& dbs_game::create(const account_name_type& moderator,
                                     const std::string& game_name,
                                     fc::time_point_sec start,
                                     const betting::game_type& game,
-                                    const std::vector<betting::market_type>& markets)
+                                    const fc::flat_set<betting::market_type>& markets)
 {
     return dbs_service_base<game_service_i>::create([&](game_object& obj) {
         obj.moderator = moderator;
@@ -23,7 +23,16 @@ const game_object& dbs_game::create(const account_name_type& moderator,
         obj.status = game_status::created;
 
         for (const auto& m : markets)
-            obj.markets.emplace_back(m);
+            obj.markets.emplace(m);
+    });
+}
+
+void dbs_game::update_markets(const game_object& game, const fc::flat_set<betting::market_type>& markets)
+{
+    update(game, [&](game_object& g) {
+        g.markets.clear();
+        for (const auto& m : markets)
+            g.markets.emplace(m);
     });
 }
 

@@ -4,6 +4,11 @@
 #include <scorum/chain/services/betting_service.hpp>
 #include <scorum/chain/services/game.hpp>
 #include <scorum/protocol/betting/invariants_validation.hpp>
+#include <scorum/protocol/betting/wincase_comparison.hpp>
+#include <scorum/utils/range_adaptors.hpp>
+
+#include <boost/range/algorithm/sort.hpp>
+#include <boost/range/algorithm/set_algorithm.hpp>
 
 namespace scorum {
 namespace chain {
@@ -26,11 +31,18 @@ void update_game_markets_evaluator::do_apply(const operation_type& op)
 
     betting::validate_game(game_obj->game, op.markets);
 
-    _game_service.update(*game_obj, [&](game_object& g) {
-        g.markets.clear();
-        for (const auto& m : op.markets)
-            g.markets.emplace_back(m);
-    });
+    auto old_wincases = utils::flatten(game_obj->markets, [](const auto& x) { return x.wincases; });
+    auto new_wincases = utils::flatten(op.markets, [](const auto& x) { return x.wincases; });
+
+    boost::sort(old_wincases);
+    boost::sort(new_wincases);
+
+    std::vector<betting::wincase_pair> cancelled_wincases;
+    boost::set_difference(old_wincases, new_wincases, std::back_inserter(cancelled_wincases));
+
+    _betting_service.return_bets(*game_obj, cancelled_wincases);
+
+    _game_service.update_markets(*game_obj, op.markets);
 }
 }
 }

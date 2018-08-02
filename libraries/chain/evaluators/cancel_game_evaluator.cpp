@@ -23,7 +23,11 @@ void cancel_game_evaluator::do_apply(const operation_type& op)
     auto game_obj = _game_service.find(op.game_id);
     FC_ASSERT(game_obj, "Game with id '${g}' doesn't exist", ("g", op.game_id));
 
-    _game_service.update(*game_obj, [](game_object& g) { g.status = game_status::canceled; });
+    _betting_service.return_unresolved_bets(*game_obj);
+
+    _betting_service.remove_disputs(*game_obj);
+    _betting_service.remove_bets(*game_obj);
+    _game_service.remove(*game_obj);
 }
 }
 }

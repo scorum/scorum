@@ -14,7 +14,7 @@ enum class game_status : uint8_t
 {
     created,
     started,
-    canceled
+    finished
 };
 
 struct by_name;
@@ -36,7 +36,7 @@ public:
     game_status status = game_status::created;
 
     betting::game_type game;
-    fc::shared_vector<betting::market_type> markets;
+    fc::shared_flat_set<betting::market_type> markets;
 };
 
 using game_index
@@ -51,7 +51,7 @@ using game_index
 }
 }
 
-FC_REFLECT_ENUM(scorum::chain::game_status, (created)(started)(canceled))
+FC_REFLECT_ENUM(scorum::chain::game_status, (created)(started)(finished))
 FC_REFLECT(scorum::chain::game_object, (id)(moderator)(name)(start)(status)(game)(markets))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_object, scorum::chain::game_index)
