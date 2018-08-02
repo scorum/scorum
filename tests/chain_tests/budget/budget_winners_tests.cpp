@@ -15,8 +15,6 @@ using namespace budget_check_common;
 
 struct budget_payout_visitor
 {
-    typedef void result_type;
-
     budget_payout_visitor(database& db)
         : _db(db)
     {

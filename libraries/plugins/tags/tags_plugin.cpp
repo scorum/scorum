@@ -136,8 +136,6 @@ public:
 
 struct category_stats_pre_operation_visitor
 {
-    typedef void result_type;
-
     database& _db;
     category_stats_service& _category_stats_service;
 
@@ -170,8 +168,6 @@ struct category_stats_pre_operation_visitor
 
 struct category_stats_post_operation_visitor
 {
-    typedef void result_type;
-
     database& _db;
     category_stats_service& _category_stats_service;
 
@@ -195,8 +191,6 @@ struct category_stats_post_operation_visitor
 
 struct post_operation_visitor
 {
-    typedef void result_type;
-
     database& _db;
 
     post_operation_visitor(database& db)

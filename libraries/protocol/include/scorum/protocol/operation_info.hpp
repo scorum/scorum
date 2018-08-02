@@ -19,7 +19,6 @@ struct operation_info
 private:
     struct serializing_visitor
     {
-        using result_type = std::string;
         template <typename T> std::string operator()(const T&)
         {
             return fc::get_typename<T>().name();

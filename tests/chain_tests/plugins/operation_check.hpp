@@ -24,8 +24,6 @@ struct check_opetation_visitor
     {
     }
 
-    using result_type = void;
-
     void operator()(const transfer_to_scorumpower_operation& saved_op) const
     {
         BOOST_REQUIRE_EQUAL(_input_op.which(), operation(saved_op).which());
@@ -77,8 +75,6 @@ struct check_opetations_list_visitor
         FC_ASSERT(!_input_ops.empty());
     }
 
-    using result_type = void;
-
     template <typename Op> void operator()(const Op& op) const
     {
         auto it = std::find(std::begin(_input_ops), std::end(_input_ops), op);
@@ -101,8 +97,6 @@ private:
 
 struct view_opetation_visitor
 {
-    using result_type = void;
-
     template <typename Op> void operator()(const Op& op) const
     {
         fc::variant vo;

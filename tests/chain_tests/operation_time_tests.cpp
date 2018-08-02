@@ -223,8 +223,6 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
 
 struct active_voters_reward_visitor
 {
-    typedef void result_type;
-
     database& _db;
 
     std::map<account_name_type, asset> vote_reward_map;
