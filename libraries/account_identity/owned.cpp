@@ -13,7 +13,6 @@ struct get_owned_account_visitor
         : _owned(owned)
     {
     }
-    typedef void result_type;
 
     template <typename T> void operator()(const T& op)
     {

@@ -7,8 +7,6 @@ namespace util {
 
 struct get_name_visitor
 {
-    using result_type = std::string;
-
     std::string operator()(const account_type& item) const
     {
         return item.name;
@@ -22,8 +20,6 @@ struct get_name_visitor
 
 struct init_empty_item_visitor
 {
-    using result_type = genesis_account_info_item_type;
-
     genesis_account_info_item_type operator()(const account_type&) const
     {
         return account_type{};
@@ -44,8 +40,6 @@ public:
         , _steemit_bounty_accounts_supply(steemit_bounty_accounts_supply)
     {
     }
-
-    using result_type = void;
 
     void operator()(const account_type& item) const
     {
@@ -95,8 +89,6 @@ public:
         : _genesis(genesis)
     {
     }
-
-    using result_type = void;
 
     void operator()(const account_type& item) const
     {

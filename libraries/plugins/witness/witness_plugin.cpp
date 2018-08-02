@@ -144,8 +144,6 @@ struct operation_visitor
 
     const chain::database& _db;
 
-    typedef void result_type;
-
     template <typename T> void operator()(const T&) const
     {
     }

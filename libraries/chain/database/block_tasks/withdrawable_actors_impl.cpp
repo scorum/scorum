@@ -56,8 +56,6 @@ private:
 
 struct void_return_visitor
 {
-    typedef void result_type;
-
     template <typename Op> void operator()(const Op&) const
     {
         FC_ASSERT(false, "Not implemented.");

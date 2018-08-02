@@ -21,8 +21,6 @@ BOOST_FIXTURE_TEST_SUITE(comment_beneficiaries_tests, database_default_integrati
 
 struct comment_benefactor_reward_visitor
 {
-    typedef void result_type;
-
     database& _db;
 
     std::map<account_name_type, asset> reward_map;

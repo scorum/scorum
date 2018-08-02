@@ -261,8 +261,6 @@ public:
 #endif
     }
 
-    using result_type = bool;
-
     // available by default
     template <typename Op> bool operator()(const Op&) const
     {

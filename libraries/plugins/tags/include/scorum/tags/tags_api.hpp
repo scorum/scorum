@@ -81,15 +81,15 @@ public:
      */
     std::vector<api::discussion> get_discussions_by_author(const api::discussion_query& query) const;
 
-     /**
-     * @brief This method is used to fetch all posts and comments  with up to limit being returned.
-     *
-     * If start_permlink and start_author is empty then discussions are returned from the beginning. This
-     * should allow easy pagination.
-     */
+    /**
+    * @brief This method is used to fetch all posts and comments  with up to limit being returned.
+    *
+    * If start_permlink and start_author is empty then discussions are returned from the beginning. This
+    * should allow easy pagination.
+    */
     std::vector<api::discussion> get_posts_and_comments(const api::discussion_query& query) const;
 
-      /// @}
+    /// @}
 };
 
 } // namespace tags

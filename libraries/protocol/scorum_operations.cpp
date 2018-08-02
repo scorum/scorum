@@ -4,6 +4,7 @@
 #include <locale>
 
 #include <scorum/protocol/atomicswap_helper.hpp>
+#include <scorum/protocol/betting/invariants_validation.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -327,6 +328,34 @@ void proposal_create_operation::validate() const
     validate_account_name(creator);
 
     operation_validate(operation);
+}
+
+void create_game_operation::validate() const
+{
+    validate_account_name(moderator);
+
+    betting::validate_game(game, markets);
+    betting::validate_markets(markets);
+}
+
+void cancel_game_operation::validate() const
+{
+    FC_ASSERT(game_id > 0, "Id must be positive");
+    validate_account_name(moderator);
+}
+
+void update_game_markets_operation::validate() const
+{
+    FC_ASSERT(game_id > 0, "Id must be positive");
+    validate_account_name(moderator);
+
+    betting::validate_markets(markets);
+}
+
+void update_game_start_time_operation::validate() const
+{
+    FC_ASSERT(game_id > 0, "Id must be positive");
+    validate_account_name(moderator);
 }
 
 } // namespace protocol
