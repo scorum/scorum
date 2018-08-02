@@ -6,44 +6,17 @@
 
 #include <boost/multi_index/composite_key.hpp>
 
+#include <scorum/protocol/betting/wincase.hpp>
+
 namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
 using scorum::protocol::odds;
+using scorum::protocol::betting::wincase_type;
 
 #if 1
 using game_id_type = int16_t;
-
-struct wincase11;
-struct wincase12;
-struct wincase21;
-struct wincase22;
-
-struct wincase11
-{
-    using opposite_type = wincase12;
-};
-struct wincase12
-{
-    using opposite_type = wincase11;
-};
-struct wincase21
-{
-    using opposite_type = wincase22;
-};
-struct wincase22
-{
-    using opposite_type = wincase21;
-};
-
-using wincase_type = fc::static_variant<wincase11, wincase12, wincase21, wincase22>;
-
-inline bool match_wincases(const wincase_type&, const wincase_type&)
-{
-    // stub
-    return true;
-}
 #endif
 
 class bet_object : public object<bet_object_type, bet_object>

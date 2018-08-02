@@ -77,6 +77,14 @@ bool operator==(const wincase_type& lhs, const TWinCase& rhs)
     return tagl == tagr && lhs.get<std::decay_t<decltype(rhs)>>() == rhs;
 }
 // clang-format on
+
+inline bool match_wincases(const wincase_type& lhs, const wincase_type& rhs)
+{
+    return rhs.visit([&](const auto& l) -> bool {
+        auto r = rhs.get<std::decay_t<decltype(l)>>().create_opposite();
+        return wincase_type(l) == r;
+    });
+}
 }
 }
 }

@@ -6,6 +6,8 @@
 #include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/matched_bet.hpp>
 
+#include <scorum/protocol/betting/wincase_comparison.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -88,7 +90,7 @@ const bet_object& dbs_betting::create_bet(const account_name_type& better,
             obj.potential_gain = calculate_gain(obj.stake, obj.value);
         });
     }
-    FC_CAPTURE_LOG_AND_RETHROW((better)(game)(odds_value)(stake)) // TODO: wincase reflection
+    FC_CAPTURE_LOG_AND_RETHROW((better)(game)(wincase)(odds_value)(stake))
 }
 
 void dbs_betting::match(const bet_object& bet)
@@ -165,13 +167,13 @@ void dbs_betting::match(const bet_object& bet)
             _pending_bet.remove(pending_bet);
         }
     }
-    FC_CAPTURE_LOG_AND_RETHROW(()) // TODO: bet.wincase reflection
+    FC_CAPTURE_LOG_AND_RETHROW((bet))
 }
 
 bool dbs_betting::is_bets_matched(const bet_object& bet1, const bet_object& bet2) const
 {
     FC_ASSERT(bet1.game == bet2.game);
-    return bet1.better != bet2.better && match_wincases(bet1.wincase, bet2.wincase)
+    return bet1.better != bet2.better && protocol::betting::match_wincases(bet1.wincase, bet2.wincase)
         && bet1.value.inverted() == bet2.value;
 }
 
