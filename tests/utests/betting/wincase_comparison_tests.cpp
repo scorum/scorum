@@ -105,6 +105,30 @@ SCORUM_TEST_CASE(wincase_less_functor_tests)
         BOOST_CHECK(!less(wr, wl));
     }
 }
+SCORUM_TEST_CASE(wincase_pair_cmp_tests)
+{
+    {
+        wincase_pair p1 = { correct_score_home_yes{}, correct_score_home_no{} };
+        wincase_pair p2 = { correct_score_home_no{}, correct_score_home_yes{} };
 
+        std::equal_to<wincase_pair> eq_cmp{};
+        std::less<wincase_pair> less_cmp{};
+
+        BOOST_CHECK(eq_cmp(p1, p2));
+        BOOST_CHECK(!less_cmp(p1, p2));
+        BOOST_CHECK(!less_cmp(p2, p1));
+    }
+    {
+        wincase_pair p1 = { correct_score_yes{ 1, 1 }, correct_score_no{ 1, 1 } };
+        wincase_pair p2 = { correct_score_no{ 1, 0 }, correct_score_yes{ 1, 0 } };
+
+        std::equal_to<wincase_pair> eq_cmp{};
+        std::less<wincase_pair> less_cmp{};
+
+        BOOST_CHECK(!eq_cmp(p1, p2));
+        BOOST_CHECK(!less_cmp(p1, p2));
+        BOOST_CHECK(less_cmp(p2, p1));
+    }
+}
 BOOST_AUTO_TEST_SUITE_END()
 }

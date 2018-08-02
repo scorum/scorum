@@ -142,6 +142,20 @@ template <> struct less<wincase_type>
     }
 };
 
+template <> struct less<wincase_pair>
+{
+    bool operator()(const wincase_pair& lhs, const wincase_pair& rhs) const
+    {
+        auto cmp = [](const auto& l, const auto& r) { return l.which() < r.which(); };
+        auto lhs_ordered = std::minmax(lhs.first, lhs.second, cmp);
+        auto rhs_ordered = std::minmax(rhs.first, rhs.second, cmp);
+
+        std::less<wincase_type> less_cmp{};
+        return less_cmp(lhs_ordered.first, rhs_ordered.first)
+            || (!less_cmp(rhs_ordered.first, lhs_ordered.first) && less_cmp(lhs_ordered.second, rhs_ordered.second));
+    }
+};
+
 template <> struct equal_to<wincase_type>
 {
     bool operator()(const wincase_type& lhs, const wincase_type& rhs) const
@@ -160,6 +174,19 @@ template <> struct equal_to<wincase_type>
     template <typename TWinCase> bool operator()(const wincase_type& lhs, const TWinCase& rhs) const
     {
         return lhs == rhs;
+    }
+};
+
+template <> struct equal_to<wincase_pair>
+{
+    bool operator()(const wincase_pair& lhs, const wincase_pair& rhs) const
+    {
+        auto cmp = [](const auto& l, const auto& r) { return l.which() < r.which(); };
+        auto lhs_ordered = std::minmax(lhs.first, lhs.second, cmp);
+        auto rhs_ordered = std::minmax(rhs.first, rhs.second, cmp);
+
+        std::equal_to<wincase_type> eq_comp{};
+        return eq_comp(lhs_ordered.first, rhs_ordered.first) && eq_comp(lhs_ordered.second, rhs_ordered.second);
     }
 };
 }
