@@ -57,11 +57,6 @@ using operation = fc::static_variant<vote_operation,
                                      close_budget_by_advertising_moderator_operation,
                                      update_budget_operation,
 
-                                     create_game_operation,
-                                     cancel_game_operation,
-                                     update_game_markets_operation,
-                                     update_game_start_time_operation,
-
                                      /// virtual operations
                                      author_reward_operation,
                                      comment_benefactor_reward_operation,

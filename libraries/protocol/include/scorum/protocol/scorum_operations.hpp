@@ -6,8 +6,6 @@
 #include <scorum/protocol/comment.hpp>
 #include <scorum/protocol/types.hpp>
 
-#include <scorum/protocol/betting/game.hpp>
-#include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/proposal_operations.hpp>
 
 #include <fc/crypto/ripemd160.hpp>
@@ -767,59 +765,6 @@ struct close_budget_by_advertising_moderator_operation : public base_operation
     }
 };
 
-struct create_game_operation : public base_operation
-{
-    account_name_type moderator;
-    std::string name;
-    time_point_sec start;
-    betting::game_type game;
-    fc::flat_set<betting::market_type> markets;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
-struct cancel_game_operation : public base_operation
-{
-    int64_t game_id;
-    account_name_type moderator;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
-struct update_game_markets_operation : public base_operation
-{
-    int64_t game_id;
-    account_name_type moderator;
-    fc::flat_set<betting::market_type> markets;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
-struct update_game_start_time_operation : public base_operation
-{
-    int64_t game_id;
-    account_name_type moderator;
-    time_point_sec start;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
 } // namespace protocol
 } // namespace scorum
 
@@ -898,10 +843,6 @@ FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
 FC_REFLECT( scorum::protocol::close_budget_by_advertising_moderator_operation, (type)(budget_id)(moderator) )
-FC_REFLECT( scorum::protocol::create_game_operation, (moderator)(name)(start)(game)(markets) )
-FC_REFLECT( scorum::protocol::cancel_game_operation, (moderator)(game_id) )
-FC_REFLECT( scorum::protocol::update_game_markets_operation, (moderator)(game_id)(markets) )
-FC_REFLECT( scorum::protocol::update_game_start_time_operation, (moderator)(game_id)(start) )
 
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)
