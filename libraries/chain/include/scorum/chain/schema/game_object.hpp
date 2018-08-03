@@ -3,6 +3,8 @@
 #include <fc/shared_containers.hpp>
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
+#include <scorum/protocol/betting/wincase.hpp>
+#include <scorum/protocol/betting/wincase_comparison.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
 namespace scorum {
@@ -23,7 +25,7 @@ class game_object : public object<game_object_type, game_object>
 {
 public:
     /// \cond DO_NOT_DOCUMENT
-    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(game_object, (name)(markets))
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(game_object, (name)(markets)(results))
 
     typedef typename object<game_object_type, game_object>::id_type id_type;
 
@@ -32,11 +34,13 @@ public:
     account_name_type moderator;
     fc::shared_string name;
     time_point_sec start = time_point_sec::min();
+    time_point_sec finish = time_point_sec::min();
 
     game_status status = game_status::created;
 
     betting::game_type game;
     fc::shared_flat_set<betting::market_type> markets;
+    fc::shared_flat_set<betting::wincase_type> results;
 };
 
 using game_index
@@ -52,6 +56,6 @@ using game_index
 }
 
 FC_REFLECT_ENUM(scorum::chain::game_status, (created)(started)(finished))
-FC_REFLECT(scorum::chain::game_object, (id)(moderator)(name)(start)(status)(game)(markets))
+FC_REFLECT(scorum::chain::game_object, (id)(moderator)(name)(start)(finish)(status)(game)(markets)(results))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_object, scorum::chain::game_index)

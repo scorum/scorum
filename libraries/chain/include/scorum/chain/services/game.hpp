@@ -3,9 +3,12 @@
 #include <scorum/chain/services/service_base.hpp>
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
+#include <scorum/protocol/betting/wincase.hpp>
 
 namespace scorum {
 namespace chain {
+
+struct dynamic_global_property_service_i;
 
 struct game_service_i : public base_service_i<game_object>
 {
@@ -16,6 +19,7 @@ struct game_service_i : public base_service_i<game_object>
                                       const fc::flat_set<betting::market_type>& markets)
         = 0;
 
+    virtual void finish(const game_object& game, const fc::flat_set<betting::wincase_type>& wincases) = 0;
     virtual void update_markets(const game_object& game, const fc::flat_set<betting::market_type>& markets) = 0;
 
     virtual const game_object* find(const std::string& game_name) const = 0;
@@ -35,10 +39,14 @@ public:
                                       fc::time_point_sec start,
                                       const betting::game_type& game,
                                       const fc::flat_set<betting::market_type>& markets) override;
+    virtual void finish(const game_object& game, const fc::flat_set<betting::wincase_type>& wincases) override;
     virtual void update_markets(const game_object& game, const fc::flat_set<betting::market_type>& markets) override;
 
     virtual const game_object* find(const std::string& game_name) const override;
     virtual const game_object* find(int64_t game_id) const override;
+
+private:
+    dynamic_global_property_service_i& _dprops_service;
 };
 }
 }

@@ -1,11 +1,13 @@
 #include <scorum/chain/services/game.hpp>
 #include <scorum/chain/database/database.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 
 namespace scorum {
 namespace chain {
 
 dbs_game::dbs_game(database& db)
     : base_service_type(db)
+    , _dprops_service(db.dynamic_global_property_service())
 {
 }
 
@@ -24,6 +26,17 @@ const game_object& dbs_game::create(const account_name_type& moderator,
 
         for (const auto& m : markets)
             obj.markets.emplace(m);
+    });
+}
+
+void dbs_game::finish(const game_object& game, const fc::flat_set<betting::wincase_type>& wincases)
+{
+    update(game, [&](game_object& g) {
+        g.finish = _dprops_service.head_block_time();
+        g.status = game_status::finished;
+
+        for (const auto& w : wincases)
+            g.results.emplace(w);
     });
 }
 
