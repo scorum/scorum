@@ -48,24 +48,24 @@ BOOST_FIXTURE_TEST_SUITE(vcg_calculation_check, vcg_calculation_fixture)
 
 SCORUM_TEST_CASE(invalid_input_check)
 {
-    BOOST_MESSAGE("Check invalid coefficient's list");
+    BOOST_TEST_MESSAGE("Check invalid coefficient's list");
 
     SCORUM_CHECK_THROW(calculate_vcg_bets(default_per_block_values, position_weights_type()), fc::assert_exception);
 
-    BOOST_MESSAGE("Check invalid (negative) coefficient value");
+    BOOST_TEST_MESSAGE("Check invalid (negative) coefficient value");
 
     position_weights_type invalid_position_weights = default_position_weights;
     (*invalid_position_weights.rbegin()) *= -1;
     SCORUM_CHECK_THROW(calculate_vcg_bets(per_block_values_type(), invalid_position_weights), fc::assert_exception);
 
-    BOOST_MESSAGE("Check invalid (disrupted sorting) coefficient value");
+    BOOST_TEST_MESSAGE("Check invalid (disrupted sorting) coefficient value");
 
     invalid_position_weights = default_position_weights;
     auto half_position = default_position_weights.size() / 2;
     std::swap(invalid_position_weights[0], invalid_position_weights[half_position]);
     SCORUM_CHECK_THROW(calculate_vcg_bets(per_block_values_type(), invalid_position_weights), fc::assert_exception);
 
-    BOOST_MESSAGE("Check invalid (negative) per-block value");
+    BOOST_TEST_MESSAGE("Check invalid (negative) per-block value");
 
     per_block_values_type invalid_per_block_values = default_per_block_values;
     (*invalid_per_block_values.rbegin()) *= -1;
