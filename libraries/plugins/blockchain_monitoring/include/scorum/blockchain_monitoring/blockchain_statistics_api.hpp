@@ -20,12 +20,25 @@ namespace detail {
 class blockchain_statistics_api_impl;
 }
 
+/**
+ * @brief Provide api to get statistics over the time window length
+ *
+ * Require: blockchain_monitoring_plugin
+ *
+ * @ingroup api
+ * @ingroup blockchain_monitoring_plugin
+ * @defgroup blockchain_statistics_api Blockchain statistics API
+ */
 class blockchain_statistics_api
 {
 public:
     blockchain_statistics_api(const scorum::app::api_context& ctx);
 
     void on_api_startup();
+
+    /// @name Public API
+    /// @addtogroup blockchain_statistics_api
+    /// @{
 
     /**
      * @brief Gets statistics over the time window length, interval, that contains time, open.
@@ -47,6 +60,8 @@ public:
      * @brief Returns lifetime statistics.
      */
     statistics get_lifetime_stats() const;
+
+    /// @}
 
 private:
     std::shared_ptr<detail::blockchain_statistics_api_impl> my;
