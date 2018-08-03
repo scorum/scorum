@@ -31,7 +31,7 @@ struct budget_security_check_fixture : public budget_check_fixture
 
         BOOST_REQUIRE_EQUAL(alice_budget.owner, alice.name);
 
-        BOOST_MESSAGE("Eva try to close alien budget with valid authority");
+        BOOST_TEST_MESSAGE("Eva try to close alien budget with valid authority");
 
         close_budget_operation op;
         op.owner = eva.name;
@@ -57,7 +57,7 @@ struct budget_security_check_fixture : public budget_check_fixture
 
         BOOST_REQUIRE_EQUAL(alice_budget.owner, alice.name);
 
-        BOOST_MESSAGE("Eva try to update alien budget with valid authority");
+        BOOST_TEST_MESSAGE("Eva try to update alien budget with valid authority");
 
         update_budget_operation op;
         op.owner = eva.name;
@@ -91,7 +91,7 @@ SCORUM_TEST_CASE(invalid_key_check)
     const post_budget_object& alice_budget = post_budget_service.get(0);
 
     {
-        BOOST_MESSAGE("Eva try to reset json metada in budget with invalid authority");
+        BOOST_TEST_MESSAGE("Eva try to reset json metada in budget with invalid authority");
 
         update_budget_operation op;
         op.owner = alice.name;
@@ -105,7 +105,7 @@ SCORUM_TEST_CASE(invalid_key_check)
     }
 
     {
-        BOOST_MESSAGE("Eva try to close budget with invalid authority");
+        BOOST_TEST_MESSAGE("Eva try to close budget with invalid authority");
 
         close_budget_operation op;
         op.owner = alice.name;
@@ -127,7 +127,7 @@ SCORUM_TEST_CASE(miss_close_alien_budget_check)
     const banner_budget_object& bob_budget = banner_budget_service.get(0);
 
     {
-        BOOST_MESSAGE("Alice use invalid budget type with valid authority");
+        BOOST_TEST_MESSAGE("Alice use invalid budget type with valid authority");
 
         close_budget_operation op;
         op.owner = alice.name;
@@ -144,7 +144,7 @@ SCORUM_TEST_CASE(miss_close_alien_budget_check)
     }
 
     {
-        BOOST_MESSAGE("Bob use invalid budget type with valid authority");
+        BOOST_TEST_MESSAGE("Bob use invalid budget type with valid authority");
 
         close_budget_operation op;
         op.owner = bob.name;

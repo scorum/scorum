@@ -121,7 +121,7 @@ public:
 
     template <typename ServiceType> void winners_arranging_test(ServiceType& service, const budget_type type)
     {
-        BOOST_MESSAGE("Create budgets winner list: bob (1), alice (2), sam (3), sam (4), .., kenny(-1)");
+        BOOST_TEST_MESSAGE("Create budgets winner list: bob (1), alice (2), sam (3), sam (4), .., kenny(-1)");
 
         auto start = budget_start + budget_start_interval;
 
