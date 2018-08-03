@@ -32,6 +32,15 @@ struct get_raw_block_result
     std::string raw_block;
 };
 
+/**
+ * @brief The raw_block_api class
+ *
+ * Require: raw_block_plugin
+ *
+ * @ingroup api
+ * @ingroup raw_block_plugin
+ * @defgroup raw_block_api Raw block API
+ */
 class raw_block_api
 {
 public:
@@ -39,8 +48,14 @@ public:
 
     void on_api_startup();
 
+    /// @name Public API
+    /// @addtogroup raw_block_api
+    /// @{
+
     get_raw_block_result get_raw_block(get_raw_block_args args);
     void push_raw_block(std::string block_b64);
+
+    /// @}
 
 private:
     std::shared_ptr<detail::raw_block_api_impl> my;

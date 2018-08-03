@@ -29,6 +29,8 @@ void update_game_markets_evaluator::do_apply(const operation_type& op)
     auto game_obj = _game_service.find(op.game_id);
     FC_ASSERT(game_obj, "Game with id '${g}' doesn't exist", ("g", op.game_id));
 
+    FC_ASSERT(game_obj->status != game_status::finished, "Cannot change the markets when game is finished");
+
     betting::validate_game(game_obj->game, op.markets);
 
     auto old_wincases = utils::flatten(game_obj->markets, [](const auto& x) { return x.wincases; });

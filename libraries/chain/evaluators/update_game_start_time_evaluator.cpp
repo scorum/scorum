@@ -27,6 +27,8 @@ void update_game_start_time_evaluator::do_apply(const operation_type& op)
     auto game_obj = _game_service.find(op.game_id);
     FC_ASSERT(game_obj, "Game with id '${g}' doesn't exist", ("g", op.game_id));
 
+    FC_ASSERT(game_obj->status == game_status::created, "Cannot change the start time when game is started");
+
     _game_service.update(*game_obj, [&](game_object& g) { g.start = op.start; });
 }
 }

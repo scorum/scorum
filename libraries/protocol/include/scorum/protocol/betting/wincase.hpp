@@ -12,11 +12,10 @@ struct away_tag;
 struct draw_tag;
 struct both_tag;
 
-template <market_kind kind, typename tag = void> struct under;
-template <market_kind kind, typename tag = void> struct over
+template <bool side, market_kind kind, typename tag = void> struct over_under
 {
     static constexpr market_kind kind_v = kind;
-    using opposite_type = under<kind, tag>;
+    using opposite_type = over_under<!side, kind, tag>;
 
     threshold_type threshold = 0;
 
@@ -26,24 +25,10 @@ template <market_kind kind, typename tag = void> struct over
     }
 };
 
-template <market_kind kind, typename tag> struct under
+template <bool side, market_kind kind, typename tag = void> struct yes_no
 {
     static constexpr market_kind kind_v = kind;
-    using opposite_type = over<kind, tag>;
-
-    threshold_type threshold = 0;
-
-    opposite_type create_opposite() const
-    {
-        return opposite_type{ threshold };
-    }
-};
-
-template <market_kind kind, typename tag = void> struct no;
-template <market_kind kind, typename tag = void> struct yes
-{
-    static constexpr market_kind kind_v = kind;
-    using opposite_type = no<kind, tag>;
+    using opposite_type = yes_no<!side, kind, tag>;
 
     opposite_type create_opposite() const
     {
@@ -51,22 +36,10 @@ template <market_kind kind, typename tag = void> struct yes
     }
 };
 
-template <market_kind kind, typename tag> struct no
+template <bool side, market_kind kind, typename tag = void> struct score_yes_no
 {
     static constexpr market_kind kind_v = kind;
-    using opposite_type = yes<kind, tag>;
-
-    opposite_type create_opposite() const
-    {
-        return opposite_type{};
-    }
-};
-
-template <market_kind kind, typename tag = void> struct score_no;
-template <market_kind kind, typename tag = void> struct score_yes
-{
-    static constexpr market_kind kind_v = kind;
-    using opposite_type = score_no<kind>;
+    using opposite_type = score_yes_no<!side, kind, tag>;
 
     uint16_t home;
     uint16_t away;
@@ -77,19 +50,12 @@ template <market_kind kind, typename tag = void> struct score_yes
     }
 };
 
-template <market_kind kind, typename tag> struct score_no
-{
-    static constexpr market_kind kind_v = kind;
-    using opposite_type = score_yes<kind>;
-
-    uint16_t home;
-    uint16_t away;
-
-    opposite_type create_opposite() const
-    {
-        return opposite_type{ home, away };
-    }
-};
+template <market_kind kind, typename tag = void> using over = over_under<true, kind, tag>;
+template <market_kind kind, typename tag = void> using under = over_under<false, kind, tag>;
+template <market_kind kind, typename tag = void> using yes = yes_no<true, kind, tag>;
+template <market_kind kind, typename tag = void> using no = yes_no<false, kind, tag>;
+template <market_kind kind, typename tag = void> using score_yes = score_yes_no<true, kind, tag>;
+template <market_kind kind, typename tag = void> using score_no = score_yes_no<false, kind, tag>;
 
 using result_home = yes<market_kind::result, home_tag>;
 using result_draw_away = no<market_kind::result, home_tag>;

@@ -5,38 +5,20 @@ namespace scorum {
 namespace protocol {
 namespace betting {
 // clang-format off
-template <market_kind kind, typename tag>
-bool operator<(const over<kind, tag>& lhs, const over<kind, tag>& rhs)
+template <bool side, market_kind kind, typename tag>
+bool operator<(const over_under<side, kind, tag>& lhs, const over_under<side, kind, tag>& rhs)
 {
     return lhs.threshold < rhs.threshold;
 }
 
-template <market_kind kind, typename tag>
-bool operator<(const under<kind, tag>& lhs, const under<kind, tag>& rhs)
-{
-    return lhs.threshold < rhs.threshold;
-}
-
-template <market_kind kind, typename tag>
-bool operator<(const yes<kind, tag>& lhs, const yes<kind, tag>& rhs)
+template <bool side, market_kind kind, typename tag>
+bool operator<(const yes_no<side, kind, tag>& lhs, const yes_no<side, kind, tag>& rhs)
 {
     return false;
 }
 
-template <market_kind kind, typename tag>
-bool operator<(const no<kind, tag>& lhs, const no<kind, tag>& rhs)
-{
-    return false;
-}
-
-template <market_kind kind, typename tag>
-bool operator<(const score_yes<kind, tag>& lhs, const score_yes<kind, tag>& rhs)
-{
-    return std::tie(lhs.home, lhs.away) < std::tie(rhs.home, rhs.away);
-}
-
-template <market_kind kind, typename tag>
-bool operator<(const score_no<kind, tag>& lhs, const score_no<kind, tag>& rhs)
+template <bool side, market_kind kind, typename tag>
+bool operator<(const score_yes_no<side, kind, tag>& lhs, const score_yes_no<side, kind, tag>& rhs)
 {
     return std::tie(lhs.home, lhs.away) < std::tie(rhs.home, rhs.away);
 }
@@ -59,38 +41,20 @@ bool operator<(const wincase_type& lhs, const TWinCase& rhs)
     return tagl < tagr || (!(tagr < tagl) && lhs.get<std::decay_t<decltype(rhs)>>() < rhs);
 }
 
-template <market_kind kind, typename tag>
-bool operator==(const over<kind, tag>& lhs, const over<kind, tag>& rhs)
+template <bool side, market_kind kind, typename tag>
+bool operator==(const over_under<side, kind, tag>& lhs, const over_under<side, kind, tag>& rhs)
 {
     return lhs.threshold.value == rhs.threshold.value;
 }
 
-template <market_kind kind, typename tag>
-bool operator==(const under<kind, tag>& lhs, const under<kind, tag>& rhs)
-{
-    return lhs.threshold.value == rhs.threshold.value;
-}
-
-template <market_kind kind, typename tag>
-bool operator==(const yes<kind, tag>& lhs, const yes<kind, tag>& rhs)
+template <bool side, market_kind kind, typename tag>
+bool operator==(const yes_no<side, kind, tag>& lhs, const yes_no<side, kind, tag>& rhs)
 {
     return true;
 }
 
-template <market_kind kind, typename tag>
-bool operator==(const no<kind, tag>& lhs, const no<kind, tag>& rhs)
-{
-    return true;
-}
-
-template <market_kind kind, typename tag>
-bool operator==(const score_yes<kind, tag>& lhs, const score_yes<kind, tag>& rhs)
-{
-    return std::tie(lhs.home, lhs.away) == std::tie(rhs.home, rhs.away);
-}
-
-template <market_kind kind, typename tag>
-bool operator==(const score_no<kind, tag>& lhs, const score_no<kind, tag>& rhs)
+template <bool side, market_kind kind, typename tag>
+bool operator==(const score_yes_no<side, kind, tag>& lhs, const score_yes_no<side, kind, tag>& rhs)
 {
     return std::tie(lhs.home, lhs.away) == std::tie(rhs.home, rhs.away);
 }
@@ -142,20 +106,6 @@ template <> struct less<wincase_type>
     }
 };
 
-template <> struct less<wincase_pair>
-{
-    bool operator()(const wincase_pair& lhs, const wincase_pair& rhs) const
-    {
-        auto cmp = [](const auto& l, const auto& r) { return l.which() < r.which(); };
-        auto lhs_ordered = std::minmax(lhs.first, lhs.second, cmp);
-        auto rhs_ordered = std::minmax(rhs.first, rhs.second, cmp);
-
-        std::less<wincase_type> less_cmp{};
-        return less_cmp(lhs_ordered.first, rhs_ordered.first)
-            || (!less_cmp(rhs_ordered.first, lhs_ordered.first) && less_cmp(lhs_ordered.second, rhs_ordered.second));
-    }
-};
-
 template <> struct equal_to<wincase_type>
 {
     bool operator()(const wincase_type& lhs, const wincase_type& rhs) const
@@ -176,17 +126,51 @@ template <> struct equal_to<wincase_type>
         return lhs == rhs;
     }
 };
+}
+
+namespace scorum {
+namespace protocol {
+namespace betting {
+inline bool operator<(const wincase_pair& lhs, const wincase_pair& rhs)
+{
+    auto cmp = [](const auto& l, const auto& r) { return l.which() < r.which(); };
+    auto lhs_ordered = std::minmax(lhs.first, lhs.second, cmp);
+    auto rhs_ordered = std::minmax(rhs.first, rhs.second, cmp);
+
+    std::less<wincase_type> less_cmp{};
+    return less_cmp(lhs_ordered.first, rhs_ordered.first)
+        || (!less_cmp(rhs_ordered.first, lhs_ordered.first) && less_cmp(lhs_ordered.second, rhs_ordered.second));
+}
+
+inline bool operator==(const wincase_pair& lhs, const wincase_pair& rhs)
+{
+    auto cmp = [](const auto& l, const auto& r) { return l.which() < r.which(); };
+    auto lhs_ordered = std::minmax(lhs.first, lhs.second, cmp);
+    auto rhs_ordered = std::minmax(rhs.first, rhs.second, cmp);
+
+    std::equal_to<wincase_type> eq_comp{};
+    return eq_comp(lhs_ordered.first, rhs_ordered.first) && eq_comp(lhs_ordered.second, rhs_ordered.second);
+}
+}
+}
+}
+
+namespace std {
+using namespace scorum::protocol::betting;
+
+template <> struct less<wincase_pair>
+{
+    bool operator()(const wincase_pair& lhs, const wincase_pair& rhs) const
+    {
+        return lhs < rhs;
+    }
+};
 
 template <> struct equal_to<wincase_pair>
 {
     bool operator()(const wincase_pair& lhs, const wincase_pair& rhs) const
     {
-        auto cmp = [](const auto& l, const auto& r) { return l.which() < r.which(); };
-        auto lhs_ordered = std::minmax(lhs.first, lhs.second, cmp);
-        auto rhs_ordered = std::minmax(rhs.first, rhs.second, cmp);
-
-        std::equal_to<wincase_type> eq_comp{};
-        return eq_comp(lhs_ordered.first, rhs_ordered.first) && eq_comp(lhs_ordered.second, rhs_ordered.second);
+        return lhs == rhs;
     }
 };
 }

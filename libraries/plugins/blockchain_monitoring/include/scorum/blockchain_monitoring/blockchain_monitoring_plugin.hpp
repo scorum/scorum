@@ -16,6 +16,12 @@ namespace detail {
 class blockchain_monitoring_plugin_impl;
 }
 
+/**
+ * @brief This plugin designed to track statiscs over the time window
+ *
+ * @ingroup plugins
+ * @defgroup blockchain_monitoring_plugin Blockchain monitoring plugin
+ */
 class blockchain_monitoring_plugin : public scorum::app::plugin
 {
 public:

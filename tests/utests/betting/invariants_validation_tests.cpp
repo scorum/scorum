@@ -93,7 +93,7 @@ SCORUM_TEST_CASE(validate_market_test_negative)
     BOOST_REQUIRE_THROW(validate_market(market), fc::assert_exception);
 }
 
-SCORUM_TEST_CASE(validate_market_wincase_list_empty_should_throw)
+SCORUM_TEST_CASE(validate_market_empty_wincase_list_should_throw)
 {
     market_type market;
     market.kind = market_kind::total;
@@ -115,7 +115,7 @@ SCORUM_TEST_CASE(validate_game_full_market_list_test_positive)
     fc::flat_set<market_type> markets
         = { { market_kind::result, { { result_home{}, result_draw_away{} } } },
             { market_kind::round, { { round_home{}, round_away{} } } },
-            { market_kind::handicap, { { handicap_home_over{ 500 }, handicap_home_over{ 500 } } } },
+            { market_kind::handicap, { { handicap_home_over{ 500 }, handicap_home_under{ 500 } } } },
             { market_kind::correct_score, { { correct_score_home_yes{}, correct_score_home_no{} } } },
             { market_kind::goal, { { goal_both_yes{}, goal_both_no{} } } },
             { market_kind::total, { { total_over{ 500 }, total_under{ 500 } } } } };
@@ -127,7 +127,8 @@ SCORUM_TEST_CASE(validate_game_invalid_market_should_throw)
 {
     soccer_game game;
     fc::flat_set<market_type> markets
-        = { { market_kind::total_goals, { { total_goals_home_over{ 500 }, total_goals_home_under{ 500 } } } },
+        = { { market_kind::total_goals, // these is no such market in soccer_game yet
+              { { total_goals_home_over{ 500 }, total_goals_home_under{ 500 } } } },
             { market_kind::handicap, { { handicap_home_over{ 500 }, handicap_home_under{ 500 } } } } };
 
     BOOST_REQUIRE_THROW(validate_game(game, markets), fc::assert_exception);

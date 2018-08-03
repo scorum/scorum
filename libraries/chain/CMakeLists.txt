@@ -56,6 +56,7 @@ add_library( scorum_chain
              services/genesis_state.cpp
              services/account_registration_bonus.cpp
              services/blocks_story.cpp
+             services/hardfork_property.cpp
              services/betting_service.cpp
              services/game.cpp
 
