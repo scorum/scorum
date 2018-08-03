@@ -134,14 +134,11 @@ void dbs_betting::match(const bet_object& bet)
                     });
                 }
 
-                if (matched_stake.amount != 0)
-                {
-                    _matched_bet.create([&](matched_bet_object& obj) {
-                        obj.matched = _dgp_property.head_block_time();
-                        obj.bet1 = bet.id;
-                        obj.bet2 = pending_bet.id;
-                    });
-                }
+                _matched_bet.create([&](matched_bet_object& obj) {
+                    obj.matched = _dgp_property.head_block_time();
+                    obj.bet1 = bet.id;
+                    obj.bet2 = pending_bet.id;
+                });
 
                 if (!is_need_matching(pending_bet))
                 {
