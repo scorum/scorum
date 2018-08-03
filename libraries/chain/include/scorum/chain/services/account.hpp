@@ -74,6 +74,9 @@ struct account_service_i : public base_service_i<account_object>
     virtual void decrease_balance(const account_object& account, const asset& amount) = 0;
 
     virtual void increase_scorumpower(const account_object& account, const asset& amount) = 0;
+    virtual void decrease_scorumpower(const account_object& account, const asset& amount) = 0;
+
+    virtual asset create_scorumpower(const account_object& to_account, const asset& scorum) = 0;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) = 0;
 
@@ -107,8 +110,6 @@ struct account_service_i : public base_service_i<account_object>
         = 0;
 
     virtual void update_voting_proxy(const account_object& account, const optional<account_object>& proxy_account) = 0;
-
-    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) = 0;
 
     virtual void clear_witness_votes(const account_object& account) = 0;
 
@@ -202,6 +203,9 @@ public:
     virtual void decrease_balance(const account_object& account, const asset& amount) override;
 
     virtual void increase_scorumpower(const account_object& account, const asset& amount) override;
+    virtual void decrease_scorumpower(const account_object& account, const asset& amount) override;
+
+    virtual asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) override;
 
@@ -233,14 +237,6 @@ public:
 
     virtual void update_voting_proxy(const account_object& account,
                                      const optional<account_object>& proxy_account) override;
-
-    /**
-     * @param to_account - the account to receive the new scorumpower
-     * @param scorum - SCR to be converted to SP
-     * @param to_reward_balance
-     * @return the SP created and deposited to account
-     */
-    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
 
     /** clears all vote records for a particular account but does not update the
      * witness vote totals.  Vote totals should be updated first via a call to

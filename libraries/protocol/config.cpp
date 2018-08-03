@@ -38,8 +38,10 @@ config::config() /// production config
 
     , upvote_lockout(fc::hours(12))
 #endif
-    , vote_regeneration_seconds(fc::days(5))
 
+    , reverse_auction_window_seconds(fc::minutes(30))
+
+    , vote_regeneration_seconds(fc::days(5))
     , owner_auth_recovery_period(fc::days(30))
     , account_recovery_request_expiration_period(fc::days(1))
     , owner_update_limit(fc::minutes(60))
@@ -88,6 +90,8 @@ config::config(test_mode) /// test config
 
     , upvote_lockout(fc::minutes(5))
 
+    , reverse_auction_window_seconds(fc::seconds(30))
+
     , vote_regeneration_seconds(fc::minutes(30))
 
     , owner_auth_recovery_period(fc::seconds(60))
@@ -116,7 +120,7 @@ config::config(test_mode) /// test config
 
     , blogging_start_date(initial_date + cashout_window_seconds * 10)
 
-    , fifa_world_cup_2018_bounty_cashout_date(blogging_start_date + cashout_window_seconds * 11)
+    , fifa_world_cup_2018_bounty_cashout_date(blogging_start_date + cashout_window_seconds * 22)
 
     , expiraton_for_registration_bonus(fc::minutes(30))
 

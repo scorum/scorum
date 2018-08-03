@@ -26,12 +26,6 @@ public:
     void update_statistic(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
     void update_statistic(const withdrawable_id_type& from);
 
-    void
-    update_global_scr_properties(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
-
-    void
-    update_global_sp_properties(const withdrawable_id_type& from, const withdrawable_id_type& to, const asset& amount);
-
     void increase_scr(const withdrawable_id_type& id, const asset& amount);
 
     void increase_sp(const withdrawable_id_type& id, const asset& amount);
