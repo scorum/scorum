@@ -5,6 +5,9 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/budgets.hpp>
+#include <scorum/chain/services/bet.hpp>
+#include <scorum/chain/services/pending_bet.hpp>
+#include <scorum/chain/services/matched_bet.hpp>
 
 #include <fc/optional.hpp>
 
@@ -403,5 +406,89 @@ public:
 
 private:
     std::map<account_name_type, account_id_type> _index_by_name;
+};
+
+class bet_service_wrapper : public service_base_wrapper<bet_service_i>
+{
+    using base_class = service_base_wrapper<bet_service_i>;
+
+public:
+    template <typename C>
+    bet_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_, C&& constructor)
+        : base_class(shm_fixture, mocks_, constructor)
+    {
+        init_extension();
+    }
+
+    bet_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)
+        : base_class(shm_fixture, mocks_)
+    {
+        init_extension();
+    }
+
+    void init_extension()
+    {
+        _mocks.OnCall(_service, bet_service_i::get_bet).Do([this](const bet_id_type& obj_id) -> const bet_object& {
+            return this->get(obj_id);
+        });
+    }
+};
+
+class pending_bet_service_wrapper : public service_base_wrapper<pending_bet_service_i>
+{
+    using base_class = service_base_wrapper<pending_bet_service_i>;
+
+public:
+    template <typename C>
+    pending_bet_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_, C&& constructor)
+        : base_class(shm_fixture, mocks_, constructor)
+    {
+        init_extension();
+    }
+
+    pending_bet_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)
+        : base_class(shm_fixture, mocks_)
+    {
+        init_extension();
+    }
+
+    void init_extension()
+    {
+        _mocks.OnCall(_service, pending_bet_service_i::foreach_pending_bets)
+            .Do([this](const game_id_type&, pending_bet_service_i::pending_bet_call_type call) {
+                for (const auto& p : _objects_by_id)
+                {
+                    if (!call(p.second))
+                        break;
+                }
+            });
+        _mocks.OnCall(_service, pending_bet_service_i::get_pending_bet)
+            .Do([this](const pending_bet_id_type& obj_id) -> const pending_bet_object& { return this->get(obj_id); });
+    }
+};
+
+class matched_service_wrapper : public service_base_wrapper<matched_bet_service_i>
+{
+    using base_class = service_base_wrapper<matched_bet_service_i>;
+
+public:
+    template <typename C>
+    matched_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_, C&& constructor)
+        : base_class(shm_fixture, mocks_, constructor)
+    {
+        init_extension();
+    }
+
+    matched_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)
+        : base_class(shm_fixture, mocks_)
+    {
+        init_extension();
+    }
+
+    void init_extension()
+    {
+        _mocks.OnCall(_service, matched_bet_service_i::get_matched_bets)
+            .Do([this](const matched_bet_id_type& obj_id) -> const matched_bet_object& { return this->get(obj_id); });
+    }
 };
 }
