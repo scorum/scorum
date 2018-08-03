@@ -11,6 +11,7 @@
 #include <scorum/chain/evaluators/cancel_game_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_markets_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_start_time_evaluator.hpp>
+#include <scorum/chain/evaluators/post_game_results_evaluator.hpp>
 
 #include <scorum/protocol/betting/wincase_comparison.hpp>
 
@@ -396,6 +397,153 @@ SCORUM_TEST_CASE(expected_time_update)
             BOOST_CHECK_EQUAL(obj.start.sec_since_epoch(), 0u);
             mod(const_cast<game_object&>(obj));
             BOOST_CHECK_EQUAL(obj.start.sec_since_epoch(), 1u);
+        });
+
+    BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(post_game_results_evaluator_tests, game_evaluator_fixture)
+
+SCORUM_TEST_CASE(post_by_no_moderator_throw)
+{
+    post_game_results_evaluator ev(*dbs_services);
+
+    post_game_results_operation op;
+
+    mocks.OnCallOverload(game_service, (find_by_name_ptr)&game_service_i::find).Return(nullptr);
+    mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(false);
+
+    BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(cannot_find_game_should_throw)
+{
+    post_game_results_evaluator ev(*dbs_services);
+
+    post_game_results_operation op;
+
+    mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
+    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).Return(nullptr);
+
+    BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(game_not_started_yet_should_throw)
+{
+    post_game_results_evaluator ev(*dbs_services);
+
+    post_game_results_operation op;
+
+    auto game_obj = create_object<game_object>(shm, [](game_object& o) { o.status = game_status::created; });
+
+    mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
+    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+
+    BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(game_already_finished_should_throw)
+{
+    post_game_results_evaluator ev(*dbs_services);
+
+    post_game_results_operation op;
+
+    auto game_obj = create_object<game_object>(shm, [](game_object& o) { o.status = game_status::finished; });
+
+    mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
+    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+
+    BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(winners_do_not_cover_all_two_state_wincases_should_throw)
+{
+    post_game_results_evaluator ev(*dbs_services);
+
+    post_game_results_operation op;
+    op.wincases = { betting::correct_score_no{ 1, 1 } };
+
+    auto game_obj = create_object<game_object>(shm, [](game_object& o) {
+        o.id = 11u;
+        o.status = game_status::started;
+        o.markets = {
+            { betting::market_kind::total,
+              { { betting::total_over{ 1500 }, betting::total_under{ 1500 } },
+                { betting::total_over{ 1000 }, betting::total_under{ 1000 } } /* has trd state then nobody wins */ } },
+            { betting::market_kind::correct_score,
+              { { betting::correct_score_yes{ 1, 1 }, betting::correct_score_no{ 1, 1 } } } }
+        };
+    });
+
+    mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
+    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+
+    BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(winners_cover_all_wincases_shouldnt_throw)
+{
+    post_game_results_evaluator ev(*dbs_services);
+
+    post_game_results_operation op;
+    op.wincases = { betting::total_over{ 500 }, betting::total_under{ 1500 }, betting::correct_score_no{ 1, 1 },
+                    betting::correct_score_home_no{} };
+
+    auto game_obj = create_object<game_object>(shm, [](game_object& o) {
+        o.id = 11u;
+        o.status = game_status::started;
+        o.markets = { { betting::market_kind::total,
+                        { { betting::total_over{ 1500 }, betting::total_under{ 1500 } },
+                          { betting::total_over{ 500 }, betting::total_under{ 500 } } } },
+                      { betting::market_kind::correct_score,
+                        { { betting::correct_score_yes{ 1, 1 }, betting::correct_score_no{ 1, 1 } },
+                          { betting::correct_score_home_yes{}, betting::correct_score_home_no{} } } } };
+    });
+
+    mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
+    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCall(game_service, game_service_i::finish)
+        .Do([](const game_object& game, const fc::flat_set<betting::wincase_type>& wincases) -> void {
+            BOOST_CHECK_EQUAL(game.id._id, 11U);
+        });
+
+    BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
+}
+
+SCORUM_TEST_CASE(winners_cover_all_two_state_wincases_shouldnt_throw)
+{
+    post_game_results_evaluator ev(*dbs_services);
+
+    post_game_results_operation op;
+    op.wincases = { betting::total_over{ 1500 }, betting::correct_score_no{ 1, 1 } };
+
+    auto game_obj = create_object<game_object>(shm, [](game_object& o) {
+        o.id = 11u;
+        o.status = game_status::started;
+        o.markets = {
+            { betting::market_kind::total,
+              { { betting::total_over{ 1500 }, betting::total_under{ 1500 } },
+                { betting::total_over{ 0 }, betting::total_under{ 0 } }, /* has trd state then nobody wins */
+                { betting::total_over{ 1000 }, betting::total_under{ 1000 } } /* has trd state then nobody wins */ } },
+            { betting::market_kind::correct_score,
+              { { betting::correct_score_yes{ 1, 1 }, betting::correct_score_no{ 1, 1 } } } }
+        };
+    });
+
+    mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
+    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCall(game_service, game_service_i::finish)
+        .Do([](const game_object& game, const fc::flat_set<betting::wincase_type>& wincases) -> void {
+            BOOST_CHECK_EQUAL(game.id._id, 11U);
         });
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));

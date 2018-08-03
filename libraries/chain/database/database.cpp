@@ -83,6 +83,7 @@
 #include <scorum/chain/evaluators/cancel_game_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_markets_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_start_time_evaluator.hpp>
+#include <scorum/chain/evaluators/post_game_results_evaluator.hpp>
 
 #include <cmath>
 
@@ -1240,6 +1241,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<cancel_game_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_game_markets_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_game_start_time_evaluator>();
+    _my->_evaluator_registry.register_evaluator<post_game_results_evaluator>();
 }
 
 void database::initialize_indexes()
