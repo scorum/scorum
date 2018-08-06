@@ -17,18 +17,18 @@ cancel_game_evaluator::cancel_game_evaluator(data_service_factory_i& services)
 void cancel_game_evaluator::do_apply(const operation_type& op)
 {
     _account_service.check_account_existence(op.moderator);
-    auto is_moder = _betting_service.is_betting_moderator(op.moderator);
-    FC_ASSERT(is_moder, "User ${u} isn't a betting moderator", ("u", op.moderator));
+    FC_ASSERT(_betting_service.is_betting_moderator(op.moderator), "User ${u} isn't a betting moderator",
+              ("u", op.moderator));
+    FC_ASSERT(_game_service.is_exists(op.game_id), "Game with id '${g}' doesn't exist", ("g", op.game_id));
 
-    auto game_obj = _game_service.find(op.game_id);
-    FC_ASSERT(game_obj, "Game with id '${g}' doesn't exist", ("g", op.game_id));
+    auto game_obj = _game_service.get(op.game_id);
 
-    FC_ASSERT(game_obj->status != game_status::finished, "Cannot cancel the game after it is finished");
+    FC_ASSERT(game_obj.status != game_status::finished, "Cannot cancel the game after it is finished");
 
-    _betting_service.return_unresolved_bets(*game_obj);
+    _betting_service.return_unresolved_bets(game_obj);
 
-    _betting_service.remove_bets(*game_obj);
-    _game_service.remove(*game_obj);
+    _betting_service.remove_bets(game_obj);
+    _game_service.remove(game_obj);
 }
 }
 }
