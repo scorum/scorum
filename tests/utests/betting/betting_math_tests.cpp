@@ -3,7 +3,7 @@
 #include <scorum/protocol/asset.hpp>
 #include <scorum/protocol/odds.hpp>
 
-#include <scorum/chain/services/betting_service.hpp>
+#include <scorum/chain/betting/betting_math.hpp>
 
 #include "defines.hpp"
 
@@ -11,6 +11,7 @@ namespace betting_math_tests {
 
 using namespace scorum::protocol;
 using namespace scorum::chain;
+using namespace scorum::chain::betting;
 
 BOOST_AUTO_TEST_SUITE(betting_math_tests)
 

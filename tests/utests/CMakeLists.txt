@@ -49,6 +49,7 @@ set(SOURCES
     config_api_tests.cpp
     betting/betting_service_tests.cpp
     betting/betting_math_tests.cpp
+    betting/betting_matcher_tests.cpp
     odds_tests.cpp
 )
 
