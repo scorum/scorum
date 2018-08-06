@@ -22,17 +22,16 @@ post_game_results_evaluator::post_game_results_evaluator(data_service_factory_i&
 void post_game_results_evaluator::do_apply(const operation_type& op)
 {
     _account_service.check_account_existence(op.moderator);
-    auto is_moder = _betting_service.is_betting_moderator(op.moderator);
-    FC_ASSERT(is_moder, "User ${u} isn't a betting moderator", ("u", op.moderator));
+    FC_ASSERT(_betting_service.is_betting_moderator(op.moderator), "User ${u} isn't a betting moderator",
+              ("u", op.moderator));
+    FC_ASSERT(_game_service.is_exists(op.game_id), "Game with id '${g}' doesn't exist", ("g", op.game_id));
 
-    auto game_obj = _game_service.find(op.game_id);
-    FC_ASSERT(game_obj, "Game with id '${g}' doesn't exist", ("g", op.game_id));
+    auto game_obj = _game_service.get(op.game_id);
+    FC_ASSERT(game_obj.status == game_status::started, "The game is not started yet");
 
-    FC_ASSERT(game_obj->status == game_status::started, "The game is not started yet");
+    validate_winners(game_obj, op.wincases);
 
-    validate_winners(*game_obj, op.wincases);
-
-    _game_service.finish(*game_obj, op.wincases);
+    _game_service.finish(game_obj, op.wincases);
 }
 
 void post_game_results_evaluator::validate_winners(const game_object& game,

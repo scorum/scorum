@@ -50,6 +50,9 @@ public:
 
     virtual const game_object& get(const std::string& game_name) const override;
     virtual const game_object& get(int64_t game_id) const override;
+
+private:
+    dynamic_global_property_service_i& _dprops_service;
 };
 }
 }
