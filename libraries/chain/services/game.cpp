@@ -49,14 +49,24 @@ void dbs_game::update_markets(const game_object& game, const fc::flat_set<bettin
     });
 }
 
-const game_object* dbs_game::find(const std::string& game_name) const
+bool dbs_game::is_exists(const std::string& game_name) const
 {
-    return find_by<by_name>(game_name);
+    return find_by<by_name>(game_name) != nullptr;
 }
 
-const game_object* dbs_game::find(int64_t game_id) const
+bool dbs_game::is_exists(int64_t game_id) const
 {
-    return find_by<by_id>(game_id);
+    return find_by<by_id>(game_id) != nullptr;
+}
+
+const game_object& dbs_game::get(const std::string& game_name) const
+{
+    return get_by<by_name>(game_name);
+}
+
+const game_object& dbs_game::get(int64_t game_id) const
+{
+    return get_by<by_id>(game_id);
 }
 
 } // namespace scorum

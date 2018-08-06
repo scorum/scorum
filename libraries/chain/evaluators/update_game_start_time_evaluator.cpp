@@ -19,17 +19,17 @@ update_game_start_time_evaluator::update_game_start_time_evaluator(data_service_
 void update_game_start_time_evaluator::do_apply(const operation_type& op)
 {
     FC_ASSERT(op.start > _dprops_service.head_block_time(), "Game should start after head block time");
-
     _account_service.check_account_existence(op.moderator);
-    auto is_moder = _betting_service.is_betting_moderator(op.moderator);
-    FC_ASSERT(is_moder, "User ${u} isn't a betting moderator", ("u", op.moderator));
 
-    auto game_obj = _game_service.find(op.game_id);
-    FC_ASSERT(game_obj, "Game with id '${g}' doesn't exist", ("g", op.game_id));
+    FC_ASSERT(_betting_service.is_betting_moderator(op.moderator), "User ${u} isn't a betting moderator",
+              ("u", op.moderator));
 
-    FC_ASSERT(game_obj->status == game_status::created, "Cannot change the start time when game is started");
+    FC_ASSERT(_game_service.is_exists(op.game_id), "Game with id '${g}' doesn't exist", ("g", op.game_id));
+    auto game_obj = _game_service.get(op.game_id);
 
-    _game_service.update(*game_obj, [&](game_object& g) { g.start = op.start; });
+    FC_ASSERT(game_obj.status == game_status::created, "Cannot change the start time when game is started");
+
+    _game_service.update(game_obj, [&](game_object& g) { g.start = op.start; });
 }
 }
 }

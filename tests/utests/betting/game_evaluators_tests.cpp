@@ -25,8 +25,10 @@ struct game_evaluator_fixture : public shared_memory_fixture
     using check_account_existence_ptr
         = void (account_service_i::*)(const account_name_type&, const optional<const char*>&) const;
 
-    using find_by_name_ptr = const game_object* (game_service_i::*)(const std::string&)const;
-    using find_by_id_ptr = const game_object* (game_service_i::*)(int64_t) const;
+    using get_by_name_ptr = const game_object& (game_service_i::*)(const std::string&)const;
+    using get_by_id_ptr = const game_object& (game_service_i::*)(int64_t) const;
+    using exists_by_name_ptr = bool (game_service_i::*)(const std::string&) const;
+    using exists_by_id_ptr = bool (game_service_i::*)(int64_t) const;
 
     MockRepository mocks;
 
@@ -72,7 +74,7 @@ SCORUM_TEST_CASE(create_with_already_existing_name_throw)
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {});
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(1));
-    mocks.OnCallOverload(game_service, (find_by_name_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
 
     BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
 }
@@ -85,7 +87,7 @@ SCORUM_TEST_CASE(create_by_no_moderator_throw)
     op.start = fc::time_point_sec(1);
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
-    mocks.OnCallOverload(game_service, (find_by_name_ptr)&game_service_i::find).Return(nullptr);
+    mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(false);
 
@@ -103,7 +105,7 @@ SCORUM_TEST_CASE(game_should_be_created)
     op.start = fc::time_point_sec(1);
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
-    mocks.OnCallOverload(game_service, (find_by_name_ptr)&game_service_i::find).Return(nullptr);
+    mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
 
@@ -151,7 +153,8 @@ SCORUM_TEST_CASE(cancel_after_game_finished_throw)
     auto game_obj = create_object<game_object>(shm, [](game_object& o) { o.status = game_status::finished; });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
-    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
+    mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
 
     BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
@@ -182,7 +185,8 @@ SCORUM_TEST_CASE(update_after_game_finished_throw)
     auto game_obj = create_object<game_object>(shm, [](game_object& o) { o.status = game_status::finished; });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
-    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
+    mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
 
     BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
@@ -202,7 +206,8 @@ SCORUM_TEST_CASE(update_invalid_markets_throw)
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
-    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
+    mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
 
     BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
@@ -227,7 +232,8 @@ SCORUM_TEST_CASE(update_game_new_markets_is_overset_no_cancelled_bets)
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
-    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
+    mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks.OnCall(betting_service, betting_service_i::return_bets)
         .Do([](const game_object& obj, const std::vector<betting::wincase_pair>& cancelled_wincases) -> void {
@@ -259,7 +265,8 @@ SCORUM_TEST_CASE(update_game_new_markets_is_subset_some_bets_cancelled)
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
-    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
+    mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks.OnCall(betting_service, betting_service_i::return_bets)
         .Do([](const game_object& obj, const std::vector<betting::wincase_pair>& cancelled_wincases) -> void {
@@ -298,7 +305,8 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
-    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
+    mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks.OnCall(betting_service, betting_service_i::return_bets)
         .Do([](const game_object& obj, const std::vector<betting::wincase_pair>& cancelled_wincases) -> void {
@@ -353,7 +361,7 @@ SCORUM_TEST_CASE(cannot_find_game_throw)
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
-    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).Return(nullptr);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(false);
 
     BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
 }
@@ -370,7 +378,8 @@ SCORUM_TEST_CASE(after_game_started_throw)
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
-    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
+    mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get).ReturnByRef(game_obj);
 
     BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
 }
@@ -387,7 +396,8 @@ SCORUM_TEST_CASE(expected_time_update)
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
-    mocks.OnCallOverload(game_service, (find_by_id_ptr)&game_service_i::find).ReturnByRef(&game_obj);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
+    mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get).ReturnByRef(game_obj);
 
     mocks
         .OnCallOverload(game_service,
