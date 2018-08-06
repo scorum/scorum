@@ -31,7 +31,7 @@ SCORUM_TEST_CASE(more_than_matched_check) // to catch and log exceptions in calc
 
     auto matched = calculate_matched_stake(stake_my, stake_other, odds_my, odds_other);
 
-    BOOST_REQUIRE_EQUAL(matched.amount.value, 222'222'222);
+    BOOST_REQUIRE_EQUAL(matched.matched_stake.amount.value, 222'222'222);
 }
 
 SCORUM_TEST_CASE(less_than_matched_check)
@@ -47,7 +47,7 @@ SCORUM_TEST_CASE(less_than_matched_check)
 
     auto matched = calculate_matched_stake(stake_my, stake_other, odds_my, odds_other);
 
-    BOOST_REQUIRE_EQUAL(matched.amount.value, -900'000'000);
+    BOOST_REQUIRE_EQUAL(matched.matched_stake.amount.value, 900'000'000);
 }
 
 SCORUM_TEST_CASE(equal_matched_check)
@@ -62,11 +62,11 @@ SCORUM_TEST_CASE(equal_matched_check)
 
     auto matched = calculate_matched_stake(stake_my, stake_other, odds_my, odds_other);
 
-    BOOST_REQUIRE_EQUAL(matched, stake_my);
+    BOOST_REQUIRE_EQUAL(matched.matched_stake, stake_my);
 
     matched = calculate_matched_stake(stake_other, stake_my, odds_other, odds_my);
 
-    BOOST_REQUIRE_EQUAL(matched, stake_other);
+    BOOST_REQUIRE_EQUAL(matched.matched_stake, stake_other);
 }
 
 SCORUM_TEST_CASE(calculate_matched_stake_vanished_large_check)
@@ -79,7 +79,7 @@ SCORUM_TEST_CASE(calculate_matched_stake_vanished_large_check)
 
     auto matched = calculate_matched_stake(stake_my, stake_other, odds_my, odds_other);
 
-    BOOST_REQUIRE_EQUAL(matched, ASSET_SCR(1));
+    BOOST_REQUIRE_EQUAL(matched.matched_stake, ASSET_SCR(1));
 }
 
 SCORUM_TEST_CASE(calculate_matched_stake_vanished_less_check)
@@ -92,7 +92,7 @@ SCORUM_TEST_CASE(calculate_matched_stake_vanished_less_check)
 
     auto matched = calculate_matched_stake(stake_my, stake_other, odds_my, odds_other);
 
-    BOOST_REQUIRE_EQUAL(matched, ASSET_SCR(-1));
+    BOOST_REQUIRE_EQUAL(matched.matched_stake, ASSET_SCR(1));
 }
 
 SCORUM_TEST_CASE(calculate_matched_stake_negative_check)

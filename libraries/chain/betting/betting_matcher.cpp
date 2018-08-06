@@ -39,39 +39,36 @@ void betting_matcher::match(const bet_object& bet)
 
             if (is_bets_matched(bet, pending_bet))
             {
-                auto matched_stake
+                auto matched
                     = calculate_matched_stake(bet.rest_stake, pending_bet.rest_stake, bet.value, pending_bet.value);
-                if (matched_stake.amount > 0)
+                if (matched.potential_bet1_result >= matched.potential_bet2_result)
                 {
                     _bet_service.update(pending_bet, [&](bet_object& obj) {
                         obj.rest_stake.amount = 0;
-                        obj.gain += matched_stake.amount;
+                        obj.gain += matched.matched_stake;
                     });
                     _bet_service.update(bet, [&](bet_object& obj) {
-                        obj.rest_stake.amount -= matched_stake.amount;
+                        obj.rest_stake -= matched.matched_stake;
                         obj.gain += pending_bet.stake;
                     });
                 }
-                else if (matched_stake.amount < 0)
+                else if (matched.potential_bet1_result < matched.potential_bet2_result)
                 {
                     _bet_service.update(bet, [&](bet_object& obj) {
                         obj.rest_stake.amount = 0;
-                        obj.gain -= matched_stake.amount;
+                        obj.gain += matched.matched_stake;
                     });
                     _bet_service.update(pending_bet, [&](bet_object& obj) {
-                        obj.rest_stake.amount += matched_stake.amount;
+                        obj.rest_stake -= matched.matched_stake;
                         obj.gain += bet.stake;
                     });
                 }
 
-                if (matched_stake.amount != 0)
-                {
-                    _matched_bet_service.create([&](matched_bet_object& obj) {
-                        obj.matched = _dgp_property.head_block_time();
-                        obj.bet1 = bet.id;
-                        obj.bet2 = pending_bet.id;
-                    });
-                }
+                _matched_bet_service.create([&](matched_bet_object& obj) {
+                    obj.matched = _dgp_property.head_block_time();
+                    obj.bet1 = bet.id;
+                    obj.bet2 = pending_bet.id;
+                });
 
                 if (!is_need_matching(pending_bet))
                 {

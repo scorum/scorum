@@ -12,10 +12,15 @@ using scorum::protocol::odds;
 
 asset calculate_gain(const asset& bet_stake, const odds& bet_odds);
 
-asset calculate_matched_stake(const asset& bet1_stake,
-                              const asset& bet2_stake,
-                              const odds& bet1_odds,
-                              const odds& bet2_odds);
+struct matched_stake_type
+{
+    asset matched_stake = asset(0, SCORUM_SYMBOL);
+    asset potential_bet1_result = asset(0, SCORUM_SYMBOL);
+    asset potential_bet2_result = asset(0, SCORUM_SYMBOL);
+};
+
+matched_stake_type
+calculate_matched_stake(const asset& bet1_stake, const asset& bet2_stake, const odds& bet1_odds, const odds& bet2_odds);
 }
 }
 }
