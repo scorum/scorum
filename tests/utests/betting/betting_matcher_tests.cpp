@@ -22,21 +22,57 @@ struct betting_matcher_fixture : public betting_common::betting_service_fixture_
 
     betting_matcher service;
 
-    template <typename... Args> void validate_invariants(Args... args)
+    template <typename... Args> asset total_stake(Args... args)
     {
         std::array<bet_service_i::object_cref_type, sizeof...(args)> list = { args... };
-        asset total_start = ASSET_NULL_SCR;
+        asset result = ASSET_NULL_SCR;
         for (const bet_service_i::object_type& b : list)
         {
-            total_start += b.stake;
+            result += b.stake;
         }
+        return result;
+    }
 
-        asset total_result = ASSET_NULL_SCR;
+    template <typename... Args> asset total_stake_rest(Args... args)
+    {
+        std::array<bet_service_i::object_cref_type, sizeof...(args)> list = { args... };
+        asset result = ASSET_NULL_SCR;
         for (const bet_service_i::object_type& b : list)
         {
-            total_result += b.gain;
-            total_result += b.rest_stake;
+            result += b.rest_stake;
         }
+        return result;
+    }
+
+    template <typename... Args> asset total_gain(Args... args)
+    {
+        std::array<bet_service_i::object_cref_type, sizeof...(args)> list = { args... };
+        asset result = ASSET_NULL_SCR;
+        for (const bet_service_i::object_type& b : list)
+        {
+            result += b.gain;
+        }
+        return result;
+    }
+
+    template <typename... Args> asset total_matched(Args... args)
+    {
+        std::array<matched_bet_service_i::object_cref_type, sizeof...(args)> list = { args... };
+        asset result = ASSET_NULL_SCR;
+        for (const matched_bet_service_i::object_type& mb : list)
+        {
+            result += mb.matched_bet1_stake;
+            result += mb.matched_bet2_stake;
+        }
+        return result;
+    }
+
+    template <typename... Args> void validate_invariants_if_any_wincase_worked(Args... args)
+    {
+        asset total_start = total_stake(args...);
+
+        asset total_result = total_gain(args...);
+        total_result += total_stake_rest(args...);
 
         BOOST_REQUIRE_EQUAL(total_result, total_start);
     }
@@ -70,10 +106,19 @@ SCORUM_TEST_CASE(matched_for_full_stake_check)
     BOOST_CHECK_EQUAL(matched_bet.get().bet1._id, bet2.id._id);
     BOOST_CHECK_EQUAL(matched_bet.get().bet2._id, bet1.id._id);
 
+    BOOST_CHECK_EQUAL(matched_bet.get().matched_bet1_stake, bet2.stake);
+    BOOST_CHECK_EQUAL(matched_bet.get().matched_bet2_stake, bet1.stake);
+
     BOOST_CHECK_EQUAL(bet1.rest_stake, ASSET_NULL_SCR);
     BOOST_CHECK_EQUAL(bet2.rest_stake, ASSET_NULL_SCR);
 
-    validate_invariants(bet1, bet2);
+    validate_invariants_if_any_wincase_worked(bet1, bet2);
+
+    // validate_invariants_if_no_wincase_worked
+    asset total_start = total_stake(bet1, bet2);
+    asset total_result = total_matched(matched_bet.get(1));
+    total_result += total_stake_rest(bet1, bet2);
+    BOOST_REQUIRE_EQUAL(total_start, total_result);
 }
 
 SCORUM_TEST_CASE(matched_for_part_stake_check)
@@ -97,9 +142,18 @@ SCORUM_TEST_CASE(matched_for_part_stake_check)
     // <- 0.(1) SCR period give accuracy lag!
     BOOST_CHECK_EQUAL(bet2.rest_stake, ASSET_NULL_SCR);
 
+    BOOST_CHECK_EQUAL(matched_bet.get().matched_bet1_stake, bet2.stake);
+    BOOST_CHECK_EQUAL(matched_bet.get().matched_bet2_stake, bet1.stake - bet1.rest_stake);
+
     BOOST_CHECK_EQUAL(pending_bet.get().bet._id, bet1.id._id);
 
-    validate_invariants(bet1, bet2);
+    validate_invariants_if_any_wincase_worked(bet1, bet2);
+
+    // validate_invariants_if_no_wincase_worked
+    asset total_start = total_stake(bet1, bet2);
+    asset total_result = total_matched(matched_bet.get(1));
+    total_result += total_stake_rest(bet1, bet2);
+    BOOST_REQUIRE_EQUAL(total_start, total_result);
 }
 
 SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
@@ -112,6 +166,17 @@ SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
 
     service.match(bet2);
 
+    BOOST_CHECK(pending_bet.is_exists());
+    BOOST_CHECK(matched_bet.is_exists());
+
+    BOOST_CHECK_EQUAL(matched_bet.get(1).bet1._id, bet2.id._id);
+    BOOST_CHECK_EQUAL(matched_bet.get(1).bet2._id, bet1.id._id);
+
+    BOOST_CHECK_EQUAL(matched_bet.get(1).matched_bet1_stake, bet2.stake);
+    BOOST_CHECK_EQUAL(matched_bet.get(1).matched_bet2_stake, bet1.stake - bet1.rest_stake);
+
+    auto old_bet1_rest_stake = bet1.rest_stake;
+
     const auto& bet3 = create_bet("sam", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(1e+9)); // 1 SCR
 
     service.match(bet3);
@@ -122,17 +187,23 @@ SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
     BOOST_CHECK(!pending_bet.is_exists());
     BOOST_CHECK(matched_bet.is_exists());
 
-    BOOST_CHECK_EQUAL(matched_bet.get(1).bet1._id, bet2.id._id);
-    BOOST_CHECK_EQUAL(matched_bet.get(1).bet2._id, bet1.id._id);
-
     BOOST_CHECK_EQUAL(matched_bet.get(2).bet1._id, bet3.id._id);
     BOOST_CHECK_EQUAL(matched_bet.get(2).bet2._id, bet1.id._id);
+
+    BOOST_CHECK_EQUAL(matched_bet.get(2).matched_bet1_stake, bet3.stake);
+    BOOST_CHECK_EQUAL(matched_bet.get(2).matched_bet2_stake, old_bet1_rest_stake - bet1.rest_stake);
 
     BOOST_CHECK_GT(bet1.gain, ASSET_NULL_SCR);
     BOOST_CHECK_GT(bet2.gain, ASSET_NULL_SCR);
     BOOST_CHECK_GT(bet3.gain, ASSET_NULL_SCR);
 
-    validate_invariants(bet1, bet2, bet3);
+    validate_invariants_if_any_wincase_worked(bet1, bet2, bet3);
+
+    // validate_invariants_if_no_wincase_worked
+    asset total_start = total_stake(bet1, bet2, bet3);
+    asset total_result = total_matched(matched_bet.get(1), matched_bet.get(2));
+    total_result += total_stake_rest(bet1, bet2, bet3);
+    BOOST_REQUIRE_EQUAL(total_start, total_result);
 }
 
 SCORUM_TEST_CASE(matched_from_larger_potential_result_check)
@@ -155,14 +226,26 @@ SCORUM_TEST_CASE(matched_from_larger_potential_result_check)
     BOOST_CHECK_EQUAL(matched_bet.get(1).bet1._id, bet3.id._id);
     BOOST_CHECK_EQUAL(matched_bet.get(1).bet2._id, bet1.id._id);
 
+    BOOST_CHECK_EQUAL(matched_bet.get(1).matched_bet1_stake, bet1.potential_gain);
+    BOOST_CHECK_EQUAL(matched_bet.get(1).matched_bet2_stake, bet1.stake - bet1.rest_stake);
+
     BOOST_CHECK_EQUAL(matched_bet.get(2).bet1._id, bet3.id._id);
     BOOST_CHECK_EQUAL(matched_bet.get(2).bet2._id, bet2.id._id);
+
+    BOOST_CHECK_EQUAL(matched_bet.get(2).matched_bet1_stake, bet2.potential_gain);
+    BOOST_CHECK_EQUAL(matched_bet.get(2).matched_bet2_stake, bet3.stake);
 
     BOOST_CHECK_GT(bet1.gain, ASSET_NULL_SCR);
     BOOST_CHECK_GT(bet2.gain, ASSET_NULL_SCR);
     BOOST_CHECK_GT(bet3.gain, ASSET_NULL_SCR);
 
-    validate_invariants(bet1, bet2, bet3);
+    validate_invariants_if_any_wincase_worked(bet1, bet2, bet3);
+
+    // validate_invariants_if_no_wincase_worked
+    asset total_start = total_stake(bet1, bet2, bet3);
+    asset total_result = total_matched(matched_bet.get(1), matched_bet.get(2));
+    total_result += total_stake_rest(bet1, bet2, bet3);
+    BOOST_REQUIRE_EQUAL(total_start, total_result);
 }
 
 SCORUM_TEST_CASE(matched_but_matched_value_vanishes_from_larger_check)
@@ -186,7 +269,13 @@ SCORUM_TEST_CASE(matched_but_matched_value_vanishes_from_larger_check)
     BOOST_CHECK_GT(bet2.gain, ASSET_NULL_SCR);
     BOOST_CHECK_EQUAL(bet2.gain, bet1.stake);
 
-    validate_invariants(bet1, bet2);
+    validate_invariants_if_any_wincase_worked(bet1, bet2);
+
+    // validate_invariants_if_no_wincase_worked
+    asset total_start = total_stake(bet1, bet2);
+    asset total_result = total_matched(matched_bet.get(1));
+    total_result += total_stake_rest(bet1, bet2);
+    BOOST_REQUIRE_EQUAL(total_start, total_result);
 }
 
 SCORUM_TEST_CASE(matched_but_matched_value_vanishes_from_less_check)
@@ -210,7 +299,13 @@ SCORUM_TEST_CASE(matched_but_matched_value_vanishes_from_less_check)
     BOOST_CHECK_GT(bet2.gain, ASSET_NULL_SCR);
     BOOST_CHECK_EQUAL(bet1.gain, bet2.stake);
 
-    validate_invariants(bet1, bet2);
+    validate_invariants_if_any_wincase_worked(bet1, bet2);
+
+    // validate_invariants_if_no_wincase_worked
+    asset total_start = total_stake(bet1, bet2);
+    asset total_result = total_matched(matched_bet.get(1));
+    total_result += total_stake_rest(bet1, bet2);
+    BOOST_REQUIRE_EQUAL(total_start, total_result);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

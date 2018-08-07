@@ -39,36 +39,46 @@ void betting_matcher::match(const bet_object& bet)
 
             if (is_bets_matched(bet, pending_bet))
             {
-                auto matched
-                    = calculate_matched_stake(bet.rest_stake, pending_bet.rest_stake, bet.value, pending_bet.value);
-                if (matched.potential_bet1_result >= matched.potential_bet2_result)
+                auto matched = calculate_matched_stake(bet.rest_stake, pending_bet.rest_stake, bet.odds_value,
+                                                       pending_bet.odds_value);
+                if (matched.bet1_potential_result >= matched.bet2_potential_result)
                 {
+                    auto full_stake_to_gain = pending_bet.rest_stake;
+                    _bet_service.update(bet, [&](bet_object& obj) {
+                        obj.rest_stake -= matched.matched_result;
+                        obj.gain += full_stake_to_gain;
+                    });
                     _bet_service.update(pending_bet, [&](bet_object& obj) {
                         obj.rest_stake.amount = 0;
-                        obj.gain += matched.matched_stake;
+                        obj.gain += matched.matched_result;
                     });
-                    _bet_service.update(bet, [&](bet_object& obj) {
-                        obj.rest_stake -= matched.matched_stake;
-                        obj.gain += pending_bet.stake;
+                    _matched_bet_service.create([&](matched_bet_object& obj) {
+                        obj.when_matched = _dgp_property.head_block_time();
+                        obj.bet1 = bet.id;
+                        obj.bet2 = pending_bet.id;
+                        obj.matched_bet1_stake = matched.matched_result;
+                        obj.matched_bet2_stake = full_stake_to_gain;
                     });
                 }
-                else if (matched.potential_bet1_result < matched.potential_bet2_result)
+                else if (matched.bet1_potential_result < matched.bet2_potential_result)
                 {
+                    auto full_stake_to_gain = bet.rest_stake;
                     _bet_service.update(bet, [&](bet_object& obj) {
                         obj.rest_stake.amount = 0;
-                        obj.gain += matched.matched_stake;
+                        obj.gain += matched.matched_result;
                     });
                     _bet_service.update(pending_bet, [&](bet_object& obj) {
-                        obj.rest_stake -= matched.matched_stake;
-                        obj.gain += bet.stake;
+                        obj.rest_stake -= matched.matched_result;
+                        obj.gain += full_stake_to_gain;
+                    });
+                    _matched_bet_service.create([&](matched_bet_object& obj) {
+                        obj.when_matched = _dgp_property.head_block_time();
+                        obj.bet1 = bet.id;
+                        obj.bet2 = pending_bet.id;
+                        obj.matched_bet1_stake = full_stake_to_gain;
+                        obj.matched_bet2_stake = matched.matched_result;
                     });
                 }
-
-                _matched_bet_service.create([&](matched_bet_object& obj) {
-                    obj.matched = _dgp_property.head_block_time();
-                    obj.bet1 = bet.id;
-                    obj.bet2 = pending_bet.id;
-                });
 
                 if (!is_need_matching(pending_bet))
                 {
@@ -101,7 +111,7 @@ bool betting_matcher::is_bets_matched(const bet_object& bet1, const bet_object& 
 {
     FC_ASSERT(bet1.game == bet2.game);
     return bet1.better != bet2.better && protocol::betting::match_wincases(bet1.wincase, bet2.wincase)
-        && bet1.value.inverted() == bet2.value;
+        && bet1.odds_value.inverted() == bet2.odds_value;
 }
 
 bool betting_matcher::is_need_matching(const bet_object& bet) const

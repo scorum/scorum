@@ -45,10 +45,10 @@ const bet_object& betting_service::create_bet(const account_name_type& better,
             obj.better = better;
             obj.game = game;
             obj.wincase = wincase;
-            obj.value = odds::from_string(odds_value);
+            obj.odds_value = odds::from_string(odds_value);
             obj.stake = stake;
             obj.rest_stake = stake;
-            obj.potential_gain = calculate_gain(obj.stake, obj.value);
+            obj.potential_gain = calculate_gain(obj.stake, obj.odds_value);
         });
     }
     FC_CAPTURE_LOG_AND_RETHROW((better)(game)(wincase)(odds_value)(stake))

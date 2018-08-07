@@ -40,10 +40,10 @@ SCORUM_TEST_CASE(create_bet_positive_check)
 
     BOOST_CHECK_EQUAL(new_bet.better, test_bet_better);
     BOOST_CHECK_EQUAL(new_bet.game, test_bet_game);
-    BOOST_CHECK_EQUAL(new_bet.value.to_string(), test_bet_k);
+    BOOST_CHECK_EQUAL(new_bet.odds_value.to_string(), test_bet_k);
     BOOST_CHECK_EQUAL(new_bet.stake, test_bet_stake);
     BOOST_CHECK_EQUAL(new_bet.rest_stake, test_bet_stake);
-    BOOST_CHECK_EQUAL(new_bet.potential_gain, test_bet_stake * new_bet.value - new_bet.stake);
+    BOOST_CHECK_EQUAL(new_bet.potential_gain, test_bet_stake * new_bet.odds_value - new_bet.stake);
     BOOST_CHECK_EQUAL(new_bet.gain, ASSET_NULL_SCR);
 }
 

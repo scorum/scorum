@@ -22,7 +22,7 @@ using game_id_type = int16_t;
 class bet_object : public object<bet_object_type, bet_object>
 {
 public:
-    /// \cond DO_NOT_DOCUMENT
+    /// @cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_CONSTRUCTOR(bet_object)
 
     id_type id;
@@ -35,24 +35,24 @@ public:
 
     wincase_type wincase;
 
-    odds value;
+    odds odds_value;
 
     asset stake = asset(0, SCORUM_SYMBOL);
 
-    // how much assets returned back to account
+    /// how much assets returned back to account
     asset rest_stake = asset(0, SCORUM_SYMBOL);
 
-    // potential gain can calculated each time when we need but saved to improve productivity
+    /// potential gain
     asset potential_gain = asset(0, SCORUM_SYMBOL);
 
-    // how much assets win and gain to account
+    /// how much assets win and gain to account
     asset gain = asset(0, SCORUM_SYMBOL);
 };
 
 class pending_bet_object : public object<pending_bet_object_type, pending_bet_object>
 {
 public:
-    /// \cond DO_NOT_DOCUMENT
+    /// @cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_CONSTRUCTOR(pending_bet_object)
 
     id_type id;
@@ -65,19 +65,24 @@ public:
 class matched_bet_object : public object<matched_bet_object_type, matched_bet_object>
 {
 public:
-    /// \cond DO_NOT_DOCUMENT
+    /// @cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_CONSTRUCTOR(matched_bet_object)
 
     id_type id;
 
-    fc::time_point_sec matched;
+    fc::time_point_sec when_matched;
 
     bet_id_type bet1;
 
     bet_id_type bet2;
+
+    /// what part of bet1 stake is matched (subtracted from bet.rest_stake)
+    asset matched_bet1_stake = asset(0, SCORUM_SYMBOL);
+
+    /// what part of bet2 stake is matched (subtracted from bet.rest_stake)
+    asset matched_bet2_stake = asset(0, SCORUM_SYMBOL);
 };
 
-// struct by_better; --TODO
 struct by_game_id;
 
 typedef shared_multi_index_container<bet_object,
@@ -130,7 +135,7 @@ FC_REFLECT(scorum::chain::bet_object,
            (better)
            (game)
            (wincase)
-           (value)
+           (odds_value)
            (stake)
            (rest_stake)
            (potential_gain)
@@ -147,9 +152,11 @@ CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pendi
 
 FC_REFLECT(scorum::chain::matched_bet_object,
            (id)
-           (matched)
+           (when_matched)
            (bet1)
-           (bet2))
+           (bet2)
+           (matched_bet1_stake)
+           (matched_bet2_stake))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::matched_bet_object, scorum::chain::matched_bet_index)
 // clang-format on

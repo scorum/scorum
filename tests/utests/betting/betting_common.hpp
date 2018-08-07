@@ -70,10 +70,10 @@ protected:
             obj.better = better;
             obj.game = game;
             obj.wincase = wincase;
-            obj.value = odds::from_string(odds_value);
+            obj.odds_value = odds::from_string(odds_value);
             obj.stake = stake;
             obj.rest_stake = stake;
-            obj.potential_gain = calculate_gain(obj.stake, obj.value);
+            obj.potential_gain = calculate_gain(obj.stake, obj.odds_value);
         });
     }
 

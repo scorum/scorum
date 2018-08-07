@@ -14,9 +14,9 @@ asset calculate_gain(const asset& bet_stake, const odds& bet_odds);
 
 struct matched_stake_type
 {
-    asset matched_stake = asset(0, SCORUM_SYMBOL);
-    asset potential_bet1_result = asset(0, SCORUM_SYMBOL);
-    asset potential_bet2_result = asset(0, SCORUM_SYMBOL);
+    asset matched_result = asset(0, SCORUM_SYMBOL);
+    asset bet1_potential_result = asset(0, SCORUM_SYMBOL);
+    asset bet2_potential_result = asset(0, SCORUM_SYMBOL);
 };
 
 matched_stake_type
