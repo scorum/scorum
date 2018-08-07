@@ -41,44 +41,60 @@ void betting_matcher::match(const bet_object& bet)
             {
                 auto matched = calculate_matched_stake(bet.rest_stake, pending_bet.rest_stake, bet.odds_value,
                                                        pending_bet.odds_value);
-                if (matched.bet1_potential_result >= matched.bet2_potential_result)
-                {
-                    auto full_stake_to_gain = pending_bet.rest_stake;
-                    _bet_service.update(bet, [&](bet_object& obj) {
-                        obj.rest_stake -= matched.matched_result;
-                        obj.gain += full_stake_to_gain;
-                    });
-                    _bet_service.update(pending_bet, [&](bet_object& obj) {
-                        obj.rest_stake.amount = 0;
-                        obj.gain += matched.matched_result;
-                    });
-                    _matched_bet_service.create([&](matched_bet_object& obj) {
-                        obj.when_matched = _dgp_property.head_block_time();
-                        obj.bet1 = bet.id;
-                        obj.bet2 = pending_bet.id;
-                        obj.matched_bet1_stake = matched.matched_result;
-                        obj.matched_bet2_stake = full_stake_to_gain;
-                    });
-                }
-                else if (matched.bet1_potential_result < matched.bet2_potential_result)
-                {
-                    auto full_stake_to_gain = bet.rest_stake;
-                    _bet_service.update(bet, [&](bet_object& obj) {
-                        obj.rest_stake.amount = 0;
-                        obj.gain += matched.matched_result;
-                    });
-                    _bet_service.update(pending_bet, [&](bet_object& obj) {
-                        obj.rest_stake -= matched.matched_result;
-                        obj.gain += full_stake_to_gain;
-                    });
-                    _matched_bet_service.create([&](matched_bet_object& obj) {
-                        obj.when_matched = _dgp_property.head_block_time();
-                        obj.bet1 = bet.id;
-                        obj.bet2 = pending_bet.id;
-                        obj.matched_bet1_stake = full_stake_to_gain;
-                        obj.matched_bet2_stake = matched.matched_result;
-                    });
-                }
+                _bet_service.update(bet, [&](bet_object& obj) {
+                    obj.rest_stake -= matched.bet1_matched;
+                    obj.gain += matched.bet2_matched;
+                });
+                _bet_service.update(pending_bet, [&](bet_object& obj) {
+                    obj.rest_stake -= matched.bet2_matched;
+                    obj.gain += matched.bet1_matched;
+                });
+                _matched_bet_service.create([&](matched_bet_object& obj) {
+                    obj.when_matched = _dgp_property.head_block_time();
+                    obj.bet1 = bet.id;
+                    obj.bet2 = pending_bet.id;
+                    obj.matched_bet1_stake = matched.bet1_matched;
+                    obj.matched_bet2_stake = matched.bet2_matched;
+                });
+
+                //                if (matched.bet1_potential_result >= matched.bet2_potential_result)
+                //                {
+                //                    auto full_stake_to_gain = pending_bet.rest_stake;
+                //                    _bet_service.update(bet, [&](bet_object& obj) {
+                //                        obj.rest_stake -= matched.matched_result;
+                //                        obj.gain += full_stake_to_gain;
+                //                    });
+                //                    _bet_service.update(pending_bet, [&](bet_object& obj) {
+                //                        obj.rest_stake.amount = 0;
+                //                        obj.gain += matched.matched_result;
+                //                    });
+                //                    _matched_bet_service.create([&](matched_bet_object& obj) {
+                //                        obj.when_matched = _dgp_property.head_block_time();
+                //                        obj.bet1 = bet.id;
+                //                        obj.bet2 = pending_bet.id;
+                //                        obj.matched_bet1_stake = matched.matched_result;
+                //                        obj.matched_bet2_stake = full_stake_to_gain;
+                //                    });
+                //                }
+                //                else if (matched.bet1_potential_result < matched.bet2_potential_result)
+                //                {
+                //                    auto full_stake_to_gain = bet.rest_stake;
+                //                    _bet_service.update(bet, [&](bet_object& obj) {
+                //                        obj.rest_stake.amount = 0;
+                //                        obj.gain += matched.matched_result;
+                //                    });
+                //                    _bet_service.update(pending_bet, [&](bet_object& obj) {
+                //                        obj.rest_stake -= matched.matched_result;
+                //                        obj.gain += full_stake_to_gain;
+                //                    });
+                //                    _matched_bet_service.create([&](matched_bet_object& obj) {
+                //                        obj.when_matched = _dgp_property.head_block_time();
+                //                        obj.bet1 = bet.id;
+                //                        obj.bet2 = pending_bet.id;
+                //                        obj.matched_bet1_stake = full_stake_to_gain;
+                //                        obj.matched_bet2_stake = matched.matched_result;
+                //                    });
+                //                }
 
                 if (!is_need_matching(pending_bet))
                 {

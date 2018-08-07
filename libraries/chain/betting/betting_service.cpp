@@ -15,9 +15,9 @@ namespace chain {
 namespace betting {
 
 betting_service::betting_service(data_service_factory_i& db)
-    : _dgp_property(db.dynamic_global_property_service())
-    , _betting_property(db.betting_property_service())
-    , _bet(db.bet_service())
+    : _dgp_property_service(db.dynamic_global_property_service())
+    , _betting_property_service(db.betting_property_service())
+    , _bet_service(db.bet_service())
 {
 }
 
@@ -25,7 +25,7 @@ bool betting_service::is_betting_moderator(const account_name_type& account_name
 {
     try
     {
-        return _betting_property.get().moderator == account_name;
+        return _betting_property_service.get().moderator == account_name;
     }
     FC_CAPTURE_LOG_AND_RETHROW((account_name))
 }
@@ -40,8 +40,8 @@ const bet_object& betting_service::create_bet(const account_name_type& better,
     {
         FC_ASSERT(stake.amount > 0);
         FC_ASSERT(stake.symbol() == SCORUM_SYMBOL);
-        return _bet.create([&](bet_object& obj) {
-            obj.created = _dgp_property.head_block_time();
+        return _bet_service.create([&](bet_object& obj) {
+            obj.created = _dgp_property_service.head_block_time();
             obj.better = better;
             obj.game = game;
             obj.wincase = wincase;

@@ -26,24 +26,27 @@ calculate_matched_stake(const asset& bet1_stake, const asset& bet2_stake, const 
 
     matched_stake_type result;
 
-    result.bet1_potential_result = bet1_stake * bet1_odds;
-    result.bet2_potential_result = bet2_stake * bet2_odds;
+    auto r1 = bet1_stake * bet1_odds;
+    auto r2 = bet2_stake * bet2_odds;
 
-    if (result.bet1_potential_result > result.bet2_potential_result)
+    if (r1 > r2)
     {
-        auto matched_result = result.bet2_potential_result;
+        auto matched_result = r2;
         matched_result *= odds_fraction_type(bet1_odds).coup();
-        result.matched_result = std::max(matched_result, asset(1, matched_result.symbol()));
+        result.bet1_matched = std::max(matched_result, asset(1, matched_result.symbol()));
+        result.bet2_matched = bet2_stake;
     }
-    else if (result.bet1_potential_result < result.bet2_potential_result)
+    else if (r1 < r2)
     {
-        auto matched_result = result.bet1_potential_result;
+        auto matched_result = r1;
         matched_result *= odds_fraction_type(bet2_odds).coup();
-        result.matched_result = std::max(matched_result, asset(1, matched_result.symbol()));
+        result.bet2_matched = std::max(matched_result, asset(1, matched_result.symbol()));
+        result.bet1_matched = bet1_stake;
     }
     else
     {
-        result.matched_result = bet1_stake;
+        result.bet1_matched = bet1_stake;
+        result.bet2_matched = bet2_stake;
     }
 
     return result;

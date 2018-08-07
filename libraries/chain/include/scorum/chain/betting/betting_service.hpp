@@ -51,9 +51,9 @@ public:
     virtual void remove_bets(const game_object& game) override;
 
 private:
-    dynamic_global_property_service_i& _dgp_property;
-    betting_property_service_i& _betting_property;
-    bet_service_i& _bet;
+    dynamic_global_property_service_i& _dgp_property_service;
+    betting_property_service_i& _betting_property_service;
+    bet_service_i& _bet_service;
 };
 }
 }
