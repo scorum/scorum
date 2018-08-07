@@ -46,5 +46,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (bet)
         (matched_bet)
         (pending_bet)
+        (game)
         )
 // clang-format on

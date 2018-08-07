@@ -15,10 +15,6 @@ using scorum::protocol::asset;
 using scorum::protocol::odds;
 using scorum::protocol::betting::wincase_type;
 
-#if 1
-using game_id_type = int16_t;
-#endif
-
 class bet_object : public object<bet_object_type, bet_object>
 {
 public:

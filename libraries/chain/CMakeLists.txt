@@ -60,7 +60,8 @@ add_library( scorum_chain
              services/pending_bet.cpp
              services/bet.cpp
              services/matched_bet.cpp
-
+             services/game.cpp
+             
              data_service_factory.cpp
 
              evaluators/scorum_evaluators.cpp
@@ -75,6 +76,10 @@ add_library( scorum_chain
              evaluators/update_budget_evaluator.cpp
              evaluators/close_budget_evaluator.cpp
              evaluators/close_budget_by_advertising_moderator_evaluator.cpp
+             evaluators/create_game_evaluator.cpp
+             evaluators/cancel_game_evaluator.cpp
+             evaluators/update_game_markets_evaluator.cpp
+             evaluators/update_game_start_time_evaluator.cpp
 
              schema/shared_authority.cpp
              schema/advertising_property_object.cpp

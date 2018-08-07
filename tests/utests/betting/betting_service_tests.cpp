@@ -39,7 +39,7 @@ SCORUM_TEST_CASE(create_bet_positive_check)
     BOOST_REQUIRE(bet.is_exists(new_bet.id));
 
     BOOST_CHECK_EQUAL(new_bet.better, test_bet_better);
-    BOOST_CHECK_EQUAL(new_bet.game, test_bet_game);
+    BOOST_CHECK_EQUAL(new_bet.game._id, test_bet_game._id);
     BOOST_CHECK_EQUAL(new_bet.odds_value.to_string(), test_bet_k);
     BOOST_CHECK_EQUAL(new_bet.stake, test_bet_stake);
     BOOST_CHECK_EQUAL(new_bet.rest_stake, test_bet_stake);

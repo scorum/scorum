@@ -53,6 +53,31 @@ const bet_object& betting_service::create_bet(const account_name_type& better,
     }
     FC_CAPTURE_LOG_AND_RETHROW((better)(game)(wincase)(odds_value)(stake))
 }
+
+void betting_service::return_unresolved_bets(const game_object& game)
+{
+    boost::ignore_unused_variable_warning(game);
+    FC_THROW("not implemented");
+}
+
+void betting_service::return_bets(const game_object& game, const std::vector<wincase_pair>& cancelled_wincases)
+{
+    boost::ignore_unused_variable_warning(game);
+    boost::ignore_unused_variable_warning(cancelled_wincases);
+    FC_THROW("not implemented");
+}
+
+void betting_service::remove_disputs(const game_object& game)
+{
+    boost::ignore_unused_variable_warning(game);
+    FC_THROW("not implemented");
+}
+
+void betting_service::remove_bets(const game_object& game)
+{
+    boost::ignore_unused_variable_warning(game);
+    FC_THROW("not implemented");
+}
 }
 }
 }

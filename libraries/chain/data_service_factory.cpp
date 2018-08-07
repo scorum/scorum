@@ -37,6 +37,7 @@
 #include <scorum/chain/services/bet.hpp>
 #include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
+#include <scorum/chain/services/game.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -82,5 +83,6 @@ DATA_SERVICE_FACTORY_IMPL(
         (bet)
         (matched_bet)
         (pending_bet)
+        (game)
         )
 // clang-format on

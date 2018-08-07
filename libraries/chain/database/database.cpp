@@ -79,8 +79,14 @@
 #include <scorum/chain/evaluators/close_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/update_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/close_budget_by_advertising_moderator_evaluator.hpp>
+#include <scorum/chain/evaluators/create_game_evaluator.hpp>
+#include <scorum/chain/evaluators/cancel_game_evaluator.hpp>
+#include <scorum/chain/evaluators/update_game_markets_evaluator.hpp>
+#include <scorum/chain/evaluators/update_game_start_time_evaluator.hpp>
 
 #include <cmath>
+
+#include <scorum/chain/betting/betting_service.hpp>
 
 namespace scorum {
 namespace chain {
@@ -93,11 +99,13 @@ public:
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
     genesis_persistent_state_type _genesis_persistent_state;
+    betting::betting_service _betting_service;
 };
 
 database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
+    , _betting_service(self)
 {
 }
 
@@ -1232,6 +1240,10 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<create_game_evaluator>(_my->_betting_service);
+    _my->_evaluator_registry.register_evaluator<cancel_game_evaluator>(_my->_betting_service);
+    _my->_evaluator_registry.register_evaluator<update_game_markets_evaluator>(_my->_betting_service);
+    _my->_evaluator_registry.register_evaluator<update_game_start_time_evaluator>(_my->_betting_service);
 }
 
 void database::initialize_indexes()

@@ -13,6 +13,8 @@ struct bet_service_i;
 
 namespace betting {
 
+using scorum::protocol::betting::wincase_pair;
+
 struct betting_service_i
 {
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;
@@ -23,6 +25,11 @@ struct betting_service_i
                                          const std::string& odds_value,
                                          const asset& stake)
         = 0;
+
+    virtual void return_unresolved_bets(const game_object& game) = 0;
+    virtual void return_bets(const game_object& game, const std::vector<wincase_pair>& cancelled_wincases) = 0;
+    virtual void remove_disputs(const game_object& game) = 0;
+    virtual void remove_bets(const game_object& game) = 0;
 };
 
 class betting_service : public betting_service_i
@@ -37,6 +44,11 @@ public:
                                          const wincase_type& wincase,
                                          const std::string& odds_value,
                                          const asset& stake) override;
+
+    virtual void return_unresolved_bets(const game_object& game) override;
+    virtual void return_bets(const game_object& game, const std::vector<wincase_pair>& cancelled_wincases) override;
+    virtual void remove_disputs(const game_object& game) override;
+    virtual void remove_bets(const game_object& game) override;
 
 private:
     dynamic_global_property_service_i& _dgp_property;
