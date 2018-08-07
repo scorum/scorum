@@ -17,6 +17,7 @@ set(SOURCES
     betting/wincase_comparison_tests.cpp
     betting/threshold_comparison_tests.cpp
     betting/game_serialization_tests.cpp
+    betting/game_evaluators_tests.cpp
     genesis/initializator_tests.cpp
     genesis/accounts_tests.cpp
     genesis/founders_tests.cpp

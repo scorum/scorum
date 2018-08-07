@@ -10,9 +10,14 @@
 
 namespace scorum {
 namespace chain {
+
 struct betting_service_i
 {
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;
+    virtual void return_unresolved_bets(const game_object& game) = 0;
+    virtual void return_bets(const game_object& game, const std::vector<betting::wincase_pair>& cancelled_wincases) = 0;
+    virtual void remove_disputs(const game_object& game) = 0;
+    virtual void remove_bets(const game_object& game) = 0;
 };
 
 struct betting_property_service_i;
@@ -26,6 +31,11 @@ protected:
 
 public:
     virtual bool is_betting_moderator(const account_name_type& account_name) const override;
+    virtual void return_unresolved_bets(const game_object& game) override;
+    virtual void return_bets(const game_object& game,
+                             const std::vector<betting::wincase_pair>& cancelled_wincases) override;
+    virtual void remove_disputs(const game_object& game) override;
+    virtual void remove_bets(const game_object& game) override;
 
 private:
     betting_property_service_i& _betting_property;
