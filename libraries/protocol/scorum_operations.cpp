@@ -361,5 +361,21 @@ void update_game_start_time_operation::validate() const
     validate_account_name(moderator);
 }
 
+void post_bet_operation::validate() const
+{
+    FC_ASSERT(game_id > 0, "Game Id must be positive");
+    validate_account_name(better);
+    betting::validate_wincase(wincase, market);
+    FC_ASSERT(is_asset_type(stake, SCORUM_SYMBOL), "Stake must be SCR");
+    FC_ASSERT(stake > asset(0, SCORUM_SYMBOL), "Stake must be positive");
+    vallidate_odds(odds_value);
+}
+
+void cancel_bet_operation::validate() const
+{
+    FC_ASSERT(bet_id > 0, "Bet Id must be positive");
+    validate_account_name(better);
+}
+
 } // namespace protocol
 } // namespace scorum

@@ -820,6 +820,34 @@ struct update_game_start_time_operation : public base_operation
     }
 };
 
+struct post_bet_operation : public base_operation
+{
+    account_name_type better;
+    int64_t game_id;
+    betting::market_kind market;
+    betting::wincase_type wincase;
+    std::string odds_value;
+    asset stake;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(better);
+    }
+};
+
+struct cancel_bet_operation : public base_operation
+{
+    int64_t bet_id;
+    account_name_type better;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(better);
+    }
+};
+
 } // namespace protocol
 } // namespace scorum
 
@@ -911,4 +939,15 @@ FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
             (lifetime_sec)
             (operation))
+
+FC_REFLECT( scorum::protocol::post_bet_operation,
+           (better)
+           (game_id)
+           (market)
+           (wincase)
+           (odds_value)
+           (stake))
+FC_REFLECT( scorum::protocol::cancel_bet_operation,
+           (bet_id)
+           (better))
 // clang-format on

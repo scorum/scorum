@@ -3,6 +3,7 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/version.hpp>
+#include <scorum/protocol/odds.hpp>
 
 #include <fc/time.hpp>
 #include <fc/utf8.hpp>
@@ -28,6 +29,19 @@ inline void validate_json_metadata(const std::string& json_metadata)
     {
         FC_ASSERT(fc::is_utf8(json_metadata), "JSON Metadata not formatted in UTF8");
         FC_ASSERT(fc::json::is_valid(json_metadata), "JSON Metadata not valid JSON");
+    }
+}
+
+inline void vallidate_odds(const std::string& odds_value)
+{
+    try
+    {
+        odds::from_string(odds_value);
+    }
+    catch (fc::exception& err)
+    {
+        elog("${err}", ("err", err.what()));
+        FC_ASSERT(false, "Invalid odds value");
     }
 }
 

@@ -80,6 +80,8 @@ add_library( scorum_chain
              evaluators/cancel_game_evaluator.cpp
              evaluators/update_game_markets_evaluator.cpp
              evaluators/update_game_start_time_evaluator.cpp
+             evaluators/post_bet_evalulator.cpp
+             evaluators/cancel_bet_evalulator.cpp
 
              schema/shared_authority.cpp
              schema/advertising_property_object.cpp
