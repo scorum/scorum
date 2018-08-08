@@ -78,6 +78,15 @@ void validate_wincase(const wincase_type& wincase, market_kind market)
 
     FC_ASSERT(is_valid.value_or(true), "Wincase '${w}' is invalid", ("w", wincase));
 }
+
+void validate_bet_ids(const fc::flat_set<int64_t>& bet_ids)
+{
+    FC_ASSERT(!bet_ids.empty());
+    for (const auto& id : bet_ids)
+    {
+        FC_ASSERT(id > 0, "Bet Id must be positive");
+    }
+}
 }
 }
 }

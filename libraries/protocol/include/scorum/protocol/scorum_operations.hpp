@@ -836,15 +836,27 @@ struct post_bet_operation : public base_operation
     }
 };
 
-struct cancel_bet_operation : public base_operation
+struct cancel_pending_bets_operation : public base_operation
 {
-    int64_t bet_id;
+    fc::flat_set<int64_t> bet_ids;
     account_name_type better;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
         a.insert(better);
+    }
+};
+
+struct cancel_matched_bets_operation : public base_operation
+{
+    fc::flat_set<int64_t> bet_ids;
+    account_name_type moderator;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
     }
 };
 
@@ -947,7 +959,10 @@ FC_REFLECT( scorum::protocol::post_bet_operation,
            (wincase)
            (odds_value)
            (stake))
-FC_REFLECT( scorum::protocol::cancel_bet_operation,
-           (bet_id)
+FC_REFLECT( scorum::protocol::cancel_pending_bets_operation,
+           (bet_ids)
            (better))
+FC_REFLECT( scorum::protocol::cancel_matched_bets_operation,
+           (bet_ids)
+           (moderator))
 // clang-format on

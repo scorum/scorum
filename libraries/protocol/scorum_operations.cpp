@@ -371,11 +371,16 @@ void post_bet_operation::validate() const
     vallidate_odds(odds_value);
 }
 
-void cancel_bet_operation::validate() const
+void cancel_pending_bets_operation::validate() const
 {
-    FC_ASSERT(bet_id > 0, "Bet Id must be positive");
+    betting::validate_bet_ids(bet_ids);
     validate_account_name(better);
 }
 
+void cancel_matched_bets_operation::validate() const
+{
+    betting::validate_bet_ids(bet_ids);
+    validate_account_name(moderator);
+}
 } // namespace protocol
 } // namespace scorum

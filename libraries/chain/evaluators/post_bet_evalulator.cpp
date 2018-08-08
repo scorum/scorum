@@ -21,9 +21,19 @@ post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
 
 void post_bet_evaluator::do_apply(const operation_type& op)
 {
-    boost::ignore_unused_variable_warning(op);
+    FC_ASSERT(_game_service.is_exists(op.game_id));
 
-    // TODO
+    _account_service.check_account_existence(op.better);
+
+    const auto& better = _account_service.get_account(op.better);
+
+    FC_ASSERT(better.balance >= op.stake, "Insufficient funds");
+
+    const auto& bet_obj = _betting_service.create_bet(op.better, op.game_id, op.wincase, op.odds_value, op.stake);
+
+    _account_service.decrease_balance(better, op.stake);
+
+    _betting_matcher.match(bet_obj);
 }
 }
 }

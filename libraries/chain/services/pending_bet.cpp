@@ -22,6 +22,15 @@ void dbs_pending_bet::foreach_pending_bets(const game_id_type& game_id, dbs_pend
     FC_CAPTURE_LOG_AND_RETHROW((game_id))
 }
 
+void dbs_pending_bet::remove_by_bet(const bet_id_type& bet_obj_id)
+{
+    try
+    {
+        remove(get_by<by_bet_id>(bet_obj_id));
+    }
+    FC_CAPTURE_LOG_AND_RETHROW((bet_obj_id))
+}
+
 const pending_bet_object& dbs_pending_bet::get_pending_bet(const pending_bet_id_type& obj_id) const
 {
     try

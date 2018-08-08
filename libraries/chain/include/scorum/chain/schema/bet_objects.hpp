@@ -86,11 +86,17 @@ typedef shared_multi_index_container<bet_object,
                                                                member<bet_object, bet_id_type, &bet_object::id>>>>
     bet_index;
 
+struct by_bet_id;
+
 typedef shared_multi_index_container<pending_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<pending_bet_object,
                                                                       pending_bet_id_type,
                                                                       &pending_bet_object::id>>,
+                                                ordered_unique<tag<by_bet_id>,
+                                                               member<pending_bet_object,
+                                                                      bet_id_type,
+                                                                      &pending_bet_object::bet>>,
                                                 ordered_unique<tag<by_game_id>,
                                                                composite_key<pending_bet_object,
                                                                              member<pending_bet_object,
@@ -104,6 +110,8 @@ typedef shared_multi_index_container<pending_bet_object,
     pending_bet_index;
 
 struct by_matched_bets_id;
+struct by_matched_bet1_id;
+struct by_matched_bet2_id;
 
 typedef shared_multi_index_container<matched_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
@@ -119,7 +127,15 @@ typedef shared_multi_index_container<matched_bet_object,
                                                                                     bet_id_type,
                                                                                     &matched_bet_object::bet2>>,
                                                                composite_key_compare<std::less<bet_id_type>,
-                                                                                     std::less<bet_id_type>>>>>
+                                                                                     std::less<bet_id_type>>>,
+                                                ordered_non_unique<tag<by_matched_bet1_id>,
+                                                                   member<matched_bet_object,
+                                                                          bet_id_type,
+                                                                          &matched_bet_object::bet1>>,
+                                                ordered_non_unique<tag<by_matched_bet2_id>,
+                                                                   member<matched_bet_object,
+                                                                          bet_id_type,
+                                                                          &matched_bet_object::bet2>>>>
     matched_bet_index;
 }
 }
