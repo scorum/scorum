@@ -37,12 +37,6 @@ public:
 
     /// how much assets returned back to account
     asset rest_stake = asset(0, SCORUM_SYMBOL);
-
-    /// potential gain
-    asset potential_gain = asset(0, SCORUM_SYMBOL);
-
-    /// how much assets win and gain to account
-    asset gain = asset(0, SCORUM_SYMBOL);
 };
 
 class pending_bet_object : public object<pending_bet_object_type, pending_bet_object>
@@ -133,9 +127,7 @@ FC_REFLECT(scorum::chain::bet_object,
            (wincase)
            (odds_value)
            (stake)
-           (rest_stake)
-           (potential_gain)
-           (gain))
+           (rest_stake))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::bet_object, scorum::chain::bet_index)
 

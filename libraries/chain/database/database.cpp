@@ -43,6 +43,7 @@
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/advertising_property_object.hpp>
 #include <scorum/chain/schema/betting_property_object.hpp>
+#include <scorum/chain/schema/bet_objects.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -1293,7 +1294,11 @@ void database::initialize_indexes()
 
     add_index<witness_reward_in_sp_migration_index>();
     add_index<advertising_property_index>();
+
     add_index<betting_property_index>();
+    add_index<bet_index>();
+    add_index<pending_bet_index>();
+    add_index<matched_bet_index>();
 
     _plugin_index_signal();
 }

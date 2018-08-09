@@ -165,18 +165,18 @@ BOOST_FIXTURE_TEST_CASE(budget_close, update_evaluators_for_budget_fixture)
     SCORUM_REQUIRE_THROW(close_evaluator.do_apply(op), fc::assert_exception);
     op.owner = alice_create_budget_operation.owner;
 
-    BOOST_REQUIRE(post_budget_service_fixture.is_exists());
-    BOOST_REQUIRE(banner_budget_service_fixture.is_exists());
+    BOOST_REQUIRE(!post_budget_service_fixture.empty());
+    BOOST_REQUIRE(!banner_budget_service_fixture.empty());
 
     BOOST_REQUIRE_NO_THROW(close_evaluator.do_apply(op));
 
-    BOOST_CHECK(!post_budget_service_fixture.is_exists());
+    BOOST_CHECK(post_budget_service_fixture.empty());
 
     op.type = budget_type::banner;
 
     BOOST_REQUIRE_NO_THROW(close_evaluator.do_apply(op));
 
-    BOOST_CHECK(!banner_budget_service_fixture.is_exists());
+    BOOST_CHECK(banner_budget_service_fixture.empty());
 }
 
 BOOST_FIXTURE_TEST_CASE(budget_upate, update_evaluators_for_budget_fixture)

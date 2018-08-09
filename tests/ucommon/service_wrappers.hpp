@@ -105,9 +105,9 @@ public:
         return it->second;
     }
 
-    bool is_exists() const
+    bool empty() const
     {
-        return (!_objects_by_id.empty());
+        return _objects_by_id.empty();
     }
 
     bool is_exists(const typename object_type::id_type& id) const

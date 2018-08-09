@@ -22,7 +22,7 @@ struct betting_service_i
     virtual const bet_object& create_bet(const account_name_type& better,
                                          const game_id_type game,
                                          const wincase_type& wincase,
-                                         const std::string& odds_value,
+                                         const odds& odds_value,
                                          const asset& stake)
         = 0;
 
@@ -42,7 +42,7 @@ public:
     virtual const bet_object& create_bet(const account_name_type& better,
                                          const game_id_type game,
                                          const wincase_type& wincase,
-                                         const std::string& odds_value,
+                                         const odds& odds_value,
                                          const asset& stake) override;
 
     virtual void return_unresolved_bets(const game_object& game) override;

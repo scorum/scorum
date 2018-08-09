@@ -33,7 +33,7 @@ bool betting_service::is_betting_moderator(const account_name_type& account_name
 const bet_object& betting_service::create_bet(const account_name_type& better,
                                               const game_id_type game,
                                               const wincase_type& wincase,
-                                              const std::string& odds_value,
+                                              const odds& odds_value,
                                               const asset& stake)
 {
     try
@@ -45,10 +45,9 @@ const bet_object& betting_service::create_bet(const account_name_type& better,
             obj.better = better;
             obj.game = game;
             obj.wincase = wincase;
-            obj.odds_value = odds::from_string(odds_value);
+            obj.odds_value = odds_value;
             obj.stake = stake;
             obj.rest_stake = stake;
-            obj.potential_gain = calculate_gain(obj.stake, obj.odds_value);
         });
     }
     FC_CAPTURE_LOG_AND_RETHROW((better)(game)(wincase)(odds_value)(stake))

@@ -22,7 +22,7 @@ public:
 
 private:
     account_service_i& _account_service;
-    betting::betting_service_i& _betting_service;
+    chain::betting::betting_service_i& _betting_service;
     game_service_i& _game_service;
 };
 }
