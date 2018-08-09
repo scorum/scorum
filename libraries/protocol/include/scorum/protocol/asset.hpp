@@ -11,8 +11,6 @@ namespace scorum {
 namespace protocol {
 
 using asset_symbol_type = uint64_t;
-using share_value_type = int64_t;
-using share_type = safe<share_value_type>;
 
 struct asset
 {

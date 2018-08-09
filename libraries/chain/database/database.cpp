@@ -84,10 +84,14 @@
 #include <scorum/chain/evaluators/cancel_game_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_markets_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_start_time_evaluator.hpp>
+#include <scorum/chain/evaluators/post_bet_evalulator.hpp>
+#include <scorum/chain/evaluators/cancel_matched_bets_evaluator.hpp>
+#include <scorum/chain/evaluators/cancel_pending_bets_evaluator.hpp>
 
 #include <cmath>
 
 #include <scorum/chain/betting/betting_service.hpp>
+#include <scorum/chain/betting/betting_matcher.hpp>
 
 namespace scorum {
 namespace chain {
@@ -101,12 +105,14 @@ public:
     evaluator_registry<operation> _evaluator_registry;
     genesis_persistent_state_type _genesis_persistent_state;
     betting::betting_service _betting_service;
+    betting::betting_matcher _betting_matcher;
 };
 
 database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
     , _betting_service(self)
+    , _betting_matcher(self)
 {
 }
 
@@ -1245,6 +1251,9 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<cancel_game_evaluator>(_my->_betting_service);
     _my->_evaluator_registry.register_evaluator<update_game_markets_evaluator>(_my->_betting_service);
     _my->_evaluator_registry.register_evaluator<update_game_start_time_evaluator>(_my->_betting_service);
+    _my->_evaluator_registry.register_evaluator<post_bet_evaluator>(_my->_betting_service, _my->_betting_matcher);
+    _my->_evaluator_registry.register_evaluator<cancel_pending_bets_evaluator>(_my->_betting_service);
+    _my->_evaluator_registry.register_evaluator<cancel_matched_bets_evaluator>(_my->_betting_service);
 }
 
 void database::initialize_indexes()

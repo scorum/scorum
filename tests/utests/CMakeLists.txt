@@ -13,11 +13,6 @@ set(SOURCES
     genesis_tests.cpp
     print_tests.cpp
     atomicswap/atomicswap_helper_tests.cpp
-    betting/invariants_validation_tests.cpp
-    betting/wincase_comparison_tests.cpp
-    betting/threshold_comparison_tests.cpp
-    betting/game_serialization_tests.cpp
-    betting/game_evaluators_tests.cpp
     genesis/initializator_tests.cpp
     genesis/accounts_tests.cpp
     genesis/founders_tests.cpp
@@ -48,9 +43,15 @@ set(SOURCES
     budgets/advertising_api_tests.cpp
     fraction_tests.cpp
     config_api_tests.cpp
+    betting/invariants_validation_tests.cpp
+    betting/wincase_comparison_tests.cpp
+    betting/threshold_comparison_tests.cpp
+    betting/game_serialization_tests.cpp
+    betting/game_evaluators_tests.cpp
     betting/betting_service_tests.cpp
     betting/betting_math_tests.cpp
     betting/betting_matcher_tests.cpp
+    betting/bet_evaluators_tests.cpp
     odds_tests.cpp
 )
 

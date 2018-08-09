@@ -826,7 +826,7 @@ struct post_bet_operation : public base_operation
     int64_t game_id;
     betting::market_kind market;
     betting::wincase_type wincase;
-    std::string odds_value;
+    std::string odds;
     asset stake;
 
     void validate() const;
@@ -957,7 +957,7 @@ FC_REFLECT( scorum::protocol::post_bet_operation,
            (game_id)
            (market)
            (wincase)
-           (odds_value)
+           (odds)
            (stake))
 FC_REFLECT( scorum::protocol::cancel_pending_bets_operation,
            (bet_ids)

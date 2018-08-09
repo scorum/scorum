@@ -16,6 +16,7 @@
 
 #include <scorum/protocol/betting/wincase_comparison.hpp>
 
+#if 0
 namespace {
 
 using namespace scorum::chain;
@@ -411,3 +412,4 @@ SCORUM_TEST_CASE(expected_time_update)
 
 BOOST_AUTO_TEST_SUITE_END()
 }
+#endif

@@ -82,7 +82,7 @@ void betting_service::remove_bets(const game_object& game)
 
 bool betting_service::is_bet_matched(const bet_object& bet) const
 {
-    return bet.rest_stake != bet.stake || bet.gain != bet.potential_gain;
+    return bet.rest_stake != bet.stake;
 }
 }
 }

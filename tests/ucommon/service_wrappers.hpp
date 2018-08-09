@@ -8,6 +8,7 @@
 #include <scorum/chain/services/bet.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/matched_bet.hpp>
+#include <scorum/chain/services/game.hpp>
 
 #include <fc/optional.hpp>
 
@@ -116,40 +117,49 @@ public:
     }
 
 private:
+    template <typename ServiceWrapper, typename ServiceInterface>
+    friend void init_methods(ServiceWrapper*, ServiceInterface*);
+
     void init()
     {
         _service = _mocks.Mock<ServiceInterface>();
 
-        _mocks.OnCall(_service, ServiceInterface::create)
-            .Do([this](const typename ServiceInterface::modifier_type& m) -> const object_type& {
-                return this->create(m);
-            });
-
-        _mocks
-            .OnCallOverload(_service,
-                            (void (ServiceInterface::*)(const typename ServiceInterface::modifier_type&))
-                                & ServiceInterface::update)
-            .Do([this](const typename ServiceInterface::modifier_type& m) { this->update(m); });
-
-        _mocks
-            .OnCallOverload(
-                _service,
-                (void (ServiceInterface::*)(const object_type&, const typename ServiceInterface::modifier_type&))
-                    & ServiceInterface::update)
-            .Do([this](const object_type& object, const typename ServiceInterface::modifier_type& m) {
-                this->update(object, m);
-            });
-
-        _mocks.OnCallOverload(_service, (void (ServiceInterface::*)(const object_type&)) & ServiceInterface::remove)
-            .Do([this](const object_type& object) { this->remove(object); });
-
-        _mocks
-            .OnCallOverload(_service,
-                            (const object_type& (base_service_i<object_type>::*)() const)
-                                & base_service_i<object_type>::get)
-            .Do([this]() -> const object_type& { return this->get(); });
+        init_methods(this, _service);
     }
 };
+
+template <typename ServiceInterface> void init_methods(MockRepository& mocks, ServiceInterface* service)
+{
+    self->_mocks.OnCall(self->_service, ServiceInterface::create)
+        .Do([self](const typename ServiceInterface::modifier_type& m) -> const object_type& {
+            return self->create(m);
+        });
+
+    self->_mocks
+        .OnCallOverload(self->_service,
+                        (void (ServiceInterface::*)(const typename ServiceInterface::modifier_type&))
+                            & ServiceInterface::update)
+        .Do([self](const typename ServiceInterface::modifier_type& m) { self->update(m); });
+
+    self->_mocks
+        .OnCallOverload(
+            self->_service,
+            (void (ServiceInterface::*)(const object_type&, const typename ServiceInterface::modifier_type&))
+                & ServiceInterface::update)
+        .Do([self](const object_type& object, const typename ServiceInterface::modifier_type& m) {
+            self->update(object, m);
+        });
+
+    self->_mocks
+        .OnCallOverload(self->_service, (void (ServiceInterface::*)(const object_type&)) & ServiceInterface::remove)
+        .Do([self](const object_type& object) { self->remove(object); });
+
+    self->_mocks
+        .OnCallOverload(self->_service,
+                        (const object_type& (base_service_i<object_type>::*)() const)
+                            & base_service_i<object_type>::get)
+        .Do([self]() -> const object_type& { return self->get(); });
+}
 
 class dynamic_global_property_service_wrapper : public service_base_wrapper<dynamic_global_property_service_i>
 {
@@ -491,4 +501,38 @@ public:
             .Do([this](const matched_bet_id_type& obj_id) -> const matched_bet_object& { return this->get(obj_id); });
     }
 };
+
+class game_service_wrapper : public service_base_wrapper<game_service_i>
+{
+    using base_class = service_base_wrapper<game_service_i>;
+
+public:
+    template <typename C>
+    game_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_, C&& constructor)
+        : base_class(shm_fixture, mocks_, constructor)
+    {
+        init_extension();
+    }
+
+    game_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)
+        : base_class(shm_fixture, mocks_)
+    {
+        init_extension();
+    }
+
+    void init_extension()
+    {
+        _mocks.OnCallOverload(_service, (bool (game_service_i::*)(int64_t) const) & game_service_i::is_exists)
+            .Do([this](int64_t game_id) -> bool { return this->is_exists(game_id); });
+    }
+};
+
+template <> void init_methods<game_service_wrapper, game_service_i>(game_service_wrapper* self, game_service_i*)
+{
+    self->_mocks
+        .OnCallOverload(self->_service,
+                        (void (game_service_i::*)(const typename game_service_i::modifier_type&))
+                            & game_service_i::update)
+        .Do([self](const typename game_service_i::modifier_type& m) { self->update(m); });
+}
 }

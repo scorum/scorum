@@ -23,13 +23,14 @@ void cancel_pending_bets_evaluator::do_apply(const operation_type& op)
 {
     _account_service.check_account_existence(op.better);
 
-    const auto& better = _account_service.get_account(op.better);
-
     for (const auto& bet_id : op.bet_ids)
     {
         FC_ASSERT(_bet_service.is_exists(bet_id), "Bet ${id} doesn't exist", ("id", bet_id));
         const auto& bet_obj = _bet_service.get_bet(bet_id);
-        FC_ASSERT(bet_obj.better == better.name, "Invalid better for bet ${id}", ("id", bet_id));
+        FC_ASSERT(_betting_service.is_betting_moderator(op.better) || bet_obj.better == op.better,
+                  "Invalid better for bet ${id}", ("id", bet_id));
+
+        const auto& better = _account_service.get_account(op.better);
 
         _account_service.increase_balance(better, bet_obj.rest_stake);
 
