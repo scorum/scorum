@@ -41,14 +41,8 @@ void betting_matcher::match(const bet_object& bet)
             {
                 auto matched = calculate_matched_stake(bet.rest_stake, pending_bet.rest_stake, bet.odds_value,
                                                        pending_bet.odds_value);
-                _bet_service.update(bet, [&](bet_object& obj) {
-                    obj.rest_stake -= matched.bet1_matched;
-                    obj.gain += matched.bet2_matched;
-                });
-                _bet_service.update(pending_bet, [&](bet_object& obj) {
-                    obj.rest_stake -= matched.bet2_matched;
-                    obj.gain += matched.bet1_matched;
-                });
+                _bet_service.update(bet, [&](bet_object& obj) { obj.rest_stake -= matched.bet1_matched; });
+                _bet_service.update(pending_bet, [&](bet_object& obj) { obj.rest_stake -= matched.bet2_matched; });
                 _matched_bet_service.create([&](matched_bet_object& obj) {
                     obj.when_matched = _dgp_property.head_block_time();
                     obj.bet1 = bet.id;
@@ -93,7 +87,7 @@ bool betting_matcher::is_bets_matched(const bet_object& bet1, const bet_object& 
 
 bool betting_matcher::is_need_matching(const bet_object& bet) const
 {
-    return bet.gain.amount < bet.potential_gain.amount;
+    return bet.rest_stake.amount > SCORUM_MIN_STAKE_FOR_MATCHING;
 }
 }
 }

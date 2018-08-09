@@ -31,9 +31,9 @@ protected:
 
     betting_service_fixture_impl()
         : betting_property(*this, mocks, [&](betting_property_object& bp) { bp.moderator = moderator; })
-        , bet(*this, mocks)
-        , pending_bet(*this, mocks)
-        , matched_bet(*this, mocks)
+        , bets(*this, mocks)
+        , pending_bets(*this, mocks)
+        , matched_bets(*this, mocks)
         , dgp_service(*this, mocks, [&](dynamic_global_property_object& p) {
             p.time = fc::time_point_sec::from_iso_string("2018-07-01T00:00:00");
             p.head_block_number = 1;
@@ -41,9 +41,9 @@ protected:
     {
         mocks.OnCall(dbs_services, data_service_factory_i::betting_property_service)
             .ReturnByRef(betting_property.service());
-        mocks.OnCall(dbs_services, data_service_factory_i::bet_service).ReturnByRef(bet.service());
-        mocks.OnCall(dbs_services, data_service_factory_i::pending_bet_service).ReturnByRef(pending_bet.service());
-        mocks.OnCall(dbs_services, data_service_factory_i::matched_bet_service).ReturnByRef(matched_bet.service());
+        mocks.OnCall(dbs_services, data_service_factory_i::bet_service).ReturnByRef(bets.service());
+        mocks.OnCall(dbs_services, data_service_factory_i::pending_bet_service).ReturnByRef(pending_bets.service());
+        mocks.OnCall(dbs_services, data_service_factory_i::matched_bet_service).ReturnByRef(matched_bets.service());
         mocks.OnCall(dbs_services, data_service_factory_i::dynamic_global_property_service)
             .ReturnByRef(dgp_service.service());
     }
@@ -65,7 +65,7 @@ protected:
                                  const std::string& odds_value,
                                  const asset& stake)
     {
-        return bet.create([&](bet_object& obj) {
+        return bets.create([&](bet_object& obj) {
             obj.created = dgp_service.service().head_block_time();
             obj.better = better;
             obj.game = game;
@@ -73,15 +73,14 @@ protected:
             obj.odds_value = odds::from_string(odds_value);
             obj.stake = stake;
             obj.rest_stake = stake;
-            obj.potential_gain = calculate_gain(obj.stake, obj.odds_value);
         });
     }
 
 public:
     service_base_wrapper<betting_property_service_i> betting_property;
-    bet_service_wrapper bet;
-    pending_bet_service_wrapper pending_bet;
-    matched_service_wrapper matched_bet;
+    bet_service_wrapper bets;
+    pending_bet_service_wrapper pending_bets;
+    matched_service_wrapper matched_bets;
     dynamic_global_property_service_wrapper dgp_service;
 };
 }

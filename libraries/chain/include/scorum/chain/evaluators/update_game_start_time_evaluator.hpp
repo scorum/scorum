@@ -24,7 +24,7 @@ public:
 private:
     account_service_i& _account_service;
     dynamic_global_property_service_i& _dprops_service;
-    betting::betting_service_i& _betting_service;
+    chain::betting::betting_service_i& _betting_service;
     game_service_i& _game_service;
 };
 }

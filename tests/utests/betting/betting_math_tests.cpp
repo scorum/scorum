@@ -112,16 +112,16 @@ SCORUM_TEST_CASE(calculate_matched_stake_negative_check)
 
 SCORUM_TEST_CASE(calculate_gain_positive_check)
 {
-    auto potential_gain = calculate_gain(ASSET_SCR(1e+9), odds(10, 1));
+    auto potential_profit = calculate_gain(ASSET_SCR(1e+9), odds(10, 1));
 
-    BOOST_CHECK_EQUAL(potential_gain, ASSET_SCR(9e+9));
+    BOOST_CHECK_EQUAL(potential_profit, ASSET_SCR(9e+9));
 }
 
 SCORUM_TEST_CASE(calculate_gain_vanished_check)
 {
-    auto potential_gain = calculate_gain(ASSET_SCR(8000), odds(1000'0, 999'9));
+    auto potential_profit = calculate_gain(ASSET_SCR(8000), odds(1000'0, 999'9));
 
-    BOOST_CHECK_EQUAL(potential_gain, ASSET_SCR(1));
+    BOOST_CHECK_EQUAL(potential_profit, ASSET_SCR(1));
 }
 
 SCORUM_TEST_CASE(calculate_gain_negative_check)

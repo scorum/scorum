@@ -33,30 +33,29 @@ SCORUM_TEST_CASE(is_betting_moderator_check)
 
 SCORUM_TEST_CASE(create_bet_positive_check)
 {
-    const auto& new_bet
-        = service.create_bet(test_bet_better, test_bet_game, test_bet_wincase, test_bet_k, test_bet_stake);
+    const auto& new_bet = service.create_bet(test_bet_better, test_bet_game, test_bet_wincase,
+                                             odds::from_string(test_bet_k), test_bet_stake);
 
-    BOOST_REQUIRE(bet.is_exists(new_bet.id));
+    BOOST_REQUIRE(bets.is_exists(new_bet.id));
 
     BOOST_CHECK_EQUAL(new_bet.better, test_bet_better);
     BOOST_CHECK_EQUAL(new_bet.game._id, test_bet_game._id);
     BOOST_CHECK_EQUAL(new_bet.odds_value.to_string(), test_bet_k);
     BOOST_CHECK_EQUAL(new_bet.stake, test_bet_stake);
     BOOST_CHECK_EQUAL(new_bet.rest_stake, test_bet_stake);
-    BOOST_CHECK_EQUAL(new_bet.potential_gain, test_bet_stake * new_bet.odds_value - new_bet.stake);
-    BOOST_CHECK_EQUAL(new_bet.gain, ASSET_NULL_SCR);
 }
 
 SCORUM_TEST_CASE(create_bet_negative_check)
 {
-    BOOST_CHECK_THROW(service.create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SP(1e+9)),
-                      fc::exception);
-    BOOST_CHECK_THROW(service.create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_NULL_SCR),
-                      fc::exception);
-    BOOST_CHECK_THROW(service.create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_NULL_SP),
-                      fc::exception);
-    BOOST_CHECK_THROW(service.create_bet("alice", test_bet_game, goal_home_yes(), "10000000/1", ASSET_SCR(1e+9)),
-                      fc::exception);
+    BOOST_CHECK_THROW(
+        service.create_bet("alice", test_bet_game, goal_home_yes(), odds::from_string("10/1"), ASSET_SP(1e+9)),
+        fc::exception);
+    BOOST_CHECK_THROW(
+        service.create_bet("alice", test_bet_game, goal_home_yes(), odds::from_string("10/1"), ASSET_NULL_SCR),
+        fc::exception);
+    BOOST_CHECK_THROW(
+        service.create_bet("alice", test_bet_game, goal_home_yes(), odds::from_string("10/1"), ASSET_NULL_SP),
+        fc::exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
