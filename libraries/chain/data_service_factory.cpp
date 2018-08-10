@@ -34,7 +34,9 @@
 #include <scorum/chain/services/blocks_story.hpp>
 #include <scorum/chain/services/advertising_property.hpp>
 #include <scorum/chain/services/betting_property.hpp>
-#include <scorum/chain/services/betting_service.hpp>
+#include <scorum/chain/services/bet.hpp>
+#include <scorum/chain/services/matched_bet.hpp>
+#include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/game.hpp>
 
 // clang-format off
@@ -78,7 +80,9 @@ DATA_SERVICE_FACTORY_IMPL(
         (blocks_story)
         (advertising_property)
         (betting_property)
-        (betting)
+        (bet)
+        (matched_bet)
+        (pending_bet)
         (game)
         )
 // clang-format on

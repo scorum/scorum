@@ -12,8 +12,8 @@ dbs_game::dbs_game(database& db)
 const game_object& dbs_game::create(const account_name_type& moderator,
                                     const std::string& game_name,
                                     fc::time_point_sec start,
-                                    const betting::game_type& game,
-                                    const fc::flat_set<betting::market_type>& markets)
+                                    const game_type& game,
+                                    const fc::flat_set<market_type>& markets)
 {
     return dbs_service_base<game_service_i>::create([&](game_object& obj) {
         obj.moderator = moderator;
@@ -27,7 +27,7 @@ const game_object& dbs_game::create(const account_name_type& moderator,
     });
 }
 
-void dbs_game::update_markets(const game_object& game, const fc::flat_set<betting::market_type>& markets)
+void dbs_game::update_markets(const game_object& game, const fc::flat_set<market_type>& markets)
 {
     update(game, [&](game_object& g) {
         g.markets.clear();

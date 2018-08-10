@@ -10,6 +10,9 @@ namespace chain {
 
 using namespace scorum::protocol;
 
+using scorum::protocol::betting::game_type;
+using scorum::protocol::betting::market_type;
+
 enum class game_status : uint8_t
 {
     created,
@@ -35,8 +38,8 @@ public:
 
     game_status status = game_status::created;
 
-    betting::game_type game;
-    fc::shared_flat_set<betting::market_type> markets;
+    game_type game;
+    fc::shared_flat_set<market_type> markets;
 };
 
 using game_index
