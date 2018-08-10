@@ -20,7 +20,9 @@ struct betting_service_i
     virtual void remove_bets(const game_object& game) = 0;
 };
 
-struct betting_property_service_i;
+namespace dba {
+template <typename> struct db_accessor_i;
+}
 
 class dbs_betting : public dbs_base, public betting_service_i
 {
@@ -38,7 +40,7 @@ public:
     virtual void remove_bets(const game_object& game) override;
 
 private:
-    betting_property_service_i& _betting_property;
+    dba::db_accessor_i<betting_property_object>& _betting_property;
 };
 }
 }
