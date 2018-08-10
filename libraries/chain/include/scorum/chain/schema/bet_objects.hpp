@@ -35,7 +35,7 @@ public:
 
     asset stake = asset(0, SCORUM_SYMBOL);
 
-    /// how much assets returned back to account
+    /// Not matched part of stake
     asset rest_stake = asset(0, SCORUM_SYMBOL);
 };
 
