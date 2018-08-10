@@ -26,19 +26,22 @@ void cancel_pending_bets_evaluator::do_apply(const operation_type& op)
     for (const auto& bet_id : op.bet_ids)
     {
         FC_ASSERT(_bet_service.is_exists(bet_id), "Bet ${id} doesn't exist", ("id", bet_id));
-        const auto& bet_obj = _bet_service.get_bet(bet_id);
-        FC_ASSERT(_betting_service.is_betting_moderator(op.better) || bet_obj.better == op.better,
+        const auto& bet = _bet_service.get_bet(bet_id);
+        FC_ASSERT(_betting_service.is_betting_moderator(op.better) || bet.better == op.better,
                   "Invalid better for bet ${id}", ("id", bet_id));
 
         const auto& better = _account_service.get_account(op.better);
 
-        _account_service.increase_balance(better, bet_obj.rest_stake);
+        _account_service.increase_balance(better, bet.rest_stake);
 
-        _pending_bet_service.remove_by_bet(bet_id);
+        _bet_service.update(bet, [&](bet_object& obj) { obj.rest_stake.amount = 0; });
 
-        if (!_betting_service.is_bet_matched(bet_obj))
+        const auto& pending_bet = _pending_bet_service.get_by_bet(bet_id);
+        _pending_bet_service.remove(pending_bet);
+
+        if (!_betting_service.is_bet_matched(bet))
         {
-            _bet_service.remove(bet_obj);
+            _bet_service.remove(bet);
         }
     }
 }

@@ -9,11 +9,11 @@ namespace chain {
 
 struct game_service_i : public base_service_i<game_object>
 {
-    virtual const game_object& create(const account_name_type& moderator,
-                                      const std::string& game_name,
-                                      fc::time_point_sec start,
-                                      const game_type& game,
-                                      const fc::flat_set<market_type>& markets)
+    virtual const game_object& create_game(const account_name_type& moderator,
+                                           const std::string& game_name,
+                                           fc::time_point_sec start,
+                                           const game_type& game,
+                                           const fc::flat_set<market_type>& markets)
         = 0;
 
     virtual void update_markets(const game_object& game, const fc::flat_set<market_type>& markets) = 0;
@@ -33,11 +33,11 @@ protected:
     explicit dbs_game(database& db);
 
 public:
-    virtual const game_object& create(const account_name_type& moderator,
-                                      const std::string& game_name,
-                                      fc::time_point_sec start,
-                                      const game_type& game,
-                                      const fc::flat_set<market_type>& markets) override;
+    virtual const game_object& create_game(const account_name_type& moderator,
+                                           const std::string& game_name,
+                                           fc::time_point_sec start,
+                                           const game_type& game,
+                                           const fc::flat_set<market_type>& markets) override;
     virtual void update_markets(const game_object& game, const fc::flat_set<market_type>& markets) override;
 
     virtual bool is_exists(const std::string& game_name) const override;

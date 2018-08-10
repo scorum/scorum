@@ -117,49 +117,40 @@ public:
     }
 
 private:
-    template <typename ServiceWrapper, typename ServiceInterface>
-    friend void init_methods(ServiceWrapper*, ServiceInterface*);
-
     void init()
     {
         _service = _mocks.Mock<ServiceInterface>();
 
-        init_methods(this, _service);
+        _mocks.OnCall(_service, ServiceInterface::create)
+            .Do([this](const typename ServiceInterface::modifier_type& m) -> const object_type& {
+                return this->create(m);
+            });
+
+        _mocks
+            .OnCallOverload(_service,
+                            (void (ServiceInterface::*)(const typename ServiceInterface::modifier_type&))
+                                & ServiceInterface::update)
+            .Do([this](const typename ServiceInterface::modifier_type& m) { this->update(m); });
+
+        _mocks
+            .OnCallOverload(
+                _service,
+                (void (ServiceInterface::*)(const object_type&, const typename ServiceInterface::modifier_type&))
+                    & ServiceInterface::update)
+            .Do([this](const object_type& object, const typename ServiceInterface::modifier_type& m) {
+                this->update(object, m);
+            });
+
+        _mocks.OnCallOverload(_service, (void (ServiceInterface::*)(const object_type&)) & ServiceInterface::remove)
+            .Do([this](const object_type& object) { this->remove(object); });
+
+        _mocks
+            .OnCallOverload(_service,
+                            (const object_type& (base_service_i<object_type>::*)() const)
+                                & base_service_i<object_type>::get)
+            .Do([this]() -> const object_type& { return this->get(); });
     }
 };
-
-template <typename ServiceInterface> void init_methods(MockRepository& mocks, ServiceInterface* service)
-{
-    self->_mocks.OnCall(self->_service, ServiceInterface::create)
-        .Do([self](const typename ServiceInterface::modifier_type& m) -> const object_type& {
-            return self->create(m);
-        });
-
-    self->_mocks
-        .OnCallOverload(self->_service,
-                        (void (ServiceInterface::*)(const typename ServiceInterface::modifier_type&))
-                            & ServiceInterface::update)
-        .Do([self](const typename ServiceInterface::modifier_type& m) { self->update(m); });
-
-    self->_mocks
-        .OnCallOverload(
-            self->_service,
-            (void (ServiceInterface::*)(const object_type&, const typename ServiceInterface::modifier_type&))
-                & ServiceInterface::update)
-        .Do([self](const object_type& object, const typename ServiceInterface::modifier_type& m) {
-            self->update(object, m);
-        });
-
-    self->_mocks
-        .OnCallOverload(self->_service, (void (ServiceInterface::*)(const object_type&)) & ServiceInterface::remove)
-        .Do([self](const object_type& object) { self->remove(object); });
-
-    self->_mocks
-        .OnCallOverload(self->_service,
-                        (const object_type& (base_service_i<object_type>::*)() const)
-                            & base_service_i<object_type>::get)
-        .Do([self]() -> const object_type& { return self->get(); });
-}
 
 class dynamic_global_property_service_wrapper : public service_base_wrapper<dynamic_global_property_service_i>
 {
@@ -441,6 +432,9 @@ public:
         _mocks.OnCall(_service, bet_service_i::get_bet).Do([this](const bet_id_type& obj_id) -> const bet_object& {
             return this->get(obj_id);
         });
+
+        _mocks.OnCallOverload(_service, (bool (bet_service_i::*)(const bet_id_type&) const) & bet_service_i::is_exists)
+            .Do([this](const bet_id_type& obj_id) -> bool { return this->is_exists(obj_id); });
     }
 };
 
@@ -526,13 +520,4 @@ public:
             .Do([this](int64_t game_id) -> bool { return this->is_exists(game_id); });
     }
 };
-
-template <> void init_methods<game_service_wrapper, game_service_i>(game_service_wrapper* self, game_service_i*)
-{
-    self->_mocks
-        .OnCallOverload(self->_service,
-                        (void (game_service_i::*)(const typename game_service_i::modifier_type&))
-                            & game_service_i::update)
-        .Do([self](const typename game_service_i::modifier_type& m) { self->update(m); });
-}
 }

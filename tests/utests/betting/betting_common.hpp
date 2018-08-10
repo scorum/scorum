@@ -36,7 +36,7 @@ protected:
     betting_service_fixture_impl()
         : betting_property(*this, mocks, [&](betting_property_object& bp) { bp.moderator = moderator; })
         , account_service(*this, mocks)
-        , game_service(*this, mocks)
+        , games(*this, mocks)
         , bets(*this, mocks)
         , pending_bets(*this, mocks)
         , matched_bets(*this, mocks)
@@ -48,7 +48,7 @@ protected:
         mocks.OnCall(dbs_services, data_service_factory_i::betting_property_service)
             .ReturnByRef(betting_property.service());
         mocks.OnCall(dbs_services, data_service_factory_i::account_service).ReturnByRef(account_service.service());
-        mocks.OnCall(dbs_services, data_service_factory_i::game_service).ReturnByRef(game_service.service());
+        mocks.OnCall(dbs_services, data_service_factory_i::game_service).ReturnByRef(games.service());
         mocks.OnCall(dbs_services, data_service_factory_i::bet_service).ReturnByRef(bets.service());
         mocks.OnCall(dbs_services, data_service_factory_i::pending_bet_service).ReturnByRef(pending_bets.service());
         mocks.OnCall(dbs_services, data_service_factory_i::matched_bet_service).ReturnByRef(matched_bets.service());
@@ -87,7 +87,7 @@ protected:
 public:
     service_base_wrapper<betting_property_service_i> betting_property;
     account_service_wrapper account_service;
-    game_service_wrapper game_service;
+    game_service_wrapper games;
     bet_service_wrapper bets;
     pending_bet_service_wrapper pending_bets;
     matched_service_wrapper matched_bets;
