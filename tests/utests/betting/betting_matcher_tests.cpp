@@ -202,51 +202,5 @@ SCORUM_TEST_CASE(matched_from_larger_potential_result_check)
     BOOST_REQUIRE_EQUAL(total_start, total_result);
 }
 
-SCORUM_TEST_CASE(matched_but_matched_value_vanishes_from_larger_check)
-{
-    const auto& bet1 = create_bet("bob", test_bet_game, goal_home_no(), "10000/9999", ASSET_SCR(8e+3)); // 0.000'008 SCR
-    // it should produce minimal matched stake = 1e-9 SCR
-
-    service.match(bet1);
-
-    const auto& bet2 = create_bet("alice", test_bet_game, goal_home_yes(), "10000/1", ASSET_SCR(1e+9)); // 1 SCR
-
-    service.match(bet2);
-
-    BOOST_CHECK(!pending_bets.empty()); // 0.000'008 SCR can't be paid for huge 'alice' gain
-    BOOST_CHECK(!matched_bets.empty());
-
-    BOOST_CHECK_EQUAL(matched_bets.get(1).bet1._id, bet2.id._id);
-    BOOST_CHECK_EQUAL(matched_bets.get(1).bet2._id, bet1.id._id);
-
-    asset total_start = total_stake(bet1, bet2);
-    asset total_result = total_matched(matched_bets.get(1));
-    total_result += total_stake_rest(bet1, bet2);
-    BOOST_REQUIRE_EQUAL(total_start, total_result);
-}
-
-SCORUM_TEST_CASE(matched_but_matched_value_vanishes_from_less_check)
-{
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home_yes(), "10000/1", ASSET_SCR(1e+9)); // 1 SCR
-
-    service.match(bet1);
-
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home_no(), "10000/9999", ASSET_SCR(8e+3)); // 0.000'008 SCR
-    // it should produce minimal matched stake = 1e-9 SCR
-
-    service.match(bet2);
-
-    BOOST_CHECK(!pending_bets.empty()); // 0.000'008 SCR can't be paid for huge 'alice' gain
-    BOOST_CHECK(!matched_bets.empty());
-
-    BOOST_CHECK_EQUAL(matched_bets.get(1).bet1._id, bet2.id._id);
-    BOOST_CHECK_EQUAL(matched_bets.get(1).bet2._id, bet1.id._id);
-
-    asset total_start = total_stake(bet1, bet2);
-    asset total_result = total_matched(matched_bets.get(1));
-    total_result += total_stake_rest(bet1, bet2);
-    BOOST_REQUIRE_EQUAL(total_start, total_result);
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 }

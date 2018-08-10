@@ -69,32 +69,6 @@ SCORUM_TEST_CASE(equal_matched_check)
     BOOST_REQUIRE_EQUAL(matched.bet1_matched, stake_other);
 }
 
-SCORUM_TEST_CASE(calculate_matched_stake_vanished_large_check)
-{
-    const asset stake_my = ASSET_SCR(1e+9);
-    const asset stake_other = ASSET_SCR(8e+3);
-
-    const odds odds_my = odds(10000, 1);
-    const odds odds_other = odds(10000, 9999);
-
-    auto matched = calculate_matched_stake(stake_my, stake_other, odds_my, odds_other);
-
-    BOOST_REQUIRE_EQUAL(matched.bet1_matched, ASSET_SCR(1));
-}
-
-SCORUM_TEST_CASE(calculate_matched_stake_vanished_less_check)
-{
-    const asset stake_my = ASSET_SCR(8e+3);
-    const asset stake_other = ASSET_SCR(1e+9);
-
-    const odds odds_my = odds(10000, 9999);
-    const odds odds_other = odds(10000, 1);
-
-    auto matched = calculate_matched_stake(stake_my, stake_other, odds_my, odds_other);
-
-    BOOST_REQUIRE_EQUAL(matched.bet2_matched, ASSET_SCR(1));
-}
-
 SCORUM_TEST_CASE(calculate_matched_stake_negative_check)
 {
     BOOST_CHECK_THROW(calculate_matched_stake(ASSET_SCR(1e+9), ASSET_SP(9e+9), odds(10, 1), odds(10, 9)),
@@ -115,18 +89,6 @@ SCORUM_TEST_CASE(calculate_gain_positive_check)
     auto potential_profit = calculate_gain(ASSET_SCR(1e+9), odds(10, 1));
 
     BOOST_CHECK_EQUAL(potential_profit, ASSET_SCR(9e+9));
-}
-
-SCORUM_TEST_CASE(calculate_gain_vanished_check)
-{
-    auto potential_profit = calculate_gain(ASSET_SCR(8000), odds(1000'0, 999'9));
-
-    BOOST_CHECK_EQUAL(potential_profit, ASSET_SCR(1));
-}
-
-SCORUM_TEST_CASE(calculate_gain_negative_check)
-{
-    BOOST_CHECK_THROW(calculate_gain(ASSET_SP(1e+9), odds(10, 1)), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -468,6 +468,18 @@ public:
             });
         _mocks.OnCall(_service, pending_bet_service_i::get_pending_bet)
             .Do([this](const pending_bet_id_type& obj_id) -> const pending_bet_object& { return this->get(obj_id); });
+
+        _mocks.OnCall(_service, pending_bet_service_i::get_by_bet)
+            .Do([this](const bet_id_type& obj_id) -> const pending_bet_object& {
+                for (const auto& v : _objects_by_id)
+                {
+                    const pending_bet_object& obj = v.second;
+                    if (obj.bet == obj_id)
+                        return obj;
+                }
+                FC_ASSERT(false);
+                return get();
+            });
     }
 };
 
