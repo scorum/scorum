@@ -61,6 +61,7 @@ using operation = fc::static_variant<vote_operation,
                                      cancel_game_operation,
                                      update_game_markets_operation,
                                      update_game_start_time_operation,
+                                     post_game_results_operation,
 
                                      /// virtual operations
                                      author_reward_operation,
