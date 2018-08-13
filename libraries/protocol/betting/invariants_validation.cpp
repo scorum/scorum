@@ -57,6 +57,15 @@ void validate_market(const market_type& market)
     }
 }
 
+void validate_wincases(const fc::flat_set<wincase_type>& wincases)
+{
+    for (const auto& wincase : wincases)
+    {
+        auto market_kind = wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });
+        validate_wincase(wincase, market_kind);
+    }
+}
+
 void validate_wincase(const wincase_type& wincase, market_kind market)
 {
     auto market_from_wincase = wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });

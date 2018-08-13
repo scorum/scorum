@@ -361,6 +361,14 @@ void update_game_start_time_operation::validate() const
     validate_account_name(moderator);
 }
 
+void post_game_results_operation::validate() const
+{
+    FC_ASSERT(game_id > 0, "Id must be positive");
+    validate_account_name(moderator);
+
+    betting::validate_wincases(wincases);
+}
+
 void post_bet_operation::validate() const
 {
     FC_ASSERT(game_id >= 0, "Invalid game Id");

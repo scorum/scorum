@@ -23,6 +23,11 @@ template <bool side, market_kind kind, typename tag = void> struct over_under
     {
         return opposite_type{ threshold };
     }
+
+    bool has_trd_state() const
+    {
+        return threshold.value % threshold_type::factor == 0;
+    }
 };
 
 template <bool side, market_kind kind, typename tag = void> struct yes_no
@@ -33,6 +38,11 @@ template <bool side, market_kind kind, typename tag = void> struct yes_no
     opposite_type create_opposite() const
     {
         return opposite_type{};
+    }
+
+    bool has_trd_state() const
+    {
+        return false;
     }
 };
 
@@ -47,6 +57,11 @@ template <bool side, market_kind kind, typename tag = void> struct score_yes_no
     opposite_type create_opposite() const
     {
         return opposite_type{ home, away };
+    }
+
+    bool has_trd_state() const
+    {
+        return false;
     }
 };
 

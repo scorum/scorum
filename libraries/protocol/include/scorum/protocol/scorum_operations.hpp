@@ -8,6 +8,7 @@
 
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
+#include <scorum/protocol/betting/wincase_comparison.hpp>
 #include <scorum/protocol/proposal_operations.hpp>
 
 #include <fc/crypto/ripemd160.hpp>
@@ -820,6 +821,19 @@ struct update_game_start_time_operation : public base_operation
     }
 };
 
+struct post_game_results_operation : public base_operation
+{
+    int64_t game_id;
+    account_name_type moderator;
+    fc::flat_set<betting::wincase_type> wincases;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+};
+
 struct post_bet_operation : public base_operation
 {
     account_name_type better;
@@ -943,6 +957,7 @@ FC_REFLECT( scorum::protocol::create_game_operation, (moderator)(name)(start)(ga
 FC_REFLECT( scorum::protocol::cancel_game_operation, (moderator)(game_id) )
 FC_REFLECT( scorum::protocol::update_game_markets_operation, (moderator)(game_id)(markets) )
 FC_REFLECT( scorum::protocol::update_game_start_time_operation, (moderator)(game_id)(start) )
+FC_REFLECT( scorum::protocol::post_game_results_operation, (moderator)(game_id)(wincases) )
 
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)
