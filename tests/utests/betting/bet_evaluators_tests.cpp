@@ -65,10 +65,6 @@ SCORUM_TEST_CASE(post_bet_evaluator_operation_validate_check)
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
     op = test_op;
 
-    op.game_id = 0;
-    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
-    op = test_op;
-
     op.wincase = result_away();
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
     op = test_op;
@@ -215,10 +211,6 @@ SCORUM_TEST_CASE(cancel_pending_bets_operation_validate_check)
     BOOST_CHECK_NO_THROW(op.validate());
 
     op.better = "";
-    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
-    op = test_op;
-
-    op.bet_ids = { 0 };
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
     op = test_op;
 
