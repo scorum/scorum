@@ -15,6 +15,7 @@ public:
 
 public:
     using object_type = TObject;
+    using id_type = typename object_type::id_type;
     using modifier_type = typename std::function<void(object_type&)>;
     using object_cref_type = std::reference_wrapper<const TObject>;
 
@@ -46,6 +47,11 @@ public:
     bool is_exists() const
     {
         return nullptr != _db.template find<object_type>();
+    }
+
+    bool is_exists(id_type id) const
+    {
+        return nullptr != _db.template find<object_type>(id);
     }
 
     const object_type& get() const

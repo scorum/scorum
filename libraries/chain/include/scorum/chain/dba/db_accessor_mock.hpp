@@ -12,6 +12,7 @@ template <typename TObject> struct db_accessor_mock
 {
 public:
     using object_type = TObject;
+    using id_type = typename object_type::id_type;
     using modifier_type = typename std::function<void(object_type&)>;
     using object_cref_type = std::reference_wrapper<const TObject>;
 
@@ -43,7 +44,12 @@ public:
 
     bool is_exists() const
     {
-        return invoke(&db_accessor_mock::is_exists);
+        return invoke((bool (db_accessor_mock::*)() const) & db_accessor_mock::is_exists);
+    }
+
+    bool is_exists(id_type id) const
+    {
+        return invoke((bool (db_accessor_mock::*)(id_type) const) & db_accessor_mock::is_exists, id);
     }
 
     const object_type& get() const

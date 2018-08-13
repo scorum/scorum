@@ -15,6 +15,7 @@ template <typename TObject> struct db_accessor_i
     }
 
     using object_type = TObject;
+    using id_type = typename object_type::id_type;
     using modifier_type = typename std::function<void(object_type&)>;
     using object_cref_type = std::reference_wrapper<const TObject>;
 
@@ -46,6 +47,11 @@ template <typename TObject> struct db_accessor_i
     bool is_exists() const
     {
         return _inst.visit([&](auto& x) -> decltype(auto) { return x.is_exists(); });
+    }
+
+    bool is_exists(id_type id) const
+    {
+        return _inst.visit([&](auto& x) -> decltype(auto) { return x.is_exists(id); });
     }
 
     const object_type& get() const
