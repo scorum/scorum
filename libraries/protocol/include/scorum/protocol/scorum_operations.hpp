@@ -852,6 +852,7 @@ struct cancel_matched_bets_operation : public base_operation
 {
     fc::flat_set<int64_t> bet_ids;
     account_name_type moderator;
+    time_point_sec from;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -964,5 +965,6 @@ FC_REFLECT( scorum::protocol::cancel_pending_bets_operation,
            (better))
 FC_REFLECT( scorum::protocol::cancel_matched_bets_operation,
            (bet_ids)
-           (moderator))
+           (moderator)
+           (from))
 // clang-format on

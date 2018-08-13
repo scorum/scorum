@@ -84,7 +84,7 @@ void validate_bet_ids(const fc::flat_set<int64_t>& bet_ids)
     FC_ASSERT(!bet_ids.empty());
     for (const auto& id : bet_ids)
     {
-        FC_ASSERT(id > 0, "Bet Id must be positive");
+        FC_ASSERT(id >= 0, "Invalid bet Id");
     }
 }
 }

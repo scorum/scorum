@@ -21,29 +21,35 @@ cancel_pending_bets_evaluator::cancel_pending_bets_evaluator(data_service_factor
 
 void cancel_pending_bets_evaluator::do_apply(const operation_type& op)
 {
-    _account_service.check_account_existence(op.better);
-
-    for (const auto& bet_id : op.bet_ids)
+    try
     {
-        FC_ASSERT(_bet_service.is_exists(bet_id), "Bet ${id} doesn't exist", ("id", bet_id));
-        const auto& bet = _bet_service.get_bet(bet_id);
-        FC_ASSERT(_betting_service.is_betting_moderator(op.better) || bet.better == op.better,
-                  "Invalid better for bet ${id}", ("id", bet_id));
+        _account_service.check_account_existence(op.better);
 
-        const auto& better = _account_service.get_account(op.better);
-
-        _account_service.increase_balance(better, bet.rest_stake);
-
-        _bet_service.update(bet, [&](bet_object& obj) { obj.rest_stake.amount = 0; });
-
-        const auto& pending_bet = _pending_bet_service.get_by_bet(bet_id);
-        _pending_bet_service.remove(pending_bet);
-
-        if (!_betting_service.is_bet_matched(bet))
+        for (const auto& bet_id : op.bet_ids)
         {
-            _bet_service.remove(bet);
+            FC_ASSERT(_bet_service.is_exists(bet_id), "Bet ${id} doesn't exist", ("id", bet_id));
+            const auto& bet = _bet_service.get_bet(bet_id);
+            FC_ASSERT(_betting_service.is_betting_moderator(op.better) || bet.better == op.better,
+                      "Invalid better for bet ${id}", ("id", bet_id));
+
+            const auto& better = _account_service.get_account(bet.better);
+
+            _account_service.increase_balance(better, bet.rest_stake);
+
+            const auto& pending_bet = _pending_bet_service.get_by_bet(bet_id);
+            _pending_bet_service.remove(pending_bet);
+
+            if (!_betting_service.is_bet_matched(bet))
+            {
+                _bet_service.remove(bet);
+            }
+            else
+            {
+                _bet_service.update(bet, [&](bet_object& obj) { obj.rest_stake.amount = 0; });
+            }
         }
     }
+    FC_CAPTURE_LOG_AND_RETHROW((op))
 }
 }
 }

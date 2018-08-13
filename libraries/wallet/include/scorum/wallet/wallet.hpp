@@ -177,9 +177,9 @@ public:
     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
     */
     std::map<uint32_t, applied_operation> get_ops_history_by_time(const fc::time_point_sec& from,
-                                                                       const fc::time_point_sec& to,
-                                                                       uint32_t from_op,
-                                                                       uint32_t limit) const;
+                                                                  const fc::time_point_sec& to,
+                                                                  uint32_t from_op,
+                                                                  uint32_t limit) const;
 
     /**
      * Returns the list of witnesses producing blocks in the current round (21 Blocks)
@@ -1373,6 +1373,33 @@ public:
      */
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
 
+    /** Create bet.
+     *
+     *  @param better the bet creator
+     *  @param game_id game id
+     *  @param market merket for bet
+     *  @param wincase wincase for bet
+     *  @param odds coefficient that equal inverse probability of winning
+     *  @param stake amount SCR to bet
+     *  @param broadcast
+     */
+    annotated_signed_transaction post_bet(account_name_type better,
+                                          int64_t game_id,
+                                          betting::market_kind market,
+                                          betting::wincase_type wincase,
+                                          std::string odds,
+                                          asset stake,
+                                          const bool broadcast);
+
+    /** Cancel pending bets list.
+     *
+     *  @param better the creator for bets list or moderator
+     *  @param bet_ids list of game ids
+     *  @param broadcast
+     */
+    annotated_signed_transaction
+    cancel_pending_bets(account_name_type better, fc::flat_set<int64_t> bet_ids, const bool broadcast);
+
     /** Gets all money circulating between funds and users.
     *
     */
@@ -1535,7 +1562,11 @@ FC_API( scorum::wallet::wallet_api,
         (atomicswap_refund)
         (get_atomicswap_contracts)
 
-        /// helper api
+        // betting API
+        (post_bet)
+        (cancel_pending_bets)
+
+        // helper api
         (get_prototype_operation)
         (serialize_transaction)
         (sign_transaction)

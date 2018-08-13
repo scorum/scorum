@@ -343,13 +343,13 @@ void create_game_operation::validate() const
 
 void cancel_game_operation::validate() const
 {
-    FC_ASSERT(game_id > 0, "Id must be positive");
+    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 }
 
 void update_game_markets_operation::validate() const
 {
-    FC_ASSERT(game_id > 0, "Id must be positive");
+    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 
     betting::validate_markets(markets);
@@ -357,13 +357,13 @@ void update_game_markets_operation::validate() const
 
 void update_game_start_time_operation::validate() const
 {
-    FC_ASSERT(game_id > 0, "Id must be positive");
+    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 }
 
 void post_bet_operation::validate() const
 {
-    FC_ASSERT(game_id > 0, "Game Id must be positive");
+    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(better);
     betting::validate_wincase(wincase, market);
     FC_ASSERT(is_asset_type(stake, SCORUM_SYMBOL), "Stake must be SCR");
