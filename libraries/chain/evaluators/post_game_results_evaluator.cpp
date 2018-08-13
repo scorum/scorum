@@ -1,7 +1,7 @@
 #include <scorum/chain/evaluators/post_game_results_evaluator.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/betting_service.hpp>
+#include <scorum/chain/betting/betting_service.hpp>
 #include <scorum/chain/services/game.hpp>
 #include <scorum/protocol/betting/wincase.hpp>
 #include <scorum/protocol/betting/wincase_comparison.hpp>
@@ -11,10 +11,11 @@
 
 namespace scorum {
 namespace chain {
-post_game_results_evaluator::post_game_results_evaluator(data_service_factory_i& services)
+post_game_results_evaluator::post_game_results_evaluator(data_service_factory_i& services,
+                                                         betting::betting_service_i& betting_service)
     : evaluator_impl<data_service_factory_i, post_game_results_evaluator>(services)
     , _account_service(services.account_service())
-    , _betting_service(services.betting_service())
+    , _betting_service(betting_service)
     , _game_service(services.game_service())
 {
 }
@@ -35,9 +36,9 @@ void post_game_results_evaluator::do_apply(const operation_type& op)
 }
 
 void post_game_results_evaluator::validate_winners(const game_object& game,
-                                                   const fc::flat_set<betting::wincase_type>& winners) const
+                                                   const fc::flat_set<wincase_type>& winners) const
 {
-    std::equal_to<betting::wincase_type> eq_cmp;
+    std::equal_to<wincase_type> eq_cmp;
 
     for (const auto& market : game.markets)
     {

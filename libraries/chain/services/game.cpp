@@ -40,7 +40,7 @@ void dbs_game::finish(const game_object& game, const fc::flat_set<betting::winca
     });
 }
 
-void dbs_game::update_markets(const game_object& game, const fc::flat_set<betting::market_type>& markets)
+void dbs_game::update_markets(const game_object& game, const fc::flat_set<market_type>& markets)
 {
     update(game, [&](game_object& g) {
         g.markets.clear();

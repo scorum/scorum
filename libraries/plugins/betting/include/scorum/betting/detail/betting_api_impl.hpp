@@ -29,12 +29,9 @@ public:
     {
         const auto& idx = _db->get_index<game_index, by_id>();
 
-        boost::ignore_unused_variable_warning((idx));
-        // clang-format off
-        auto rng = boost::make_iterator_range(idx.lower_bound(from_id), idx.end())
-                | utils::adaptors::take_n(limit)
-                | boost::adaptors::transformed([](const auto& x) { return api::game_api_obj(x); });
-        // clang-format on
+        auto rng = boost::make_iterator_range(idx.lower_bound(from_id), idx.end()) //
+            | utils::adaptors::take_n(limit)
+            | boost::adaptors::transformed([](const auto& x) { return api::game_api_obj(x); });
 
         return { rng.begin(), rng.end() };
     }

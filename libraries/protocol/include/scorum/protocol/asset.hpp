@@ -5,6 +5,8 @@
 #include <scorum/utils/fraction.hpp>
 #include <scorum/utils/extra_high_bit_operations.hpp>
 
+#include <scorum/protocol/odds.hpp>
+
 namespace scorum {
 namespace protocol {
 
@@ -95,6 +97,10 @@ struct asset
         amount = utils::multiply_by_fractional(amount.value, fraction.numerator, fraction.denominator);
         return *this;
     }
+    asset& operator*=(const odds& k)
+    {
+        return (*this) *= (odds_fraction_type)k;
+    }
     friend bool operator==(const asset& a, const asset& b)
     {
         return std::tie(a._symbol, a.amount) == std::tie(b._symbol, b.amount);
@@ -155,6 +161,12 @@ struct asset
     {
         asset ret(a);
         ret *= fraction;
+        return ret;
+    }
+    friend asset operator*(const asset& a, const odds& k)
+    {
+        asset ret(a);
+        ret *= k;
         return ret;
     }
     template <typename T> friend asset operator/(const asset& a, const T& b_amount)

@@ -5,8 +5,10 @@
 #include <scorum/chain/schema/game_object.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/schema/betting_property_object.hpp>
+#include <scorum/chain/schema/bet_objects.hpp>
 
-#define DB_TYPES (game_object)(proposal_object)(betting_property_object)
+#define DB_TYPES                                                                                                       \
+    (game_object)(proposal_object)(betting_property_object)(bet_object)(pending_bet_object)(matched_bet_object)
 
 #define INSTANTIATE_DBA_FACTORY_METHODS(_1, _2, TYPE)                                                                  \
     template db_accessor_i<TYPE>& get_db_accessor<TYPE>(db_accessor_factory&);                                         \

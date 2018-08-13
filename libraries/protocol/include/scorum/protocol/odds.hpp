@@ -99,3 +99,5 @@ inline void from_variant(const fc::variant& var, scorum::protocol::odds& vo)
 }
 
 } // namespace fc
+
+FC_REFLECT_EMPTY(scorum::protocol::odds)
