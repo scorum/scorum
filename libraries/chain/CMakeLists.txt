@@ -57,7 +57,9 @@ add_library( scorum_chain
              services/account_registration_bonus.cpp
              services/blocks_story.cpp
              services/hardfork_property.cpp
-             services/betting_service.cpp
+             services/pending_bet.cpp
+             services/bet.cpp
+             services/matched_bet.cpp
              services/game.cpp
 
              data_service_factory.cpp
@@ -114,6 +116,10 @@ add_library( scorum_chain
              database/block_tasks/process_witness_reward_in_sp_migration.cpp
 
              database/process_user_activity.cpp
+
+             betting/betting_service.cpp
+             betting/betting_math.cpp
+             betting/betting_matcher.cpp
 
              ${HEADERS}
              ${hardfork_hpp_file}

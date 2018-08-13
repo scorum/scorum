@@ -2,16 +2,18 @@
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/chain/services/betting_service.hpp>
 #include <scorum/chain/services/game.hpp>
+
+#include <scorum/chain/betting/betting_service.hpp>
 
 namespace scorum {
 namespace chain {
-update_game_start_time_evaluator::update_game_start_time_evaluator(data_service_factory_i& services)
+update_game_start_time_evaluator::update_game_start_time_evaluator(data_service_factory_i& services,
+                                                                   betting::betting_service_i& betting_service)
     : evaluator_impl<data_service_factory_i, update_game_start_time_evaluator>(services)
     , _account_service(services.account_service())
     , _dprops_service(services.dynamic_global_property_service())
-    , _betting_service(services.betting_service())
+    , _betting_service(betting_service)
     , _game_service(services.game_service())
 {
 }

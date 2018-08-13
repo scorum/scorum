@@ -105,6 +105,8 @@ namespace detail {
 
 #define SCORUM_MIN_PER_BLOCK_REWARD            share_type(1)
 
+#define SCORUM_MIN_STAKE_FOR_MATCHING          share_type(1)
+
 #define SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER  30
 
 #define SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER 10

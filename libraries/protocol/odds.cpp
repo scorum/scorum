@@ -7,12 +7,13 @@ void odds::initialize(const odds_value_type& base_n, const odds_value_type& base
 {
     FC_ASSERT(base_n > 0, "Numerator must be positive and non zero");
     FC_ASSERT(base_d > 0, "Denominator must be positive and non zero");
+    FC_ASSERT(base_n > base_d, "Numerator must be more then denominator (inverted probability = (0, 1))");
     auto base = utils::make_fraction(base_n, base_d);
     _base = std::tie(base.numerator, base.denominator);
     auto simplified = base.simplify();
     _simplified = std::tie(simplified.numerator, simplified.denominator);
-    auto inverted = simplified.invert();
-    _inverted = std::tie(inverted.numerator, inverted.denominator);
+    auto inverted = simplified.coup().invert();
+    _inverted = std::tie(inverted.denominator, inverted.numerator);
 }
 
 odds_fraction_type odds::base() const
@@ -36,11 +37,18 @@ odds odds::from_string(const std::string& from)
     std::string s = fc::trim(from);
     auto slash_pos = s.find('/');
     FC_ASSERT(std::string::npos != slash_pos);
+
     auto n_str = s.substr(0, slash_pos);
     FC_ASSERT(!n_str.empty());
+    auto n = fc::to_int64(n_str);
+    FC_ASSERT(n > 0 && n <= (int64_t)std::numeric_limits<odds_value_type>::max());
+
     auto d_str = s.substr(slash_pos + 1);
     FC_ASSERT(!d_str.empty());
-    return utils::make_fraction((odds_value_type)fc::to_int64(n_str), (odds_value_type)fc::to_int64(d_str));
+    auto d = fc::to_int64(d_str);
+    FC_ASSERT(d > 0 && d <= (int64_t)std::numeric_limits<odds_value_type>::max());
+
+    return utils::make_fraction((odds_value_type)n, (odds_value_type)d);
 }
 
 std::string odds::to_string() const
