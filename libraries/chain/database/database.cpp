@@ -109,26 +109,24 @@ public:
 
     betting::betting_service_i& betting_service()
     {
-        if (!_pbetting_service)
-            _pbetting_service.reset(new betting::betting_service(static_cast<data_service_factory_i&>(_self)));
-        return (*_pbetting_service.get());
+        return _betting_service;
     }
 
     betting::betting_matcher_i& betting_matcher()
     {
-        if (!_pbetting_matcher)
-            _pbetting_matcher.reset(new betting::betting_matcher(static_cast<data_service_factory_i&>(_self)));
-        return (*_pbetting_matcher.get());
+        return _betting_matcher;
     }
 
 private:
-    std::unique_ptr<betting::betting_service> _pbetting_service;
-    std::unique_ptr<betting::betting_matcher> _pbetting_matcher;
+    betting::betting_service _betting_service;
+    betting::betting_matcher _betting_matcher;
 };
 
 database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
+    , _betting_service(static_cast<data_service_factory_i&>(_self))
+    , _betting_matcher(static_cast<data_service_factory_i&>(_self))
 {
 }
 
