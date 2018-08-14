@@ -10,6 +10,10 @@ struct data_service_factory_i;
 struct dynamic_global_property_service_i;
 struct betting_property_service_i;
 struct bet_service_i;
+namespace dba {
+template <typename> struct db_accessor_i;
+struct db_accessor_factory;
+}
 
 namespace betting {
 
@@ -35,7 +39,7 @@ struct betting_service_i
 class betting_service : public betting_service_i
 {
 public:
-    betting_service(data_service_factory_i&);
+    betting_service(data_service_factory_i&, dba::db_accessor_factory&);
 
     virtual bool is_betting_moderator(const account_name_type& account_name) const override;
 
@@ -52,8 +56,8 @@ public:
 
 private:
     dynamic_global_property_service_i& _dgp_property_service;
-    betting_property_service_i& _betting_property_service;
-    bet_service_i& _bet_service;
+    dba::db_accessor_i<betting_property_object>& _betting_property_dba;
+    dba::db_accessor_i<bet_object>& _bet_dba;
 };
 }
 }

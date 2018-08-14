@@ -107,7 +107,7 @@ public:
 database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
-    , _betting_service(self)
+    , _betting_service(self, self)
 {
 }
 
