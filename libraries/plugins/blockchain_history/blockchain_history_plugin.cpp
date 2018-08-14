@@ -1,7 +1,7 @@
 #include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 #include <scorum/blockchain_history/account_history_api.hpp>
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
-#include <scorum/blockchain_history/schema/account_history_object.hpp>
+#include <scorum/blockchain_history/schema/history_object.hpp>
 
 #include <scorum/account_identity/impacted.hpp>
 
@@ -47,9 +47,12 @@ public:
 
         db.add_plugin_index<operation_index>();
         db.add_plugin_index<account_operations_full_history_index>();
-        db.add_plugin_index<transfers_to_scr_history_index>();
-        db.add_plugin_index<transfers_to_sp_history_index>();
-        db.add_plugin_index<withdrawals_to_scr_history_index>();
+        db.add_plugin_index<account_transfers_to_scr_history_index>();
+        db.add_plugin_index<account_transfers_to_sp_history_index>();
+        db.add_plugin_index<account_withdrawals_to_scr_history_index>();
+        db.add_plugin_index<devcommittee_operations_full_history_index>();
+        db.add_plugin_index<devcommittee_transfers_to_scr_history_index>();
+        db.add_plugin_index<devcommittee_withdrawals_to_scr_history_index>();
         db.add_plugin_index<filtered_not_virt_operations_history_index>();
         db.add_plugin_index<filtered_virt_operations_history_index>();
         db.add_plugin_index<filtered_market_operations_history_index>();
@@ -92,13 +95,13 @@ public:
     void operator()(const transfer_operation&) const
     {
         push_history<account_history_object>(_obj);
-        push_history<transfers_to_scr_history_object>(_obj);
+        push_history<account_transfers_to_scr_history_object>(_obj);
     }
 
     void operator()(const transfer_to_scorumpower_operation&) const
     {
         push_history<account_history_object>(_obj);
-        push_history<transfers_to_sp_history_object>(_obj);
+        push_history<account_transfers_to_sp_history_object>(_obj);
     }
 
     void operator()(const withdraw_scorumpower_operation& op) const
@@ -106,9 +109,9 @@ public:
         push_history<account_history_object>(_obj);
 
         if (_item == op.account)
-            push_progress<withdrawals_to_scr_history_object>(_obj);
+            push_progress<account_withdrawals_to_scr_history_object>(_obj);
 
-        push_history<withdrawals_to_scr_history_object>(_obj);
+        push_history<account_withdrawals_to_scr_history_object>(_obj);
     }
 
     void operator()(const acc_to_acc_vesting_withdraw_operation& op) const
@@ -116,7 +119,7 @@ public:
         push_history<account_history_object>(_obj);
 
         if (_item == op.from_account)
-            push_progress<withdrawals_to_scr_history_object>(_obj);
+            push_progress<account_withdrawals_to_scr_history_object>(_obj);
     }
 
     void operator()(const acc_to_devpool_vesting_withdraw_operation& op) const
@@ -124,7 +127,7 @@ public:
         push_history<account_history_object>(_obj);
 
         if (_item == op.from_account)
-            push_progress<withdrawals_to_scr_history_object>(_obj);
+            push_progress<account_withdrawals_to_scr_history_object>(_obj);
     }
 
     void operator()(const acc_finished_vesting_withdraw_operation& op) const
@@ -132,13 +135,48 @@ public:
         push_history<account_history_object>(_obj);
 
         if (_item == op.from_account)
-            push_progress<withdrawals_to_scr_history_object>(_obj);
+            push_progress<account_withdrawals_to_scr_history_object>(_obj);
+    }
+
+    void operator()(const proposal_virtual_operation& op) const
+    {
+        op.proposal_op.weak_visit(
+            [&](const development_committee_withdraw_vesting_operation& op) {
+                push_devcommittee_history<devcommittee_history_object>(_obj);
+                push_devcommittee_progress<devcommittee_withdrawals_to_scr_history_object>(_obj);
+                push_devcommittee_history<devcommittee_withdrawals_to_scr_history_object>(_obj);
+            },
+            [&](const development_committee_transfer_operation& op) {
+                push_devcommittee_history<devcommittee_history_object>(_obj);
+                push_devcommittee_history<devcommittee_transfers_to_scr_history_object>(_obj);
+            },
+            [&](const development_committee_add_member_operation& op) {
+                push_devcommittee_history<devcommittee_history_object>(_obj);
+            },
+            [&](const development_committee_exclude_member_operation& op) {
+                push_devcommittee_history<devcommittee_history_object>(_obj);
+            },
+            [&](const development_committee_change_quorum_operation& op) {
+                push_devcommittee_history<devcommittee_history_object>(_obj);
+            });
+    }
+
+    void operator()(const devpool_to_devpool_vesting_withdraw_operation& op) const
+    {
+        push_devcommittee_history<devcommittee_history_object>(_obj);
+        push_devcommittee_progress<devcommittee_withdrawals_to_scr_history_object>(_obj);
+    }
+
+    void operator()(const devpool_finished_vesting_withdraw_operation& op) const
+    {
+        push_devcommittee_history<devcommittee_history_object>(_obj);
+        push_devcommittee_progress<devcommittee_withdrawals_to_scr_history_object>(_obj);
     }
 
 private:
     template <typename history_object_type> void push_history(const operation_object& op) const
     {
-        const auto& hist_idx = _db.get_index<history_index<history_object_type>, by_account>();
+        const auto& hist_idx = _db.get_index<account_history_index<history_object_type>, by_account>();
         auto hist_itr = hist_idx.lower_bound(_item);
         uint32_t sequence = 0;
         if (hist_itr != hist_idx.end() && hist_itr->account == _item)
@@ -153,12 +191,23 @@ private:
 
     template <typename history_object_type> void push_progress(const operation_object& op) const
     {
-        const auto& idx = _db.get_index<history_index<history_object_type>, by_account>();
+        const auto& idx = _db.get_index<account_history_index<history_object_type>, by_account>();
         auto it = idx.lower_bound(_item);
         if (it != idx.end() && it->account == _item)
         {
             _db.modify<history_object_type>(*it, [&](history_object_type& h) { h.progress.push_back(op.id); });
         }
+    }
+
+    template <typename history_object_type> void push_devcommittee_history(const operation_object& op) const
+    {
+        _db.create<history_object_type>([&](history_object_type& ahist) { ahist.op = op.id; });
+    }
+
+    template <typename history_object_type> void push_devcommittee_progress(const operation_object& op) const
+    {
+        const auto& idx = _db.get_index<devcommittee_history_index<history_object_type>, by_id_desc>();
+        _db.modify<history_object_type>(*idx.begin(), [&](history_object_type& h) { h.progress.push_back(op.id); });
     }
 };
 

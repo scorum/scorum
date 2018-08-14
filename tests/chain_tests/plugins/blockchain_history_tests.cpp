@@ -8,7 +8,7 @@
 #include <scorum/app/api_context.hpp>
 
 #include <scorum/blockchain_history/blockchain_history_plugin.hpp>
-#include <scorum/blockchain_history/schema/account_history_object.hpp>
+#include <scorum/blockchain_history/schema/history_object.hpp>
 #include <scorum/blockchain_history/schema/applied_operation.hpp>
 
 #include <scorum/blockchain_history/account_history_api.hpp>
@@ -65,7 +65,7 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
     template <typename history_object_type>
     operation_map_type get_operations_accomplished_by_account(const std::string& account_name)
     {
-        const auto& idx = db.get_index<blockchain_history::history_index<history_object_type>>()
+        const auto& idx = db.get_index<blockchain_history::account_history_index<history_object_type>>()
                               .indices()
                               .get<blockchain_history::by_account>();
 
@@ -106,9 +106,9 @@ SCORUM_TEST_CASE(check_account_nontransfer_operation_only_in_full_history_test)
     operation_map_type buratino_full_ops
         = get_operations_accomplished_by_account<blockchain_history::account_history_object>(buratino);
     operation_map_type buratino_scr_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(buratino);
     operation_map_type buratino_sp_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(buratino);
 
     BOOST_REQUIRE_EQUAL(buratino_full_ops.size(), 1u);
     BOOST_REQUIRE_EQUAL(buratino_scr_ops.size(), 0u);
@@ -125,9 +125,9 @@ SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_scr_h
     operation_map_type buratino_full_ops
         = get_operations_accomplished_by_account<blockchain_history::account_history_object>(buratino);
     operation_map_type buratino_scr_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(buratino);
     operation_map_type buratino_sp_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(buratino);
 
     BOOST_REQUIRE_EQUAL(buratino_full_ops.size(), 2u);
     BOOST_REQUIRE_EQUAL(buratino_scr_ops.size(), 1u);
@@ -148,9 +148,9 @@ SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_sp_hi
     operation_map_type buratino_full_ops
         = get_operations_accomplished_by_account<blockchain_history::account_history_object>(buratino);
     operation_map_type buratino_scr_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(buratino);
     operation_map_type buratino_sp_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(buratino);
 
     BOOST_REQUIRE_EQUAL(buratino_full_ops.size(), 2u);
     BOOST_REQUIRE_EQUAL(buratino_scr_ops.size(), 0u);
@@ -172,9 +172,11 @@ SCORUM_TEST_CASE(check_account_transfer_operation_history_test)
 
     {
         operation_map_type buratino_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(buratino);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(
+                buratino);
         operation_map_type maugli_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(maugli);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(
+                maugli);
 
         BOOST_REQUIRE_EQUAL(buratino_ops.size(), 1u);
         BOOST_REQUIRE_EQUAL(maugli_ops.size(), 0u);
@@ -193,9 +195,11 @@ SCORUM_TEST_CASE(check_account_transfer_operation_history_test)
 
     {
         operation_map_type buratino_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(buratino);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(
+                buratino);
         operation_map_type maugli_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(maugli);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(
+                maugli);
 
         BOOST_REQUIRE_EQUAL(buratino_ops.size(), 2u);
         BOOST_REQUIRE_EQUAL(maugli_ops.size(), 1u);
@@ -214,9 +218,11 @@ SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
 
     {
         operation_map_type buratino_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(buratino);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(
+                buratino);
         operation_map_type maugli_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(maugli);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(
+                maugli);
 
         BOOST_REQUIRE_EQUAL(buratino_ops.size(), 0u);
         BOOST_REQUIRE_EQUAL(maugli_ops.size(), 0u);
@@ -230,9 +236,11 @@ SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
 
     {
         operation_map_type buratino_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(buratino);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(
+                buratino);
         operation_map_type maugli_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(maugli);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(
+                maugli);
 
         BOOST_REQUIRE_EQUAL(buratino_ops.size(), 1u);
         BOOST_REQUIRE_EQUAL(maugli_ops.size(), 1u);
