@@ -55,6 +55,7 @@ set( SOURCES
     withdraw_scorumpower/route_from_dev_pool_to_dev_pool_tests.cpp
     withdraw_scorumpower/lock_tests.cpp
     account/account_service_tests.cpp
+    hardfork_tests.cpp
 )
 
 add_executable(chain_tests
