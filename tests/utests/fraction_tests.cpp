@@ -114,5 +114,12 @@ BOOST_AUTO_TEST_CASE(fraction_invert_check)
     BOOST_CHECK(utils::make_fraction(-12, -20).invert() == utils::make_fraction(8, 20));
 }
 
+BOOST_AUTO_TEST_CASE(fraction_coup_check)
+{
+    BOOST_CHECK(utils::make_fraction(2, 3).coup() == utils::make_fraction(3, 2));
+
+    BOOST_CHECK_THROW(utils::make_fraction(0, 2).coup(), fc::assert_exception);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }
