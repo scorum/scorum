@@ -21,6 +21,7 @@ namespace scorum {
 namespace wallet {
 
 using scorum::blockchain_history::applied_operation;
+using scorum::blockchain_history::applied_withdraw_operation;
 using scorum::blockchain_history::applied_operation_type;
 using scorum::blockchain_history::signed_block_api_obj;
 using scorum::app::chain_capital_api_obj;
@@ -177,9 +178,9 @@ public:
     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
     */
     std::map<uint32_t, applied_operation> get_ops_history_by_time(const fc::time_point_sec& from,
-                                                                       const fc::time_point_sec& to,
-                                                                       uint32_t from_op,
-                                                                       uint32_t limit) const;
+                                                                  const fc::time_point_sec& to,
+                                                                  uint32_t from_op,
+                                                                  uint32_t limit) const;
 
     /**
      * Returns the list of witnesses producing blocks in the current round (21 Blocks)
@@ -1000,6 +1001,44 @@ public:
      */
     std::map<uint32_t, applied_operation>
     get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit);
+
+    /**
+     *  Account operations have sequence numbers from 0 to N where N is the most recent operation. This method
+     *  returns operations in the range [from-limit, from]
+     *
+     *  @param account - account whose history will be returned
+     *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
+     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+     */
+    std::map<uint32_t, applied_withdraw_operation>
+    get_account_sp_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit);
+
+    /**
+     *  Devcommittee operations have sequence numbers from 0 to N where N is the most recent operation. This method
+     *  returns operations in the range [from-limit, from]
+     *
+     *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
+     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+     */
+    std::vector<applied_operation> get_devcommittee_history(uint64_t from, uint32_t limit);
+
+    /**
+     *  Devcommittee operations have sequence numbers from 0 to N where N is the most recent operation. This method
+     *  returns operations in the range [from-limit, from]
+     *
+     *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
+     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+     */
+    std::vector<applied_operation> get_devcommittee_scr_to_scr_transfers(uint64_t from, uint32_t limit);
+
+    /**
+     *  Devcommittee operations have sequence numbers from 0 to N where N is the most recent operation. This method
+     *  returns operations in the range [from-limit, from]
+     *
+     *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
+     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+     */
+    std::vector<applied_withdraw_operation> get_devcommittee_sp_to_scr_transfers(uint64_t from, uint32_t limit);
 
     std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> get_result_formatters() const;
 

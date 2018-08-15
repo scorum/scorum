@@ -1,6 +1,7 @@
 #include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 #include <scorum/blockchain_history/account_history_api.hpp>
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
+#include <scorum/blockchain_history/devcommittee_history_api.hpp>
 #include <scorum/blockchain_history/schema/history_object.hpp>
 
 #include <scorum/account_identity/impacted.hpp>
@@ -444,6 +445,7 @@ void blockchain_history_plugin::plugin_startup()
 {
     app().register_api_factory<account_history_api>(API_ACCOUNT_HISTORY);
     app().register_api_factory<blockchain_history_api>(API_BLOCKCHAIN_HISTORY);
+    app().register_api_factory<devcommittee_history_api>(API_DEVCOMMITTEE_HISTORY);
 }
 
 flat_map<account_name_type, account_name_type> blockchain_history_plugin::tracked_accounts() const

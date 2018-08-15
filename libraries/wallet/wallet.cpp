@@ -11,6 +11,7 @@
 #include <scorum/account_by_key/account_by_key_api.hpp>
 #include <scorum/blockchain_history/account_history_api.hpp>
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
+#include <scorum/blockchain_history/devcommittee_history_api.hpp>
 
 #include <scorum/protocol/atomicswap_helper.hpp>
 
@@ -926,6 +927,23 @@ public:
         }
     }
 
+    void use_remote_devcommittee_history_api()
+    {
+        if (_remote_devcommittee_history_api.valid())
+            return;
+
+        try
+        {
+            _remote_devcommittee_history_api = _remote_api->get_api_by_name(API_DEVCOMMITTEE_HISTORY)
+                                                   ->as<blockchain_history::devcommittee_history_api>();
+        }
+        catch (const fc::exception& e)
+        {
+            elog("Couldn't get devcommittee_history_api");
+            throw(e);
+        }
+    }
+
     void use_remote_blockchain_history_api()
     {
         if (_remote_blockchain_history_api.valid())
@@ -991,6 +1009,7 @@ public:
     optional<fc::api<account_by_key::account_by_key_api>> _remote_account_by_key_api;
     optional<fc::api<blockchain_history::account_history_api>> _remote_account_history_api;
     optional<fc::api<blockchain_history::blockchain_history_api>> _remote_blockchain_history_api;
+    optional<fc::api<blockchain_history::devcommittee_history_api>> _remote_devcommittee_history_api;
 
     uint32_t _tx_expiration_seconds = 30;
 
@@ -1071,9 +1090,9 @@ wallet_api::get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_
 }
 
 std::map<uint32_t, applied_operation> wallet_api::get_ops_history_by_time(const fc::time_point_sec& from,
-                                                                               const fc::time_point_sec& to,
-                                                                               uint32_t from_op,
-                                                                               uint32_t limit) const
+                                                                          const fc::time_point_sec& to,
+                                                                          uint32_t from_op,
+                                                                          uint32_t limit) const
 {
     my->use_remote_blockchain_history_api();
 
@@ -2303,6 +2322,52 @@ wallet_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t
     {
         item.second.op.weak_visit([&](transfer_operation& top) { top.memo = decrypt_memo(top.memo); });
     }
+
+    return result;
+}
+
+std::map<uint32_t, applied_withdraw_operation>
+wallet_api::get_account_sp_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit)
+{
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get account history");
+    my->use_remote_account_history_api();
+
+    auto result = (*my->_remote_account_history_api)->get_account_sp_to_scr_transfers(account, from, limit);
+
+    for (auto& item : result)
+    {
+        item.second.op.weak_visit([&](transfer_operation& top) { top.memo = decrypt_memo(top.memo); });
+    }
+
+    return result;
+}
+
+std::vector<applied_operation> wallet_api::get_devcommittee_history(uint64_t from, uint32_t limit)
+{
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get devcommittee history");
+    my->use_remote_devcommittee_history_api();
+
+    auto result = (*my->_remote_devcommittee_history_api)->get_history(from, limit);
+
+    return result;
+}
+
+std::vector<applied_operation> wallet_api::get_devcommittee_scr_to_scr_transfers(uint64_t from, uint32_t limit)
+{
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get devcommittee history");
+    my->use_remote_devcommittee_history_api();
+
+    auto result = (*my->_remote_devcommittee_history_api)->get_scr_to_scr_transfers(from, limit);
+
+    return result;
+}
+
+std::vector<applied_withdraw_operation> wallet_api::get_devcommittee_sp_to_scr_transfers(uint64_t from, uint32_t limit)
+{
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get devcommittee history");
+    my->use_remote_devcommittee_history_api();
+
+    auto result = (*my->_remote_devcommittee_history_api)->get_sp_to_scr_transfers(from, limit);
 
     return result;
 }

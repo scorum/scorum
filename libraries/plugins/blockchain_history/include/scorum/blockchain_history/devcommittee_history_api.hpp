@@ -21,13 +21,13 @@ class devcommittee_history_api_impl;
 }
 
 /**
- * @brief Allows quick search of applied operations
+ * @brief Allows quick search of applied operations related to devcommittee
  *
  * Require: blockchain_history_plugin
  *
  * @ingroup api
  * @ingroup blockchain_history_plugin
- * @defgroup account_history_api Account history API
+ * @defgroup devcommittee_history_api Development committee history API
  */
 class devcommittee_history_api
 {
@@ -38,7 +38,7 @@ public:
     void on_api_startup();
 
     /// @name Public API
-    /// @addtogroup account_history_api
+    /// @addtogroup devcommittee_history_api
     /// @{
 
     /**
