@@ -51,6 +51,7 @@ set(SOURCES
     betting/betting_service_tests.cpp
     betting/betting_math_tests.cpp
     betting/betting_matcher_tests.cpp
+    db_accessors/db_accessors_tests.cpp
     odds_tests.cpp
 )
 

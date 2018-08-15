@@ -25,9 +25,9 @@ public:
         invoke((void (db_accessor_mock::*)(const modifier_type&)) & db_accessor_mock::update, modifier);
     }
 
-    void update(const object_type& o, const modifier_type& modifier)
+    void update(const object_type& obj, const modifier_type& modifier)
     {
-        invoke((void (db_accessor_mock::*)(const object_type&, const modifier_type&)) & db_accessor_mock::update,
+        invoke((void (db_accessor_mock::*)(const object_type&, const modifier_type&)) & db_accessor_mock::update, obj,
                modifier);
     }
 
@@ -41,9 +41,9 @@ public:
         invoke((void (db_accessor_mock::*)(const object_type&)) & db_accessor_mock::remove, o);
     }
 
-    bool is_exists() const
+    bool is_empty() const
     {
-        return invoke(&db_accessor_mock::is_exists);
+        return invoke(&db_accessor_mock::is_empty);
     }
 
     const object_type& get() const
@@ -61,23 +61,11 @@ public:
         return invoke(&db_accessor_mock::find_by<IndexBy, Key>, arg);
     }
 
-    template <class IndexBy, typename TCall> void foreach_by(TCall&& call) const
-    {
-        invoke(&db_accessor_mock::foreach_by<IndexBy, TCall>, std::forward<TCall>(call));
-    }
-
     template <class IndexBy, class TLower, class TUpper>
     std::vector<object_cref_type> get_range_by(TLower&& lower, TUpper&& upper) const
     {
         return invoke(&db_accessor_mock::get_range_by<IndexBy, TLower, TUpper>, std::forward<TLower>(lower),
                       std::forward<TUpper>(upper));
-    }
-
-    template <class IndexBy, class TLower, class TUpper, class TPredicate>
-    std::vector<object_cref_type> get_filtered_range_by(TLower&& lower, TUpper&& upper, TPredicate&& filter) const
-    {
-        return invoke(&db_accessor_mock::get_filtered_range_by<IndexBy, TLower, TUpper, TPredicate>,
-                      std::forward<TLower>(lower), std::forward<TUpper>(upper), std::forward<TPredicate>(filter));
     }
 
 public:

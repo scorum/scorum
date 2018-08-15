@@ -44,6 +44,7 @@
 #include <scorum/chain/schema/advertising_property_object.hpp>
 #include <scorum/chain/schema/betting_property_object.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/schema/game_object.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -1302,6 +1303,7 @@ void database::initialize_indexes()
     add_index<bet_index>();
     add_index<pending_bet_index>();
     add_index<matched_bet_index>();
+    add_index<game_index>();
 
     _plugin_index_signal();
 }

@@ -35,7 +35,7 @@ template <typename TObject> struct db_accessor_i
 
     void remove()
     {
-        _inst.visit([&](auto& x) { x.remove(get()); });
+        _inst.visit([&](auto& x) { x.remove(); });
     }
 
     void remove(const object_type& o)
@@ -43,9 +43,9 @@ template <typename TObject> struct db_accessor_i
         _inst.visit([&](auto& x) { x.remove(o); });
     }
 
-    bool is_exists() const
+    bool is_empty() const
     {
-        return _inst.visit([&](auto& x) -> decltype(auto) { return x.is_exists(); });
+        return _inst.visit([&](auto& x) -> decltype(auto) { return x.is_empty(); });
     }
 
     const object_type& get() const
@@ -63,25 +63,11 @@ template <typename TObject> struct db_accessor_i
         return _inst.visit([&](auto& x) -> decltype(auto) { return x.find_by<IndexBy>(arg); });
     }
 
-    template <class IndexBy, typename TCall> void foreach_by(TCall&& call) const
-    {
-        _inst.visit([&](auto& x) { x.foreach_by<IndexBy>(std::forward<TCall>(call)); });
-    }
-
     template <class IndexBy, class TLower, class TUpper>
     std::vector<object_cref_type> get_range_by(TLower&& lower, TUpper&& upper) const
     {
         return _inst.visit([&](auto& x) -> decltype(auto) {
             return x.get_range_by<IndexBy>(std::forward<TLower>(lower), std::forward<TUpper>(upper));
-        });
-    }
-
-    template <class IndexBy, class TLower, class TUpper, class TPredicate>
-    std::vector<object_cref_type> get_filtered_range_by(TLower&& lower, TUpper&& upper, TPredicate&& filter) const
-    {
-        return _inst.visit([&](auto& x) -> decltype(auto) {
-            return x.get_filtered_range_by<IndexBy>(std::forward<TLower>(lower), std::forward<TUpper>(upper),
-                                                    std::forward<TPredicate>(filter));
         });
     }
 
