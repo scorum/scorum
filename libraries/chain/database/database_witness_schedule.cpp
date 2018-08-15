@@ -148,7 +148,7 @@ void database::update_witness_schedule()
                 _wso.current_shuffled_witnesses[i] = active_witnesses.nth(i)->second;
             }
 
-            for (size_t i = active_witnesses.size(); i < SCORUM_MAX_WITNESSES; i++)
+            for (size_t i = active_witnesses.size(); i < SCORUM_MAX_WITNESSES_LIMIT; i++)
             {
                 _wso.current_shuffled_witnesses[i] = account_name_type();
             }
@@ -327,7 +327,6 @@ void database::_update_witness_hardfork_version_votes()
             const auto& hfp = _db.obtain_service<dbs_hardfork_property>().get();
             if (hfp.next_hardfork != std::get<0>(hf_itr->first) || hfp.next_hardfork_time != std::get<1>(hf_itr->first))
             {
-
                 _db.modify(hfp, [&](hardfork_property_object& hpo) {
                     hpo.next_hardfork = std::get<0>(hf_itr->first);
                     hpo.next_hardfork_time = std::get<1>(hf_itr->first);

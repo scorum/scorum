@@ -13,16 +13,38 @@ namespace protocol {
  */
 struct version
 {
-    version() {}
+    version()
+    {
+    }
     version(uint8_t m, uint8_t h, uint16_t r);
-    virtual ~version() {}
+    virtual ~version()
+    {
+    }
 
-    bool operator==(const version& o) const { return v_num == o.v_num; }
-    bool operator!=(const version& o) const { return v_num != o.v_num; }
-    bool operator<(const version& o) const { return v_num < o.v_num; }
-    bool operator<=(const version& o) const { return v_num <= o.v_num; }
-    bool operator>(const version& o) const { return v_num > o.v_num; }
-    bool operator>=(const version& o) const { return v_num >= o.v_num; }
+    bool operator==(const version& o) const
+    {
+        return v_num == o.v_num;
+    }
+    bool operator!=(const version& o) const
+    {
+        return v_num != o.v_num;
+    }
+    bool operator<(const version& o) const
+    {
+        return v_num < o.v_num;
+    }
+    bool operator<=(const version& o) const
+    {
+        return v_num <= o.v_num;
+    }
+    bool operator>(const version& o) const
+    {
+        return v_num > o.v_num;
+    }
+    bool operator>=(const version& o) const
+    {
+        return v_num >= o.v_num;
+    }
 
     operator fc::string() const;
 
@@ -39,30 +61,79 @@ struct hardfork_version : version
         : version(m, h, 0)
     {
     }
-    hardfork_version(version v) { v_num = v.v_num & 0xFFFF0000; }
-    ~hardfork_version() {}
+    hardfork_version(version v)
+    {
+        v_num = v.v_num & 0xFFFF0000;
+    }
+    ~hardfork_version()
+    {
+    }
 
-    void operator=(const version& o) { v_num = o.v_num & 0xFFFF0000; }
-    void operator=(const hardfork_version& o) { v_num = o.v_num & 0xFFFF0000; }
+    void operator=(const version& o)
+    {
+        v_num = o.v_num & 0xFFFF0000;
+    }
+    void operator=(const hardfork_version& o)
+    {
+        v_num = o.v_num & 0xFFFF0000;
+    }
 
-    bool operator==(const hardfork_version& o) const { return v_num == o.v_num; }
-    bool operator!=(const hardfork_version& o) const { return v_num != o.v_num; }
-    bool operator<(const hardfork_version& o) const { return v_num < o.v_num; }
-    bool operator<=(const hardfork_version& o) const { return v_num <= o.v_num; }
-    bool operator>(const hardfork_version& o) const { return v_num > o.v_num; }
-    bool operator>=(const hardfork_version& o) const { return v_num >= o.v_num; }
+    bool operator==(const hardfork_version& o) const
+    {
+        return v_num == o.v_num;
+    }
+    bool operator!=(const hardfork_version& o) const
+    {
+        return v_num != o.v_num;
+    }
+    bool operator<(const hardfork_version& o) const
+    {
+        return v_num < o.v_num;
+    }
+    bool operator<=(const hardfork_version& o) const
+    {
+        return v_num <= o.v_num;
+    }
+    bool operator>(const hardfork_version& o) const
+    {
+        return v_num > o.v_num;
+    }
+    bool operator>=(const hardfork_version& o) const
+    {
+        return v_num >= o.v_num;
+    }
 
-    bool operator==(const version& o) const { return v_num == (o.v_num & 0xFFFF0000); }
-    bool operator!=(const version& o) const { return v_num != (o.v_num & 0xFFFF0000); }
-    bool operator<(const version& o) const { return v_num < (o.v_num & 0xFFFF0000); }
-    bool operator<=(const version& o) const { return v_num <= (o.v_num & 0xFFFF0000); }
-    bool operator>(const version& o) const { return v_num > (o.v_num & 0xFFFF0000); }
-    bool operator>=(const version& o) const { return v_num >= (o.v_num & 0xFFFF0000); }
+    bool operator==(const version& o) const
+    {
+        return v_num == (o.v_num & 0xFFFF0000);
+    }
+    bool operator!=(const version& o) const
+    {
+        return v_num != (o.v_num & 0xFFFF0000);
+    }
+    bool operator<(const version& o) const
+    {
+        return v_num < (o.v_num & 0xFFFF0000);
+    }
+    bool operator<=(const version& o) const
+    {
+        return v_num <= (o.v_num & 0xFFFF0000);
+    }
+    bool operator>(const version& o) const
+    {
+        return v_num > (o.v_num & 0xFFFF0000);
+    }
+    bool operator>=(const version& o) const
+    {
+        return v_num >= (o.v_num & 0xFFFF0000);
+    }
 };
 
 struct hardfork_version_vote
 {
-    hardfork_version_vote() {}
+    hardfork_version_vote()
+    {
+    }
     hardfork_version_vote(hardfork_version v, fc::time_point_sec t)
         : hf_version(v)
         , hf_time(t)
@@ -86,6 +157,6 @@ void from_variant(const variant& var, scorum::protocol::hardfork_version& hv);
 
 #include <fc/reflect/reflect.hpp>
 FC_REFLECT(scorum::protocol::version, (v_num))
-FC_REFLECT_DERIVED(scorum::protocol::hardfork_version, (scorum::protocol::version), )
+FC_REFLECT_DERIVED(scorum::protocol::hardfork_version, (scorum::protocol::version), BOOST_PP_SEQ_NIL)
 
 FC_REFLECT(scorum::protocol::hardfork_version_vote, (hf_version)(hf_time))
