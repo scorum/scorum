@@ -138,6 +138,52 @@ public:
             push_progress<account_withdrawals_to_scr_history_object>(_obj);
     }
 
+private:
+    template <typename history_object_type> void push_history(const operation_object& op) const
+    {
+        const auto& hist_idx = _db.get_index<account_history_index<history_object_type>, by_account>();
+        auto hist_itr = hist_idx.lower_bound(_item);
+        uint32_t sequence = 0;
+        if (hist_itr != hist_idx.end() && hist_itr->account == _item)
+            sequence = hist_itr->sequence + 1;
+
+        _db.create<history_object_type>([&](history_object_type& ahist) {
+            ahist.account = _item;
+            ahist.sequence = sequence;
+            ahist.op = op.id;
+        });
+    }
+
+    template <typename history_object_type> void push_progress(const operation_object& op) const
+    {
+        const auto& idx = _db.get_index<account_history_index<history_object_type>, by_account>();
+        auto it = idx.lower_bound(_item);
+        if (it != idx.end() && it->account == _item)
+        {
+            _db.modify<history_object_type>(*it, [&](history_object_type& h) { h.progress.push_back(op.id); });
+        }
+    }
+};
+
+class devcommittee_operation_visitor
+{
+    database& _db;
+    const operation_object& _obj;
+
+public:
+    using result_type = void;
+
+    devcommittee_operation_visitor(database& db, const operation_object& obj)
+        : _db(db)
+        , _obj(obj)
+    {
+    }
+
+    template <typename Op> void operator()(const Op&) const
+    {
+        // do nothing.
+    }
+
     void operator()(const proposal_virtual_operation& op) const
     {
         op.proposal_op.weak_visit(
@@ -174,31 +220,6 @@ public:
     }
 
 private:
-    template <typename history_object_type> void push_history(const operation_object& op) const
-    {
-        const auto& hist_idx = _db.get_index<account_history_index<history_object_type>, by_account>();
-        auto hist_itr = hist_idx.lower_bound(_item);
-        uint32_t sequence = 0;
-        if (hist_itr != hist_idx.end() && hist_itr->account == _item)
-            sequence = hist_itr->sequence + 1;
-
-        _db.create<history_object_type>([&](history_object_type& ahist) {
-            ahist.account = _item;
-            ahist.sequence = sequence;
-            ahist.op = op.id;
-        });
-    }
-
-    template <typename history_object_type> void push_progress(const operation_object& op) const
-    {
-        const auto& idx = _db.get_index<account_history_index<history_object_type>, by_account>();
-        auto it = idx.lower_bound(_item);
-        if (it != idx.end() && it->account == _item)
-        {
-            _db.modify<history_object_type>(*it, [&](history_object_type& h) { h.progress.push_back(op.id); });
-        }
-    }
-
     template <typename history_object_type> void push_devcommittee_history(const operation_object& op) const
     {
         _db.create<history_object_type>([&](history_object_type& ahist) { ahist.op = op.id; });
@@ -207,7 +228,10 @@ private:
     template <typename history_object_type> void push_devcommittee_progress(const operation_object& op) const
     {
         const auto& idx = _db.get_index<devcommittee_history_index<history_object_type>, by_id_desc>();
-        _db.modify<history_object_type>(*idx.begin(), [&](history_object_type& h) { h.progress.push_back(op.id); });
+        if (!idx.empty())
+        {
+            _db.modify<history_object_type>(*idx.begin(), [&](history_object_type& h) { h.progress.push_back(op.id); });
+        }
     }
 };
 
@@ -293,6 +317,9 @@ void blockchain_history_plugin_impl::on_operation(const operation_notification& 
 
     const operation_object& new_obj = create_operation_obj(note);
     update_filtered_operation_index(new_obj, note.op);
+
+    note.op.visit(devcommittee_operation_visitor(db, new_obj));
+
     for (const auto& item : impacted)
     {
         auto itr = _tracked_accounts.lower_bound(item);

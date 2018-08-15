@@ -49,11 +49,11 @@ public:
     *  @param limit - the maximum number of items that can be queried (0 to MAX_BLOCKCHAIN_HISTORY_DEPTH], must be less
     * than from
     */
-    std::map<uint32_t, applied_operation> get_history(uint64_t from, uint32_t limit) const;
+    std::vector<applied_operation> get_history(uint64_t from, uint32_t limit) const;
 
-    std::map<uint32_t, applied_operation> get_scr_to_scr_transfers(uint64_t from, uint32_t limit) const;
+    std::vector<applied_operation> get_scr_to_scr_transfers(uint64_t from, uint32_t limit) const;
 
-    std::map<uint32_t, applied_withdraw_operation> get_sp_to_scr_transfers(uint64_t from, uint32_t limit) const;
+    std::vector<applied_withdraw_operation> get_sp_to_scr_transfers(uint64_t from, uint32_t limit) const;
 
     /// @}
 
