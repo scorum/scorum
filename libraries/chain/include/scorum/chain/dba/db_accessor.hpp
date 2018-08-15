@@ -1,5 +1,6 @@
 #pragma once
-#include <scorum/chain/database/database.hpp>
+#include <chainbase/database_index.hpp>
+#include <chainbase/segment_manager.hpp>
 
 namespace scorum {
 namespace chain {
@@ -8,8 +9,8 @@ namespace dba {
 template <typename TObject> class db_accessor
 {
 public:
-    explicit db_accessor(scorum::chain::database& db)
-        : _db(db)
+    explicit db_accessor(chainbase::database_index<chainbase::segment_manager>& db_idx)
+        : _db_idx(db_idx)
     {
     }
 
@@ -20,39 +21,39 @@ public:
 
     const object_type& create(const modifier_type& modifier)
     {
-        return _db.template create<object_type>([&](object_type& o) { modifier(o); });
+        return _db_idx.template create<object_type>([&](object_type& o) { modifier(o); });
     }
 
     void update(const modifier_type& modifier)
     {
-        _db.modify(get(), [&](object_type& o) { modifier(o); });
+        _db_idx.modify(get(), [&](object_type& o) { modifier(o); });
     }
 
     void update(const object_type& o, const modifier_type& modifier)
     {
-        _db.modify(o, [&](object_type& c) { modifier(c); });
+        _db_idx.modify(o, [&](object_type& c) { modifier(c); });
     }
 
     void remove()
     {
-        _db.remove(get());
+        _db_idx.remove(get());
     }
 
     void remove(const object_type& o)
     {
-        _db.remove(o);
+        _db_idx.remove(o);
     }
 
     bool is_exists() const
     {
-        return nullptr != _db.template find<object_type>();
+        return nullptr != _db_idx.template find<object_type>();
     }
 
     const object_type& get() const
     {
         try
         {
-            return _db.template get<object_type>();
+            return _db_idx.template get<object_type>();
         }
         FC_CAPTURE_AND_RETHROW()
     }
@@ -61,7 +62,7 @@ public:
     {
         try
         {
-            return _db.template get<object_type, IndexBy>(arg);
+            return _db_idx.template get<object_type, IndexBy>(arg);
         }
         FC_CAPTURE_AND_RETHROW()
     }
@@ -70,14 +71,14 @@ public:
     {
         try
         {
-            return _db.template find<object_type, IndexBy>(arg);
+            return _db_idx.template find<object_type, IndexBy>(arg);
         }
         FC_CAPTURE_AND_RETHROW()
     }
 
     template <class IndexBy, typename TCall> void foreach_by(TCall&& call) const
     {
-        const auto& idx = _db.template get_index<typename chainbase::get_index_type<object_type>::type>()
+        const auto& idx = _db_idx.template get_index<typename chainbase::get_index_type<object_type>::type>()
                               .indices()
                               .template get<IndexBy>();
         for (auto it = idx.cbegin(); it != idx.cend(); ++it)
@@ -93,7 +94,7 @@ public:
         {
             std::vector<object_cref_type> ret;
 
-            const auto& idx = _db.template get_index<typename chainbase::get_index_type<object_type>::type>()
+            const auto& idx = _db_idx.template get_index<typename chainbase::get_index_type<object_type>::type>()
                                   .indices()
                                   .template get<IndexBy>();
 
@@ -113,7 +114,7 @@ public:
         {
             std::vector<object_cref_type> ret;
 
-            const auto& idx = _db.template get_index<typename chainbase::get_index_type<object_type>::type>()
+            const auto& idx = _db_idx.template get_index<typename chainbase::get_index_type<object_type>::type>()
                                   .indices()
                                   .template get<IndexBy>();
 
@@ -127,7 +128,7 @@ public:
     }
 
 private:
-    scorum::chain::database& _db;
+    chainbase::database_index<chainbase::segment_manager>& _db_idx;
 };
 }
 }
