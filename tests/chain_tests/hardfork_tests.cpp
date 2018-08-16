@@ -427,6 +427,7 @@ SCORUM_TEST_CASE(hardfork_apply_check)
     wdump((hpo.last_hardfork));
 
     BOOST_REQUIRE_EQUAL(hpo.last_hardfork, SCORUM_NUM_HARDFORKS);
+    BOOST_REQUIRE_EQUAL(hpo.processed_hardforks.size(), SCORUM_NUM_HARDFORKS + 1);
 
     auto hardfork_ver = hpo.current_hardfork_version;
     auto hardfork_time_str = hpo.processed_hardforks[hpo.last_hardfork].to_iso_string();
@@ -484,6 +485,7 @@ SCORUM_TEST_CASE(too_few_wirnesses_for_hardfork_appling_check)
     wdump((hpo.last_hardfork));
 
     BOOST_REQUIRE_NE(hpo.last_hardfork, SCORUM_NUM_HARDFORKS);
+    BOOST_REQUIRE_LT(hpo.processed_hardforks.size(), SCORUM_NUM_HARDFORKS + 1);
 
     BOOST_REQUIRE_EQUAL(node_base.current_hardfork(), 0);
     BOOST_REQUIRE_EQUAL(node_witness1.current_hardfork(), 0);
@@ -514,6 +516,7 @@ SCORUM_TEST_CASE(hardfork_apply_without_part_of_witnesses_check)
     wdump((hpo.last_hardfork));
 
     BOOST_REQUIRE_EQUAL(hpo.last_hardfork, SCORUM_NUM_HARDFORKS);
+    BOOST_REQUIRE_EQUAL(hpo.processed_hardforks.size(), SCORUM_NUM_HARDFORKS + 1);
 
     auto hardfork_ver = hpo.current_hardfork_version;
     auto hardfork_time_str = hpo.processed_hardforks[hpo.last_hardfork].to_iso_string();
