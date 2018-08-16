@@ -1214,11 +1214,12 @@ SCORUM_TEST_CASE(get_history_positive_test)
 
     wait_withdraw(SCORUM_VESTING_WITHDRAW_INTERVALS);
 
-    BOOST_TEST_MESSAGE("Return all test");
+    BOOST_TEST_MESSAGE("Return all");
     {
         auto hist = _devapi.get_history(-1, 100);
 
-        // 1(add) + 1(excl) + 1(withdr create) + 1(transf) + [13(withdr 76 SP) + 1(withdr 12 SP)] + 1(finish withdr)
+        // 1(add) + 1(exclude) + 1(withdraw create) + 1(transfer) + [13(withdrawn 76 SP) + 1(withdrawn 12 SP)] +
+        // 1(finishde withdraw)
         BOOST_REQUIRE_EQUAL(hist.size(), 20u);
         BOOST_REQUIRE_NO_THROW(hist[0].op.get<devpool_finished_vesting_withdraw_operation>());
         BOOST_REQUIRE_NO_THROW(hist[19]
@@ -1234,6 +1235,7 @@ SCORUM_TEST_CASE(get_history_positive_test)
         BOOST_REQUIRE_NO_THROW(hist[0].op.get<devpool_finished_vesting_withdraw_operation>());
         BOOST_REQUIRE_NO_THROW(hist[3].op.get<devpool_to_devpool_vesting_withdraw_operation>());
     }
+
     BOOST_TEST_MESSAGE("Return first 3 events");
     {
         auto hist = _devapi.get_history(2, 42);
@@ -1264,7 +1266,6 @@ SCORUM_TEST_CASE(get_transfers_positive_test)
     {
         auto hist = _devapi.get_scr_to_scr_transfers(-1, 100);
 
-        // 1(add) + 1(excl) + 1(withdr create) + 1(transf) + [13(withdr 76 SP) + 1(withdr 12 SP)] + 1(finish withdr)
         BOOST_REQUIRE_EQUAL(hist.size(), 2u);
         BOOST_REQUIRE_NO_THROW({
             const auto& op = hist[0]
