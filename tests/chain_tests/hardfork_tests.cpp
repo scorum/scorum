@@ -262,7 +262,7 @@ struct hardfork_fixture : public database_integration_fixture
 
     void prepare_network()
     {
-        SCORUM_MESSAGE("-- Start network: node_base, node_base2, node_witness1, node_witness2");
+        SCORUM_MESSAGE("-- Start network: node_base, node_witness1, node_witness2, node_witness3");
 
         node_base.initialize();
         node_witness1.initialize();
@@ -294,7 +294,7 @@ struct hardfork_fixture : public database_integration_fixture
 
         node_base.produce_block();
 
-        SCORUM_MESSAGE("-- Start initial node_witness1 and node_witness2");
+        SCORUM_MESSAGE("-- Synchronize node_witness1, node_witness2, node_witness3");
 
         node_witness1.sync_with(node_base);
         node_witness2.sync_with(node_base);
@@ -318,7 +318,7 @@ struct hardfork_fixture : public database_integration_fixture
         node_witness2.set_witness(witness2);
         node_witness3.set_witness(witness3);
 
-        SCORUM_MESSAGE("-- Wait next witness schedule updation");
+        SCORUM_MESSAGE("-- Wait next witness schedule updating");
 
         auto ci = 0;
         while (ci++ < SCORUM_MAX_WITNESSES - (decltype(ci))last_block_num)
