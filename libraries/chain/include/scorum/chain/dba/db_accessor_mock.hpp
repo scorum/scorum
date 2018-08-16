@@ -72,14 +72,14 @@ public:
     template <typename THandler, typename TRet, typename... TArgs>
     void mock(TRet (db_accessor_mock::*ptr)(TArgs...), THandler&& handler)
     {
-        void* addr = (void*&)ptr;
+        void* addr = cast<void*>(ptr);
         _handlers.emplace(addr, std::function<TRet(TArgs...)>(std::forward<THandler>(handler)));
     }
 
     template <typename THandler, typename TRet, typename... TArgs>
     void mock(TRet (db_accessor_mock::*ptr)(TArgs...) const, THandler&& handler)
     {
-        void* addr = (void*&)ptr;
+        void* addr = cast<void*>(ptr);
         _handlers.emplace(addr, std::function<TRet(TArgs...)>(std::forward<THandler>(handler)));
     }
 
@@ -87,7 +87,7 @@ private:
     template <typename TRet, typename... TArgs, typename... UArgs>
     TRet invoke(TRet (db_accessor_mock::*ptr)(TArgs...), UArgs&&... args)
     {
-        void* addr = (void*&)ptr;
+        void* addr = cast<void*>(ptr);
         if (_handlers.count(addr))
             return boost::any_cast<std::function<TRet(TArgs...)>>(_handlers.at(addr))(std::forward<UArgs>(args)...);
 
@@ -97,11 +97,23 @@ private:
     template <typename TRet, typename... TArgs, typename... UArgs>
     TRet invoke(TRet (db_accessor_mock::*ptr)(TArgs...) const, UArgs&&... args) const
     {
-        void* addr = (void*&)ptr;
+        void* addr = cast<void*>(ptr);
         if (_handlers.count(addr))
             return boost::any_cast<std::function<TRet(TArgs...)>>(_handlers.at(addr))(std::forward<UArgs>(args)...);
 
         FC_ASSERT(false, "wasn't mocked");
+    }
+
+    template <typename TOut, typename TIn> TOut cast(TIn in) const
+    {
+        // Type-punning. Undefined behavior according to c++ standart, but works in major c++ compilers
+        union
+        {
+            TIn in;
+            TOut out;
+        } u = { in };
+
+        return u.out;
     }
 
     std::map<void*, boost::any> _handlers;
