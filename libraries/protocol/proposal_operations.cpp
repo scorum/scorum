@@ -28,7 +28,6 @@ percent_type development_committee_transfer_operation::get_required_quorum(commi
 
 void development_committee_withdraw_vesting_operation::validate() const
 {
-    FC_ASSERT(vesting_shares >= asset(0, SP_SYMBOL), "Must withdraw a non-negative amount");
 }
 
 percent_type development_committee_withdraw_vesting_operation::get_required_quorum(committee_i& committee_service) const
