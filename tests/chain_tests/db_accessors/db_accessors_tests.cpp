@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(db_accessors_tests)
     const auto* o5 = dba.find_by<by_name>(std::string("cartman"));
     BOOST_CHECK(o5 == nullptr);
 
-    const auto o6 = dba.create([](game_object& o) {
+    const auto& o6 = dba.create([](game_object& o) {
         o.name = "1";
         o.moderator = "moder";
     });
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(db_accessors_tests)
         dba.remove();
         auto vec = dba.get_range_by<by_name>(::boost::multi_index::unbounded, ::boost::multi_index::unbounded);
         BOOST_CHECK_EQUAL(vec.size(), 1);
-        BOOST_CHECK(vec[0].get().name == "2");
+        BOOST_CHECK(vec[0].get().name == "1");
     }
 
     dba.remove(o6);
