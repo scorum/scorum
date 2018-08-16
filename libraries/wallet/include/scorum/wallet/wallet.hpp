@@ -1375,26 +1375,26 @@ public:
 
     /** Create bet.
      *
-     *  @param better the bet creator
-     *  @param game_id game id
-     *  @param market merket for bet
+     *  @param better owner for new bet
+     *  @param game_id game id for bet creating
+     *  @param market market kind for wincase
      *  @param wincase wincase for bet
-     *  @param odds coefficient that equal inverse probability of winning
-     *  @param stake amount SCR to bet
+     *  @param odds rational coefficient that define potential result (p). p = odds * stake
+     *  @param stake amount in SCR to bet
      *  @param broadcast
      */
     annotated_signed_transaction post_bet(account_name_type better,
                                           int64_t game_id,
                                           betting::market_kind market,
                                           betting::wincase_type wincase,
-                                          std::string odds,
+                                          odds_input odds,
                                           asset stake,
                                           const bool broadcast);
 
     /** Cancel pending bets list.
      *
-     *  @param better the creator for bets list or moderator
-     *  @param bet_ids list of game ids
+     *  @param better owner
+     *  @param bet_ids bets list that is being canceling
      *  @param broadcast
      */
     annotated_signed_transaction

@@ -32,19 +32,6 @@ inline void validate_json_metadata(const std::string& json_metadata)
     }
 }
 
-inline void vallidate_odds(const std::string& odds_value)
-{
-    try
-    {
-        odds::from_string(odds_value);
-    }
-    catch (fc::exception& err)
-    {
-        elog("${err}", ("err", err.what()));
-        FC_ASSERT(false, "Invalid odds value");
-    }
-}
-
 struct base_operation
 {
     void get_required_authorities(std::vector<authority>&) const
