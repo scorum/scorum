@@ -29,8 +29,7 @@ void cancel_pending_bets_evaluator::do_apply(const operation_type& op)
         {
             FC_ASSERT(_bet_service.is_exists(bet_id), "Bet ${id} doesn't exist", ("id", bet_id));
             const auto& bet = _bet_service.get_bet(bet_id);
-            FC_ASSERT(_betting_service.is_betting_moderator(op.better) || bet.better == op.better,
-                      "Invalid better for bet ${id}", ("id", bet_id));
+            FC_ASSERT(bet.better == op.better, "Invalid better for bet ${id}", ("id", bet_id));
 
             const auto& better = _account_service.get_account(bet.better);
 

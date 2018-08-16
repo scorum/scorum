@@ -237,10 +237,5 @@ SCORUM_TEST_CASE(cancel_pending_bets_evaluator_by_better_check)
     check_evaluator(better.name);
 }
 
-SCORUM_TEST_CASE(cancel_pending_bets_evaluator_by_moderator_check)
-{
-    check_evaluator(moderator.name);
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 }

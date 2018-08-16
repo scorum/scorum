@@ -188,20 +188,6 @@ SCORUM_TEST_CASE(cancel_single_pending_bet_by_better_operation_check)
     generate_block();
 }
 
-SCORUM_TEST_CASE(cancel_single_pending_bet_by_moderator_operation_check)
-{
-    generate_block();
-
-    BOOST_REQUIRE_NO_THROW(create_bet(alice, market_kind::result, result_home{}, { 10, 2 },
-                                      asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)));
-
-    generate_block();
-
-    BOOST_REQUIRE_NO_THROW(cancel_pending_bet(moderator, { 0 }));
-
-    generate_block();
-}
-
 SCORUM_TEST_CASE(cancel_some_pending_bets_by_better_operation_check)
 {
     generate_block();
@@ -220,30 +206,6 @@ SCORUM_TEST_CASE(cancel_some_pending_bets_by_better_operation_check)
     generate_block();
 
     cancel_pending_bet(alice, { 0, 1 });
-
-    generate_block();
-}
-
-SCORUM_TEST_CASE(cancel_some_pending_bets_by_moderator_operation_check)
-{
-    generate_block();
-
-    BOOST_REQUIRE_NO_THROW(create_bet(alice, market_kind::total, total_under{ 2000 }, { 10, 2 },
-                                      asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)));
-
-    generate_block();
-
-    BOOST_REQUIRE_NO_THROW(create_bet(alice, market_kind::result, result_home(), { 10, 5 },
-                                      asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)));
-
-    generate_block();
-
-    BOOST_REQUIRE_NO_THROW(create_bet(bob, market_kind::total, total_over{ 2000 }, { 10, 8 },
-                                      asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)));
-
-    generate_block();
-
-    BOOST_REQUIRE_NO_THROW(cancel_pending_bet(moderator, { 0, 1 }));
 
     generate_block();
 }
