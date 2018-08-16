@@ -32,11 +32,11 @@ public:
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
         FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2} ",
                   ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));
-        FC_ASSERT(from >= limit, "From must be greater than limit");
 
         const auto& idx = db->get_index<devcommittee_history_index<history_object_type>, by_id_desc>();
 
-        for (auto it = idx.lower_bound(from); it != idx.end() && limit; ++it, --limit)
+        auto from_ = std::min((uint64_t)std::numeric_limits<int64_t>::max(), from);
+        for (auto it = idx.lower_bound(from_); it != idx.end() && limit; ++it, --limit)
         {
             funct(*it);
         }
