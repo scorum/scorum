@@ -293,7 +293,9 @@ public:
     /// Reset the object graph in-memory
     void initialize_indexes();
 
-    void init_genesis(const genesis_state_type& genesis_state);
+    void open_genesis(const genesis_state_type& genesis_state);
+
+    void setup_genesis(const genesis_state_type& genesis_state);
 
     /**
      *  This method validates transactions without adding it to the pending state.
