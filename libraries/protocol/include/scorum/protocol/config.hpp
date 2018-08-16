@@ -61,6 +61,8 @@ namespace detail {
         
         const fc::time_point_sec witness_reward_migration_date;
 
+        const fc::microseconds active_sp_holders_reward_period;
+
         enum test_mode { test };
 
         explicit config(test_mode);
@@ -76,7 +78,7 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 1, 1) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 2, 0) )
 
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
@@ -109,6 +111,7 @@ namespace detail {
 
 #define SCORUM_START_WITHDRAW_COEFFICIENT           10
 
+#define SCORUM_PRODUCER_REWARD_PERIOD           (scorum::protocol::detail::get_config().active_sp_holders_reward_period)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #define SCORUM_BLOCKID_POOL_SIZE                (scorum::protocol::detail::get_config().blockid_pool_size)

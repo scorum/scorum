@@ -42,6 +42,8 @@ public:
     virtual void open_database_impl(const genesis_state_type& genesis) override
     {
         database_integration_fixture::open_database_impl(genesis);
+
+        db.set_hardfork(SCORUM_NUM_HARDFORKS);
     }
 
     inline asset get_active_voters_reward(const asset& total)
@@ -90,7 +92,10 @@ SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget)
         auto post = create_post(alice).push();
         post.vote(bob).in_block();
 
+        generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD, false);
+
         auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
+        active_sp_holders_reward *= SCORUM_PRODUCER_REWARD_PERIOD.to_seconds() / SCORUM_BLOCK_INTERVAL;
 
         BOOST_REQUIRE_EQUAL(account_service.get_account(bob.name).scorumpower,
                             bob_sp_before + active_sp_holders_reward);

@@ -130,6 +130,8 @@ struct account_service_i : public base_service_i<account_object>
     using account_call_type = typename base_service_i::call_type;
 
     virtual void foreach_account(account_call_type&&) const = 0;
+
+    virtual account_refs_type get_by_cashout_time(const fc::time_point_sec& until) const = 0;
 };
 
 // DB operations with account_*** objects
@@ -256,6 +258,8 @@ public:
     virtual account_refs_type get_active_sp_holders() const override;
 
     virtual void foreach_account(account_call_type&&) const override;
+
+    virtual account_refs_type get_by_cashout_time(const fc::time_point_sec& until) const override;
 
 private:
     const account_object& _create_account_objects(const account_name_type& new_account_name,

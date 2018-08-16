@@ -627,6 +627,15 @@ void dbs_account::foreach_account(account_call_type&& call) const
 {
     foreach_by<by_id>(call);
 }
+dbs_account::account_refs_type dbs_account::get_by_cashout_time(const fc::time_point_sec& until) const
+{
+    try
+    {
+        return get_range_by<by_active_sp_holders_cashout_time>(::boost::multi_index::unbounded,
+                                                               ::boost::lambda::_1 <= std::make_tuple(until, ALL_IDS));
+    }
+    FC_CAPTURE_AND_RETHROW((until))
+}
 
 } // namespace chain
 } // namespace scorum

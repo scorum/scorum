@@ -64,6 +64,7 @@
 #include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
+#include <scorum/chain/database/block_tasks/process_active_sp_holders_cashout.hpp>
 #include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
@@ -1499,6 +1500,7 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_contracts_expiration().apply(task_ctx);
         database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
+        database_ns::process_active_sp_holders_cashout().apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();
@@ -1941,9 +1943,13 @@ void database::init_hardforks(time_point_sec genesis_time)
 
     // SCORUM: structure to initialize hardofrks
 
-    FC_ASSERT(SCORUM_HARDFORK_0_1 == 1, "Invalid hardfork configuration");
+    FC_ASSERT(SCORUM_HARDFORK_0_1 == 1, "Invalid hardfork #1 configuration");
     _hardfork_times[SCORUM_HARDFORK_0_1] = fc::time_point_sec(SCORUM_HARDFORK_0_1_TIME);
     _hardfork_versions[SCORUM_HARDFORK_0_1] = SCORUM_HARDFORK_0_1_VERSION;
+
+    FC_ASSERT(SCORUM_HARDFORK_0_2 == 2, "Invalid hardfork #2 configuration");
+    _hardfork_times[SCORUM_HARDFORK_0_2] = fc::time_point_sec(SCORUM_HARDFORK_0_2_TIME);
+    _hardfork_versions[SCORUM_HARDFORK_0_2] = SCORUM_HARDFORK_0_2_VERSION;
 
     const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",
@@ -2051,7 +2057,9 @@ void database::validate_invariants() const
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
             total_supply += itr->balance;
+            total_supply += asset(itr->active_sp_holders_pending_scr_reward, SCORUM_SYMBOL);
             total_scorumpower += itr->scorumpower;
+            total_scorumpower += asset(itr->active_sp_holders_pending_sp_reward, SP_SYMBOL);
             total_vsf_votes += (itr->proxy == SCORUM_PROXY_TO_SELF_ACCOUNT
                                     ? itr->witness_vote_weight()
                                     : (SCORUM_MAX_PROXY_RECURSION_DEPTH > 0

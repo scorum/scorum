@@ -77,6 +77,8 @@ config::config() /// production config
 
     , witness_reward_migration_date(
           fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(WITNESS_REWARD_MIGRATION_DATE)))
+
+    , active_sp_holders_reward_period(fc::days(7))
 {
     FC_ASSERT(blogging_start_date + cashout_window_seconds < fifa_world_cup_2018_bounty_cashout_date,
               "Required: fifa_world_cup_2018_bounty_cashout_date >= blogging_start_date + cashout_window_seconds.");
@@ -127,6 +129,8 @@ config::config(test_mode) /// test config
     , expiraton_for_registration_bonus(fc::minutes(30))
 
     , witness_reward_migration_date(initial_date + cashout_window_seconds * 10)
+
+    , active_sp_holders_reward_period(fc::seconds(cashout_window_seconds / 10))
 {
     // do nothing
 }
