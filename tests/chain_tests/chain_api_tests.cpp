@@ -136,11 +136,13 @@ SCORUM_TEST_CASE(chain_properties_getter_test)
 
 SCORUM_TEST_CASE(chain_properties_getter_after_generate_block_test)
 {
-    generate_block();
+    wdump((db.head_block_num()));
 
     auto props = _api_call.get_chain_properties();
 
     generate_block();
+
+    wdump((db.head_block_num()));
 
     auto props_new = _api_call.get_chain_properties();
 
