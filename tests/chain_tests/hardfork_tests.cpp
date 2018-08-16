@@ -48,6 +48,11 @@ public:
         _witness_key = witness.private_key;
     }
 
+    void set_lock_producing(bool lock)
+    {
+        _lock_producing = lock;
+    }
+
     const Actor& witness() const
     {
         return _witness;
@@ -69,11 +74,12 @@ public:
 
     fc::time_point_sec try_produce_block(const fc::time_point_sec& last)
     {
-        fc::time_point_sec now = last + SCORUM_BLOCK_INTERVAL;
+        fc::time_point_sec now = last;
+        now += SCORUM_BLOCK_INTERVAL;
         auto slot = db.get_slot_at_time(now);
-        if (_witness.name == db.get_scheduled_witness(slot))
+        if (!_lock_producing && _witness.name == db.get_scheduled_witness(slot))
         {
-            produce_block();
+            produce_block_impl(now);
             return fc::time_point_sec();
         }
         return now; // miss block
@@ -191,12 +197,24 @@ public:
         }
     }
 
+    uint32_t current_hardfork() const
+    {
+        return _current_hardfork_id;
+    }
+
 protected:
     virtual void open_database_impl(const genesis_state_type& genesis)
     {
         genesis_state_type genesis_new_timestamp = genesis;
         genesis_new_timestamp.initial_timestamp = fc::time_point_sec(SCORUM_HARDFORK_0_1_TIME) + fc::days(365 * 5);
         database_integration_fixture::open_database_impl(genesis_new_timestamp);
+
+        db.pre_apply_operation.connect([&](const operation_notification& note) { on_operation(note); });
+    }
+
+    void on_operation(const operation_notification& n)
+    {
+        n.op.weak_visit([&](const hardfork_operation& hf) { _current_hardfork_id = hf.hardfork_id; });
     }
 
     uint32_t produce_block_impl(const fc::time_point_sec& block_time)
@@ -214,6 +232,8 @@ protected:
 
     Actor _witness;
     private_key_type _witness_key;
+    bool _lock_producing = false;
+    uint32_t _current_hardfork_id = 0;
 };
 
 struct hardfork_fixture : public database_integration_fixture
@@ -242,100 +262,111 @@ struct hardfork_fixture : public database_integration_fixture
 
     void prepare_network()
     {
-        SCORUM_MESSAGE("-- Start network: node_base1, node_base2, node_witness1, node_witness2");
+        SCORUM_MESSAGE("-- Start network: node_base, node_base2, node_witness1, node_witness2");
 
-        node_base1.initialize();
-        node_base2.initialize();
+        node_base.initialize();
         node_witness1.initialize();
         node_witness2.initialize();
+        node_witness3.initialize();
 
-        BOOST_CHECK_EQUAL(node_base1.db.head_block_num(), 1u);
-        BOOST_CHECK_EQUAL(node_base2.db.head_block_num(), 1u);
+        BOOST_CHECK_EQUAL(node_base.db.head_block_num(), 1u);
         BOOST_CHECK_EQUAL(node_witness1.db.head_block_num(), 1u);
         BOOST_CHECK_EQUAL(node_witness2.db.head_block_num(), 1u);
+        BOOST_CHECK_EQUAL(node_witness3.db.head_block_num(), 1u);
 
-        SCORUM_MESSAGE("-- Create accounts on node_base1");
+        SCORUM_MESSAGE("-- Create accounts on node_base");
 
-        node_base1.create_accounts(witness1, witness2);
+        node_base.create_accounts(witness1, witness2, witness3);
 
-        BOOST_CHECK(node_base1.account_service.is_exists(witness1.name));
-        BOOST_CHECK(node_base1.account_service.is_exists(witness2.name));
+        BOOST_CHECK(node_base.account_service.is_exists(witness1.name));
+        BOOST_CHECK(node_base.account_service.is_exists(witness2.name));
+        BOOST_CHECK(node_base.account_service.is_exists(witness3.name));
 
-        node_base1.produce_block();
+        node_base.produce_block();
 
-        BOOST_CHECK_EQUAL(node_base1.db.head_block_num(), 2u);
-        BOOST_CHECK_EQUAL(node_base2.db.head_block_num(), 1u);
+        SCORUM_MESSAGE("-- Create witnesses on node_base");
 
-        broadcast_block(node_base1.get_last_block(), std::ref(node_base2));
+        node_base.create_witnesses(witness1, witness2, witness3);
 
-        BOOST_CHECK_EQUAL(node_base2.db.head_block_num(), 2u);
+        BOOST_CHECK(node_base.witness_service.is_exists(witness1.name));
+        BOOST_CHECK(node_base.witness_service.is_exists(witness2.name));
+        BOOST_CHECK(node_base.witness_service.is_exists(witness3.name));
 
-        SCORUM_MESSAGE("-- Create witnesses on node_base2");
-
-        node_base2.create_witnesses(witness1, witness2);
-
-        BOOST_CHECK(node_base2.witness_service.is_exists(witness1.name));
-        BOOST_CHECK(node_base2.witness_service.is_exists(witness2.name));
-
-        node_base2.produce_block();
-
-        broadcast_block(node_base2.get_last_block(), std::ref(node_base1));
-
-        BOOST_CHECK(node_base1.witness_service.is_exists(witness1.name));
-        BOOST_CHECK(node_base1.witness_service.is_exists(witness2.name));
+        node_base.produce_block();
 
         SCORUM_MESSAGE("-- Start initial node_witness1 and node_witness2");
 
-        node_witness1.sync_with(node_base1);
-        node_witness2.sync_with(node_base1);
+        node_witness1.sync_with(node_base);
+        node_witness2.sync_with(node_base);
+        node_witness3.sync_with(node_base);
+
+        auto last_block_num = node_base.db.head_block_num();
+
+        BOOST_CHECK_EQUAL(node_witness1.db.head_block_num(), last_block_num);
+        BOOST_CHECK_EQUAL(node_witness2.db.head_block_num(), last_block_num);
+        BOOST_CHECK_EQUAL(node_witness3.db.head_block_num(), last_block_num);
+
+        BOOST_CHECK(node_witness1.account_service.is_exists(witness1.name));
+        BOOST_CHECK(node_witness2.account_service.is_exists(witness2.name));
+        BOOST_CHECK(node_witness3.account_service.is_exists(witness3.name));
 
         BOOST_CHECK(node_witness1.witness_service.is_exists(witness1.name));
         BOOST_CHECK(node_witness2.witness_service.is_exists(witness2.name));
+        BOOST_CHECK(node_witness3.witness_service.is_exists(witness3.name));
 
         node_witness1.set_witness(witness1);
         node_witness2.set_witness(witness2);
+        node_witness3.set_witness(witness3);
 
         SCORUM_MESSAGE("-- Wait next witness schedule updation");
 
-        auto last_block_num = node_witness2.db.head_block_num();
         auto ci = 0;
         while (ci++ < SCORUM_MAX_WITNESSES - (decltype(ci))last_block_num)
         {
-            node_base1.produce_block();
+            node_base.produce_block();
 
-            broadcast_block(node_base1.get_last_block(), std::ref(node_base2), std::ref(node_witness1),
-                            std::ref(node_witness2));
+            broadcast_block(node_base.get_last_block(), std::ref(node_witness1), std::ref(node_witness2),
+                            std::ref(node_witness3));
         }
 
-        BOOST_CHECK_EQUAL(node_base2.db.head_block_num(), node_base1.db.head_block_num());
-        BOOST_CHECK_EQUAL(node_witness1.db.head_block_num(), node_base1.db.head_block_num());
-        BOOST_CHECK_EQUAL(node_witness2.db.head_block_num(), node_base1.db.head_block_num());
+        last_block_num = node_base.db.head_block_num();
+
+        BOOST_CHECK_EQUAL(node_witness1.db.head_block_num(), last_block_num);
+        BOOST_CHECK_EQUAL(node_witness2.db.head_block_num(), last_block_num);
+        BOOST_CHECK_EQUAL(node_witness3.db.head_block_num(), last_block_num);
     }
 
     void network_produce_block()
     {
-        auto now = node_base1.db.head_block_time();
+        auto now = node_base.db.head_block_time();
         while (true)
         {
-            auto next = node_base1.try_produce_block(now);
+            auto next = node_base.try_produce_block(now);
             if (fc::time_point_sec() == next)
             {
-                broadcast_block(node_base1.get_last_block(), std::ref(node_base2), std::ref(node_witness1),
-                                std::ref(node_witness2));
+                broadcast_block(node_base.get_last_block(), std::ref(node_witness1), std::ref(node_witness2),
+                                std::ref(node_witness3));
                 return;
             }
             next = node_witness1.try_produce_block(now);
             if (fc::time_point_sec() == next)
             {
-                broadcast_block(node_witness1.get_last_block(), std::ref(node_base1), std::ref(node_base2),
-                                std::ref(node_witness2));
+                broadcast_block(node_witness1.get_last_block(), std::ref(node_base), std::ref(node_witness2),
+                                std::ref(node_witness3));
                 return;
             }
             next = node_witness2.try_produce_block(now);
             if (fc::time_point_sec() == next)
             {
-                broadcast_block(node_witness2.get_last_block(), std::ref(node_base1), std::ref(node_base2),
-                                std::ref(node_witness1));
+                broadcast_block(node_witness2.get_last_block(), std::ref(node_base), std::ref(node_witness1),
+                                std::ref(node_witness3));
+                return;
+            }
+            next = node_witness3.try_produce_block(now);
+            if (fc::time_point_sec() == next)
+            {
+                broadcast_block(node_witness3.get_last_block(), std::ref(node_base), std::ref(node_witness1),
+                                std::ref(node_witness2));
                 return;
             }
             now = next;
@@ -344,11 +375,12 @@ struct hardfork_fixture : public database_integration_fixture
 
     Actor witness1 = "witness1";
     Actor witness2 = "witness2";
+    Actor witness3 = "witness3";
 
-    db_node node_base1;
-    db_node node_base2;
+    db_node node_base; // witness initdelegate
     db_node node_witness1;
     db_node node_witness2;
+    db_node node_witness3;
 };
 
 BOOST_FIXTURE_TEST_SUITE(hardfork_tests, hardfork_fixture)
@@ -357,20 +389,28 @@ SCORUM_TEST_CASE(hardfork_apply_check)
 {
     prepare_network();
 
-    wdump((node_base1.db.get_genesis_time()));
+    wdump((node_base.db.get_genesis_time()));
 
     SCORUM_MESSAGE("-- Most witnesses have not produced blocks yet");
 
-    const auto& pre_hpo = node_base1.hardfork_property_service.get();
+    const auto& pre_hpo = node_base.hardfork_property_service.get();
 
     wdump((pre_hpo.next_hardfork));
     wdump((pre_hpo.next_hardfork_time.to_iso_string()));
+    wdump((pre_hpo.last_hardfork));
+
+    BOOST_REQUIRE_EQUAL(pre_hpo.last_hardfork, 0);
+
+    BOOST_REQUIRE_EQUAL(node_base.current_hardfork(), 0);
+    BOOST_REQUIRE_EQUAL(node_witness1.current_hardfork(), 0);
+    BOOST_REQUIRE_EQUAL(node_witness2.current_hardfork(), 0);
+    BOOST_REQUIRE_EQUAL(node_witness3.current_hardfork(), 0);
 
     // next hardfork set by most not producing witnesses
     BOOST_CHECK(pre_hpo.next_hardfork == hardfork_version());
-    BOOST_CHECK_EQUAL(pre_hpo.next_hardfork_time.to_iso_string(), node_base1.db.get_genesis_time().to_iso_string());
+    BOOST_CHECK_EQUAL(pre_hpo.next_hardfork_time.to_iso_string(), node_base.db.get_genesis_time().to_iso_string());
 
-    SCORUM_MESSAGE("-- New witness1 and witness2 become produce blocks");
+    SCORUM_MESSAGE("-- New witnesses become produce blocks");
 
     auto ci = 0;
     while (ci++ < SCORUM_MAX_WITNESSES)
@@ -378,47 +418,150 @@ SCORUM_TEST_CASE(hardfork_apply_check)
         network_produce_block();
     }
 
-    SCORUM_MESSAGE("-- Check hardfork was applied");
+    SCORUM_MESSAGE("-- Hardfork applied for network");
 
-    SCORUM_MESSAGE("- Hardfork prepared and applied");
-
-    const auto& hpo = node_base1.hardfork_property_service.get();
+    const auto& hpo = node_base.hardfork_property_service.get();
 
     wdump((hpo.next_hardfork));
     wdump((hpo.next_hardfork_time.to_iso_string()));
+    wdump((hpo.last_hardfork));
 
-    BOOST_CHECK(hpo.next_hardfork == SCORUM_HARDFORK_0_1_VERSION);
-    BOOST_CHECK_EQUAL(hpo.next_hardfork_time.to_iso_string(),
-                      fc::time_point_sec(SCORUM_HARDFORK_0_1_TIME).to_iso_string());
+    BOOST_REQUIRE_EQUAL(hpo.last_hardfork, SCORUM_NUM_HARDFORKS);
 
     auto hardfork_ver = hpo.current_hardfork_version;
+    auto hardfork_time_str = hpo.processed_hardforks[hpo.last_hardfork].to_iso_string();
 
     wdump((hardfork_ver));
+    wdump((hardfork_time_str));
 
     BOOST_CHECK(hpo.next_hardfork == hardfork_ver);
+    BOOST_CHECK_EQUAL(hpo.next_hardfork_time.to_iso_string(), hardfork_time_str);
 
-    SCORUM_MESSAGE("- Hardfork applied for witnesses");
+    BOOST_REQUIRE_EQUAL(node_base.current_hardfork(), SCORUM_NUM_HARDFORKS);
+    BOOST_REQUIRE_EQUAL(node_witness1.current_hardfork(), SCORUM_NUM_HARDFORKS);
+    BOOST_REQUIRE_EQUAL(node_witness2.current_hardfork(), SCORUM_NUM_HARDFORKS);
+    BOOST_REQUIRE_EQUAL(node_witness3.current_hardfork(), SCORUM_NUM_HARDFORKS);
 
-    const witness_object& w0 = node_base1.witness_service.get(initdelegate.name);
-    wdump((w0));
-    const witness_object& w1 = node_base1.witness_service.get(witness1.name);
+    SCORUM_MESSAGE("-- Hardfork applied for witnesses");
+
+    const witness_object& w1 = node_base.witness_service.get(witness1.name);
     wdump((w1));
-    const witness_object& w2 = node_base1.witness_service.get(witness2.name);
+    const witness_object& w2 = node_base.witness_service.get(witness2.name);
     wdump((w2));
+    const witness_object& w3 = node_base.witness_service.get(witness3.name);
+    wdump((w3));
 
-    BOOST_CHECK(w0.hardfork_version_vote == hardfork_ver);
     BOOST_CHECK(w1.hardfork_version_vote == hardfork_ver);
     BOOST_CHECK(w2.hardfork_version_vote == hardfork_ver);
+    BOOST_CHECK(w3.hardfork_version_vote == hardfork_ver);
 
-    auto hardfork_time = fc::time_point_sec(TEST_GENESIS_TIMESTAMP).to_iso_string();
-    if (SCORUM_NUM_HARDFORKS > 0)
+    BOOST_CHECK_EQUAL(w1.hardfork_time_vote.to_iso_string(), hardfork_time_str);
+    BOOST_CHECK_EQUAL(w2.hardfork_time_vote.to_iso_string(), hardfork_time_str);
+    BOOST_CHECK_EQUAL(w3.hardfork_time_vote.to_iso_string(), hardfork_time_str);
+}
+
+SCORUM_TEST_CASE(too_few_wirnesses_for_hardfork_appling_check)
+{
+    prepare_network();
+
+    SCORUM_MESSAGE("-- Only witness1 produces blocks");
+
+    node_witness2.set_lock_producing(true);
+    node_witness3.set_lock_producing(true);
+
+    auto ci = 0;
+    while (ci++ < SCORUM_MAX_WITNESSES)
     {
-        hardfork_time = hpo.processed_hardforks[SCORUM_NUM_HARDFORKS].to_iso_string();
-        BOOST_CHECK_EQUAL(hpo.next_hardfork_time.to_iso_string(), hardfork_time);
+        network_produce_block();
     }
-    BOOST_CHECK_EQUAL(w0.hardfork_time_vote.to_iso_string(), hardfork_time);
-    BOOST_CHECK_EQUAL(w1.hardfork_time_vote.to_iso_string(), hardfork_time);
-    BOOST_CHECK_EQUAL(w2.hardfork_time_vote.to_iso_string(), hardfork_time);
+
+    SCORUM_MESSAGE("-- Hardfork is not applied for network");
+
+    const auto& hpo = node_base.hardfork_property_service.get();
+
+    wdump((hpo.next_hardfork));
+    wdump((hpo.next_hardfork_time.to_iso_string()));
+    wdump((hpo.last_hardfork));
+
+    BOOST_REQUIRE_NE(hpo.last_hardfork, SCORUM_NUM_HARDFORKS);
+
+    BOOST_REQUIRE_EQUAL(node_base.current_hardfork(), 0);
+    BOOST_REQUIRE_EQUAL(node_witness1.current_hardfork(), 0);
+    BOOST_REQUIRE_EQUAL(node_witness2.current_hardfork(), 0);
+    BOOST_REQUIRE_EQUAL(node_witness3.current_hardfork(), 0);
+}
+
+SCORUM_TEST_CASE(hardfork_apply_without_part_of_witnesses_check)
+{
+    prepare_network();
+
+    SCORUM_MESSAGE("-- Only witness1, witness2 produce blocks");
+
+    node_witness3.set_lock_producing(true);
+
+    auto ci = 0;
+    while (ci++ < SCORUM_MAX_WITNESSES)
+    {
+        network_produce_block();
+    }
+
+    SCORUM_MESSAGE("-- Hardfork applied for network");
+
+    const auto& hpo = node_base.hardfork_property_service.get();
+
+    wdump((hpo.next_hardfork));
+    wdump((hpo.next_hardfork_time.to_iso_string()));
+    wdump((hpo.last_hardfork));
+
+    BOOST_REQUIRE_EQUAL(hpo.last_hardfork, SCORUM_NUM_HARDFORKS);
+
+    auto hardfork_ver = hpo.current_hardfork_version;
+    auto hardfork_time_str = hpo.processed_hardforks[hpo.last_hardfork].to_iso_string();
+
+    wdump((hardfork_ver));
+    wdump((hardfork_time_str));
+
+    BOOST_CHECK(hpo.next_hardfork == hardfork_ver);
+    BOOST_CHECK_EQUAL(hpo.next_hardfork_time.to_iso_string(), hardfork_time_str);
+
+    BOOST_REQUIRE_EQUAL(node_base.current_hardfork(), SCORUM_NUM_HARDFORKS);
+    BOOST_REQUIRE_EQUAL(node_witness1.current_hardfork(), SCORUM_NUM_HARDFORKS);
+    BOOST_REQUIRE_EQUAL(node_witness2.current_hardfork(), SCORUM_NUM_HARDFORKS);
+    BOOST_REQUIRE_EQUAL(node_witness3.current_hardfork(), SCORUM_NUM_HARDFORKS);
+
+    const witness_object& pre_w1 = node_base.witness_service.get(witness1.name);
+    wdump((pre_w1));
+    const witness_object& pre_w2 = node_base.witness_service.get(witness2.name);
+    wdump((pre_w2));
+    const witness_object& pre_w3 = node_base.witness_service.get(witness3.name);
+    wdump((pre_w3));
+
+    SCORUM_MESSAGE("-- All witnesses start producing blocks");
+
+    node_witness3.set_lock_producing(false);
+
+    ci = 0;
+    while (ci++ < SCORUM_MAX_WITNESSES)
+    {
+        network_produce_block();
+    }
+
+    SCORUM_MESSAGE("-- Hardfork applied for witnesses");
+
+    const witness_object& w1 = node_base.witness_service.get(witness1.name);
+    wdump((w1));
+    const witness_object& w2 = node_base.witness_service.get(witness2.name);
+    wdump((w2));
+    const witness_object& w3 = node_base.witness_service.get(witness3.name);
+    wdump((w3));
+
+    BOOST_CHECK(w1.hardfork_version_vote == hardfork_ver);
+    BOOST_CHECK(w2.hardfork_version_vote == hardfork_ver);
+    BOOST_CHECK(w3.hardfork_version_vote == hardfork_version());
+
+    BOOST_CHECK_EQUAL(w1.hardfork_time_vote.to_iso_string(), hardfork_time_str);
+    BOOST_CHECK_EQUAL(w2.hardfork_time_vote.to_iso_string(), hardfork_time_str);
+    BOOST_CHECK_EQUAL(w3.hardfork_time_vote.to_iso_string(), node_base.db.get_genesis_time().to_iso_string());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
