@@ -772,7 +772,7 @@ public:
             return p.str();
         };
 
-        auto account_history_formatter = [this](variant result, const fc::variants& a) {
+        auto history_formatter = [this](variant result, const fc::variants& a) {
             const auto& results = result.get_array();
 
             cli::formatter p;
@@ -800,9 +800,14 @@ public:
             return p.str();
         };
 
-        m["get_account_history"] = account_history_formatter;
-        m["get_account_scr_to_scr_transfers"] = account_history_formatter;
-        m["get_account_scr_to_sp_transfers"] = account_history_formatter;
+        m["get_account_history"] = history_formatter;
+        m["get_account_scr_to_scr_transfers"] = history_formatter;
+        m["get_account_scr_to_sp_transfers"] = history_formatter;
+        m["get_account_sp_to_scr_transfers"] = history_formatter;
+
+        m["get_devcommittee_history"] = history_formatter;
+        m["get_devcommittee_scr_to_scr_transfers"] = history_formatter;
+        m["get_devcommittee_sp_to_scr_transfers"] = history_formatter;
 
         m["get_withdraw_routes"] = [this](variant result, const fc::variants& a) {
             auto routes = result.as<std::vector<withdraw_route>>();
