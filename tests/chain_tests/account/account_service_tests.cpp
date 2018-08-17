@@ -13,12 +13,14 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
 
+#include "database_blog_integration.hpp"
+
 namespace account_service_tests {
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-struct account_service_fixture : public database_fixture::database_default_integration_fixture
+struct account_service_fixture : public database_fixture::database_blog_integration_fixture
 {
     Actor alice = "alice";
     Actor bob = "bob";
@@ -30,6 +32,8 @@ struct account_service_fixture : public database_fixture::database_default_integ
     {
         try
         {
+            open_database();
+
             actor(initdelegate).create_account(alice);
             actor(initdelegate).give_sp(alice, 1e+3);
             actor(initdelegate).give_scr(alice, 1e+3);
@@ -164,6 +168,30 @@ SCORUM_TEST_CASE(create_scorumpower_full_check)
     BOOST_CHECK_EQUAL(old_total_scorumpower + asset(to_transfer.amount, SP_SYMBOL),
                       dgp_service.get().total_scorumpower);
     BOOST_CHECK_EQUAL(old_bob_votes + to_transfer.amount, witness_service.get(bob.name).votes);
+}
+
+SCORUM_TEST_CASE(get_by_cashout_time_check)
+{
+    generate_block();
+
+    BOOST_REQUIRE(account_service.get_by_cashout_time(db.head_block_time()).empty());
+
+    auto cashout = db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD;
+
+    BOOST_REQUIRE(account_service.get_by_cashout_time(cashout).empty());
+
+    auto post = create_post(alice).push();
+    post.vote(bob).in_block();
+
+    BOOST_REQUIRE(account_service.get_by_cashout_time(db.head_block_time()).empty());
+
+    cashout = db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD;
+
+    BOOST_REQUIRE_EQUAL(account_service.get_by_cashout_time(cashout).size(), 1u);
+
+    post.vote(alice).in_block();
+
+    BOOST_REQUIRE_EQUAL(account_service.get_by_cashout_time(cashout).size(), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
