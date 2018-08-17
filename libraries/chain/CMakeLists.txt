@@ -83,7 +83,6 @@ add_library( scorum_chain
              evaluators/post_game_results_evaluator.cpp
              evaluators/post_bet_evalulator.cpp
              evaluators/cancel_pending_bets_evaluator.cpp
-             evaluators/cancel_matched_bets_evaluator.cpp
 
              schema/shared_authority.cpp
              schema/advertising_property_object.cpp

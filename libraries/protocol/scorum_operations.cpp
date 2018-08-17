@@ -385,11 +385,5 @@ void cancel_pending_bets_operation::validate() const
     betting::validate_bet_ids(bet_ids);
     validate_account_name(better);
 }
-
-void cancel_matched_bets_operation::validate() const
-{
-    betting::validate_bet_ids(bet_ids);
-    validate_account_name(moderator);
-}
 } // namespace protocol
 } // namespace scorum

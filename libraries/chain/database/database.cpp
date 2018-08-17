@@ -87,7 +87,6 @@
 #include <scorum/chain/evaluators/update_game_start_time_evaluator.hpp>
 #include <scorum/chain/evaluators/post_game_results_evaluator.hpp>
 #include <scorum/chain/evaluators/post_bet_evalulator.hpp>
-#include <scorum/chain/evaluators/cancel_matched_bets_evaluator.hpp>
 #include <scorum/chain/evaluators/cancel_pending_bets_evaluator.hpp>
 
 #include <cmath>
@@ -1269,7 +1268,6 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator(
         new post_bet_evaluator(*this, _my->betting_service(), _my->betting_matcher()));
     _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->betting_service()));
-    _my->_evaluator_registry.register_evaluator(new cancel_matched_bets_evaluator(*this, _my->betting_service()));
 }
 
 void database::initialize_indexes()
