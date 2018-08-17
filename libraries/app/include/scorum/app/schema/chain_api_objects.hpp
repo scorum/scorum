@@ -92,16 +92,22 @@ struct chain_capital_api_obj
     time_point_sec head_block_time;
     account_name_type current_witness;
 
-    // total SCR and SP (circulating_capital + pools supply)
+    /// Total SCR and SP (circulating_capital + pools supply)
     asset total_supply = asset(0, SCORUM_SYMBOL);
 
-    // total SCR and SP on circulating (on account balances). circulating_capital <= total_supply
+    /// Total amount of SCR
+    asset circulating_scr = asset(0, SCORUM_SYMBOL);
+
+    /// Total amount of SP
+    asset circulating_sp = asset(0, SP_SYMBOL);
+
+    /// Total SCR and SP on circulating (on account balances). circulating_capital <= total_supply
     asset circulating_capital = asset(0, SCORUM_SYMBOL);
 
-    // total SCR on accounts
+    /// Total SCR on accounts
     asset total_scr = asset(0, SCORUM_SYMBOL);
 
-    // total SP on accounts
+    /// Total SP on accounts
     asset total_scorumpower = asset(0, SP_SYMBOL);
 
     asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
@@ -155,6 +161,8 @@ FC_REFLECT(scorum::app::chain_capital_api_obj,
            (head_block_time)
            (current_witness)
            (total_supply)
+           (circulating_scr)
+           (circulating_sp)
            (circulating_capital)
            (total_scr)
            (total_scorumpower)
