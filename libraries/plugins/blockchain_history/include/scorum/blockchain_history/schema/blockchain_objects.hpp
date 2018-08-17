@@ -32,6 +32,9 @@ enum blockchain_history_object_type
     filtered_not_virt_operations_history,
     filtered_virt_operations_history,
     filtered_market_operations_history,
+    devcommittee_all_operations_history,
+    devcommittee_scr_to_scr_transfers_history,
+    devcommittee_sp_to_scr_withdrawals_history,
 };
 }
 }

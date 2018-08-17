@@ -38,6 +38,8 @@ development_committee_withdraw_vesting_evaluator::development_committee_withdraw
 void development_committee_withdraw_vesting_evaluator::do_apply(
     const development_committee_withdraw_vesting_evaluator::operation_type& o)
 {
+    FC_ASSERT(o.vesting_shares >= asset(0, SP_SYMBOL), "Must withdraw a non-negative amount");
+
     withdraw_scorumpower_dev_pool_task create_withdraw;
     withdraw_scorumpower_context ctx(db(), o.vesting_shares);
     create_withdraw.apply(ctx);

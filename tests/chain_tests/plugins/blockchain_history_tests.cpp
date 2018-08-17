@@ -8,17 +8,18 @@
 #include <scorum/app/api_context.hpp>
 
 #include <scorum/blockchain_history/blockchain_history_plugin.hpp>
-#include <scorum/blockchain_history/schema/account_history_object.hpp>
+#include <scorum/blockchain_history/schema/history_object.hpp>
 #include <scorum/blockchain_history/schema/applied_operation.hpp>
 
 #include <scorum/blockchain_history/account_history_api.hpp>
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
+#include <scorum/blockchain_history/devcommittee_history_api.hpp>
 
 #include <scorum/protocol/operations.hpp>
 #include <scorum/common_api/config.hpp>
 
 #include "database_trx_integration.hpp"
-
+#include "devcommittee_fixture.hpp"
 #include "operation_check.hpp"
 
 namespace blockchain_history_tests {
@@ -65,7 +66,7 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
     template <typename history_object_type>
     operation_map_type get_operations_accomplished_by_account(const std::string& account_name)
     {
-        const auto& idx = db.get_index<blockchain_history::history_index<history_object_type>>()
+        const auto& idx = db.get_index<blockchain_history::account_history_index<history_object_type>>()
                               .indices()
                               .get<blockchain_history::by_account>();
 
@@ -106,9 +107,9 @@ SCORUM_TEST_CASE(check_account_nontransfer_operation_only_in_full_history_test)
     operation_map_type buratino_full_ops
         = get_operations_accomplished_by_account<blockchain_history::account_history_object>(buratino);
     operation_map_type buratino_scr_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(buratino);
     operation_map_type buratino_sp_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(buratino);
 
     BOOST_REQUIRE_EQUAL(buratino_full_ops.size(), 1u);
     BOOST_REQUIRE_EQUAL(buratino_scr_ops.size(), 0u);
@@ -125,9 +126,9 @@ SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_scr_h
     operation_map_type buratino_full_ops
         = get_operations_accomplished_by_account<blockchain_history::account_history_object>(buratino);
     operation_map_type buratino_scr_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(buratino);
     operation_map_type buratino_sp_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(buratino);
 
     BOOST_REQUIRE_EQUAL(buratino_full_ops.size(), 2u);
     BOOST_REQUIRE_EQUAL(buratino_scr_ops.size(), 1u);
@@ -148,9 +149,9 @@ SCORUM_TEST_CASE(check_account_transfer_operation_in_full_and_transfers_to_sp_hi
     operation_map_type buratino_full_ops
         = get_operations_accomplished_by_account<blockchain_history::account_history_object>(buratino);
     operation_map_type buratino_scr_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(buratino);
     operation_map_type buratino_sp_ops
-        = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(buratino);
+        = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(buratino);
 
     BOOST_REQUIRE_EQUAL(buratino_full_ops.size(), 2u);
     BOOST_REQUIRE_EQUAL(buratino_scr_ops.size(), 0u);
@@ -172,9 +173,11 @@ SCORUM_TEST_CASE(check_account_transfer_operation_history_test)
 
     {
         operation_map_type buratino_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(buratino);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(
+                buratino);
         operation_map_type maugli_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(maugli);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(
+                maugli);
 
         BOOST_REQUIRE_EQUAL(buratino_ops.size(), 1u);
         BOOST_REQUIRE_EQUAL(maugli_ops.size(), 0u);
@@ -193,9 +196,11 @@ SCORUM_TEST_CASE(check_account_transfer_operation_history_test)
 
     {
         operation_map_type buratino_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(buratino);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(
+                buratino);
         operation_map_type maugli_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_scr_history_object>(maugli);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_scr_history_object>(
+                maugli);
 
         BOOST_REQUIRE_EQUAL(buratino_ops.size(), 2u);
         BOOST_REQUIRE_EQUAL(maugli_ops.size(), 1u);
@@ -214,9 +219,11 @@ SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
 
     {
         operation_map_type buratino_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(buratino);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(
+                buratino);
         operation_map_type maugli_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(maugli);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(
+                maugli);
 
         BOOST_REQUIRE_EQUAL(buratino_ops.size(), 0u);
         BOOST_REQUIRE_EQUAL(maugli_ops.size(), 0u);
@@ -230,9 +237,11 @@ SCORUM_TEST_CASE(check_account_transfer_to_scorumpower_operation_history_test)
 
     {
         operation_map_type buratino_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(buratino);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(
+                buratino);
         operation_map_type maugli_ops
-            = get_operations_accomplished_by_account<blockchain_history::transfers_to_sp_history_object>(maugli);
+            = get_operations_accomplished_by_account<blockchain_history::account_transfers_to_sp_history_object>(
+                maugli);
 
         BOOST_REQUIRE_EQUAL(buratino_ops.size(), 1u);
         BOOST_REQUIRE_EQUAL(maugli_ops.size(), 1u);
@@ -1147,6 +1156,201 @@ SCORUM_TEST_CASE(get_ops_history_by_time_positive_check)
 
         BOOST_CHECK(v.successed());
     }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+struct devcommittee_history_fixture : public devcommittee_fixture::devcommittee_fixture
+{
+    devcommittee_history_fixture()
+        : alice("alice")
+        , bob("bob")
+        , _devcommittee_history_api_ctx(app, API_DEVCOMMITTEE_HISTORY, std::make_shared<api_session_data>())
+        , _devapi(_devcommittee_history_api_ctx)
+    {
+        init_plugin<scorum::blockchain_history::blockchain_history_plugin>();
+
+        auto genesis = default_genesis_state()
+                           .development_sp_supply(ASSET_SP(1000))
+                           .development_scr_supply(ASSET_SCR(1000))
+                           .generate();
+        open_database(genesis);
+
+        generate_block();
+        validate_database();
+
+        actor(initdelegate).create_account(alice);
+        actor(initdelegate).give_scr(alice, feed_amount);
+        actor(initdelegate).give_sp(alice, feed_amount);
+
+        actor(initdelegate).create_account(bob);
+        actor(initdelegate).give_scr(bob, feed_amount);
+        actor(initdelegate).give_sp(bob, feed_amount);
+    }
+
+    const int feed_amount = 99000;
+
+    Actor alice;
+    Actor bob;
+
+    api_context _devcommittee_history_api_ctx;
+    blockchain_history::devcommittee_history_api _devapi;
+};
+
+BOOST_FIXTURE_TEST_SUITE(devcommittee_history_tests, devcommittee_history_fixture)
+
+SCORUM_TEST_CASE(get_history_positive_test)
+{
+    BOOST_TEST_MESSAGE("Preparing required data");
+
+    devcommittee_add_member(initdelegate, alice, initdelegate);
+    devcommittee_change_quorum(initdelegate, exclude_member_quorum, 50u, initdelegate, alice);
+    devcommittee_exclude_member(initdelegate, alice, initdelegate);
+    devcommittee_withdraw(initdelegate, ASSET_SP(1000), initdelegate);
+
+    wait_withdraw(1);
+
+    devcommittee_transfer(initdelegate, alice, ASSET_SCR(100), initdelegate);
+
+    wait_withdraw(SCORUM_VESTING_WITHDRAW_INTERVALS);
+
+    BOOST_TEST_MESSAGE("Return all");
+    {
+        auto hist = _devapi.get_history(-1, 100);
+
+        // 1(add) + 1(exclude) + 1(withdraw create) + 1(transfer) + [13(withdrawn 76 SP) + 1(withdrawn 12 SP)] +
+        // 1(finishde withdraw)
+        BOOST_REQUIRE_EQUAL(hist.size(), 20u);
+        BOOST_REQUIRE_NO_THROW(hist[0].op.get<devpool_finished_vesting_withdraw_operation>());
+        BOOST_REQUIRE_NO_THROW(hist[19]
+                                   .op.get<proposal_virtual_operation>()
+                                   .proposal_op.get<development_committee_add_member_operation>());
+    }
+
+    BOOST_TEST_MESSAGE("Return last 4 events");
+    {
+        auto hist = _devapi.get_history(-1, 4);
+
+        BOOST_REQUIRE_EQUAL(hist.size(), 4u);
+        BOOST_REQUIRE_NO_THROW(hist[0].op.get<devpool_finished_vesting_withdraw_operation>());
+        BOOST_REQUIRE_NO_THROW(hist[3].op.get<devpool_to_devpool_vesting_withdraw_operation>());
+    }
+
+    BOOST_TEST_MESSAGE("Return first 3 events");
+    {
+        auto hist = _devapi.get_history(2, 42);
+
+        BOOST_REQUIRE_EQUAL(hist.size(), 3u);
+        BOOST_REQUIRE_NO_THROW(hist[0]
+                                   .op.get<proposal_virtual_operation>()
+                                   .proposal_op.get<development_committee_exclude_member_operation>());
+        BOOST_REQUIRE_NO_THROW(
+            hist[2].op.get<proposal_virtual_operation>().proposal_op.get<development_committee_add_member_operation>());
+    }
+}
+
+SCORUM_TEST_CASE(get_history_negative_test)
+{
+    BOOST_CHECK_THROW(_devapi.get_history(-1, 0), fc::assert_exception);
+    BOOST_CHECK_THROW(_devapi.get_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(get_transfers_positive_test)
+{
+    BOOST_TEST_MESSAGE("Preparing required data");
+    devcommittee_transfer(initdelegate, alice, ASSET_SCR(100), initdelegate);
+    devcommittee_change_quorum(initdelegate, exclude_member_quorum, 50u, initdelegate);
+    devcommittee_transfer(initdelegate, bob, ASSET_SCR(200), initdelegate);
+
+    BOOST_TEST_MESSAGE("Return all in correct order test");
+    {
+        auto hist = _devapi.get_scr_to_scr_transfers(-1, 100);
+
+        BOOST_REQUIRE_EQUAL(hist.size(), 2u);
+        BOOST_REQUIRE_NO_THROW({
+            const auto& op = hist[0]
+                                 .op.get<proposal_virtual_operation>()
+                                 .proposal_op.get<development_committee_transfer_operation>();
+            BOOST_CHECK_EQUAL(op.amount.amount, 200u);
+        });
+        BOOST_REQUIRE_NO_THROW({
+            const auto& op = hist[1]
+                                 .op.get<proposal_virtual_operation>()
+                                 .proposal_op.get<development_committee_transfer_operation>();
+            BOOST_CHECK_EQUAL(op.amount.amount, 100u);
+        });
+    }
+}
+
+SCORUM_TEST_CASE(get_transfers_negative_test)
+{
+    BOOST_CHECK_THROW(_devapi.get_scr_to_scr_transfers(-1, 0), fc::assert_exception);
+    BOOST_CHECK_THROW(_devapi.get_scr_to_scr_transfers(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(withdraw_after_previous_withdraw_finished_test)
+{
+    devcommittee_withdraw(initdelegate, ASSET_SP(130), initdelegate);
+    wait_withdraw(SCORUM_VESTING_WITHDRAW_INTERVALS);
+
+    devcommittee_withdraw(initdelegate, ASSET_SP(260), initdelegate);
+    wait_withdraw(1);
+
+    auto hist = _devapi.get_sp_to_scr_transfers(-1, 100);
+    BOOST_CHECK_EQUAL(hist.size(), 2u);
+
+    BOOST_CHECK(hist[0].status == blockchain_history::applied_withdraw_operation::active);
+    BOOST_CHECK_EQUAL(hist[0].withdrawn.amount, 20u);
+    BOOST_CHECK(hist[1].status == blockchain_history::applied_withdraw_operation::finished);
+    BOOST_CHECK_EQUAL(hist[1].withdrawn.amount, 130u);
+}
+
+SCORUM_TEST_CASE(new_withdraw_interrupt_previous_withdraw_test)
+{
+    devcommittee_withdraw(initdelegate, ASSET_SP(130), initdelegate);
+    wait_withdraw(SCORUM_VESTING_WITHDRAW_INTERVALS / 2); // |13/2| == 6
+
+    devcommittee_withdraw(initdelegate, ASSET_SP(260), initdelegate);
+    wait_withdraw(SCORUM_VESTING_WITHDRAW_INTERVALS);
+
+    auto hist = _devapi.get_sp_to_scr_transfers(-1, 100);
+    BOOST_CHECK_EQUAL(hist.size(), 2u);
+
+    BOOST_CHECK(hist[0].status == blockchain_history::applied_withdraw_operation::finished);
+    BOOST_CHECK_EQUAL(hist[0].withdrawn.amount, 260u);
+    BOOST_CHECK(hist[1].status == blockchain_history::applied_withdraw_operation::interrupted);
+    BOOST_CHECK_EQUAL(hist[1].withdrawn.amount, 60u);
+}
+
+SCORUM_TEST_CASE(zero_withdraw_interrupt_previous_withdraw_test)
+{
+    devcommittee_withdraw(initdelegate, ASSET_SP(130), initdelegate);
+    wait_withdraw(SCORUM_VESTING_WITHDRAW_INTERVALS / 2); // |13/2| == 6
+
+    devcommittee_withdraw(initdelegate, ASSET_SP(0), initdelegate);
+    wait_withdraw(SCORUM_VESTING_WITHDRAW_INTERVALS);
+
+    auto hist = _devapi.get_sp_to_scr_transfers(-1, 100);
+    BOOST_CHECK_EQUAL(hist.size(), 2u);
+
+    BOOST_CHECK(hist[0].status == blockchain_history::applied_withdraw_operation::empty);
+    BOOST_CHECK_EQUAL(hist[0].withdrawn.amount, 0u);
+    BOOST_CHECK(hist[1].status == blockchain_history::applied_withdraw_operation::interrupted);
+    BOOST_CHECK_EQUAL(hist[1].withdrawn.amount, 60u);
+}
+
+SCORUM_TEST_CASE(get_withrdaw_negative_test)
+{
+    BOOST_CHECK_THROW(_devapi.get_sp_to_scr_transfers(-1, 0), fc::assert_exception);
+    BOOST_CHECK_THROW(_devapi.get_sp_to_scr_transfers(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(zero_withdraw_after_previous_withdraw_finished_should_throw_test)
+{
+    devcommittee_withdraw(initdelegate, ASSET_SP(130), initdelegate);
+    wait_withdraw(SCORUM_VESTING_WITHDRAW_INTERVALS);
+
+    BOOST_REQUIRE_THROW(devcommittee_withdraw(initdelegate, ASSET_SP(0), initdelegate), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
