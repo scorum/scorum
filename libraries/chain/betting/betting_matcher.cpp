@@ -98,7 +98,7 @@ bool betting_matcher::is_bets_matched(const bet_object& bet1, const bet_object& 
 
 bool betting_matcher::is_need_matching(const bet_object& bet) const
 {
-    return bet.rest_stake.amount > SCORUM_MIN_STAKE_FOR_MATCHING;
+    return bet.rest_stake.amount > SCORUM_MIN_BET_STAKE_FOR_MATCHING;
 }
 }
 }

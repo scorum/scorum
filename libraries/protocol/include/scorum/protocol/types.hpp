@@ -1,5 +1,4 @@
 #pragma once
-#include <scorum/protocol/config.hpp>
 
 #include <fc/container/flat_fwd.hpp>
 #include <fc/io/varint.hpp>
@@ -18,6 +17,8 @@
 #include <fc/uint128.hpp>
 #include <fc/static_variant.hpp>
 #include <fc/smart_ref_fwd.hpp>
+#include <fc/time.hpp>
+#include <fc/safe.hpp>
 
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -65,6 +66,9 @@ typedef fc::ecc::compact_signature signature_type;
 typedef uint16_t authority_weight_type;
 typedef uint16_t percent_type;
 typedef int16_t vote_weight_type;
+
+using share_value_type = int64_t;
+using share_type = fc::safe<share_value_type>;
 
 struct public_key_type
 {

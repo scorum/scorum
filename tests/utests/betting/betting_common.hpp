@@ -2,6 +2,7 @@
 
 #include "service_wrappers.hpp"
 
+#include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/betting_property.hpp>
 #include <scorum/chain/services/bet.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
@@ -10,6 +11,9 @@
 
 #include <scorum/chain/betting/betting_math.hpp>
 #include <scorum/protocol/betting/wincase.hpp>
+
+#include <scorum/chain/betting/betting_service.hpp>
+#include <scorum/chain/betting/betting_matcher.hpp>
 
 namespace betting_common {
 
@@ -31,6 +35,8 @@ protected:
 
     betting_service_fixture_impl()
         : betting_property(*this, mocks, [&](betting_property_object& bp) { bp.moderator = moderator; })
+        , account_service(*this, mocks)
+        , games(*this, mocks)
         , bets(*this, mocks)
         , pending_bets(*this, mocks)
         , matched_bets(*this, mocks)
@@ -41,6 +47,8 @@ protected:
     {
         mocks.OnCall(dbs_services, data_service_factory_i::betting_property_service)
             .ReturnByRef(betting_property.service());
+        mocks.OnCall(dbs_services, data_service_factory_i::account_service).ReturnByRef(account_service.service());
+        mocks.OnCall(dbs_services, data_service_factory_i::game_service).ReturnByRef(games.service());
         mocks.OnCall(dbs_services, data_service_factory_i::bet_service).ReturnByRef(bets.service());
         mocks.OnCall(dbs_services, data_service_factory_i::pending_bet_service).ReturnByRef(pending_bets.service());
         mocks.OnCall(dbs_services, data_service_factory_i::matched_bet_service).ReturnByRef(matched_bets.service());
@@ -78,9 +86,23 @@ protected:
 
 public:
     service_base_wrapper<betting_property_service_i> betting_property;
+    account_service_wrapper account_service;
+    game_service_wrapper games;
     bet_service_wrapper bets;
     pending_bet_service_wrapper pending_bets;
     matched_service_wrapper matched_bets;
     dynamic_global_property_service_wrapper dgp_service;
+};
+
+struct betting_evaluator_fixture_impl : public betting_service_fixture_impl
+{
+protected:
+    betting_evaluator_fixture_impl()
+    {
+    }
+
+public:
+    betting_service_i* betting_service_moc = mocks.Mock<betting_service_i>();
+    betting_matcher_i* betting_matcher_moc = mocks.Mock<betting_matcher_i>();
 };
 }

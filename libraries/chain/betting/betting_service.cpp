@@ -10,6 +10,8 @@
 
 #include <scorum/chain/betting/betting_math.hpp>
 
+#include <scorum/chain/schema/bet_objects.hpp>
+
 namespace scorum {
 namespace chain {
 namespace betting {
@@ -76,6 +78,11 @@ void betting_service::remove_bets(const game_object& game)
 {
     boost::ignore_unused_variable_warning(game);
     FC_THROW("not implemented");
+}
+
+bool betting_service::is_bet_matched(const bet_object& bet) const
+{
+    return bet.rest_stake != bet.stake;
 }
 }
 }

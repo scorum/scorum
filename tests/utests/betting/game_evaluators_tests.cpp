@@ -121,7 +121,7 @@ SCORUM_TEST_CASE(game_should_be_created)
             game_service,
             (const game_object& (game_service_i::*)(const account_name_type&, const std::string&, fc::time_point_sec,
                                                     const game_type&, const fc::flat_set<market_type>&))
-                & game_service_i::create)
+                & game_service_i::create_game)
         .Do([&](const account_name_type& acc_name, const std::string& game_name, fc::time_point_sec start,
                 const game_type& game, const fc::flat_set<market_type>& markets) -> const game_object& {
             BOOST_CHECK_EQUAL(acc_name, "cartman");

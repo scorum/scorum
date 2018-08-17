@@ -27,7 +27,7 @@ void create_game_evaluator::do_apply(const operation_type& op)
     FC_ASSERT(_betting_service.is_betting_moderator(op.moderator), "User ${u} isn't a betting moderator",
               ("u", op.moderator));
 
-    _game_service.create(op.moderator, op.name, op.start, op.game, op.markets);
+    _game_service.create_game(op.moderator, op.name, op.start, op.game, op.markets);
 }
 }
 }

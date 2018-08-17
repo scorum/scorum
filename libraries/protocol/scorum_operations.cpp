@@ -343,13 +343,13 @@ void create_game_operation::validate() const
 
 void cancel_game_operation::validate() const
 {
-    FC_ASSERT(game_id > 0, "Id must be positive");
+    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 }
 
 void update_game_markets_operation::validate() const
 {
-    FC_ASSERT(game_id > 0, "Id must be positive");
+    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 
     betting::validate_markets(markets);
@@ -357,7 +357,7 @@ void update_game_markets_operation::validate() const
 
 void update_game_start_time_operation::validate() const
 {
-    FC_ASSERT(game_id > 0, "Id must be positive");
+    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 }
 
@@ -369,5 +369,23 @@ void post_game_results_operation::validate() const
     betting::validate_wincases(wincases);
 }
 
+void post_bet_operation::validate() const
+{
+    FC_ASSERT(game_id >= 0, "Invalid game Id");
+    validate_account_name(better);
+    betting::validate_wincase(wincase, market);
+    FC_ASSERT(is_asset_type(stake, SCORUM_SYMBOL), "Stake must be SCR");
+    auto min_stake = asset(SCORUM_MIN_BET_STAKE, SCORUM_SYMBOL);
+    FC_ASSERT(stake >= min_stake, "Stake must be greater  or equal then ${s}", ("s", min_stake));
+    FC_ASSERT(odds.numerator > 0, "odds numerator must be greater then zero");
+    FC_ASSERT(odds.denominator > 0, "odds denominator must be greater then zero");
+    FC_ASSERT(odds.numerator > odds.denominator, "odds must be greater then one");
+}
+
+void cancel_pending_bets_operation::validate() const
+{
+    betting::validate_bet_ids(bet_ids);
+    validate_account_name(better);
+}
 } // namespace protocol
 } // namespace scorum

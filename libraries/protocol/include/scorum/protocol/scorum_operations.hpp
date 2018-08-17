@@ -834,6 +834,52 @@ struct post_game_results_operation : public base_operation
     }
 };
 
+/// rational number
+struct odds_input
+{
+    odds_value_type numerator;
+    odds_value_type denominator;
+};
+
+struct post_bet_operation : public base_operation
+{
+    /// owner for new bet
+    account_name_type better;
+    /// game for bet creating
+    int64_t game_id;
+    /// market kind for wincase
+    betting::market_kind market;
+    /// wincase
+    betting::wincase_type wincase;
+    /// odds - rational coefficient that define potential result (p). p = odds * stake
+    odds_input odds;
+    /// stake amount in SCR
+    asset stake;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(better);
+    }
+};
+
+struct cancel_pending_bets_operation : public base_operation
+{
+    /// bets list that is being canceling
+    fc::flat_set<int64_t> bet_ids;
+    /// owner
+    account_name_type better;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(better);
+    }
+};
+
+    /// bets list that is being canceling
+    /// supervisor
+    /// timepoint from that even matched stake is being canceling
 } // namespace protocol
 } // namespace scorum
 
@@ -926,4 +972,19 @@ FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
             (lifetime_sec)
             (operation))
+
+FC_REFLECT(scorum::protocol::odds_input,
+           (numerator)
+           (denominator))
+
+FC_REFLECT( scorum::protocol::post_bet_operation,
+           (better)
+           (game_id)
+           (market)
+           (wincase)
+           (odds)
+           (stake))
+FC_REFLECT( scorum::protocol::cancel_pending_bets_operation,
+           (bet_ids)
+           (better))
 // clang-format on

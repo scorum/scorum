@@ -1069,9 +1069,9 @@ wallet_api::get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_
 }
 
 std::map<uint32_t, applied_operation> wallet_api::get_ops_history_by_time(const fc::time_point_sec& from,
-                                                                               const fc::time_point_sec& to,
-                                                                               uint32_t from_op,
-                                                                               uint32_t limit) const
+                                                                          const fc::time_point_sec& to,
+                                                                          uint32_t from_op,
+                                                                          uint32_t limit) const
 {
     my->use_remote_blockchain_history_api();
 
@@ -3064,6 +3064,68 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
     result = my->_remote_db->get_atomicswap_contracts(owner);
 
     return result;
+}
+
+annotated_signed_transaction wallet_api::post_bet(account_name_type better,
+                                                  int64_t game_id,
+                                                  betting::market_kind market,
+                                                  betting::wincase_type wincase,
+                                                  odds_input odds,
+                                                  asset stake,
+                                                  const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    post_bet_operation op;
+
+    op.better = better;
+    op.game_id = game_id;
+    op.market = market;
+    op.odds = odds;
+    op.stake = stake;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    try
+    {
+        ret = my->sign_transaction(tx, broadcast);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't post bet.");
+    }
+
+    return ret;
+}
+
+annotated_signed_transaction
+wallet_api::cancel_pending_bets(account_name_type better, fc::flat_set<int64_t> bet_ids, const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    cancel_pending_bets_operation op;
+
+    op.better = better;
+    op.bet_ids = bet_ids;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    try
+    {
+        ret = my->sign_transaction(tx, broadcast);
+    }
+    catch (fc::exception& e)
+    {
+        elog("Can't cancel pending bets.");
+    }
+
+    return ret;
 }
 
 void wallet_api::exit()

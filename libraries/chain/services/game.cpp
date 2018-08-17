@@ -11,9 +11,9 @@ dbs_game::dbs_game(database& db)
 {
 }
 
-const game_object& dbs_game::create(const account_name_type& moderator,
-                                    const std::string& game_name,
-                                    fc::time_point_sec start,
+const game_object& dbs_game::create_game(const account_name_type& moderator,
+                                         const std::string& game_name,
+                                         fc::time_point_sec start,
                                     const betting::game_type& game,
                                     const fc::flat_set<betting::market_type>& markets)
 {
