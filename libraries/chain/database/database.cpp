@@ -2105,6 +2105,10 @@ void database::validate_invariants() const
         FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");
         FC_ASSERT(accounts_circulating.sp <= asset::maximum(SP_SYMBOL), "Assets SP overflow");
 
+        FC_ASSERT(gpo.total_supply == total_supply, "",
+                  ("gpo.total_supply", gpo.total_supply)
+                  ("total_supply", total_supply));
+
         FC_ASSERT(gpo.total_scorumpower == accounts_circulating.sp, "",
                   ("gpo.total_supply", gpo.total_supply)
                   ("gpo.total_scorumpower", gpo.total_scorumpower)
@@ -2118,14 +2122,6 @@ void database::validate_invariants() const
                   ("gpo.circulating_capital", gpo.circulating_capital)
                   ("accounts_circulating.sp", accounts_circulating.sp)
                   ("accounts_circulating.scr", accounts_circulating.scr));
-
-        FC_ASSERT(gpo.total_supply == total_supply, "",
-                  ("gpo.total_supply", gpo.total_supply)
-                  ("total_supply", total_supply));
-
-        FC_ASSERT(gpo.total_scorumpower == accounts_circulating.sp, "",
-                  ("gpo.total_scorumpower", gpo.total_scorumpower)
-                  ("total_scorumpower", accounts_circulating.sp));
 
         FC_ASSERT(gpo.total_scorumpower.amount == accounts_circulating.vsf_votes, "",
                   ("total_scorumpower", gpo.total_scorumpower)
