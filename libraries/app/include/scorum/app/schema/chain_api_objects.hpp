@@ -161,6 +161,8 @@ FC_REFLECT(scorum::app::chain_capital_api_obj,
            (head_block_time)
            (current_witness)
            (total_supply)
+           (circulating_scr)
+           (circulating_sp)
            (circulating_capital)
            (total_scr)
            (total_scorumpower)
