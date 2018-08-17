@@ -191,6 +191,8 @@ SCORUM_TEST_CASE(get_by_cashout_time_check)
 
     post.vote(alice).in_block();
 
+    cashout = db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD;
+
     BOOST_REQUIRE_EQUAL(account_service.get_by_cashout_time(cashout).size(), 2u);
 }
 
