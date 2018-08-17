@@ -70,6 +70,49 @@ struct account_service_fixture : public database_fixture::database_blog_integrat
 
 BOOST_FIXTURE_TEST_SUITE(account_service_tests, account_service_fixture)
 
+SCORUM_TEST_CASE(create_account_should_increase_total_scorumpower_amount)
+{
+    Actor piter = "piter";
+
+    scorum::protocol::authority active, owner, posting;
+
+    const auto circulating_capital = dgp_service.get().circulating_capital;
+    const auto total_scorumpower = dgp_service.get().total_scorumpower;
+
+    BOOST_CHECK_EQUAL(circulating_capital.amount, 10000000060u);
+    BOOST_CHECK_EQUAL(total_scorumpower.amount, 28560u);
+
+    const auto fee = ASSET_SCR(5);
+
+    BOOST_REQUIRE_NO_THROW(
+        account_service.create_account(piter.name, alice.name, piter.public_key, "{}", owner, active, posting, fee));
+
+    BOOST_CHECK_EQUAL(dgp_service.get().circulating_capital.amount, circulating_capital.amount);
+    BOOST_CHECK_EQUAL(dgp_service.get().total_scorumpower.amount, total_scorumpower.amount + fee.amount);
+}
+
+SCORUM_TEST_CASE(create_account_with_delegation_should_increase_total_scorumpower_amount)
+{
+    Actor piter = "piter";
+
+    scorum::protocol::authority active, owner, posting;
+
+    const auto circulating_capital = dgp_service.get().circulating_capital;
+    const auto total_scorumpower = dgp_service.get().total_scorumpower;
+
+    BOOST_CHECK_EQUAL(circulating_capital.amount, 10000000060u);
+    BOOST_CHECK_EQUAL(total_scorumpower.amount, 28560u);
+
+    const auto fee = ASSET_SCR(5);
+    const auto delegated_sp = ASSET_SP(10);
+
+    BOOST_REQUIRE_NO_THROW(account_service.create_account_with_delegation(
+        piter.name, alice.name, piter.public_key, "{}", owner, active, posting, fee, delegated_sp));
+
+    BOOST_CHECK_EQUAL(dgp_service.get().circulating_capital.amount, circulating_capital.amount);
+    BOOST_CHECK_EQUAL(dgp_service.get().total_scorumpower.amount, total_scorumpower.amount + fee.amount);
+}
+
 SCORUM_TEST_CASE(increase_balance_increase_circulating_capital_check)
 {
     const asset to_transfer = ASSET_SCR(500);

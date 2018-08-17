@@ -110,12 +110,12 @@ const account_object& dbs_account::create_account(const account_name_type& new_a
 {
     FC_ASSERT(fee.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
 
-    const auto& creator = get_account(creator_name);
-
-    update(creator, [&](account_object& c) { c.balance -= fee; });
+    if (fee.amount > 0)
+        decrease_balance(get_account(creator_name), fee);
 
     const auto& new_account
         = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
+
     if (fee.amount > 0)
         create_scorumpower(new_account, fee);
 
@@ -137,10 +137,9 @@ const account_object& dbs_account::create_account_with_delegation(const account_
 
     const auto& creator = get_account(creator_name);
 
-    update(creator, [&](account_object& c) {
-        c.balance -= fee;
-        c.delegated_scorumpower += delegation;
-    });
+    update(creator, [&](account_object& c) { c.delegated_scorumpower += delegation; });
+
+    decrease_balance(creator, fee);
 
     const auto& new_account
         = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
@@ -245,11 +244,16 @@ void dbs_account::update_owner_authority(const account_object& account, const au
 
 void dbs_account::increase_balance(const account_object& account, const asset& amount)
 {
+    // clang-format off
     FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
     update(account, [&](account_object& acnt) { acnt.balance += amount; });
 
-    db_impl().obtain_service<dbs_dynamic_global_property>().update(
-        [&](dynamic_global_property_object& props) { props.circulating_capital += amount; });
+
+
+    db_impl().obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& props) {
+        props.circulating_capital += amount;
+    });
+    // clang-format on
 }
 
 void dbs_account::decrease_balance(const account_object& account, const asset& amount)
@@ -635,6 +639,28 @@ dbs_account::account_refs_type dbs_account::get_by_cashout_time(const fc::time_p
                                                                ::boost::lambda::_1 <= std::make_tuple(until, ALL_IDS));
     }
     FC_CAPTURE_AND_RETHROW((until))
+}
+
+accounts_total dbs_account::accounts_circulating_capital() const
+{
+    accounts_total totals;
+
+    const auto& account_idx = db_impl().get_index<account_index>().indices().get<by_name>();
+    for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
+    {
+        totals.scr += itr->balance;
+        totals.sp += itr->scorumpower;
+        totals.pending_scr += itr->active_sp_holders_pending_scr_reward;
+        totals.pending_sp += itr->active_sp_holders_pending_sp_reward;
+
+        totals.vsf_votes += (itr->proxy == SCORUM_PROXY_TO_SELF_ACCOUNT
+                                 ? itr->witness_vote_weight()
+                                 : (SCORUM_MAX_PROXY_RECURSION_DEPTH > 0
+                                        ? itr->proxied_vsf_votes[SCORUM_MAX_PROXY_RECURSION_DEPTH - 1]
+                                        : itr->scorumpower.amount));
+    }
+
+    return totals;
 }
 
 } // namespace chain
