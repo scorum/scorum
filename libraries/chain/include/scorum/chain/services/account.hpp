@@ -6,6 +6,17 @@
 namespace scorum {
 namespace chain {
 
+struct accounts_total
+{
+    /// sum of all SCR balances
+    asset scr = asset(0, SCORUM_SYMBOL);
+
+    /// sum of all SP balances
+    asset sp = asset(0, SP_SYMBOL);
+
+    share_type vsf_votes = 0;
+};
+
 struct account_service_i : public base_service_i<account_object>
 {
     virtual const account_object& get(const account_id_type&) const = 0;
@@ -130,6 +141,8 @@ struct account_service_i : public base_service_i<account_object>
     using account_call_type = typename base_service_i::call_type;
 
     virtual void foreach_account(account_call_type&&) const = 0;
+
+    virtual accounts_total accounts_circulating_capital() const = 0;
 };
 
 // DB operations with account_*** objects
@@ -256,6 +269,8 @@ public:
     virtual account_refs_type get_active_sp_holders() const override;
 
     virtual void foreach_account(account_call_type&&) const override;
+
+    accounts_total accounts_circulating_capital() const override;
 
 private:
     const account_object& _create_account_objects(const account_name_type& new_account_name,
