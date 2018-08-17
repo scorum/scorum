@@ -3070,7 +3070,7 @@ annotated_signed_transaction wallet_api::post_bet(account_name_type better,
                                                   int64_t game_id,
                                                   betting::market_kind market,
                                                   betting::wincase_type wincase,
-                                                  std::string odds,
+                                                  odds_input odds,
                                                   asset stake,
                                                   const bool broadcast)
 {

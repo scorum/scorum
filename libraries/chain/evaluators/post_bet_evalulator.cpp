@@ -29,8 +29,8 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     FC_ASSERT(better.balance >= op.stake, "Insufficient funds");
 
-    const auto& bet_obj
-        = _betting_service.create_bet(op.better, op.game_id, op.wincase, odds::from_string(op.odds), op.stake);
+    const auto& bet_obj = _betting_service.create_bet(op.better, op.game_id, op.wincase,
+                                                      odds(op.odds.numerator, op.odds.denominator), op.stake);
 
     _account_service.decrease_balance(better, op.stake);
 

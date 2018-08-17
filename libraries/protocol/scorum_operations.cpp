@@ -376,8 +376,10 @@ void post_bet_operation::validate() const
     betting::validate_wincase(wincase, market);
     FC_ASSERT(is_asset_type(stake, SCORUM_SYMBOL), "Stake must be SCR");
     auto min_stake = asset(SCORUM_MIN_BET_STAKE, SCORUM_SYMBOL);
-    FC_ASSERT(stake >= min_stake, "Stake must be greter or equal then ${s}", ("s", min_stake));
-    vallidate_odds(odds);
+    FC_ASSERT(stake >= min_stake, "Stake must be greater  or equal then ${s}", ("s", min_stake));
+    FC_ASSERT(odds.numerator > 0, "odds numerator must be greater then zero");
+    FC_ASSERT(odds.denominator > 0, "odds denominator must be greater then zero");
+    FC_ASSERT(odds.numerator > odds.denominator, "odds must be greater then one");
 }
 
 void cancel_pending_bets_operation::validate() const

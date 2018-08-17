@@ -26,7 +26,7 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
         test_op.game_id = game.id._id;
         test_op.market = market_kind::correct_score;
         test_op.wincase = correct_score_home_yes();
-        test_op.odds = "3/1";
+        test_op.odds = { 3, 1 };
         test_op.stake = better.scr_amount;
     }
 
@@ -36,7 +36,7 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
             obj.better = test_op.better;
             obj.game = test_op.game_id;
             obj.wincase = test_op.wincase;
-            obj.odds_value = odds::from_string(test_op.odds);
+            obj.odds_value = odds(test_op.odds.numerator, test_op.odds.denominator);
             obj.stake = test_op.stake;
             obj.rest_stake = obj.stake;
         });
@@ -69,7 +69,7 @@ SCORUM_TEST_CASE(post_bet_evaluator_operation_validate_check)
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
     op = test_op;
 
-    op.odds = "11111111111111/1";
+    op.odds = { 1, 10 };
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
     op = test_op;
 
@@ -235,11 +235,6 @@ SCORUM_TEST_CASE(cancel_pending_bets_evaluator_negative_check)
 SCORUM_TEST_CASE(cancel_pending_bets_evaluator_by_better_check)
 {
     check_evaluator(better.name);
-}
-
-SCORUM_TEST_CASE(cancel_pending_bets_evaluator_by_moderator_check)
-{
-    check_evaluator(moderator.name);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
