@@ -365,6 +365,12 @@ void dbs_account::update_voting_power(const account_object& account, uint16_t vo
     time_point_sec t = db_impl().head_block_time();
 
     update(account, [&](account_object& a) {
+        if (voting_power < a.voting_power && a.active_sp_holders_cashout_time == fc::time_point_sec::maximum())
+        {
+            fc::time_point_sec cashout_time = t;
+            cashout_time += SCORUM_PRODUCER_REWARD_PERIOD;
+            a.active_sp_holders_cashout_time = cashout_time;
+        }
         a.voting_power = voting_power;
         a.last_vote_time = t;
         a.last_vote_cashout_time = scorum::rewards_math::calculate_expected_restoring_time(

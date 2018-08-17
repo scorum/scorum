@@ -192,26 +192,15 @@ void process_funds::charge_account_pending_reward(block_task_context& ctx,
 
     data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
-    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
 
-    fc::time_point_sec cashout_time = account.active_sp_holders_cashout_time;
-    if (cashout_time == fc::time_point_sec::maximum())
+    if (reward.symbol() == SCORUM_SYMBOL)
     {
-        cashout_time = dgp_service.head_block_time();
-        cashout_time += SCORUM_PRODUCER_REWARD_PERIOD;
+        account_service.update(account, [&](account_object& a) { a.active_sp_holders_pending_scr_reward += reward; });
     }
-
-    account_service.update(account, [&](account_object& obj) {
-        obj.active_sp_holders_cashout_time = cashout_time;
-        if (reward.symbol() == SCORUM_SYMBOL)
-        {
-            obj.active_sp_holders_pending_scr_reward += reward;
-        }
-        else
-        {
-            obj.active_sp_holders_pending_sp_reward += reward;
-        }
-    });
+    else
+    {
+        account_service.update(account, [&](account_object& a) { a.active_sp_holders_pending_sp_reward += reward; });
+    }
 }
 
 void process_funds::charge_witness_reward(block_task_context& ctx, const account_object& witness, const asset& reward)
