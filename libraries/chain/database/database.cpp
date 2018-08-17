@@ -2057,9 +2057,10 @@ void database::validate_invariants() const
         for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
         {
             total_supply += itr->balance;
-            total_supply += asset(itr->active_sp_holders_pending_scr_reward, SCORUM_SYMBOL);
+            // following two field do not represented in global properties
+            total_supply += itr->active_sp_holders_pending_scr_reward;
+            total_supply += asset(itr->active_sp_holders_pending_sp_reward.amount, SCORUM_SYMBOL);
             total_scorumpower += itr->scorumpower;
-            total_scorumpower += asset(itr->active_sp_holders_pending_sp_reward, SP_SYMBOL);
             total_vsf_votes += (itr->proxy == SCORUM_PROXY_TO_SELF_ACCOUNT
                                     ? itr->witness_vote_weight()
                                     : (SCORUM_MAX_PROXY_RECURSION_DEPTH > 0

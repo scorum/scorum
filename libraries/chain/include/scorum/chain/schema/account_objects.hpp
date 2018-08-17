@@ -64,8 +64,8 @@ public:
     time_point_sec last_root_post = fc::time_point_sec::min();
 
     time_point_sec active_sp_holders_cashout_time = fc::time_point_sec::maximum();
-    share_type active_sp_holders_pending_scr_reward;
-    share_type active_sp_holders_pending_sp_reward;
+    asset active_sp_holders_pending_scr_reward = asset(0, SCORUM_SYMBOL);
+    asset active_sp_holders_pending_sp_reward = asset(0, SP_SYMBOL);
 
     /// This function should be used only when the account votes for a witness directly
     share_type witness_vote_weight() const

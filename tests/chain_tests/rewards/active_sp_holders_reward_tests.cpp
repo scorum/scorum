@@ -51,19 +51,19 @@ public:
         return total * SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
     }
 
-    asset create_advertising_budget()
+    asset create_advertising_budget(uint32_t number_of_block)
     {
         const auto& account = account_service.get_account(initdelegate.name);
         auto advertising_budget = ASSET_SCR(2e+9);
-        auto deadline = db.get_slot_time(1);
+        auto deadline = db.get_slot_time(number_of_block);
 
-        BOOST_CHECK_NO_THROW(budget_service.create_budget(account, advertising_budget, deadline));
+        const auto& ret = budget_service.create_budget(account, advertising_budget, deadline);
 
         auto& reward_service = db.obtain_service<dbs_content_reward_scr>();
         reward_service.update(
             [&](content_reward_balancer_scr_object& rp) { rp.current_per_block_reward = advertising_budget; });
 
-        return advertising_budget;
+        return ret.per_block;
     }
 
     dbs_budget& budget_service;
@@ -92,10 +92,12 @@ SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget)
         auto post = create_post(alice).push();
         post.vote(bob).in_block();
 
-        generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD, false);
+        auto initial_blocks = db.head_block_num();
+        generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+        auto pass_blocks = db.head_block_num() - initial_blocks;
 
         auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
-        active_sp_holders_reward *= SCORUM_PRODUCER_REWARD_PERIOD.to_seconds() / SCORUM_BLOCK_INTERVAL;
+        active_sp_holders_reward *= pass_blocks;
 
         BOOST_REQUIRE_EQUAL(account_service.get_account(bob.name).scorumpower,
                             bob_sp_before + active_sp_holders_reward);
@@ -107,15 +109,20 @@ SCORUM_TEST_CASE(per_block_scr_payment_from_budget)
 {
     try
     {
-        auto advertising_budget = create_advertising_budget();
+        auto advertising_budget = create_advertising_budget(100);
 
         auto post = create_post(alice).push();
         post.vote(bob).in_block();
+
+        auto initial_blocks = db.head_block_num();
+        generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+        auto pass_blocks = db.head_block_num() - initial_blocks;
 
         auto dev_team_reward_scr = advertising_budget * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
         auto user_reward_scr = advertising_budget - dev_team_reward_scr;
 
         auto active_sp_holders_reward = get_active_voters_reward(user_reward_scr);
+        active_sp_holders_reward *= pass_blocks;
 
         BOOST_REQUIRE_EQUAL(account_service.get_account(bob.name).balance, active_sp_holders_reward);
     }
@@ -141,7 +148,7 @@ SCORUM_TEST_CASE(per_block_scr_payment_from_budget_if_no_active_voters_exist)
 {
     try
     {
-        auto advertising_budget = create_advertising_budget();
+        auto advertising_budget = create_advertising_budget(1);
 
         generate_block();
 
@@ -168,7 +175,12 @@ SCORUM_TEST_CASE(per_block_sp_payment_division_from_fund_budget)
         post.vote(bob).push();
         post.vote(alice).in_block();
 
+        auto initial_blocks = db.head_block_num();
+        generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+        auto pass_blocks = db.head_block_num() - initial_blocks;
+
         auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
+        active_sp_holders_reward *= pass_blocks;
 
         auto alice_reward = active_sp_holders_reward * alice.sp_percent / 100;
         auto bob_reward = active_sp_holders_reward - alice_reward;
@@ -234,17 +246,21 @@ SCORUM_TEST_CASE(payments_from_sp_balancer_arter_fund_budget_is_over)
 
         generate_blocks(fund_budget_period_in_blocks);
 
+        BOOST_REQUIRE(!budget_service.is_fund_budget_exists());
+
         const auto& voter = account_service.get_account(bob.name);
         asset bob_sp_before = voter.scorumpower;
 
         auto post = create_post(alice).push();
         post.vote(bob).in_block();
 
+        generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+
         auto& balancer = voters_reward_sp_service.get();
 
         BOOST_REQUIRE(balancer.current_per_block_reward.amount != 0);
 
-        BOOST_REQUIRE_EQUAL(voter.scorumpower, bob_sp_before + balancer.current_per_block_reward);
+        BOOST_REQUIRE_GT(voter.scorumpower, bob_sp_before);
     }
     FC_LOG_AND_RETHROW()
 }

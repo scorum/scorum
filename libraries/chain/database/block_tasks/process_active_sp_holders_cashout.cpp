@@ -18,29 +18,27 @@ void process_active_sp_holders_cashout::on_apply(block_task_context& ctx)
     for (const account_object& account : accounts)
     {
         auto reward_scr = account.active_sp_holders_pending_scr_reward;
-        if (reward_scr > 0)
+        if (reward_scr.amount > 0)
         {
-            account_service.increase_balance(account, asset(reward_scr, SCORUM_SYMBOL));
+            account_service.increase_balance(account, reward_scr);
         }
         auto reward_sp = account.active_sp_holders_pending_sp_reward;
-        if (reward_sp > 0)
+        if (reward_sp.amount > 0)
         {
-            account_service.create_scorumpower(account, asset(reward_sp, SCORUM_SYMBOL));
+            account_service.create_scorumpower(account, reward_sp);
         }
         account_service.update(account, [&](account_object& obj) {
             obj.active_sp_holders_cashout_time = fc::time_point_sec::maximum();
-            obj.active_sp_holders_pending_scr_reward = 0;
-            obj.active_sp_holders_pending_sp_reward = 0;
+            obj.active_sp_holders_pending_scr_reward.amount = 0;
+            obj.active_sp_holders_pending_sp_reward.amount = 0;
         });
-        if (reward_scr > 0)
+        if (reward_scr.amount > 0)
         {
-            ctx.push_virtual_operation(
-                active_sp_holders_reward_operation(account.name, asset(reward_scr, SCORUM_SYMBOL)));
+            ctx.push_virtual_operation(active_sp_holders_reward_operation(account.name, reward_scr));
         }
-        if (reward_sp > 0)
+        if (reward_sp.amount > 0)
         {
-            ctx.push_virtual_operation(
-                active_sp_holders_reward_operation(account.name, asset(reward_sp, SCORUM_SYMBOL)));
+            ctx.push_virtual_operation(active_sp_holders_reward_operation(account.name, reward_sp));
         }
     }
 

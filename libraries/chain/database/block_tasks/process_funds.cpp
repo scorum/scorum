@@ -46,6 +46,7 @@ void process_funds::on_apply(block_task_context& ctx)
         const budget_object& budget = budget_service.get_fund_budget();
         original_fund_reward += budget_service.allocate_cash(budget);
     }
+
     distribute_reward(ctx, original_fund_reward); // distribute SP
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
@@ -143,7 +144,6 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
 
                 if (hardfork_service.has_hardfork(SCORUM_HARDFORK_0_2))
                 {
-                    wdump((account)(account_reward));
                     charge_account_pending_reward(ctx, account, account_reward);
                 }
                 else
@@ -205,11 +205,11 @@ void process_funds::charge_account_pending_reward(block_task_context& ctx,
         obj.active_sp_holders_cashout_time = cashout_time;
         if (reward.symbol() == SCORUM_SYMBOL)
         {
-            obj.active_sp_holders_pending_scr_reward += reward.amount;
+            obj.active_sp_holders_pending_scr_reward += reward;
         }
         else
         {
-            obj.active_sp_holders_pending_sp_reward += reward.amount;
+            obj.active_sp_holders_pending_sp_reward += reward;
         }
     });
 }
