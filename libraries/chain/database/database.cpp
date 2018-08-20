@@ -64,6 +64,7 @@
 #include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
+#include <scorum/chain/database/block_tasks/process_active_sp_holders_cashout.hpp>
 #include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
@@ -1501,6 +1502,7 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_contracts_expiration().apply(task_ctx);
         database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
+        database_ns::process_active_sp_holders_cashout().apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();
@@ -1943,9 +1945,13 @@ void database::init_hardforks(time_point_sec genesis_time)
 
     // SCORUM: structure to initialize hardofrks
 
-    FC_ASSERT(SCORUM_HARDFORK_0_1 == 1, "Invalid hardfork configuration");
+    FC_ASSERT(SCORUM_HARDFORK_0_1 == 1, "Invalid hardfork #1 configuration");
     _hardfork_times[SCORUM_HARDFORK_0_1] = fc::time_point_sec(SCORUM_HARDFORK_0_1_TIME);
     _hardfork_versions[SCORUM_HARDFORK_0_1] = SCORUM_HARDFORK_0_1_VERSION;
+
+    FC_ASSERT(SCORUM_HARDFORK_0_2 == 2, "Invalid hardfork #2 configuration");
+    _hardfork_times[SCORUM_HARDFORK_0_2] = fc::time_point_sec(SCORUM_HARDFORK_0_2_TIME);
+    _hardfork_versions[SCORUM_HARDFORK_0_2] = SCORUM_HARDFORK_0_2_VERSION;
 
     const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",
@@ -2043,6 +2049,9 @@ void database::validate_invariants() const
         const auto accounts_circulating = account_service.accounts_circulating_capital();
 
         total_supply += accounts_circulating.scr;
+        // following two field do not represented in global properties
+        total_supply += accounts_circulating.pending_scr;
+        total_supply += asset(accounts_circulating.pending_sp.amount, SCORUM_SYMBOL);
 
         /// verify no witness has too many votes
         const auto& witness_idx = get_index<witness_index>().indices();
@@ -2127,7 +2136,15 @@ void database::validate_invariants() const
 
         FC_ASSERT(gpo.total_scorumpower.amount == accounts_circulating.vsf_votes, "",
                   ("total_scorumpower", gpo.total_scorumpower)
-                  ("total_vsf_votes", accounts_circulating.vsf_votes));
+                  ("accounts_circulating.total_vsf_votes", accounts_circulating.vsf_votes));
+
+        FC_ASSERT(gpo.total_pending_balance == accounts_circulating.pending_scr, "",
+                  ("total_pending_balance", gpo.total_pending_balance)
+                  ("accounts_circulating.pending_scr", accounts_circulating.pending_scr));
+
+        FC_ASSERT(gpo.total_pending_scorumpower == accounts_circulating.pending_sp, "",
+                  ("total_pending_scorumpower", gpo.total_pending_scorumpower)
+                  ("accounts_circulating.pending_sp", accounts_circulating.pending_sp));
 
         // clang-format on
     }

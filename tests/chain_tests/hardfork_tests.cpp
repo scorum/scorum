@@ -413,7 +413,7 @@ SCORUM_TEST_CASE(hardfork_apply_check)
     SCORUM_MESSAGE("-- New witnesses become produce blocks");
 
     auto ci = 0;
-    while (ci++ < SCORUM_MAX_WITNESSES)
+    while (ci++ < SCORUM_NUM_HARDFORKS * SCORUM_MAX_WITNESSES)
     {
         network_produce_block();
     }
@@ -471,7 +471,7 @@ SCORUM_TEST_CASE(too_few_wirnesses_for_hardfork_appling_check)
     node_witness3.set_lock_producing(true);
 
     auto ci = 0;
-    while (ci++ < SCORUM_MAX_WITNESSES)
+    while (ci++ < SCORUM_NUM_HARDFORKS * SCORUM_MAX_WITNESSES)
     {
         network_produce_block();
     }
@@ -502,7 +502,7 @@ SCORUM_TEST_CASE(hardfork_apply_without_part_of_witnesses_check)
     node_witness3.set_lock_producing(true);
 
     auto ci = 0;
-    while (ci++ < SCORUM_MAX_WITNESSES)
+    while (ci++ < SCORUM_NUM_HARDFORKS * SCORUM_MAX_WITNESSES)
     {
         network_produce_block();
     }

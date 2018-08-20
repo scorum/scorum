@@ -33,6 +33,8 @@ config::config() /// production config
     , reverse_auction_window_seconds(fc::minutes(30))
 
     , upvote_lockout(fc::minutes(30))
+
+    , active_sp_holders_reward_period(fc::minutes(1))
 #else
     , vesting_withdraw_interval_seconds(DAYS_TO_SECONDS(7)) // 1 week per interval
 
@@ -41,6 +43,8 @@ config::config() /// production config
     , reverse_auction_window_seconds(fc::minutes(30))
 
     , upvote_lockout(fc::hours(12))
+
+    , active_sp_holders_reward_period(fc::days(7))
 #endif
     , vote_regeneration_seconds(fc::days(5))
 
@@ -105,6 +109,8 @@ config::config(test_mode) /// test config
     , reverse_auction_window_seconds(fc::seconds(30))
 
     , upvote_lockout(fc::minutes(5))
+
+    , active_sp_holders_reward_period(fc::seconds(cashout_window_seconds / 10))
 
     , vote_regeneration_seconds(fc::minutes(30))
 

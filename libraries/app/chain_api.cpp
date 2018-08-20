@@ -153,7 +153,8 @@ chain_capital_api_obj chain_api::get_chain_capital() const
                 + capital.content_reward_fund_scr_balance
                 + capital.dev_pool_scr_balance
                 + capital.registration_pool_balance
-                + capital.total_scr;
+                + capital.total_scr
+                + dpo.total_pending_balance;
 
         capital.circulating_sp = capital.active_voters_balancer_sp
                 + capital.fund_budget_balance
@@ -161,7 +162,8 @@ chain_capital_api_obj chain_api::get_chain_capital() const
                 + capital.content_reward_fund_sp_balance
                 + capital.dev_pool_sp_balance
                 + capital.witness_reward_in_sp_migration_fund
-                + capital.total_scorumpower;
+                + capital.total_scorumpower
+                + dpo.total_pending_scorumpower;
 
         if (capital.total_supply.amount != capital.circulating_scr.amount + capital.circulating_sp.amount)
         {

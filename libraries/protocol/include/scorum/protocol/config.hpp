@@ -27,6 +27,8 @@ namespace detail {
 
         const fc::microseconds upvote_lockout;
 
+        const fc::microseconds active_sp_holders_reward_period;
+
         const fc::microseconds vote_regeneration_seconds;
 
         const fc::microseconds owner_auth_recovery_period;
@@ -82,7 +84,7 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 1, 2) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 2, 0) )
 
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
@@ -115,6 +117,7 @@ namespace detail {
 
 #define SCORUM_START_WITHDRAW_COEFFICIENT           10
 
+#define SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD           (scorum::protocol::detail::get_config().active_sp_holders_reward_period)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #define SCORUM_BLOCKID_POOL_SIZE                (scorum::protocol::detail::get_config().blockid_pool_size)
