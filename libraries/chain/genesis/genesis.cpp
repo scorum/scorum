@@ -39,12 +39,12 @@ fc::time_point_sec database::get_genesis_time() const
     return _const_genesis_time;
 }
 
-void database::open_genesis(const genesis_state_type& genesis_state)
+void database::set_initial_timestamp(const genesis_state_type& genesis_state)
 {
     _const_genesis_time = genesis_state.initial_timestamp;
 }
 
-void database::setup_genesis(const genesis_state_type& genesis_state)
+void database::init_genesis(const genesis_state_type& genesis_state)
 {
     try
     {

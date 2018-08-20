@@ -145,12 +145,12 @@ void database::open(const fc::path& data_dir,
         initialize_indexes();
         initialize_evaluators();
 
-        open_genesis(genesis_state);
+        set_initial_timestamp(genesis_state);
 
         if (chainbase_flags & chainbase::database::read_write)
         {
             if (!find<dynamic_global_property_object>())
-                with_write_lock([&]() { setup_genesis(genesis_state); });
+                with_write_lock([&]() { init_genesis(genesis_state); });
 
             if (!fc::exists(data_dir))
             {
