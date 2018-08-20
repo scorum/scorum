@@ -424,7 +424,7 @@ FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj,
                    (content_reward_scr_balance)
                    (content_reward_sp_balance)
                    )
-FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), )
+FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), BOOST_PP_SEQ_NIL)
 
 FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
 
