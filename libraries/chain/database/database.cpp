@@ -146,6 +146,8 @@ void database::open(const fc::path& data_dir,
         initialize_indexes();
         initialize_evaluators();
 
+        set_initial_timestamp(genesis_state);
+
         if (chainbase_flags & chainbase::database::read_write)
         {
             if (!find<dynamic_global_property_object>())

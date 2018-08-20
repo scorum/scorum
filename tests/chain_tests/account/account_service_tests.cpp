@@ -80,7 +80,7 @@ SCORUM_TEST_CASE(create_account_should_increase_total_scorumpower_amount)
     const auto total_scorumpower = dgp_service.get().total_scorumpower;
 
     BOOST_CHECK_EQUAL(circulating_capital.amount, 10000000060u);
-    BOOST_CHECK_EQUAL(total_scorumpower.amount, 28560u);
+    BOOST_CHECK_EQUAL(total_scorumpower.amount, 15060u);
 
     const auto fee = ASSET_SCR(5);
 
@@ -101,7 +101,7 @@ SCORUM_TEST_CASE(create_account_with_delegation_should_increase_total_scorumpowe
     const auto total_scorumpower = dgp_service.get().total_scorumpower;
 
     BOOST_CHECK_EQUAL(circulating_capital.amount, 10000000060u);
-    BOOST_CHECK_EQUAL(total_scorumpower.amount, 28560u);
+    BOOST_CHECK_EQUAL(total_scorumpower.amount, 15060u);
 
     const auto fee = ASSET_SCR(5);
     const auto delegated_sp = ASSET_SP(10);

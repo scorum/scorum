@@ -63,6 +63,12 @@ namespace detail {
         
         const fc::time_point_sec witness_reward_migration_date;
 
+        const uint8_t scorum_max_witnesses;
+
+        const uint8_t scorum_max_voted_witnesses;
+
+        const uint8_t scorum_hardfork_required_witnesses;
+
         enum test_mode { test };
 
         explicit config(test_mode);
@@ -158,11 +164,12 @@ namespace detail {
 #define SCORUM_BLOCKS_PER_HOUR                 (60*60/SCORUM_BLOCK_INTERVAL)
 #define SCORUM_START_MINER_VOTING_BLOCK        (SCORUM_BLOCKS_PER_DAY * 30)
 
-#define SCORUM_MAX_VOTED_WITNESSES              20
-#define SCORUM_MAX_RUNNER_WITNESSES             1
-#define SCORUM_MAX_WITNESSES                    (SCORUM_MAX_VOTED_WITNESSES+SCORUM_MAX_RUNNER_WITNESSES)
+#define SCORUM_MAX_VOTED_WITNESSES              (scorum::protocol::detail::get_config().scorum_max_voted_witnesses)
+#define SCORUM_MAX_RUNNER_WITNESSES             (scorum::protocol::detail::get_config().scorum_max_witnesses - scorum::protocol::detail::get_config().scorum_max_voted_witnesses)
+#define SCORUM_MAX_WITNESSES                    (scorum::protocol::detail::get_config().scorum_max_witnesses)
+#define SCORUM_MAX_WITNESSES_LIMIT               21
 #define SCORUM_WITNESS_MISSED_BLOCKS_THRESHOLD  SCORUM_BLOCKS_PER_DAY/2
-#define SCORUM_HARDFORK_REQUIRED_WITNESSES      17 // 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75% participation on all subsequent rounds.
+#define SCORUM_HARDFORK_REQUIRED_WITNESSES      (scorum::protocol::detail::get_config().scorum_hardfork_required_witnesses)
 
 #define SCORUM_MAX_TIME_UNTIL_EXPIRATION       (60*60) // seconds,  aka: 1 hour
 #define SCORUM_MAX_MEMO_SIZE                   2048
