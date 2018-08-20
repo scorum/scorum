@@ -219,7 +219,7 @@ SCORUM_TEST_CASE(get_by_cashout_time_check)
 
     BOOST_REQUIRE(account_service.get_by_cashout_time(db.head_block_time()).empty());
 
-    auto cashout = db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD;
+    auto cashout = db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD;
 
     BOOST_REQUIRE(account_service.get_by_cashout_time(cashout).empty());
 
@@ -228,15 +228,50 @@ SCORUM_TEST_CASE(get_by_cashout_time_check)
 
     BOOST_REQUIRE(account_service.get_by_cashout_time(db.head_block_time()).empty());
 
-    cashout = db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD;
+    cashout = db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD;
 
     BOOST_REQUIRE_EQUAL(account_service.get_by_cashout_time(cashout).size(), 1u);
 
     post.vote(alice).in_block();
 
-    cashout = db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD;
+    cashout = db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD;
 
     BOOST_REQUIRE_EQUAL(account_service.get_by_cashout_time(cashout).size(), 2u);
+}
+
+SCORUM_TEST_CASE(update_voting_power_change_active_sp_holders_cashout_time_check)
+{
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(account_service.get_account(alice.name).active_sp_holders_cashout_time.sec_since_epoch(),
+                        fc::time_point_sec::maximum().sec_since_epoch());
+
+    BOOST_REQUIRE_EQUAL(account_service.get_account(alice.name).voting_power, SCORUM_100_PERCENT);
+
+    SCORUM_MESSAGE("-- Cashout time is not changing if voting power is not changing");
+
+    account_service.update_voting_power(account_service.get_account(alice.name), SCORUM_100_PERCENT);
+
+    BOOST_REQUIRE_EQUAL(account_service.get_account(alice.name).active_sp_holders_cashout_time.sec_since_epoch(),
+                        fc::time_point_sec::maximum().sec_since_epoch());
+
+    SCORUM_MESSAGE("-- Cashout time is changing if voting power is changing to less value");
+
+    account_service.update_voting_power(account_service.get_account(alice.name), SCORUM_100_PERCENT / 2);
+
+    auto cashout = (db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD).sec_since_epoch();
+
+    BOOST_CHECK_EQUAL(account_service.get_account(alice.name).active_sp_holders_cashout_time.sec_since_epoch(),
+                      cashout);
+
+    SCORUM_MESSAGE("-- Cashout time is not changing if cashout time has already changed");
+
+    generate_block();
+
+    account_service.update_voting_power(account_service.get_account(alice.name), SCORUM_100_PERCENT);
+
+    BOOST_CHECK_EQUAL(account_service.get_account(alice.name).active_sp_holders_cashout_time.sec_since_epoch(),
+                      cashout);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

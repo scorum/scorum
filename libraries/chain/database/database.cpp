@@ -2134,7 +2134,15 @@ void database::validate_invariants() const
 
         FC_ASSERT(gpo.total_scorumpower.amount == accounts_circulating.vsf_votes, "",
                   ("total_scorumpower", gpo.total_scorumpower)
-                  ("total_vsf_votes", accounts_circulating.vsf_votes));
+                  ("accounts_circulating.total_vsf_votes", accounts_circulating.vsf_votes));
+
+        FC_ASSERT(gpo.total_pending_balance == accounts_circulating.pending_scr, "",
+                  ("total_pending_balance", gpo.total_pending_balance)
+                  ("accounts_circulating.pending_scr", accounts_circulating.pending_scr));
+
+        FC_ASSERT(gpo.total_pending_scorumpower == accounts_circulating.pending_sp, "",
+                  ("total_pending_scorumpower", gpo.total_pending_scorumpower)
+                  ("accounts_circulating.pending_sp", accounts_circulating.pending_sp));
 
         // clang-format on
     }

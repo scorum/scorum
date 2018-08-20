@@ -88,7 +88,7 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
 
     distribute_active_sp_holders_reward(ctx, active_sp_holder_reward);
 
-    charge_content_reward(ctx, content_reward);
+    pay_content_reward(ctx, content_reward);
 }
 
 void process_funds::distribute_witness_reward(block_task_context& ctx, const asset& witness_reward)
@@ -107,7 +107,7 @@ void process_funds::distribute_witness_reward(block_task_context& ctx, const ass
 
     const auto& witness = account_service.get_account(cwit.owner);
 
-    charge_witness_reward(ctx, witness, witness_reward);
+    pay_witness_reward(ctx, witness, witness_reward);
 
     if (witness_reward.amount != 0)
         ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
@@ -144,11 +144,11 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
 
                 if (hardfork_service.has_hardfork(SCORUM_HARDFORK_0_2))
                 {
-                    charge_account_pending_reward(ctx, account, account_reward);
+                    pay_account_pending_reward(ctx, account, account_reward);
                 }
                 else
                 {
-                    charge_account_reward(ctx, account, account_reward);
+                    pay_account_reward(ctx, account, account_reward);
                 }
 
                 distributed_reward += account_reward;
@@ -162,10 +162,10 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
     }
 
     // put undistributed money in special fund
-    charge_activity_reward(ctx, total_reward - distributed_reward);
+    pay_activity_reward(ctx, total_reward - distributed_reward);
 }
 
-void process_funds::charge_account_reward(block_task_context& ctx, const account_object& account, const asset& reward)
+void process_funds::pay_account_reward(block_task_context& ctx, const account_object& account, const asset& reward)
 {
     if (reward.amount <= 0)
         return;
@@ -183,9 +183,9 @@ void process_funds::charge_account_reward(block_task_context& ctx, const account
     }
 }
 
-void process_funds::charge_account_pending_reward(block_task_context& ctx,
-                                                  const account_object& account,
-                                                  const asset& reward)
+void process_funds::pay_account_pending_reward(block_task_context& ctx,
+                                               const account_object& account,
+                                               const asset& reward)
 {
     if (reward.amount <= 0)
         return;
@@ -195,15 +195,15 @@ void process_funds::charge_account_pending_reward(block_task_context& ctx,
 
     if (reward.symbol() == SCORUM_SYMBOL)
     {
-        account_service.update(account, [&](account_object& a) { a.active_sp_holders_pending_scr_reward += reward; });
+        account_service.increase_pending_balance(account, reward);
     }
     else
     {
-        account_service.update(account, [&](account_object& a) { a.active_sp_holders_pending_sp_reward += reward; });
+        account_service.increase_pending_scorumpower(account, reward);
     }
 }
 
-void process_funds::charge_witness_reward(block_task_context& ctx, const account_object& witness, const asset& reward)
+void process_funds::pay_witness_reward(block_task_context& ctx, const account_object& witness, const asset& reward)
 {
     data_service_factory_i& services = ctx.services();
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
@@ -217,10 +217,10 @@ void process_funds::charge_witness_reward(block_task_context& ctx, const account
         dgp_service.update([&](dynamic_global_property_object& p) { p.total_witness_reward_sp += reward; });
     }
 
-    charge_account_reward(ctx, witness, reward);
+    pay_account_reward(ctx, witness, reward);
 }
 
-void process_funds::charge_content_reward(block_task_context& ctx, const asset& reward)
+void process_funds::pay_content_reward(block_task_context& ctx, const asset& reward)
 {
     if (reward.amount <= 0)
         return;
@@ -239,7 +239,7 @@ void process_funds::charge_content_reward(block_task_context& ctx, const asset& 
     }
 }
 
-void process_funds::charge_activity_reward(block_task_context& ctx, const asset& reward)
+void process_funds::pay_activity_reward(block_task_context& ctx, const asset& reward)
 {
     if (reward.amount <= 0)
         return;

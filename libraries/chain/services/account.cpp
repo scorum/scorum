@@ -248,8 +248,6 @@ void dbs_account::increase_balance(const account_object& account, const asset& a
     FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
     update(account, [&](account_object& acnt) { acnt.balance += amount; });
 
-
-
     db_impl().obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& props) {
         props.circulating_capital += amount;
     });
@@ -259,6 +257,20 @@ void dbs_account::increase_balance(const account_object& account, const asset& a
 void dbs_account::decrease_balance(const account_object& account, const asset& amount)
 {
     increase_balance(account, -amount);
+}
+
+void dbs_account::increase_pending_balance(const account_object& account, const asset& amount)
+{
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    update(account, [&](account_object& acnt) { acnt.active_sp_holders_pending_scr_reward += amount; });
+
+    db_impl().obtain_service<dbs_dynamic_global_property>().update(
+        [&](dynamic_global_property_object& props) { props.total_pending_balance += amount; });
+}
+
+void dbs_account::decrease_pending_balance(const account_object& account, const asset& amount)
+{
+    increase_pending_balance(account, -amount);
 }
 
 void dbs_account::increase_scorumpower(const account_object& account, const asset& amount)
@@ -277,6 +289,20 @@ void dbs_account::increase_scorumpower(const account_object& account, const asse
 void dbs_account::decrease_scorumpower(const account_object& account, const asset& amount)
 {
     increase_scorumpower(account, -amount);
+}
+
+void dbs_account::increase_pending_scorumpower(const account_object& account, const asset& amount)
+{
+    FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
+    update(account, [&](account_object& acnt) { acnt.active_sp_holders_pending_sp_reward += amount; });
+
+    db_impl().obtain_service<dbs_dynamic_global_property>().update(
+        [&](dynamic_global_property_object& props) { props.total_pending_scorumpower += amount; });
+}
+
+void dbs_account::decrease_pending_scorumpower(const account_object& account, const asset& amount)
+{
+    increase_pending_scorumpower(account, -amount);
 }
 
 const asset dbs_account::create_scorumpower(const account_object& to_account, const asset& scorum)
@@ -368,7 +394,7 @@ void dbs_account::update_voting_power(const account_object& account, uint16_t vo
         if (voting_power < a.voting_power && a.active_sp_holders_cashout_time == fc::time_point_sec::maximum())
         {
             fc::time_point_sec cashout_time = t;
-            cashout_time += SCORUM_PRODUCER_REWARD_PERIOD;
+            cashout_time += SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD;
             a.active_sp_holders_cashout_time = cashout_time;
         }
         a.voting_power = voting_power;

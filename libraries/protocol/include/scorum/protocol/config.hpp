@@ -27,6 +27,8 @@ namespace detail {
 
         const fc::microseconds upvote_lockout;
 
+        const fc::microseconds active_sp_holders_reward_period;
+
         const fc::microseconds vote_regeneration_seconds;
 
         const fc::microseconds owner_auth_recovery_period;
@@ -60,8 +62,6 @@ namespace detail {
         const fc::microseconds expiraton_for_registration_bonus;
         
         const fc::time_point_sec witness_reward_migration_date;
-
-        const fc::microseconds active_sp_holders_reward_period;
 
         enum test_mode { test };
 
@@ -111,7 +111,7 @@ namespace detail {
 
 #define SCORUM_START_WITHDRAW_COEFFICIENT           10
 
-#define SCORUM_PRODUCER_REWARD_PERIOD           (scorum::protocol::detail::get_config().active_sp_holders_reward_period)
+#define SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD           (scorum::protocol::detail::get_config().active_sp_holders_reward_period)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #define SCORUM_BLOCKID_POOL_SIZE                (scorum::protocol::detail::get_config().blockid_pool_size)

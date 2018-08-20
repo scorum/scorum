@@ -21,11 +21,11 @@ private:
     void distribute_reward(block_task_context& ctx, const asset& reward);
     void distribute_active_sp_holders_reward(block_task_context& ctx, const asset& reward);
     void distribute_witness_reward(block_task_context& ctx, const asset& reward);
-    void charge_account_reward(block_task_context& ctx, const account_object&, const asset& reward);
-    void charge_account_pending_reward(block_task_context& ctx, const account_object&, const asset& reward);
-    void charge_witness_reward(block_task_context& ctx, const account_object&, const asset& reward);
-    void charge_content_reward(block_task_context& ctx, const asset& reward);
-    void charge_activity_reward(block_task_context& ctx, const asset& reward);
+    void pay_account_reward(block_task_context& ctx, const account_object&, const asset& reward);
+    void pay_account_pending_reward(block_task_context& ctx, const account_object&, const asset& reward);
+    void pay_witness_reward(block_task_context& ctx, const account_object&, const asset& reward);
+    void pay_content_reward(block_task_context& ctx, const asset& reward);
+    void pay_activity_reward(block_task_context& ctx, const asset& reward);
     const asset get_activity_reward(block_task_context& ctx, const asset& reward);
     bool apply_mainnet_schedule_crutches(block_task_context&);
 };

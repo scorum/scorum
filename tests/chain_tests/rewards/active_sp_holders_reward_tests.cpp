@@ -118,7 +118,7 @@ SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget)
     post.vote(bob).in_block();
 
     auto initial_blocks = db.head_block_num();
-    generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
     auto pass_blocks = db.head_block_num() - initial_blocks;
 
     auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
@@ -135,7 +135,7 @@ SCORUM_TEST_CASE(per_block_scr_payment_from_budget)
     post.vote(bob).in_block();
 
     auto initial_blocks = db.head_block_num();
-    generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
     auto pass_blocks = db.head_block_num() - initial_blocks;
 
     auto dev_team_reward_scr = advertising_budget * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
@@ -184,7 +184,7 @@ SCORUM_TEST_CASE(per_block_sp_payment_division_from_fund_budget)
     post.vote(alice).in_block();
 
     auto initial_blocks = db.head_block_num();
-    generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
     auto pass_blocks = db.head_block_num() - initial_blocks;
 
     auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
@@ -218,7 +218,7 @@ SCORUM_TEST_CASE(per_block_payments_are_stopped_after_battary_restored)
     post.vote(bob, vote_weight).in_block();
 
     auto initial_blocks = db.head_block_num();
-    generate_blocks(last_vote_cashout_time + SCORUM_PRODUCER_REWARD_PERIOD);
+    generate_blocks(last_vote_cashout_time + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
     auto pass_blocks = db.head_block_num() - initial_blocks;
 
     auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
@@ -226,7 +226,7 @@ SCORUM_TEST_CASE(per_block_payments_are_stopped_after_battary_restored)
     BOOST_REQUIRE_EQUAL(voter.scorumpower, bob_sp_before + active_sp_holders_reward * pass_blocks);
 
     initial_blocks = db.head_block_num();
-    generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
     pass_blocks = db.head_block_num() - initial_blocks;
 
     BOOST_REQUIRE_EQUAL(voter.scorumpower, bob_sp_before + active_sp_holders_reward * pass_blocks);
@@ -259,7 +259,7 @@ SCORUM_TEST_CASE(payments_from_sp_balancer_arter_fund_budget_is_over)
     auto post = create_post(alice).push();
     post.vote(bob).in_block();
 
-    generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
 
     auto& balancer = voters_reward_sp_service.get();
 
@@ -270,7 +270,7 @@ SCORUM_TEST_CASE(payments_from_sp_balancer_arter_fund_budget_is_over)
 
 SCORUM_TEST_CASE(active_sp_holders_op_notifications_check)
 {
-    generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
 
     set_voter(bob);
 
@@ -279,17 +279,17 @@ SCORUM_TEST_CASE(active_sp_holders_op_notifications_check)
 
     BOOST_CHECK_EQUAL(op_times(), 0);
 
-    generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
 
     BOOST_CHECK_EQUAL(op_times(), 1);
 
-    generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
 
     BOOST_CHECK_EQUAL(op_times(), 1);
 
     post.vote(bob, 90).in_block();
 
-    generate_blocks(db.head_block_time() + SCORUM_PRODUCER_REWARD_PERIOD);
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
 
     BOOST_CHECK_EQUAL(op_times(), 2);
 }
