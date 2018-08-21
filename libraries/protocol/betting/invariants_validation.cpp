@@ -13,12 +13,12 @@ namespace betting {
 namespace bf = boost::fusion;
 
 const bf::map<bf::pair<soccer_game, std::set<market_kind>>, bf::pair<hockey_game, std::set<market_kind>>>
-    game_markets(bf::make_pair<soccer_game>(std::set<market_kind>{ market_kind::result, market_kind::round,
-                                                                   market_kind::handicap, market_kind::correct_score,
-                                                                   market_kind::goal, market_kind::total }),
-                 bf::make_pair<hockey_game>(std::set<market_kind>{ market_kind::result, market_kind::round,
-                                                                   market_kind::handicap, market_kind::correct_score,
-                                                                   market_kind::goal, market_kind::total }));
+    game_markets(bf::make_pair<soccer_game>(std::set<market_kind>{
+                     market_kind::result, market_kind::round, market_kind::handicap, market_kind::correct_score,
+                     market_kind::correct_score_parametrized, market_kind::goal, market_kind::total }),
+                 bf::make_pair<hockey_game>(std::set<market_kind>{
+                     market_kind::result, market_kind::round, market_kind::handicap, market_kind::correct_score,
+                     market_kind::correct_score_parametrized, market_kind::goal, market_kind::total }));
 
 void validate_game(const game_type& game, const fc::flat_set<market_type>& markets)
 {

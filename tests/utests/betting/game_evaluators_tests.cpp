@@ -289,7 +289,7 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
     op.markets = { { market_kind::total,
                      { { total_over{ 1000 }, total_under{ 1000 } }, { total_over{ 0 }, total_under{ 0 } } } },
                    { market_kind::correct_score,
-                     { { correct_score_yes{ 1, 1 }, correct_score_no{ 1, 1 } }, /* this one is new */
+                     { { correct_score_away_yes{}, correct_score_away_no{} }, /* this one is new */
                        { correct_score_home_yes{}, correct_score_home_no{} } /* this one is new */ } } };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {

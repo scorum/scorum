@@ -24,7 +24,7 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
 
         test_op.better = better.name;
         test_op.game_id = game.id._id;
-        test_op.market = market_kind::correct_score;
+        test_op.market = market_kind::correct_score_parametrized;
         test_op.wincase = correct_score_home_yes();
         test_op.odds = { 3, 1 };
         test_op.stake = better.scr_amount;

@@ -50,11 +50,12 @@ struct game_serialization_test_fixture
                      { handicap_home_over{ -500 }, handicap_home_under{ -500 } },
                      { handicap_home_over{ 0 }, handicap_home_under{ 0 } } } },
                  { market_kind::correct_score,
-                   { { correct_score_yes{ 1, 1 }, correct_score_no{ 1, 1 } },
-                     { correct_score_no{ 1, 0 }, correct_score_yes{ 1, 0 } },
-                     { correct_score_home_yes{}, correct_score_home_no{} },
+                   { { correct_score_home_yes{}, correct_score_home_no{} },
                      { correct_score_draw_yes{}, correct_score_draw_no{} },
                      { correct_score_away_no{}, correct_score_away_yes{} } } },
+                 { market_kind::correct_score_parametrized,
+                   { { correct_score_yes{ 1, 1 }, correct_score_no{ 1, 1 } },
+                     { correct_score_no{ 1, 0 }, correct_score_yes{ 1, 0 } } } },
                  { market_kind::goal,
                    { { goal_home_yes{}, goal_home_no{} },
                      { goal_both_yes{}, goal_both_no{} },
@@ -97,17 +98,20 @@ struct game_serialization_test_fixture
         BOOST_CHECK_EQUAL(markets.nth(2)->wincases.nth(0)->second.get<handicap_home_under>().threshold, -500);
 
         BOOST_CHECK(markets.nth(3)->kind == market_kind::correct_score);
-        BOOST_CHECK_EQUAL(markets.nth(3)->wincases.size(), 5u);
-        BOOST_CHECK_EQUAL(markets.nth(3)->wincases.nth(0)->first.get<correct_score_no>().home, 1);
-        BOOST_CHECK_EQUAL(markets.nth(3)->wincases.nth(0)->first.get<correct_score_no>().away, 0);
-        BOOST_CHECK_EQUAL(markets.nth(3)->wincases.nth(0)->second.get<correct_score_yes>().home, 1);
-        BOOST_CHECK_EQUAL(markets.nth(3)->wincases.nth(0)->second.get<correct_score_yes>().away, 0);
+        BOOST_CHECK_EQUAL(markets.nth(3)->wincases.size(), 3u);
 
-        BOOST_CHECK(markets.nth(4)->kind == market_kind::goal);
-        BOOST_CHECK_EQUAL(markets.nth(4)->wincases.size(), 3u);
+        BOOST_CHECK(markets.nth(4)->kind == market_kind::correct_score_parametrized);
+        BOOST_CHECK_EQUAL(markets.nth(4)->wincases.size(), 1u);
+        BOOST_CHECK_EQUAL(markets.nth(4)->wincases.nth(0)->first.get<correct_score_no>().home, 1);
+        BOOST_CHECK_EQUAL(markets.nth(4)->wincases.nth(0)->first.get<correct_score_no>().away, 0);
+        BOOST_CHECK_EQUAL(markets.nth(4)->wincases.nth(0)->second.get<correct_score_yes>().home, 1);
+        BOOST_CHECK_EQUAL(markets.nth(4)->wincases.nth(0)->second.get<correct_score_yes>().away, 0);
 
-        BOOST_CHECK(markets.nth(5)->kind == market_kind::total);
+        BOOST_CHECK(markets.nth(5)->kind == market_kind::goal);
         BOOST_CHECK_EQUAL(markets.nth(5)->wincases.size(), 3u);
+
+        BOOST_CHECK(markets.nth(6)->kind == market_kind::total);
+        BOOST_CHECK_EQUAL(markets.nth(6)->wincases.size(), 3u);
     }
 };
 
@@ -195,10 +199,34 @@ SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
                        { correct_score_home_yes{}, correct_score_home_no{} } } } };
 
     auto json = fc::json::to_string(op);
-
-    BOOST_CHECK_EQUAL(
-        json,
-        R"({"moderator":"","name":"","start":"1970-01-01T00:00:00","game":["soccer_game",{}],"markets":[{"kind":"correct_score","wincases":[[["correct_score_yes",{"home":1,"away":1}],["correct_score_no",{"home":1,"away":1}]],[["correct_score_home_yes",{}],["correct_score_home_no",{}]]]}]})");
+    // clang-format off
+    auto json_comp = fc::json::to_string(fc::json::from_string(
+                                           R"(
+                                           {
+                                              "moderator":"",
+                                              "name":"",
+                                              "start":"1970-01-01T00:00:00",
+                                              "game":[
+                                                 "soccer_game",
+                                                 {}
+                                              ],
+                                              "markets":[
+                                                 [
+                                                    "correct_score_parametrized",
+                                                    {
+                                                       "home":1,
+                                                       "away":1
+                                                    }
+                                                 ],
+                                                 [
+                                                    "correct_score",
+                                                    {}
+                                                 ]
+                                              ]
+                                           }
+                                           )"));
+    // clang-format on
+    BOOST_CHECK_EQUAL(json, json_comp);
 }
 
 SCORUM_TEST_CASE(wincases_duplicates_deserialization_test)

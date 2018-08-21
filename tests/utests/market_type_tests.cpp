@@ -131,8 +131,8 @@ using test_result_market = base_market_without_parameters_type<market_kind::resu
                                                                WINCASE(result_away, result_home_draw)>;
 using test_handicap_market
     = base_market_with_threshold_type<market_kind::handicap, WINCASE(handicap_home_over, handicap_home_under)>;
-using test_correct_score_market
-    = base_market_with_score_type<market_kind::correct_score, WINCASE(correct_score_yes, correct_score_no)>;
+using test_correct_score_market = base_market_with_score_type<market_kind::correct_score_parametrized,
+                                                              WINCASE(correct_score_yes, correct_score_no)>;
 
 using test_market_type = fc::static_variant<test_result_market, test_handicap_market, test_correct_score_market>;
 

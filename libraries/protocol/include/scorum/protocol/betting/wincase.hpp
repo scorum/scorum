@@ -90,14 +90,15 @@ using round_away = no<market_kind::round, home_tag>;
 using handicap_home_over = over<market_kind::handicap>;
 using handicap_home_under = under<market_kind::handicap>;
 
-using correct_score_yes = score_yes<market_kind::correct_score>;
-using correct_score_no = score_no<market_kind::correct_score>;
 using correct_score_home_yes = yes<market_kind::correct_score, home_tag>;
 using correct_score_home_no = no<market_kind::correct_score, home_tag>;
 using correct_score_draw_yes = yes<market_kind::correct_score, draw_tag>;
 using correct_score_draw_no = no<market_kind::correct_score, draw_tag>;
 using correct_score_away_yes = yes<market_kind::correct_score, away_tag>;
 using correct_score_away_no = no<market_kind::correct_score, away_tag>;
+
+using correct_score_yes = score_yes<market_kind::correct_score_parametrized>;
+using correct_score_no = score_no<market_kind::correct_score_parametrized>;
 
 using goal_home_yes = yes<market_kind::goal, home_tag>;
 using goal_home_no = no<market_kind::goal, home_tag>;
