@@ -7,11 +7,13 @@ namespace betting {
 
 struct threshold_type
 {
-    static constexpr int16_t factor = 1000;
+    using value_type = int16_t;
 
-    int16_t value;
+    static constexpr value_type factor = 1000;
 
-    threshold_type(int16_t value)
+    value_type value;
+
+    threshold_type(const value_type value)
         : value(value)
     {
     }

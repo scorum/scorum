@@ -19,9 +19,15 @@ template <bool side, market_kind kind, typename tag = void> struct over_under
 
     threshold_type threshold = 0;
 
+    over_under() = default;
+    over_under(const threshold_type::value_type threshold_)
+        : threshold(threshold_)
+    {
+    }
+
     opposite_type create_opposite() const
     {
-        return opposite_type{ threshold };
+        return opposite_type{ threshold.value };
     }
 
     bool has_trd_state() const
