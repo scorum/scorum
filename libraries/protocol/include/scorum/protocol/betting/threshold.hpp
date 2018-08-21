@@ -19,19 +19,19 @@ struct threshold_type
     }
 };
 
-inline bool operator<(const threshold_type& lhs, int16_t value)
+inline bool operator<(const threshold_type& lhs, threshold_type::value_type value)
 {
     return lhs.value < threshold_type::factor * value;
 }
-inline bool operator<(int16_t value, const threshold_type& rhs)
+inline bool operator<(threshold_type::value_type value, const threshold_type& rhs)
 {
     return threshold_type::factor * value < rhs.value;
 }
-inline bool operator>(const threshold_type& lhs, int16_t value)
+inline bool operator>(const threshold_type& lhs, threshold_type::value_type value)
 {
     return lhs.value > threshold_type::factor * value;
 }
-inline bool operator>(int16_t value, const threshold_type& rhs)
+inline bool operator>(threshold_type::value_type value, const threshold_type& rhs)
 {
     return threshold_type::factor * value > rhs.value;
 }

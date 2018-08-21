@@ -93,8 +93,8 @@ struct game_serialization_test_fixture
 
         BOOST_CHECK(markets.nth(2)->kind == market_kind::handicap);
         BOOST_CHECK_EQUAL(markets.nth(2)->wincases.size(), 3u);
-        BOOST_CHECK_EQUAL(markets.nth(2)->wincases.nth(0)->first.get<handicap_home_over>().threshold.value, -500);
-        BOOST_CHECK_EQUAL(markets.nth(2)->wincases.nth(0)->second.get<handicap_home_under>().threshold.value, -500);
+        BOOST_CHECK_EQUAL(markets.nth(2)->wincases.nth(0)->first.get<handicap_home_over>().threshold, -500);
+        BOOST_CHECK_EQUAL(markets.nth(2)->wincases.nth(0)->second.get<handicap_home_under>().threshold, -500);
 
         BOOST_CHECK(markets.nth(3)->kind == market_kind::correct_score);
         BOOST_CHECK_EQUAL(markets.nth(3)->wincases.size(), 5u);

@@ -21,15 +21,15 @@ SCORUM_TEST_CASE(wincase_less_operator_tests)
         BOOST_CHECK(!(wr < wl));
     }
     {
-        handicap_home_over wl{ { 1000 } };
-        handicap_home_over wr{ { 1500 } };
+        handicap_home_over wl{ 1000 };
+        handicap_home_over wr{ 1500 };
 
         BOOST_CHECK((wl < wr));
         BOOST_CHECK(!(wr < wl));
     }
     {
-        handicap_home_over wl{ { -1000 } };
-        handicap_home_over wr{ { -1000 } };
+        handicap_home_over wl{ -1000 };
+        handicap_home_over wr{ -1000 };
 
         BOOST_CHECK(!(wl < wr));
         BOOST_CHECK(!(wr < wl));

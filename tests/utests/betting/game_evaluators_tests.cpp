@@ -273,8 +273,8 @@ SCORUM_TEST_CASE(update_game_new_markets_is_subset_some_bets_cancelled)
             BOOST_REQUIRE_EQUAL(cancelled_wincases.size(), 2u);
             BOOST_CHECK_NO_THROW(cancelled_wincases[0].first.get<result_home>());
             BOOST_CHECK_NO_THROW(cancelled_wincases[0].second.get<result_draw_away>());
-            BOOST_CHECK_EQUAL(cancelled_wincases[1].first.get<total_over>().threshold.value, 500u);
-            BOOST_CHECK_EQUAL(cancelled_wincases[1].second.get<total_under>().threshold.value, 500u);
+            BOOST_CHECK_EQUAL(cancelled_wincases[1].first.get<total_over>().threshold, 500u);
+            BOOST_CHECK_EQUAL(cancelled_wincases[1].second.get<total_under>().threshold, 500u);
         });
     mocks.OnCall(game_service, game_service_i::update_markets);
 
@@ -310,8 +310,8 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
             BOOST_REQUIRE_EQUAL(cancelled_wincases.size(), 2u);
             BOOST_CHECK_NO_THROW(cancelled_wincases[0].first.get<result_home>());
             BOOST_CHECK_NO_THROW(cancelled_wincases[0].second.get<result_draw_away>());
-            BOOST_CHECK_EQUAL(cancelled_wincases[1].first.get<total_over>().threshold.value, 500u);
-            BOOST_CHECK_EQUAL(cancelled_wincases[1].second.get<total_under>().threshold.value, 500u);
+            BOOST_CHECK_EQUAL(cancelled_wincases[1].first.get<total_over>().threshold, 500u);
+            BOOST_CHECK_EQUAL(cancelled_wincases[1].second.get<total_under>().threshold, 500u);
         });
     mocks.OnCall(game_service, game_service_i::update_markets);
 

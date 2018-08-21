@@ -72,7 +72,8 @@ void validate_wincase(const wincase_type& wincase, market_kind market)
     FC_ASSERT(market_from_wincase == market, "Market '${wm}' from wincase doesn't equal specified market '${m}'",
               ("wm", market_from_wincase)("m", market));
 
-    auto check_threshold = [](auto threshold) { return threshold.value % (threshold_type::factor / 2) == 0; };
+    auto check_threshold
+        = [](auto threshold) { return threshold_type(threshold).value % (threshold_type::factor / 2) == 0; };
     auto check_positive_threshold = [&](auto threshold) { return check_threshold(threshold) && threshold > 0; };
 
     auto is_valid
