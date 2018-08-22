@@ -127,7 +127,9 @@ struct chain_capital_api_obj
     asset total_witness_reward_sp = asset(0, SP_SYMBOL);
     asset witness_reward_in_sp_migration_fund = asset(0, SP_SYMBOL);
 
+    /// Total amount of pending SCR (planned rewards for account)
     asset total_pending_scr = asset(0, SCORUM_SYMBOL);
+    /// Total amount of pending SP (planned rewards for account)
     asset total_pending_sp = asset(0, SP_SYMBOL);
 };
 }
