@@ -10,7 +10,6 @@ enum class market_kind
     round,
     handicap,
     correct_score,
-    correct_score_parametrized,
     goal,
     total,
     total_goals
@@ -20,7 +19,7 @@ enum class market_kind
 }
 
 FC_REFLECT_ENUM(scorum::protocol::betting::market_kind,
-                (result)(round)(handicap)(correct_score)(correct_score_parametrized)(goal)(total)(total_goals))
+                (result)(round)(handicap)(correct_score)(goal)(total)(total_goals))
 
 namespace fc {
 class variant;

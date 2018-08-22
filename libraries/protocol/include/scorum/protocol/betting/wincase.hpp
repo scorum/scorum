@@ -97,8 +97,8 @@ using correct_score_draw_no = no<market_kind::correct_score, draw_tag>;
 using correct_score_away_yes = yes<market_kind::correct_score, away_tag>;
 using correct_score_away_no = no<market_kind::correct_score, away_tag>;
 
-using correct_score_yes = score_yes<market_kind::correct_score_parametrized>;
-using correct_score_no = score_no<market_kind::correct_score_parametrized>;
+using correct_score_yes = score_yes<market_kind::correct_score>;
+using correct_score_no = score_no<market_kind::correct_score>;
 
 using goal_home_yes = yes<market_kind::goal, home_tag>;
 using goal_home_no = no<market_kind::goal, home_tag>;

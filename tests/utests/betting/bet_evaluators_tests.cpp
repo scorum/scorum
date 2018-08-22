@@ -20,11 +20,10 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
         better.scorum(ASSET_SCR(1e+9));
         account_service.add_actor(better);
 
-        const auto& game = games.create([&](game_object& obj) { fc::from_string(obj.name, "test"); });
+        const auto& game = games.create([&](game_object& obj) { fc::from_string(obj.name, "test_ok"); });
 
         test_op.better = better.name;
         test_op.game_id = game.id._id;
-        test_op.market = market_kind::correct_score_parametrized;
         test_op.wincase = correct_score_home_yes();
         test_op.odds = { 3, 1 };
         test_op.stake = better.scr_amount;
@@ -65,10 +64,6 @@ SCORUM_TEST_CASE(post_bet_evaluator_operation_validate_check)
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
     op = test_op;
 
-    op.wincase = result_away();
-    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
-    op = test_op;
-
     op.odds = { 1, 10 };
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
     op = test_op;
@@ -86,13 +81,40 @@ SCORUM_TEST_CASE(post_bet_evaluator_negative_check)
 {
     post_bet_operation op = test_op;
 
+    SCORUM_MESSAGE("-- Check invalid account");
+
     op.better = "mercury";
     BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
     op = test_op;
 
+    SCORUM_MESSAGE("-- Check insufficient funds");
+
     op.stake = better.scr_amount + better.scr_amount;
     BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
     op = test_op;
+
+    SCORUM_MESSAGE("-- Check invalid game");
+
+    games.create([&](game_object& obj) {
+        fc::from_string(obj.name, "test_wrong");
+        obj.status = game_status::finished;
+    });
+
+    op.game_id += 1;
+    BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
+    op = test_op;
+
+    SCORUM_MESSAGE("-- Check invalid wincase");
+
+    games.create([&](game_object& obj) {
+        fc::from_string(obj.name, "winter");
+        obj.game = hockey_game{};
+        obj.status = game_status::finished;
+    });
+
+    op.game_id += 2;
+    op.wincase = handicap_home_over{};
+    BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
 }
 
 SCORUM_TEST_CASE(post_bet_evaluator_positive_check)

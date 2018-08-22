@@ -10,6 +10,8 @@
 #include <defines.hpp>
 #include <iostream>
 
+#if 0
+
 namespace {
 using namespace scorum;
 using namespace scorum::protocol;
@@ -288,3 +290,5 @@ SCORUM_TEST_CASE(update_game_markets_binary_deserialization_test)
 
 BOOST_AUTO_TEST_SUITE_END()
 }
+
+#endif

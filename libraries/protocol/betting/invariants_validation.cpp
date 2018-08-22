@@ -12,13 +12,22 @@ namespace betting {
 
 namespace bf = boost::fusion;
 
-const bf::map<bf::pair<soccer_game, std::set<market_kind>>, bf::pair<hockey_game, std::set<market_kind>>>
-    game_markets(bf::make_pair<soccer_game>(std::set<market_kind>{
-                     market_kind::result, market_kind::round, market_kind::handicap, market_kind::correct_score,
-                     market_kind::correct_score_parametrized, market_kind::goal, market_kind::total }),
-                 bf::make_pair<hockey_game>(std::set<market_kind>{
-                     market_kind::result, market_kind::round, market_kind::handicap, market_kind::correct_score,
-                     market_kind::correct_score_parametrized, market_kind::goal, market_kind::total }));
+// clang-format off
+const bf::map<bf::pair<soccer_game, std::set<market_kind>>, bf::pair<hockey_game, std::set<market_kind>>> game_markets(
+    bf::make_pair<soccer_game>(std::set<market_kind>{
+                                        market_kind::result,
+                                        market_kind::round,
+                                        market_kind::handicap,
+                                        market_kind::correct_score,
+                                        market_kind::goal,
+                                        market_kind::total,
+                                        market_kind::total_goals
+                                                    }),
+    bf::make_pair<hockey_game>(std::set<market_kind>{ //This type for tests purpose only. Now we have markets table for soccer only
+                                        market_kind::result,
+                                        market_kind::goal
+                                                    }));
+// clang-format on
 
 void validate_game(const game_type& game, const fc::flat_set<market_type>& markets)
 {
@@ -26,52 +35,28 @@ void validate_game(const game_type& game, const fc::flat_set<market_type>& marke
         = game.visit([&](const auto& g) { return bf::at_key<std::decay_t<decltype(g)>>(game_markets); });
 
     std::vector<market_kind> actual_markets;
-    boost::transform(markets, std::back_inserter(actual_markets), [](const market_type& m) { return m.kind; });
+    boost::transform(markets, std::back_inserter(actual_markets), [](const market_type& m) {
+        market_kind kind;
+        m.visit([&](const auto& market_impl) { kind = market_impl.kind; });
+        return kind;
+    });
 
     std::vector<market_kind> diff;
     boost::set_difference(actual_markets, expected_markets, std::back_inserter(diff));
 
-    FC_ASSERT(diff.empty(), "Markets [$(m)] cannot be used with specified game", ("m", diff));
-}
-
-void validate_markets(const fc::flat_set<market_type>& markets)
-{
-    FC_ASSERT((!markets.empty()), "Markets list cannot be empty");
-
-    for (const auto& market : markets)
-        validate_market(market);
-}
-
-void validate_market(const market_type& market)
-{
-    FC_ASSERT((!market.wincases.empty()), "Wincases list cannot be empty (market '${m}')", ("m", market.kind));
-
-    for (const auto& pair : market.wincases)
-    {
-        validate_wincase(pair.first, market.kind);
-        validate_wincase(pair.second, market.kind);
-
-        auto is_valid_pair = pair.first.visit([&](const auto& fst) { return fst.create_opposite() == pair.second; });
-
-        FC_ASSERT(is_valid_pair, "Wincases '${1}' and '${2}' cannot be paired", ("1", pair.first)("2", pair.second));
-    }
+    FC_ASSERT(diff.empty(), "Markets [${m}] cannot be used with specified game", ("m", diff));
 }
 
 void validate_wincases(const fc::flat_set<wincase_type>& wincases)
 {
     for (const auto& wincase : wincases)
     {
-        auto market_kind = wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });
-        validate_wincase(wincase, market_kind);
+        validate_wincase(wincase);
     }
 }
 
-void validate_wincase(const wincase_type& wincase, market_kind market)
+void validate_wincase(const wincase_type& wincase)
 {
-    auto market_from_wincase = wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });
-    FC_ASSERT(market_from_wincase == market, "Market '${wm}' from wincase doesn't equal specified market '${m}'",
-              ("wm", market_from_wincase)("m", market));
-
     auto check_threshold
         = [](auto threshold) { return threshold_type(threshold).value % (threshold_type::factor / 2) == 0; };
     auto check_positive_threshold = [&](auto threshold) { return check_threshold(threshold) && threshold > 0; };
@@ -87,6 +72,17 @@ void validate_wincase(const wincase_type& wincase, market_kind market)
                              [&](const total_goals_away_under& w) { return check_positive_threshold(w.threshold); });
 
     FC_ASSERT(is_valid.value_or(true), "Wincase '${w}' is invalid", ("w", wincase));
+}
+
+void validate_if_wincase_in_game(const game_type& game, const wincase_type& wincase)
+{
+    const auto& expected_markets
+        = game.visit([&](const auto& g) { return bf::at_key<std::decay_t<decltype(g)>>(game_markets); });
+
+    auto market_kind = wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });
+
+    FC_ASSERT(expected_markets.find(market_kind) != expected_markets.end(), "Wincase '${w}' doesn't belong game '${g}'",
+              ("w", wincase)("g", game));
 }
 
 void validate_bet_ids(const fc::flat_set<int64_t>& bet_ids)
