@@ -2138,12 +2138,12 @@ void database::validate_invariants() const
                   ("total_scorumpower", gpo.total_scorumpower)
                   ("accounts_circulating.total_vsf_votes", accounts_circulating.vsf_votes));
 
-        FC_ASSERT(gpo.total_pending_balance == accounts_circulating.pending_scr, "",
-                  ("total_pending_balance", gpo.total_pending_balance)
+        FC_ASSERT(gpo.total_pending_scr == accounts_circulating.pending_scr, "",
+                  ("total_pending_scr", gpo.total_pending_scr)
                   ("accounts_circulating.pending_scr", accounts_circulating.pending_scr));
 
-        FC_ASSERT(gpo.total_pending_scorumpower == accounts_circulating.pending_sp, "",
-                  ("total_pending_scorumpower", gpo.total_pending_scorumpower)
+        FC_ASSERT(gpo.total_pending_sp == accounts_circulating.pending_sp, "",
+                  ("total_pending_sp", gpo.total_pending_sp)
                   ("accounts_circulating.pending_sp", accounts_circulating.pending_sp));
 
         // clang-format on
