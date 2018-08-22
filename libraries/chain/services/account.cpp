@@ -265,7 +265,7 @@ void dbs_account::increase_pending_balance(const account_object& account, const 
     update(account, [&](account_object& acnt) { acnt.active_sp_holders_pending_scr_reward += amount; });
 
     db_impl().obtain_service<dbs_dynamic_global_property>().update(
-        [&](dynamic_global_property_object& props) { props.total_pending_balance += amount; });
+        [&](dynamic_global_property_object& props) { props.total_pending_scr += amount; });
 }
 
 void dbs_account::decrease_pending_balance(const account_object& account, const asset& amount)
@@ -297,7 +297,7 @@ void dbs_account::increase_pending_scorumpower(const account_object& account, co
     update(account, [&](account_object& acnt) { acnt.active_sp_holders_pending_sp_reward += amount; });
 
     db_impl().obtain_service<dbs_dynamic_global_property>().update(
-        [&](dynamic_global_property_object& props) { props.total_pending_scorumpower += amount; });
+        [&](dynamic_global_property_object& props) { props.total_pending_sp += amount; });
 }
 
 void dbs_account::decrease_pending_scorumpower(const account_object& account, const asset& amount)

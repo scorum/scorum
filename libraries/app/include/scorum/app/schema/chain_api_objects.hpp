@@ -126,6 +126,9 @@ struct chain_capital_api_obj
     asset total_witness_reward_scr = asset(0, SCORUM_SYMBOL);
     asset total_witness_reward_sp = asset(0, SP_SYMBOL);
     asset witness_reward_in_sp_migration_fund = asset(0, SP_SYMBOL);
+
+    asset total_pending_scr = asset(0, SCORUM_SYMBOL);
+    asset total_pending_sp = asset(0, SP_SYMBOL);
 };
 }
 }
@@ -178,5 +181,7 @@ FC_REFLECT(scorum::app::chain_capital_api_obj,
            (content_reward_fifa_world_cup_2018_bounty_fund_sp_balance)
            (total_witness_reward_scr)
            (total_witness_reward_sp)
-           (witness_reward_in_sp_migration_fund))
+           (witness_reward_in_sp_migration_fund)
+           (total_pending_scr)
+           (total_pending_sp))
 // clang-format on

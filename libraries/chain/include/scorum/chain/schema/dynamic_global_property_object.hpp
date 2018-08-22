@@ -59,10 +59,10 @@ public:
     asset total_witness_reward_sp = asset(0, SP_SYMBOL);
 
     /// Total amount of pending SCR
-    asset total_pending_balance = asset(0, SCORUM_SYMBOL);
+    asset total_pending_scr = asset(0, SCORUM_SYMBOL);
 
     /// Total amount of pending SP
-    asset total_pending_scorumpower = asset(0, SP_SYMBOL);
+    asset total_pending_sp = asset(0, SP_SYMBOL);
 
     /// Chain properties are decided by the set of active witnesses which change every round.
     /// Each witness posts what they think the chain properties should be as part of their witness
@@ -110,8 +110,8 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (total_scorumpower)
           (total_witness_reward_scr)
           (total_witness_reward_sp)
-          (total_pending_balance)
-          (total_pending_scorumpower)
+          (total_pending_scr)
+          (total_pending_sp)
           (median_chain_props)
           (majority_version)
           (current_aslot)
