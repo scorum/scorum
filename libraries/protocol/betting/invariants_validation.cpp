@@ -34,8 +34,8 @@ void validate_game(const game_type& game, const fc::flat_set<market_type>& marke
     const auto& expected_markets
         = game.visit([&](const auto& g) { return bf::at_key<std::decay_t<decltype(g)>>(game_markets); });
 
-    std::vector<market_kind> actual_markets;
-    boost::transform(markets, std::back_inserter(actual_markets), [](const market_type& m) {
+    std::set<market_kind> actual_markets;
+    boost::transform(markets, std::inserter(actual_markets, actual_markets.begin()), [](const market_type& m) {
         market_kind kind;
         m.visit([&](const auto& market_impl) { kind = market_impl.kind; });
         return kind;

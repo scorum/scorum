@@ -91,7 +91,7 @@ struct bet_operations_fixture : public database_fixture::database_default_integr
             op.start = dgp_service.head_block_time() + fc::hours(1);
             op.name = "test";
             op.game = soccer_game{};
-            op.markets = { result_market{}, total_market{ 2000 } };
+            op.markets = { result_home_market{}, total_market{ 2000 } };
 
             push_operation_only(op, moderator.private_key);
 

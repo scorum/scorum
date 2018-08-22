@@ -67,7 +67,7 @@ struct base_market_without_parameters_type
         return result;
     }
 
-    bool less(const base_market_without_parameters_type<Kind, Wincases...>&)
+    bool less(const base_market_without_parameters_type<Kind, Wincases...>&) const
     {
         return false;
     }
@@ -92,7 +92,7 @@ struct base_market_with_threshold_type
         return result;
     }
 
-    bool less(const base_market_with_threshold_type<Kind, Wincases...>& other)
+    bool less(const base_market_with_threshold_type<Kind, Wincases...>& other) const
     {
         return threshold < other.threshold;
     }
@@ -119,9 +119,9 @@ struct base_market_with_score_type
         return result;
     }
 
-    bool less(const base_market_with_score_type<Kind, Wincases...>& other)
+    bool less(const base_market_with_score_type<Kind, Wincases...>& other) const
     {
-        return home < other.home || (!(other.home < home) && away < other.away;
+        return home < other.home || (!(other.home < home) && away < other.away);
     }
 };
 
@@ -198,7 +198,7 @@ template <> struct less<market_type>
         return tagl < tagr || (!(tagr < tagl) && less_equal_types(lhs, rhs));
     }
 
-    bool less_equal_types(const market_type& lhs, const market_type& rhs)
+    bool less_equal_types(const market_type& lhs, const market_type& rhs) const
     {
         FC_ASSERT(lhs.which() == rhs.which());
         return lhs.visit([&](const auto& l) -> bool { return l.less(rhs.get<std::decay_t<decltype(l)>>()); });

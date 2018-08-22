@@ -67,7 +67,9 @@ SCORUM_TEST_CASE(validate_game_full_market_list_test_positive)
 {
     soccer_game game;
     // clang-format off
-    fc::flat_set<market_type> markets = { result_market{},
+    fc::flat_set<market_type> markets = { result_home_market{},
+                                          result_draw_market{},
+                                          result_away_market{},
                                           round_market{},
                                           handicap_market{ 500 },
                                           correct_score_market{},
@@ -84,7 +86,7 @@ SCORUM_TEST_CASE(validate_game_invalid_market_should_negative)
 {
     hockey_game game; // there are some alien markets (handicap_market, total_goals_market)
     // clang-format off
-    fc::flat_set<market_type> markets = { result_market{},
+    fc::flat_set<market_type> markets = { result_home_market{},
                                           goal_market{},
                                           handicap_market{ 500 },
                                           total_goals_market{} };

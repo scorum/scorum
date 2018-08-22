@@ -221,7 +221,7 @@ SCORUM_TEST_CASE(update_game_new_markets_is_overset_no_cancelled_bets)
     update_game_markets_evaluator ev(*dbs_services, *betting_service);
 
     update_game_markets_operation op;
-    op.markets = { total_market{ 1000 }, total_market{ 0 }, total_market{ 500 }, result_market{} };
+    op.markets = { total_market{ 1000 }, total_market{ 0 }, total_market{ 500 }, result_home_market{} };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
@@ -247,11 +247,11 @@ SCORUM_TEST_CASE(update_game_new_markets_is_subset_some_bets_cancelled)
     update_game_markets_evaluator ev(*dbs_services, *betting_service);
 
     update_game_markets_operation op;
-    op.markets = { total_market{ 1000 }, result_market{} };
+    op.markets = { total_market{ 1000 }, result_home_market{} };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
-        o.markets = { total_market{ 1000 }, total_market{ 0 }, total_market{ 500 }, result_market{} };
+        o.markets = { total_market{ 1000 }, total_market{ 0 }, total_market{ 500 }, result_home_market{} };
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
@@ -262,7 +262,7 @@ SCORUM_TEST_CASE(update_game_new_markets_is_subset_some_bets_cancelled)
         .Do([](const game_object& obj, const std::vector<wincase_pair>& cancelled_wincases) -> void {
             BOOST_REQUIRE_EQUAL(cancelled_wincases.size(), 2u);
             BOOST_CHECK_NO_THROW(cancelled_wincases[0].first.get<total_over>());
-            BOOST_CHECK_NO_THROW(cancelled_wincases[0].second.get<total_over>());
+            BOOST_CHECK_NO_THROW(cancelled_wincases[0].second.get<total_under>());
             BOOST_CHECK_EQUAL(cancelled_wincases[1].first.get<total_over>().threshold, 500u);
             BOOST_CHECK_EQUAL(cancelled_wincases[1].second.get<total_under>().threshold, 500u);
         });
@@ -281,7 +281,7 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
         o.markets = { total_market{ 1000 }, total_market{ 0 }, total_market{ 500 }, /* should be returned */
-                      result_market{} /* should be returned */ };
+                      result_home_market{} /* should be returned */ };
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
