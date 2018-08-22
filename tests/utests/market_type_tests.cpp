@@ -1,7 +1,5 @@
 #include <boost/test/unit_test.hpp>
 
-#include <initializer_list>
-
 #include <fc/reflect/reflect.hpp>
 
 #include <scorum/protocol/betting/market.hpp>
@@ -19,111 +17,6 @@ namespace market_type_tests {
 
 using namespace scorum::protocol;
 using namespace scorum::protocol::betting;
-
-template <typename LeftWincase, typename RightWincase> struct strict_wincase_pair_type
-{
-    static_assert(LeftWincase::kind_v == RightWincase::kind_v, "Left and right wincases should have same market kind");
-    static_assert(std::is_same<LeftWincase, typename RightWincase::opposite_type>::value,
-                  "Left and right wincases should be opposite each other");
-
-    using left_wincase = LeftWincase;
-    using right_wincase = RightWincase;
-
-    constexpr strict_wincase_pair_type() = default;
-};
-
-template <typename Wincase> constexpr bool check_market_kind(market_kind kind, Wincase&& w)
-{
-    return kind == std::decay_t<decltype(w)>::left_wincase::kind_v; // second check for right_wincase is not necessary
-}
-
-template <typename Wincase, typename... Wincases>
-constexpr bool check_market_kind(market_kind kind, Wincase&& first, Wincases&&... ws)
-{
-    return check_market_kind(kind, std::forward<Wincase>(first))
-        && check_market_kind(kind, std::forward<Wincases>(ws)...);
-}
-
-using wincase_pairs_type = fc::flat_set<wincase_pair>;
-
-#define WINCASE(l, r) strict_wincase_pair_type<l, r>
-
-template <market_kind Kind, typename... Wincases> struct base_market_type
-{
-    static_assert(check_market_kind(Kind, Wincases{}...), "All wincases should have same market kind");
-
-    static constexpr market_kind kind = Kind;
-
-protected:
-    base_market_type() = default;
-};
-
-template <market_kind Kind, typename... Wincases>
-struct base_market_without_parameters_type : public base_market_type<Kind, Wincases...>
-{
-    base_market_without_parameters_type() = default;
-
-    wincase_pairs_type create_wincase_pairs() const
-    {
-        wincase_pairs_type result;
-        boost::fusion::set<Wincases...> wincases;
-        boost::fusion::for_each(wincases, [&](auto w) {
-            typename decltype(w)::left_wincase wl{};
-            result.emplace(std::make_pair(wincase_type(wl), wincase_type(wl.create_opposite())));
-        });
-        return result;
-    }
-};
-
-template <market_kind Kind, typename... Wincases>
-struct base_market_with_threshold_type : public base_market_type<Kind, Wincases...>
-{
-    threshold_type::value_type threshold = 0;
-
-    base_market_with_threshold_type() = default;
-
-    base_market_with_threshold_type(const threshold_type::value_type threshold_)
-        : threshold(threshold_)
-    {
-    }
-
-    wincase_pairs_type create_wincase_pairs() const
-    {
-        wincase_pairs_type result;
-        boost::fusion::set<Wincases...> wincases;
-        boost::fusion::for_each(wincases, [&](auto w) {
-            typename decltype(w)::left_wincase wl{ threshold };
-            result.emplace(std::make_pair(wincase_type(wl), wincase_type(wl.create_opposite())));
-        });
-        return result;
-    }
-};
-
-template <market_kind Kind, typename... Wincases>
-struct base_market_with_score_type : public base_market_type<Kind, Wincases...>
-{
-    uint16_t home = 0;
-    uint16_t away = 0;
-
-    base_market_with_score_type() = default;
-
-    base_market_with_score_type(const int16_t home_, const int16_t away_)
-        : home(home_)
-        , away(away_)
-    {
-    }
-
-    wincase_pairs_type create_wincase_pairs() const
-    {
-        wincase_pairs_type result;
-        boost::fusion::set<Wincases...> wincases;
-        boost::fusion::for_each(wincases, [&](auto w) {
-            typename decltype(w)::left_wincase wl{ home, away };
-            result.emplace(std::make_pair(wincase_type(wl), wincase_type(wl.create_opposite())));
-        });
-        return result;
-    }
-};
 
 using test_result_market = base_market_without_parameters_type<market_kind::result,
                                                                WINCASE(result_home, result_draw_away),
@@ -162,11 +55,12 @@ BOOST_AUTO_TEST_SUITE(market_type_tests)
 
 BOOST_FIXTURE_TEST_CASE(create_wincase_pairs_check, market_type_fixture)
 {
-    // WINCASE(result_home, result_home_away) w; <- should raise static_assertion
-    // WINCASE(result_home, result_home) w; <- should raise static_assertion
-    // WINCASE(result_home, correct_score_home_no) <- should raise static_assertion
-    WINCASE(result_home, result_draw_away) w;
-    decltype(w)::left_wincase{};
+    // WINCASE(total_goals_home_over, result_home_away) w; <- should raise static_assertion
+    // WINCASE(total_goals_home_over, total_goals_home_over) w; <- should raise static_assertion
+    // WINCASE(total_goals_home_over, handicap_home_under) <- should raise static_assertion
+    WINCASE(total_goals_home_over, total_goals_home_under) wp;
+    auto w = decltype(wp)::left_wincase{};
+    wdump((wincase_type(w)));
 
     test_market_type market1 = test_result_market{};
     test_market_type market2 = test_handicap_market{ 1000 };

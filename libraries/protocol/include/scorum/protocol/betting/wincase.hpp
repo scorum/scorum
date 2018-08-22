@@ -148,6 +148,18 @@ using wincase_type = fc::static_variant<result_home,
                                         total_goals_away_under>;
 
 using wincase_pair = std::pair<wincase_type, wincase_type>;
+
+template <typename LeftWincase, typename RightWincase> struct strict_wincase_pair_type
+{
+    static_assert(LeftWincase::kind_v == RightWincase::kind_v, "Left and right wincases should have same market kind");
+    static_assert(std::is_same<LeftWincase, typename RightWincase::opposite_type>::value,
+                  "Left and right wincases should be opposite each other");
+
+    using left_wincase = LeftWincase;
+    using right_wincase = RightWincase;
+};
+
+#define WINCASE(l, r) strict_wincase_pair_type<l, r>
 }
 }
 }
