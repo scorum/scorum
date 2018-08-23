@@ -14,18 +14,17 @@ namespace protocol {
 namespace betting {
 
 /// This check if strict_wincase_pair_type has valid market kind
-template <typename WincasePair> constexpr bool check_market_kind(market_kind kind, WincasePair&& w)
+template <typename WincasePair> constexpr bool check_market_kind(market_kind kind, const WincasePair&)
 {
     // Only one check for left_wincase is necessary because strict_wincase_pair_type type
     // guarantees that left_wincase and right_wincase have the same market kind
-    return kind == std::decay_t<decltype(w)>::left_wincase::kind_v;
+    return kind == WincasePair::left_wincase::kind_v;
 }
 
 template <typename WincasePair, typename... WincasePairs>
-constexpr bool check_market_kind(market_kind kind, WincasePair&& first, WincasePairs&&... ws)
+constexpr bool check_market_kind(market_kind kind, const WincasePair& first, const WincasePairs&... ws)
 {
-    return check_market_kind(kind, std::forward<WincasePair>(first))
-        && check_market_kind(kind, std::forward<WincasePairs>(ws)...);
+    return check_market_kind(kind, first) && check_market_kind(kind, ws...);
 }
 
 using wincase_pairs_type = fc::flat_set<wincase_pair>;
@@ -36,17 +35,13 @@ template <class Implementation, market_kind Kind, typename... Wincases> struct b
 
     static constexpr market_kind kind = Kind;
 
-    virtual ~base_market_type()
-    {
-    }
-
     wincase_pairs_type create_wincase_pairs() const
     {
         wincase_pairs_type result;
         boost::fusion::set<Wincases...> wincase_ps;
         boost::fusion::for_each(wincase_ps, [&](auto wp) {
-            auto wl = dynamic_cast<const Implementation*>(this)->create_wincase(decltype(wp){});
-            result.emplace(std::make_pair(wincase_type(wl), wincase_type(wl.create_opposite())));
+            auto wl = static_cast<const Implementation*>(this)->create_wincase(decltype(wp){});
+            result.emplace(wincase_type(wl), wincase_type(wl.create_opposite()));
         });
         return result;
     }
@@ -121,7 +116,7 @@ struct base_market_with_score_type
 
     bool less(const base_market_with_score_type<Kind, Wincases...>& other) const
     {
-        return home < other.home || (!(other.home < home) && away < other.away);
+        return std::tie(home, away) < std::tie(other.home, other.away);
     }
 };
 
