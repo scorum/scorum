@@ -36,9 +36,7 @@ void validate_game(const game_type& game, const fc::flat_set<market_type>& marke
 
     std::set<market_kind> actual_markets;
     boost::transform(markets, std::inserter(actual_markets, actual_markets.begin()), [](const market_type& m) {
-        market_kind kind;
-        m.visit([&](const auto& market_impl) { kind = market_impl.kind; });
-        return kind;
+        return m.visit([&](const auto& market_impl) { return market_impl.kind; });
     });
 
     std::vector<market_kind> diff;

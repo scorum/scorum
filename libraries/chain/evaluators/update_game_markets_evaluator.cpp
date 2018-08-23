@@ -35,9 +35,7 @@ void update_game_markets_evaluator::do_apply(const operation_type& op)
     protocol::betting::validate_game(game_obj.game, op.markets);
 
     auto get_wincases = [](const auto& market) {
-        protocol::betting::wincase_pairs_type result;
-        market.visit([&](const auto& market_impl) { result = market_impl.create_wincase_pairs(); });
-        return result;
+        return market.visit([&](const auto& market_impl) { return market_impl.create_wincase_pairs(); });
     };
     auto old_wincases = utils::flatten(game_obj.markets, get_wincases);
     auto new_wincases = utils::flatten(op.markets, get_wincases);
