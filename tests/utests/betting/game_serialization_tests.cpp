@@ -32,6 +32,7 @@ struct game_serialization_test_fixture
     update_game_markets_operation get_update_game_markets_operation() const
     {
         update_game_markets_operation op;
+        op.game_id = 0;
         op.moderator = "moderator_name";
         op.markets = get_markets();
 
@@ -39,89 +40,86 @@ struct game_serialization_test_fixture
     }
 
     // clang-format off
-    fc::string markets_json = fc::json::to_string(fc::json::from_string(
-                                           R"(
-                                           {
-                                             "moderator": "moderator_name",
-                                             "game_id": 0,
-                                             "markets": [
-                                               [
-                                                 "result_home_market",
-                                                 {}
-                                               ],
-                                               [
-                                                 "result_draw_market",
-                                                 {}
-                                               ],
-                                               [
-                                                 "result_away_market",
-                                                 {}
-                                               ],
-                                               [
-                                                 "round_market",
-                                                 {}
-                                               ],
-                                               [
-                                                 "handicap_market",
-                                                 {
-                                                   "threshold": -500
-                                                 }
-                                               ],
-                                               [
-                                                 "handicap_market",
-                                                 {
-                                                   "threshold": 0
-                                                 }
-                                               ],
-                                               [
-                                                 "handicap_market",
-                                                 {
-                                                   "threshold": 1000
-                                                 }
-                                               ],
-                                               [
-                                                 "correct_score_market",
-                                                 {}
-                                               ],
-                                               [
-                                                 "correct_score_parametrized_market",
-                                                 {
-                                                   "home": 1,
-                                                   "away": 0
-                                                 }
-                                               ],
-                                               [
-                                                 "correct_score_parametrized_market",
-                                                 {
-                                                   "home": 1,
-                                                   "away": 1
-                                                 }
-                                               ],
-                                               [
-                                                 "goal_market",
-                                                 {}
-                                               ],
-                                               [
-                                                 "total_market",
-                                                 {
-                                                   "threshold": 0
-                                                 }
-                                               ],
-                                               [
-                                                 "total_market",
-                                                 {
-                                                   "threshold": 500
-                                                 }
-                                               ],
-                                               [
-                                                 "total_market",
-                                                 {
-                                                   "threshold": 1000
-                                                 }
-                                               ]
-                                             ]
-                                           }
-                                           )"));
+    fc::string markets_json = R"(
+                              "markets": [
+                                [
+                                  "result_home_market",
+                                  {}
+                                ],
+                                [
+                                  "result_draw_market",
+                                  {}
+                                ],
+                                [
+                                  "result_away_market",
+                                  {}
+                                ],
+                                [
+                                  "round_market",
+                                  {}
+                                ],
+                                [
+                                  "handicap_market",
+                                  {
+                                    "threshold": -500
+                                  }
+                                ],
+                                [
+                                  "handicap_market",
+                                  {
+                                    "threshold": 0
+                                  }
+                                ],
+                                [
+                                  "handicap_market",
+                                  {
+                                    "threshold": 1000
+                                  }
+                                ],
+                                [
+                                  "correct_score_market",
+                                  {}
+                                ],
+                                [
+                                  "correct_score_parametrized_market",
+                                  {
+                                    "home": 1,
+                                    "away": 0
+                                  }
+                                ],
+                                [
+                                  "correct_score_parametrized_market",
+                                  {
+                                    "home": 1,
+                                    "away": 1
+                                  }
+                                ],
+                                [
+                                  "goal_market",
+                                  {}
+                                ],
+                                [
+                                  "total_market",
+                                  {
+                                    "threshold": 0
+                                  }
+                                ],
+                                [
+                                  "total_market",
+                                  {
+                                    "threshold": 500
+                                  }
+                                ],
+                                [
+                                  "total_market",
+                                  {
+                                    "threshold": 1000
+                                  }
+                                ]
+                              ]
+                              )";
+    fc::string create_markets_json_tpl = "{\"moderator\":\"moderator_name\", \"name\":\"game_name\",\"start\":\"2016-04-25T17:30:00\", \"game\":[\"soccer_game\",{}], ${markets}}";
+    fc::string update_markets_json_tpl = "{\"moderator\":\"moderator_name\", \"game_id\":0,${markets}}";
     // clang-format on
 
     fc::flat_set<betting::market_type> get_markets() const
@@ -243,12 +241,16 @@ SCORUM_TEST_CASE(create_game_json_serialization_test)
 
     auto json = fc::json::to_string(op);
 
-    BOOST_CHECK_EQUAL(json, markets_json);
+    auto json_comp = fc::format_string(create_markets_json_tpl, fc::mutable_variant_object()("markets", markets_json));
+    json_comp = fc::json::to_string(fc::json::from_string(json_comp));
+
+    BOOST_CHECK_EQUAL(json, json_comp);
 }
 
 SCORUM_TEST_CASE(create_game_json_deserialization_test)
 {
-    auto obj = fc::json::from_string(markets_json).as<create_game_operation>();
+    auto json = fc::format_string(create_markets_json_tpl, fc::mutable_variant_object()("markets", markets_json));
+    auto obj = fc::json::from_string(json).as<create_game_operation>();
 
     validate_soccer_create_game_operation(obj);
 }
@@ -404,69 +406,63 @@ SCORUM_TEST_CASE(update_game_markets_json_serialization_test)
 
     auto json = fc::json::to_string(op);
 
-    BOOST_CHECK_EQUAL(json, markets_json);
+    auto json_comp = fc::format_string(update_markets_json_tpl, fc::mutable_variant_object()("markets", markets_json));
+    json_comp = fc::json::to_string(fc::json::from_string(json_comp));
+
+    BOOST_CHECK_EQUAL(json, json_comp);
 }
 
 SCORUM_TEST_CASE(update_game_markets_json_deserialization_test)
 {
-    auto obj = fc::json::from_string(markets_json).as<update_game_markets_operation>();
+    auto json = fc::format_string(update_markets_json_tpl, fc::mutable_variant_object()("markets", markets_json));
+    auto obj = fc::json::from_string(json).as<update_game_markets_operation>();
 
     validate_update_game_markets_operation(obj);
 }
 
-// SCORUM_TEST_CASE(create_game_binary_serialization_test)
-//{
-//    auto op = get_soccer_create_game_operation();
+SCORUM_TEST_CASE(create_game_binary_serialization_test)
+{
+    auto op = get_soccer_create_game_operation();
 
-//    auto hex = fc::to_hex(fc::raw::pack(op));
+    auto hex = fc::to_hex(fc::raw::pack(op));
 
-//    BOOST_CHECK_EQUAL(hex,
-//    "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e57000600000000000000000300030104020"
-//                           "50100000000000000010607020000000000000003080cfe090cfe08000009000008e80309e80303000000000000"
-//                           "00050b010000000a010000000a010001000b010001000c0d0e0f111004000000000000000312131415161705000"
-//                           "000000000000318000019000018f40119f40118e80319e803");
-//}
+    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e57000e000102030"
+                           "40cfe04000004e80305060100000006010001000708000008f40108e803");
+}
 
-// SCORUM_TEST_CASE(create_game_binary_deserialization_test)
-//{
-//    auto hex = "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e57000600000000000000000300030104020"
-//               "50100000000000000010607020000000000000003080cfe090cfe08000009000008e80309e80303000000000000"
-//               "00050b010000000a010000000a010001000b010001000c0d0e0f111004000000000000000312131415161705000"
-//               "000000000000318000019000018f40119f40118e80319e803";
+SCORUM_TEST_CASE(create_game_binary_deserialization_test)
+{
+    auto hex = "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e57000e000102030"
+               "40cfe04000004e80305060100000006010001000708000008f40108e803";
 
-//    char buffer[1000];
-//    fc::from_hex(hex, buffer, sizeof(buffer));
-//    auto obj = fc::raw::unpack<create_game_operation>(buffer, sizeof(buffer));
+    char buffer[1000];
+    fc::from_hex(hex, buffer, sizeof(buffer));
+    auto obj = fc::raw::unpack<create_game_operation>(buffer, sizeof(buffer));
 
-//    validate_soccer_create_game_operation(obj);
-//}
+    validate_soccer_create_game_operation(obj);
+}
 
-// SCORUM_TEST_CASE(update_game_markets_binary_serialization_test)
-//{
-//    auto op = get_update_game_markets_operation();
+SCORUM_TEST_CASE(update_game_markets_binary_serialization_test)
+{
+    auto op = get_update_game_markets_operation();
 
-//    auto hex = fc::to_hex(fc::raw::pack(op));
+    auto hex = fc::to_hex(fc::raw::pack(op));
 
-//    BOOST_CHECK_EQUAL(hex,
-//    "0e6d6f64657261746f725f6e616d650000000000000000060000000000000000030003010402050100000000000"
-//                           "000010607020000000000000003080cfe090cfe08000009000008e80309e8030300000000000000050b01000000"
-//                           "0a010000000a010001000b010001000c0d0e0f11100400000000000000031213141516170500000000000000031"
-//                           "8000019000018f40119f40118e80319e803");
-//}
+    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d6500000000000000000e000102030"
+                           "40cfe04000004e80305060100000006010001000708000008f40108e803");
+}
 
-// SCORUM_TEST_CASE(update_game_markets_binary_deserialization_test)
-//{
-//    auto hex = "0e6d6f64657261746f725f6e616d650000000000000000060000000000000000030003010402050100000000000"
-//               "000010607020000000000000003080cfe090cfe08000009000008e80309e8030300000000000000050b01000000"
-//               "0a010000000a010001000b010001000c0d0e0f11100400000000000000031213141516170500000000000000031"
-//               "8000019000018f40119f40118e80319e803";
+SCORUM_TEST_CASE(update_game_markets_binary_deserialization_test)
+{
+    auto hex = "0e6d6f64657261746f725f6e616d6500000000000000000e000102030"
+               "40cfe04000004e80305060100000006010001000708000008f40108e803";
 
-//    char buffer[1000];
-//    fc::from_hex(hex, buffer, sizeof(buffer));
-//    auto obj = fc::raw::unpack<update_game_markets_operation>(buffer, sizeof(buffer));
+    char buffer[1000];
+    fc::from_hex(hex, buffer, sizeof(buffer));
+    auto obj = fc::raw::unpack<update_game_markets_operation>(buffer, sizeof(buffer));
 
-//    validate_update_game_markets_operation(obj);
-//}
+    validate_update_game_markets_operation(obj);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 }
