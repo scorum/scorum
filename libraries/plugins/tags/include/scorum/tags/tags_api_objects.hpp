@@ -76,15 +76,27 @@ struct comment_api_obj
     share_type abs_rshares;
     share_type vote_rshares;
 
+    /// total_payout_scr_value =
+    ///         author_payout_scr_value + curator_payout_scr_value + from_children_payout_scr_value +
+    ///         beneficiary_payout_scr_value
     asset total_payout_scr_value = asset(0, SCORUM_SYMBOL);
     asset author_payout_scr_value = asset(0, SCORUM_SYMBOL);
     asset curator_payout_scr_value = asset(0, SCORUM_SYMBOL);
+    asset from_children_payout_scr_value = asset(0, SCORUM_SYMBOL);
     asset beneficiary_payout_scr_value = asset(0, SCORUM_SYMBOL);
 
+    /// total_payout_sp_value =
+    ///         author_payout_sp_value + curator_payout_sp_value + from_children_payout_sp_value +
+    ///         beneficiary_payout_sp_value
     asset total_payout_sp_value = asset(0, SP_SYMBOL);
     asset author_payout_sp_value = asset(0, SP_SYMBOL);
     asset curator_payout_sp_value = asset(0, SP_SYMBOL);
+    asset from_children_payout_sp_value = asset(0, SP_SYMBOL);
     asset beneficiary_payout_sp_value = asset(0, SP_SYMBOL);
+
+    /// share that was paid to parent from comment fund
+    asset to_parent_payout_scr_value = asset(0, SCORUM_SYMBOL);
+    asset to_parent_payout_sp_value = asset(0, SP_SYMBOL);
 
     asset max_accepted_payout = asset(0, SCORUM_SYMBOL);
 
@@ -209,11 +221,15 @@ FC_REFLECT(scorum::tags::api::comment_api_obj,
           (total_payout_scr_value)
           (author_payout_scr_value)
           (curator_payout_scr_value)
+          (from_children_payout_scr_value)
           (beneficiary_payout_scr_value)
           (total_payout_sp_value)
           (author_payout_sp_value)
           (curator_payout_sp_value)
+          (from_children_payout_sp_value)
           (beneficiary_payout_sp_value)
+          (to_parent_payout_scr_value)
+          (to_parent_payout_sp_value)
           (net_votes)
           (root_comment)
           (max_accepted_payout)
