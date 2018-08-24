@@ -53,6 +53,7 @@ set(SOURCES
     betting/betting_matcher_tests.cpp
     betting/bet_evaluators_tests.cpp
     odds_tests.cpp
+    market_type_tests.cpp
 )
 
 add_executable(utests

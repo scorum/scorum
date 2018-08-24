@@ -23,7 +23,7 @@ void cancel_game_evaluator::do_apply(const operation_type& op)
               ("u", op.moderator));
     FC_ASSERT(_game_service.is_exists(op.game_id), "Game with id '${g}' doesn't exist", ("g", op.game_id));
 
-    auto game_obj = _game_service.get(op.game_id);
+    auto game_obj = _game_service.get_game(op.game_id);
 
     FC_ASSERT(game_obj.status != game_status::finished, "Cannot cancel the game after it is finished");
 

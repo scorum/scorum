@@ -338,7 +338,6 @@ void create_game_operation::validate() const
               ("1", SCORUM_MAX_GAME_NAME_LENGTH));
 
     betting::validate_game(game, markets);
-    betting::validate_markets(markets);
 }
 
 void cancel_game_operation::validate() const
@@ -351,8 +350,6 @@ void update_game_markets_operation::validate() const
 {
     FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
-
-    betting::validate_markets(markets);
 }
 
 void update_game_start_time_operation::validate() const
@@ -373,7 +370,7 @@ void post_bet_operation::validate() const
 {
     FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(better);
-    betting::validate_wincase(wincase, market);
+    betting::validate_wincase(wincase);
     FC_ASSERT(is_asset_type(stake, SCORUM_SYMBOL), "Stake must be SCR");
     auto min_stake = asset(SCORUM_MIN_BET_STAKE, SCORUM_SYMBOL);
     FC_ASSERT(stake >= min_stake, "Stake must be greater  or equal then ${s}", ("s", min_stake));

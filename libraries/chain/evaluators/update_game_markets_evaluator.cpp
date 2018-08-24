@@ -29,13 +29,16 @@ void update_game_markets_evaluator::do_apply(const operation_type& op)
               ("u", op.moderator));
     FC_ASSERT(_game_service.is_exists(op.game_id), "Game with id '${g}' doesn't exist", ("g", op.game_id));
 
-    auto game_obj = _game_service.get(op.game_id);
+    auto game_obj = _game_service.get_game(op.game_id);
     FC_ASSERT(game_obj.status != game_status::finished, "Cannot change the markets when game is finished");
 
-    scorum::protocol::betting::validate_game(game_obj.game, op.markets);
+    protocol::betting::validate_game(game_obj.game, op.markets);
 
-    auto old_wincases = utils::flatten(game_obj.markets, [](const auto& x) { return x.wincases; });
-    auto new_wincases = utils::flatten(op.markets, [](const auto& x) { return x.wincases; });
+    auto get_wincases = [](const auto& market) {
+        return market.visit([&](const auto& market_impl) { return market_impl.create_wincase_pairs(); });
+    };
+    auto old_wincases = utils::flatten(game_obj.markets, get_wincases);
+    auto new_wincases = utils::flatten(op.markets, get_wincases);
 
     boost::sort(old_wincases);
     boost::sort(new_wincases);

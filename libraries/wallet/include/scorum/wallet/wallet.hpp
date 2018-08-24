@@ -1377,7 +1377,6 @@ public:
      *
      *  @param better owner for new bet
      *  @param game_id game id for bet creating
-     *  @param market market kind for wincase
      *  @param wincase wincase for bet
      *  @param odds rational coefficient that define potential result (p). p = odds * stake
      *  @param stake amount in SCR to bet
@@ -1385,7 +1384,6 @@ public:
      */
     annotated_signed_transaction post_bet(account_name_type better,
                                           int64_t game_id,
-                                          betting::market_kind market,
                                           betting::wincase_type wincase,
                                           odds_input odds,
                                           asset stake,

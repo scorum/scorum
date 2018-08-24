@@ -6,6 +6,8 @@
 #include <scorum/chain/betting/betting_service.hpp>
 #include <scorum/chain/betting/betting_matcher.hpp>
 
+#include <scorum/protocol/betting/invariants_validation.hpp>
+
 namespace scorum {
 namespace chain {
 post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
@@ -22,6 +24,12 @@ post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
 void post_bet_evaluator::do_apply(const operation_type& op)
 {
     FC_ASSERT(_game_service.is_exists(op.game_id));
+
+    auto game_obj = _game_service.get_game(op.game_id);
+
+    protocol::betting::validate_if_wincase_in_game(game_obj.game, op.wincase);
+
+    FC_ASSERT(game_obj.status != game_status::finished, "Cannot post bet for game that is finished");
 
     _account_service.check_account_existence(op.better);
 

@@ -529,7 +529,12 @@ public:
     void init_extension()
     {
         _mocks.OnCallOverload(_service, (bool (game_service_i::*)(int64_t) const) & game_service_i::is_exists)
-            .Do([this](int64_t game_id) -> bool { return this->is_exists(game_id); });
+            .Do([this](int64_t obj_id) -> bool { return this->is_exists(obj_id); });
+
+        _mocks
+            .OnCallOverload(_service,
+                            (const game_object& (game_service_i::*)(int64_t) const) & game_service_i::get_game)
+            .Do([this](int64_t obj_id) -> const game_object& { return this->get(game_id_type{ obj_id }); });
     }
 };
 }

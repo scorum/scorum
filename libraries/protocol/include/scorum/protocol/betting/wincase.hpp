@@ -17,7 +17,12 @@ template <bool side, market_kind kind, typename tag = void> struct over_under
     static constexpr market_kind kind_v = kind;
     using opposite_type = over_under<!side, kind, tag>;
 
-    threshold_type threshold = 0;
+    threshold_type::value_type threshold = 0;
+
+    threshold_type create_threshold() const
+    {
+        return threshold_type{ threshold };
+    }
 
     opposite_type create_opposite() const
     {
@@ -26,7 +31,7 @@ template <bool side, market_kind kind, typename tag = void> struct over_under
 
     bool has_trd_state() const
     {
-        return threshold.value % threshold_type::factor == 0;
+        return threshold % threshold_type::factor == 0;
     }
 };
 
@@ -85,14 +90,15 @@ using round_away = no<market_kind::round, home_tag>;
 using handicap_home_over = over<market_kind::handicap>;
 using handicap_home_under = under<market_kind::handicap>;
 
-using correct_score_yes = score_yes<market_kind::correct_score>;
-using correct_score_no = score_no<market_kind::correct_score>;
 using correct_score_home_yes = yes<market_kind::correct_score, home_tag>;
 using correct_score_home_no = no<market_kind::correct_score, home_tag>;
 using correct_score_draw_yes = yes<market_kind::correct_score, draw_tag>;
 using correct_score_draw_no = no<market_kind::correct_score, draw_tag>;
 using correct_score_away_yes = yes<market_kind::correct_score, away_tag>;
 using correct_score_away_no = no<market_kind::correct_score, away_tag>;
+
+using correct_score_yes = score_yes<market_kind::correct_score>;
+using correct_score_no = score_no<market_kind::correct_score>;
 
 using goal_home_yes = yes<market_kind::goal, home_tag>;
 using goal_home_no = no<market_kind::goal, home_tag>;
@@ -142,6 +148,18 @@ using wincase_type = fc::static_variant<result_home,
                                         total_goals_away_under>;
 
 using wincase_pair = std::pair<wincase_type, wincase_type>;
+
+template <typename LeftWincase, typename RightWincase> struct strict_wincase_pair_type
+{
+    static_assert(LeftWincase::kind_v == RightWincase::kind_v, "Left and right wincases should have same market kind");
+    static_assert(std::is_same<LeftWincase, typename RightWincase::opposite_type>::value,
+                  "Left and right wincases should be opposite each other");
+
+    using left_wincase = LeftWincase;
+    using right_wincase = RightWincase;
+};
+
+#define WINCASE(l, r) strict_wincase_pair_type<l, r>
 }
 }
 }
