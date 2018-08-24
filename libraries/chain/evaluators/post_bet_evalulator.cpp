@@ -29,13 +29,13 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     protocol::betting::validate_if_wincase_in_game(game_obj.game, op.wincase);
 
+    FC_ASSERT(game_obj.status != game_status::finished, "Cannot post bet for game that is finished");
+
     _account_service.check_account_existence(op.better);
 
     const auto& better = _account_service.get_account(op.better);
 
     FC_ASSERT(better.balance >= op.stake, "Insufficient funds");
-
-    FC_ASSERT(game_obj.status != game_status::finished, "Cannot post bet for game that is finished");
 
     const auto& bet_obj = _betting_service.create_bet(op.better, op.game_id, op.wincase,
                                                       odds(op.odds.numerator, op.odds.denominator), op.stake);
