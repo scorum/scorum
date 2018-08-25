@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(comment_delete_apply)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test1";
-        vote.weight = (int16_t)100;
+        vote.weight = SCORUM_PERCENT(100);
         tx.operations.push_back(comment);
         tx.operations.push_back(vote);
         tx.set_expiration(db.head_block_time() + SCORUM_MIN_TRANSACTION_EXPIRATION_LIMIT);
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(comment_delete_apply)
         BOOST_TEST_MESSAGE("--- Test success deleting a comment with negative rshares");
 
         generate_block();
-        vote.weight = -1 * (int16_t)100;
+        vote.weight = -1 * SCORUM_PERCENT(100);
         tx.clear();
         tx.operations.push_back(vote);
         tx.operations.push_back(op);
@@ -3302,7 +3302,7 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test";
-        vote.weight = (int16_t)100;
+        vote.weight = SCORUM_PERCENT(100);
         tx.clear();
         tx.operations.push_back(comment);
         tx.operations.push_back(vote);
@@ -3333,13 +3333,13 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
             boost::make_tuple(db.obtain_service<dbs_comment>().get("alice", std::string("test")).id,
                               db.obtain_service<dbs_account>().get_account("alice").id));
 
-        vote.weight = (int16_t)0;
+        vote.weight = SCORUM_PERCENT(0);
         tx.clear();
         tx.operations.push_back(vote);
         tx.sign(alice_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        vote.weight = (int16_t)50;
+        vote.weight = SCORUM_PERCENT(50);
         tx.clear();
         tx.operations.push_back(vote);
         tx.sign(alice_private_key, db.get_chain_id());

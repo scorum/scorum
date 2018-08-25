@@ -203,13 +203,13 @@ SCORUM_TEST_CASE(per_block_payments_are_stopped_after_battary_restored)
     const auto& voter = account_service.get_account(bob.name);
     asset bob_sp_before = voter.scorumpower;
 
-    auto vote_weight = 100;
+    const auto vote_weight = SCORUM_PERCENT(100);
 
     uint16_t current_power = scorum::rewards_math::calculate_restoring_power(
         voter.voting_power, dprops_service.head_block_time(), voter.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
 
-    uint16_t used_power = scorum::rewards_math::calculate_used_power(current_power, vote_weight * SCORUM_1_PERCENT,
-                                                                     SCORUM_VOTING_POWER_DECAY_PERCENT);
+    uint16_t used_power
+        = scorum::rewards_math::calculate_used_power(current_power, vote_weight, SCORUM_VOTING_POWER_DECAY_PERCENT);
 
     auto last_vote_cashout_time = scorum::rewards_math::calculate_expected_restoring_time(
         current_power - used_power, dprops_service.head_block_time(), SCORUM_VOTE_REGENERATION_SECONDS);
@@ -275,7 +275,7 @@ SCORUM_TEST_CASE(active_sp_holders_op_notifications_check)
     set_voter(bob);
 
     auto post = create_post(alice).push();
-    post.vote(bob, 30).in_block();
+    post.vote(bob, SCORUM_PERCENT(30)).in_block();
 
     BOOST_CHECK_EQUAL(op_times(), 0);
 
@@ -287,7 +287,7 @@ SCORUM_TEST_CASE(active_sp_holders_op_notifications_check)
 
     BOOST_CHECK_EQUAL(op_times(), 1);
 
-    post.vote(bob, 90).in_block();
+    post.vote(bob, SCORUM_PERCENT(90)).in_block();
 
     generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
 
