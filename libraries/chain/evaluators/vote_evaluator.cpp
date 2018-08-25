@@ -8,6 +8,7 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/rewards_math/formulas.hpp>
 
@@ -16,48 +17,63 @@ namespace chain {
 
 vote_evaluator::vote_evaluator(data_service_factory_i& services)
     : evaluator_impl<data_service_factory_i, vote_evaluator>(services)
+    , _account_service(services.account_service())
+    , _comment_service(services.comment_service())
+    , _comment_vote_service(services.comment_vote_service())
+    , _dgp_service(services.dynamic_global_property_service())
+    , _hardfork_service(services.hardfork_property_service())
 {
+}
+
+vote_weight_type vote_evaluator::get_weigth(const vote_evaluator::operation_type& o) const
+{
+    if (_hardfork_service.has_hardfork(SCORUM_HARDFORK_0_2))
+    {
+        FC_ASSERT(abs(o.weight) <= SCORUM_100_PERCENT, "Weight is not a SCORUM percentage");
+        return o.weight;
+    }
+    else
+    {
+        FC_ASSERT(abs(o.weight) <= 100, "Weight is not a SCORUM percentage");
+        return static_cast<vote_weight_type>(o.weight * SCORUM_1_PERCENT);
+    }
 }
 
 void vote_evaluator::do_apply(const operation_type& o)
 {
-    account_service_i& account_service = db().account_service();
-    comment_service_i& comment_service = db().comment_service();
-    comment_vote_service_i& comment_vote_service = db().comment_vote_service();
-    dynamic_global_property_service_i& dprops_service = db().dynamic_global_property_service();
-
     try
     {
-        const auto& comment = comment_service.get(o.author, o.permlink);
-        const auto& voter = account_service.get_account(o.voter);
+        const auto& comment = _comment_service.get(o.author, o.permlink);
+        const auto& voter = _account_service.get_account(o.voter);
 
         FC_ASSERT(!(voter.owner_challenged || voter.active_challenged),
                   "Operation cannot be processed because the account is currently challenged.");
 
         FC_ASSERT(voter.can_vote, "Voter has declined their voting rights.");
 
-        const vote_weight_type weight = o.weight * SCORUM_1_PERCENT;
+        const vote_weight_type weight = get_weigth(o);
+
         if (weight > 0)
             FC_ASSERT(comment.allow_votes, "Votes are not allowed on the comment.");
 
         if (comment.cashout_time == fc::time_point_sec::maximum())
         {
 #ifndef CLEAR_VOTES
-            if (!comment_vote_service.is_exists(comment.id, voter.id))
+            if (!_comment_vote_service.is_exists(comment.id, voter.id))
             {
-                comment_vote_service.create([&](comment_vote_object& cvo) {
+                _comment_vote_service.create([&](comment_vote_object& cvo) {
                     cvo.voter = voter.id;
                     cvo.comment = comment.id;
                     cvo.vote_percent = weight;
-                    cvo.last_update = dprops_service.head_block_time();
+                    cvo.last_update = _dgp_service.head_block_time();
                 });
             }
             else
             {
-                const comment_vote_object& comment_vote = comment_vote_service.get(comment.id, voter.id);
-                comment_vote_service.update(comment_vote, [&](comment_vote_object& cvo) {
+                const comment_vote_object& comment_vote = _comment_vote_service.get(comment.id, voter.id);
+                _comment_vote_service.update(comment_vote, [&](comment_vote_object& cvo) {
                     cvo.vote_percent = weight;
-                    cvo.last_update = dprops_service.head_block_time();
+                    cvo.last_update = _dgp_service.head_block_time();
                 });
             }
 #endif
@@ -65,13 +81,12 @@ void vote_evaluator::do_apply(const operation_type& o)
         }
 
         {
-            int64_t elapsed_seconds = (dprops_service.head_block_time() - voter.last_vote_time).to_seconds();
+            int64_t elapsed_seconds = (_dgp_service.head_block_time() - voter.last_vote_time).to_seconds();
             FC_ASSERT(elapsed_seconds >= SCORUM_MIN_VOTE_INTERVAL_SEC, "Can only vote once every 3 seconds.");
         }
 
-        uint16_t current_power
-            = rewards_math::calculate_restoring_power(voter.voting_power, dprops_service.head_block_time(),
-                                                      voter.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
+        uint16_t current_power = rewards_math::calculate_restoring_power(
+            voter.voting_power, _dgp_service.head_block_time(), voter.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
         FC_ASSERT(current_power > 0, "Account currently does not have voting power.");
 
         uint16_t used_power
@@ -88,25 +103,25 @@ void vote_evaluator::do_apply(const operation_type& o)
         /// this is the rshares voting for or against the post
         share_type rshares = weight < 0 ? -abs_rshares : abs_rshares;
 
-        if (!comment_vote_service.is_exists(comment.id, voter.id))
+        if (!_comment_vote_service.is_exists(comment.id, voter.id))
         {
             FC_ASSERT(weight != 0, "Vote weight cannot be 0.");
 
             if (rshares > 0)
             {
-                FC_ASSERT(dprops_service.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
+                FC_ASSERT(_dgp_service.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
                           "Cannot increase payout within last twelve hours before payout.");
             }
 
-            account_service.update_voting_power(voter, current_power - used_power);
+            _account_service.update_voting_power(voter, current_power - used_power);
 
-            const auto& root_comment = comment_service.get(comment.root_comment);
+            const auto& root_comment = _comment_service.get(comment.root_comment);
 
             FC_ASSERT(abs_rshares > 0, "Cannot vote with 0 rshares.");
 
             auto old_vote_rshares = comment.vote_rshares;
 
-            comment_service.update(comment, [&](comment_object& c) {
+            _comment_service.update(comment, [&](comment_object& c) {
                 c.net_rshares += rshares;
                 c.abs_rshares += abs_rshares;
                 if (rshares > 0)
@@ -117,16 +132,16 @@ void vote_evaluator::do_apply(const operation_type& o)
                     c.net_votes--;
             });
 
-            comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
+            _comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
 
             uint64_t max_vote_weight = 0;
 
-            comment_vote_service.create([&](comment_vote_object& cv) {
+            _comment_vote_service.create([&](comment_vote_object& cv) {
                 cv.voter = voter.id;
                 cv.comment = comment.id;
                 cv.rshares = rshares;
                 cv.vote_percent = weight;
-                cv.last_update = dprops_service.head_block_time();
+                cv.last_update = _dgp_service.head_block_time();
 
                 bool curation_reward_eligible
                     = rshares > 0 && (comment.last_payout == fc::time_point_sec()) && comment.allow_curation_rewards;
@@ -157,12 +172,12 @@ void vote_evaluator::do_apply(const operation_type& o)
 
             if (max_vote_weight) // Optimization
             {
-                comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight += max_vote_weight; });
+                _comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight += max_vote_weight; });
             }
         }
         else
         {
-            const comment_vote_object& comment_vote = comment_vote_service.get(comment.id, voter.id);
+            const comment_vote_object& comment_vote = _comment_vote_service.get(comment.id, voter.id);
 
             FC_ASSERT(comment_vote.num_changes != -1, "Cannot vote again on a comment after payout.");
 
@@ -173,15 +188,15 @@ void vote_evaluator::do_apply(const operation_type& o)
 
             if (comment_vote.rshares < rshares)
             {
-                FC_ASSERT(dprops_service.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
+                FC_ASSERT(_dgp_service.head_block_time() < comment.cashout_time - SCORUM_UPVOTE_LOCKOUT,
                           "Cannot increase payout within last twelve hours before payout.");
             }
 
-            account_service.update_voting_power(voter, current_power - used_power);
+            _account_service.update_voting_power(voter, current_power - used_power);
 
-            const auto& root_comment = comment_service.get(comment.root_comment);
+            const auto& root_comment = _comment_service.get(comment.root_comment);
 
-            comment_service.update(comment, [&](comment_object& c) {
+            _comment_service.update(comment, [&](comment_object& c) {
                 c.net_rshares -= comment_vote.rshares;
                 c.net_rshares += rshares;
                 c.abs_rshares += abs_rshares;
@@ -201,14 +216,14 @@ void vote_evaluator::do_apply(const operation_type& o)
                     c.net_votes -= 2;
             });
 
-            comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
+            _comment_service.update(root_comment, [&](comment_object& c) { c.children_abs_rshares += abs_rshares; });
 
-            comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight -= comment_vote.weight; });
+            _comment_service.update(comment, [&](comment_object& c) { c.total_vote_weight -= comment_vote.weight; });
 
-            comment_vote_service.update(comment_vote, [&](comment_vote_object& cv) {
+            _comment_vote_service.update(comment_vote, [&](comment_vote_object& cv) {
                 cv.rshares = rshares;
                 cv.vote_percent = weight;
-                cv.last_update = dprops_service.head_block_time();
+                cv.last_update = _dgp_service.head_block_time();
                 cv.weight = 0;
                 cv.num_changes += 1;
             });
