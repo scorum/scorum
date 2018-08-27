@@ -35,7 +35,7 @@ SCORUM_TEST_CASE(no_votes_should_return_nothing)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "B", "C" };
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
@@ -51,7 +51,7 @@ SCORUM_TEST_CASE(no_requested_tag_should_return_nothing)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "D" };
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
 
@@ -65,7 +65,7 @@ SCORUM_TEST_CASE(no_category_and_domain_should_return_post)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "A" };
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
@@ -89,7 +89,7 @@ SCORUM_TEST_CASE(should_return_post_by_converting_all_to_lowercase)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "a", "B" };
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 1u);
@@ -113,7 +113,7 @@ SCORUM_TEST_CASE(should_return_voted_tags_intersection)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "B", "C" };
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
@@ -151,7 +151,7 @@ SCORUM_TEST_CASE(should_return_tags_intersection_contains_same_tags_in_diff_case
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "рус1", "рУс1" };
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_trending(q).size(), 2u);
@@ -181,7 +181,7 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = false;
+    q.all_tags_exist = false;
     q.tags = { "A", "D" };
 
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
@@ -226,7 +226,7 @@ SCORUM_TEST_CASE(check_pagination)
      */
     discussion_query q;
     q.limit = 2;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "C", "B" };
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
@@ -265,7 +265,7 @@ SCORUM_TEST_CASE(check_only_first_8_tags_are_analized)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "G" };
     {
         std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
@@ -292,7 +292,7 @@ SCORUM_TEST_CASE(check_truncate_body)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "I" };
     q.truncate_body = 5;
     std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
@@ -312,7 +312,7 @@ SCORUM_TEST_CASE(no_votes_should_return_union)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = false;
+    q.all_tags_exist = false;
     q.tags = { "A", "B", "C" };
     std::vector<discussion> discussions = _api.get_discussions_by_created(q);
 
@@ -328,7 +328,7 @@ SCORUM_TEST_CASE(should_return_two_posts_from_same_block_ordered_by_id_desc)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = false;
+    q.all_tags_exist = false;
     q.tags = { "A", "B" };
     std::vector<discussion> discussions = _api.get_discussions_by_created(q);
 
@@ -345,7 +345,7 @@ SCORUM_TEST_CASE(check_tag_should_be_truncated_to_24symbols)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = false;
+    q.all_tags_exist = false;
 
     q.tags = { "手手手手手田田田田田手手手手手田田田田田手手手手手田田田田田" }; // 30 symbols
     std::vector<discussion> discussions = _api.get_discussions_by_created(q);
@@ -367,7 +367,7 @@ SCORUM_TEST_CASE(check_domain_should_be_truncated_to_24symbols)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = false;
+    q.all_tags_exist = false;
 
     q.tags = { "domaiдоменdomaidomaiдомен" }; // 25 symbols
     BOOST_CHECK_EQUAL(_api.get_discussions_by_created(q).size(), 1u);
@@ -386,7 +386,7 @@ SCORUM_TEST_CASE(check_category_should_be_truncated_to_24symbols)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = false;
+    q.all_tags_exist = false;
 
     q.tags = { "categcategcategcategcateg" }; // 25 symbols
     BOOST_CHECK_EQUAL(_api.get_discussions_by_created(q).size(), 1u);
@@ -422,7 +422,7 @@ SCORUM_TEST_CASE(check_comments_should_not_be_returned)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = false;
+    q.all_tags_exist = false;
     q.tags = { "A", "B", "C", "D" };
     std::vector<discussion> discussions = _api.get_discussions_by_created(q);
 
@@ -444,7 +444,7 @@ SCORUM_TEST_CASE(check_discussions_after_post_deleting)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "B", "C" };
     {
         std::vector<discussion> discussions = _api.get_discussions_by_created(q);
@@ -474,7 +474,7 @@ SCORUM_TEST_CASE(check_active_votes_if_comment_was_voted_with_negative_weight)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
 
     auto discussions = _api.get_discussions_by_created(q);
     BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
@@ -504,7 +504,7 @@ SCORUM_TEST_CASE(should_return_voted_tags_union)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
     q.tags = { "B", "C" };
     {
         std::vector<discussion> discussions = _api.get_discussions_by_hot(q);
@@ -545,7 +545,7 @@ SCORUM_TEST_CASE(should_return_all_posts_both_with_and_without_tags)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_hot(q).size(), 3u);
 }
@@ -560,7 +560,7 @@ SCORUM_TEST_CASE(should_return_posts_even_after_cashout)
 
     discussion_query q;
     q.limit = 100;
-    q.tags_logical_and = true;
+    q.all_tags_exist = true;
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_hot(q).size(), 1u);
 }

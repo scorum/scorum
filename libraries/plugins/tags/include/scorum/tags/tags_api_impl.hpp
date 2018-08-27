@@ -403,7 +403,7 @@ private:
                          [&](const std::string& t) { return get_posts(t, tag_filter); });
 
         // clang-format off
-        posts_crefs posts = query.tags_logical_and
+        posts_crefs posts = query.all_tags_exist
                 ? intersect(posts_by_tags)
                 : union_all(posts_by_tags);
         // clang-format on

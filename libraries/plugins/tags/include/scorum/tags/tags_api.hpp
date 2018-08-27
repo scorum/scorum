@@ -68,7 +68,14 @@ public:
     std::vector<api::discussion> get_discussions_by_created(const api::discussion_query& query) const;
     std::vector<api::discussion> get_discussions_by_hot(const api::discussion_query& query) const;
 
+    /// This is obsolete method, use get_contents
     api::discussion get_content(const std::string& author, const std::string& permlink) const;
+
+    /**
+     * @brief Returns all discussions by author/permlink pairs
+     * @param query vector of author/permlink pairs
+     */
+    std::vector<api::discussion> get_contents(const std::vector<api::content_query>& query) const;
 
     std::vector<api::discussion> get_comments(const std::string& parent_author,
                                               const std::string& parent_permlink,
@@ -101,6 +108,7 @@ FC_API(scorum::tags::tags_api,
 
        // content
        (get_content)
+       (get_contents)
        (get_comments)
        (get_discussions_by_author))
 // clang-format on

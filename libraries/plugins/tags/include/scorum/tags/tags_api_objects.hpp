@@ -177,8 +177,25 @@ struct discussion_query
     /// query limit
     uint32_t limit = 0;
 
-    bool tags_logical_and = true;
+    /// require that all tags in query must exist in querying posts
+    bool all_tags_exist = true;
+    /// tags to select
     std::set<std::string> tags;
+
+    /// require only that was reached cashout time
+    bool cashout_time_is_reached = false;
+
+    /// require only that has no zero reward
+    bool rewarded = false;
+};
+
+struct content_query
+{
+    /// author
+    std::string author;
+
+    /// permlink
+    std::string permlink;
 };
 
 /// @}
@@ -254,5 +271,7 @@ FC_REFLECT(scorum::tags::api::discussion_query,
           (start_permlink)
           (limit)
           (tags)
-          (tags_logical_and))
+          (all_tags_exist)
+          (cashout_time_is_reached)
+          (rewarded))
 // clang-format on

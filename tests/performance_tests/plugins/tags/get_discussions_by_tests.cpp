@@ -88,7 +88,7 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
 
         api::discussion_query q;
         q.tags = { "A", "B", "C", "D" };
-        q.tags_logical_and = true;
+        q.all_tags_exist = true;
         q.limit = 100;
         auto posts = _api.get_discussions_by_created(q);
 
