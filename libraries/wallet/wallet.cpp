@@ -2412,7 +2412,7 @@ annotated_signed_transaction wallet_api::vote(
     const std::string& voter, const std::string& author, const std::string& permlink, int16_t weight, bool broadcast)
 {
     FC_ASSERT(!is_locked());
-    FC_ASSERT(abs(weight) <= 100, "Weight must be between -100 and 100 and not 0");
+    FC_ASSERT(abs(weight) <= 10000, "Weight must be between -10 000 and 10 000 and not 0");
 
     vote_operation op;
     op.voter = voter;
