@@ -39,6 +39,10 @@ void process_active_sp_holders_cashout::on_apply(block_task_context& ctx)
         {
             ctx.push_virtual_operation(active_sp_holders_reward_operation(account.name, reward_sp));
         }
+        if (account.voting_power < SCORUM_100_PERCENT && account.last_vote_cashout_time > dgp_service.head_block_time())
+        {
+            account_service.update_active_sp_holders_cashout_time(account);
+        }
     }
 
     debug_log(ctx.get_block_info(), "process_active_sp_holders_cashout END");
