@@ -200,7 +200,7 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
                              fc::to_string(comment.permlink),
                              fund_reward,
                              payout_result.total_claimed_reward,
-                             author_reward,
+                             author_reward - payout_from_children,
                              curators_reward,
                              payout_from_children,
                              payout_to_parent,
@@ -311,6 +311,8 @@ void process_comments_cashout_impl::accumulate_statistic(const comment_object& c
     FC_ASSERT(curation_payout.symbol() == reward_symbol);
     FC_ASSERT(beneficiary_payout.symbol() == reward_symbol);
 
+    asset author_payout_without_children = author_payout;
+    author_payout_without_children -= payout_from_children;
     asset total_payout = author_payout;
     total_payout += curation_payout;
     total_payout += beneficiary_payout;
@@ -321,7 +323,7 @@ void process_comments_cashout_impl::accumulate_statistic(const comment_object& c
         accumulate_comment_statistic(comment_statistic_scr_service, comment,
                                      fund_reward,
                                      total_payout,
-                                     author_payout,
+                                     author_payout_without_children,
                                      curation_payout,
                                      payout_from_children,
                                      payout_to_parent,
@@ -332,7 +334,7 @@ void process_comments_cashout_impl::accumulate_statistic(const comment_object& c
         accumulate_comment_statistic(comment_statistic_sp_service, comment,
                                      fund_reward,
                                      total_payout,
-                                     author_payout,
+                                     author_payout_without_children,
                                      curation_payout,
                                      payout_from_children,
                                      payout_to_parent,

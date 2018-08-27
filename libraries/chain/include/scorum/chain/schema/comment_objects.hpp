@@ -132,7 +132,7 @@ public:
     /// tracks the total payout this comment has received over time
     asset total_payout_value = asset(0, SymbolType);
 
-    /// the author payout this comment has received over time
+    /// the author payout this comment has received over time without from_children_payout_value
     asset author_payout_value = asset(0, SymbolType);
 
     /// the curator payout this comment has received over time

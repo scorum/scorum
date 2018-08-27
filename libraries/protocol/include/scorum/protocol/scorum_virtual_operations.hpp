@@ -22,6 +22,8 @@ struct author_reward_operation : public virtual_operation
 
     account_name_type author;
     std::string permlink;
+
+    /// all reward for comment author (with from_children_payout)
     asset reward; // in SCR or SP
 };
 
@@ -76,10 +78,10 @@ struct comment_reward_operation : public virtual_operation
     /// reward accrued from fund
     asset fund_reward;
 
-    /// reward distributed within particular comment across author, beneficiaries and curators
+    /// reward distributed within particular comment across author, parents, beneficiaries and curators
     asset total_payout;
 
-    /// reward for comment author only (without curators, to_parent_payout, beneficiaries_payout)
+    /// reward for comment author only (without from_children_payout)
     asset author_payout;
 
     /// reward for curators (voters)
