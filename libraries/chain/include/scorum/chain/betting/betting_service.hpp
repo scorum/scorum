@@ -11,7 +11,7 @@ struct dynamic_global_property_service_i;
 struct betting_property_service_i;
 struct bet_service_i;
 namespace dba {
-template <typename> struct db_accessor_i;
+template <typename> struct db_accessor;
 struct db_accessor_factory;
 }
 
@@ -56,8 +56,8 @@ public:
 
 private:
     dynamic_global_property_service_i& _dgp_property_service;
-    dba::db_accessor_i<betting_property_object>& _betting_property_dba;
-    dba::db_accessor_i<bet_object>& _bet_dba;
+    dba::db_accessor<betting_property_object>& _betting_property_dba;
+    dba::db_accessor<bet_object>& _bet_dba;
 };
 }
 }

@@ -6,7 +6,7 @@
 #include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/dba/db_accessor_factory.hpp>
-#include <scorum/chain/dba/db_accessor_i.hpp>
+#include <scorum/chain/dba/db_accessor.hpp>
 
 #include <scorum/protocol/betting/wincase_comparison.hpp>
 

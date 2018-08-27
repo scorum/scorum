@@ -1,16 +1,19 @@
 #pragma once
 #include <chainbase/database_index.hpp>
 #include <chainbase/segment_manager.hpp>
-#include <scorum/utils/function_ref.hpp>
+#include <scorum/chain/dba/db_accessor_helpers.hpp>
+#include <scorum/utils/function_view.hpp>
+#include <scorum/utils/any_range.hpp>
 
 namespace scorum {
 namespace chain {
 namespace dba {
-namespace detail {
-// template <typename TObject> using modifier_type = utils::function_ref<void(TObject&)>;
-template <typename TObject> using modifier_type = const std::function<void(TObject&)>&;
-template <typename TObject> using object_cref_type = std::reference_wrapper<const TObject>;
+template <typename TObject> using modifier_type = utils::function_view<void(TObject&)>;
+template <typename TObject> using predicate_type = utils::function_view<bool(const TObject&)>;
+template <typename TObject> using cref_type = std::reference_wrapper<const TObject>;
 using db_index = chainbase::database_index<chainbase::segment_manager>;
+
+namespace detail {
 
 template <typename TObject> const TObject& create(db_index& db_idx, modifier_type<TObject> modifier)
 {
@@ -69,24 +72,73 @@ template <typename TObject, typename IndexBy, typename Key> const TObject* find_
     FC_CAPTURE_AND_RETHROW()
 }
 
-template <typename TObject, class IndexBy, class TLower, class TUpper>
-std::vector<object_cref_type<TObject>> get_range_by(db_index& db_idx, TLower&& lower, TUpper&& upper)
+template <typename TKey> void validate_bounds(const detail::bound<TKey>& lower, const detail::bound<TKey>& upper);
+template <typename TIdx, typename TKey> auto get_lower_bound(TIdx& idx, const detail::bound<TKey>& bound);
+template <typename TIdx, typename TKey> auto get_upper_bound(TIdx& idx, const detail::bound<TKey>& bound);
+
+template <typename TObject, typename IndexBy, typename TKey>
+utils::forward_range<TObject>
+get_range(db_index& db_idx, const detail::bound<TKey>& lower, const detail::bound<TKey>& upper)
 {
     try
     {
-        std::vector<object_cref_type<TObject>> ret;
+        validate_bounds(lower, upper);
 
-        const auto& idx = db_idx.template get_index<typename chainbase::get_index_type<TObject>::type>()
-                              .indices()
-                              .template get<IndexBy>();
+        const auto& idx = db_idx.get_index<typename chainbase::get_index_type<TObject>::type, IndexBy>();
 
-        auto range = idx.range(std::forward<TLower>(lower), std::forward<TUpper>(upper));
+        auto from = get_lower_bound(idx, lower);
+        auto to = get_upper_bound(idx, upper);
 
-        std::copy(range.first, range.second, std::back_inserter(ret));
-
-        return ret;
+        return { from, to };
     }
     FC_CAPTURE_AND_RETHROW()
+}
+
+template <typename TKey> void validate_bounds(const detail::bound<TKey>& lower, const detail::bound<TKey>& upper)
+{
+    auto is_lower_asc_order = lower.kind == bound_kind::gt || lower.kind == bound_kind::ge;
+    auto is_upper_asc_order = lower.kind == bound_kind::lt || lower.kind == bound_kind::le;
+    auto is_lower_desc_order = lower.kind == bound_kind::lt || lower.kind == bound_kind::le;
+    auto is_upper_desc_order = lower.kind == bound_kind::gt || lower.kind == bound_kind::ge;
+
+    FC_ASSERT(lower.kind == bound_kind::unbounded || upper.kind == bound_kind::unbounded
+                  || (is_lower_asc_order && is_upper_asc_order && lower.value.get() <= upper.value.get())
+                  || (is_lower_desc_order && is_upper_desc_order && upper.value.get() <= lower.value.get()),
+              "Invalid boundaries.");
+}
+
+template <typename TIdx, typename TKey> auto get_lower_bound(TIdx& idx, const detail::bound<TKey>& bound)
+{
+    switch (bound.kind)
+    {
+    case bound_kind::unbounded:
+        return idx.begin();
+    case bound_kind::ge:
+    case bound_kind::le:
+        return idx.lower_bound(bound.value.get());
+    case bound_kind::gt:
+    case bound_kind::lt:
+        return idx.upper_bound(bound.value.get());
+    default:
+        FC_ASSERT(false, "Not implemented.");
+    }
+}
+
+template <typename TIdx, typename TKey> auto get_upper_bound(TIdx& idx, const detail::bound<TKey>& bound)
+{
+    switch (bound.kind)
+    {
+    case bound_kind::unbounded:
+        return idx.end();
+    case bound_kind::ge:
+    case bound_kind::le:
+        return idx.upper_bound(bound.value.get());
+    case bound_kind::gt:
+    case bound_kind::lt:
+        return idx.lower_bound(bound.value.get());
+    default:
+        FC_ASSERT(false, "Not implemented.");
+    }
 }
 }
 
@@ -100,20 +152,21 @@ public:
 
 public:
     using object_type = TObject;
-    using modifier_type = typename std::function<void(object_type&)>;
+    using modifier_type = utils::function_view<void(object_type&)>;
+    using predicate_type = utils::function_view<bool(const object_type&)>;
     using object_cref_type = std::reference_wrapper<const TObject>;
 
-    const object_type& create(const modifier_type& modifier)
+    const object_type& create(modifier_type modifier)
     {
         return detail::create(_db_idx, modifier);
     }
 
-    void update(const modifier_type& modifier)
+    void update(modifier_type modifier)
     {
         detail::update_single<TObject>(_db_idx, modifier);
     }
 
-    void update(const object_type& o, const modifier_type& modifier)
+    void update(const object_type& o, modifier_type modifier)
     {
         detail::update(_db_idx, o, modifier);
     }
@@ -148,11 +201,29 @@ public:
         return detail::find_by<TObject, IndexBy, Key>(_db_idx, arg);
     }
 
-    template <class IndexBy, class TLower, class TUpper>
-    std::vector<object_cref_type> get_range_by(TLower&& lower, TUpper&& upper) const
+    template <typename IndexBy, typename TKey>
+    utils::forward_range<object_type> get_range(const detail::bound<TKey>& lower,
+                                                const detail::bound<TKey>& upper) const
     {
-        return detail::get_range_by<TObject, IndexBy, TLower, TUpper>(_db_idx, std::forward<TLower>(lower),
-                                                                      std::forward<TUpper>(upper));
+        return detail::get_range<TObject, IndexBy, TKey>(_db_idx, lower, upper);
+    }
+
+    template <typename IndexBy, typename TKey>
+    utils::forward_range<object_type> get_range(unbounded_placeholder lower, const detail::bound<TKey>& upper) const
+    {
+        return detail::get_range<TObject, IndexBy, TKey>(_db_idx, lower, upper);
+    }
+
+    template <typename IndexBy, typename TKey>
+    utils::forward_range<object_type> get_range(const detail::bound<TKey>& lower, unbounded_placeholder upper) const
+    {
+        return detail::get_range<TObject, IndexBy, TKey>(_db_idx, lower, upper);
+    }
+
+    template <typename IndexBy>
+    utils::forward_range<object_type> get_range(unbounded_placeholder lower, unbounded_placeholder upper) const
+    {
+        return detail::get_range<TObject, IndexBy, no_key>(_db_idx, lower, upper);
     }
 
 private:

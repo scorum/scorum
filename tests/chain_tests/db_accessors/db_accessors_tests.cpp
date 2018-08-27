@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-#include <scorum/chain/dba/db_accessor_i.hpp>
+#include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/dba/db_accessor_factory.hpp>
 #include <scorum/chain/schema/game_object.hpp>
 
@@ -15,7 +15,7 @@ BOOST_FIXTURE_TEST_SUITE(db_accessors_tests, database_fixture::database_default_
 BOOST_AUTO_TEST_CASE(db_accessors_tests)
 {
     db_accessor_factory dba_factory{ db };
-    db_accessor_i<game_object>& dba = dba_factory.get_dba<game_object>();
+    db_accessor<game_object>& dba = dba_factory.get_dba<game_object>();
 
     BOOST_CHECK(dba.is_empty());
 
