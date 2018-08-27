@@ -189,6 +189,23 @@ public:
         return discussion();
     }
 
+    std::vector<api::discussion> get_contents(const std::vector<api::content_query>& query) const
+    {
+        FC_ASSERT(query.size() <= MAX_DISCUSSIONS_LIST_SIZE,
+                  "query size cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
+        std::vector<api::discussion> result;
+        const auto& by_permlink_idx = _db.get_index<comment_index, by_permlink>();
+        for (const auto& q : query)
+        {
+            auto itr = by_permlink_idx.find(boost::make_tuple(q.author, q.permlink));
+            if (itr != by_permlink_idx.end())
+            {
+                result.emplace_back(get_discussion(*itr, q.truncate_body));
+            }
+        }
+        return result;
+    }
+
     std::vector<discussion>
     get_comments(const std::string& parent_author, const std::string& parent_permlink, uint32_t depth) const
     {
@@ -401,6 +418,8 @@ private:
 
         boost::transform(tags, std::back_inserter(posts_by_tags),
                          [&](const std::string& t) { return get_posts(t, tag_filter); });
+
+        // TODO: cashout_time_is_reached
 
         // clang-format off
         posts_crefs posts = query.all_tags_exist

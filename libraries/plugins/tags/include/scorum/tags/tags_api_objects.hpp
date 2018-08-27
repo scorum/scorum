@@ -191,6 +191,9 @@ struct discussion_query
 
 struct content_query
 {
+    /// the number of bytes of the post body to return, 0 for all
+    uint32_t truncate_body = 0;
+
     /// author
     std::string author;
 
@@ -274,4 +277,9 @@ FC_REFLECT(scorum::tags::api::discussion_query,
           (all_tags_exist)
           (cashout_time_is_reached)
           (rewarded))
+
+FC_REFLECT(scorum::tags::api::content_query,
+          (truncate_body)
+          (author)
+          (permlink))
 // clang-format on
