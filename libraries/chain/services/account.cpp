@@ -398,7 +398,7 @@ void dbs_account::update_voting_power(const account_object& account, uint16_t vo
     update(account, [&](account_object& a) {
         a.voting_power = voting_power;
         a.last_vote_time = t;
-        a.last_vote_cashout_time = scorum::rewards_math::calculate_expected_restoring_time(
+        a.voting_power_restoring_time = scorum::rewards_math::calculate_expected_restoring_time(
             voting_power, t, SCORUM_VOTE_REGENERATION_SECONDS);
         a.vote_reward_competitive_sp = a.effective_scorumpower();
     });
@@ -668,7 +668,7 @@ dbs_account::account_refs_type dbs_account::get_active_sp_holders() const
 
     fc::time_point_sec min_vote_time_for_cashout = dprops_service.head_block_time();
 
-    return get_range_by<by_last_vote_cashout_time>(min_vote_time_for_cashout < boost::lambda::_1,
+    return get_range_by<by_voting_power_restoring_time>(min_vote_time_for_cashout < boost::lambda::_1,
                                                    boost::multi_index::unbounded);
 }
 
