@@ -406,16 +406,13 @@ void dbs_account::update_voting_power(const account_object& account, uint16_t vo
 
 void dbs_account::update_active_sp_holders_cashout_time(const account_object& account)
 {
-    if (account.active_sp_holders_cashout_time != fc::time_point_sec::maximum())
-        return;
-
-    time_point_sec t = db_impl().head_block_time();
-
-    update(account, [&](account_object& a) {
-        fc::time_point_sec cashout_time = t;
-        cashout_time += SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD;
-        a.active_sp_holders_cashout_time = cashout_time;
-    });
+    if (account.active_sp_holders_cashout_time == fc::time_point_sec::maximum())
+    {
+        update(account, [&](account_object& a) {
+            fc::time_point_sec cashout_time = db_impl().head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD;
+            a.active_sp_holders_cashout_time = cashout_time;
+        });
+    }
 }
 
 void dbs_account::create_account_recovery(const account_name_type& account_to_recover,
@@ -669,7 +666,7 @@ dbs_account::account_refs_type dbs_account::get_active_sp_holders() const
     fc::time_point_sec min_vote_time_for_cashout = dprops_service.head_block_time();
 
     return get_range_by<by_voting_power_restoring_time>(min_vote_time_for_cashout < boost::lambda::_1,
-                                                   boost::multi_index::unbounded);
+                                                        boost::multi_index::unbounded);
 }
 
 void dbs_account::foreach_account(account_call_type&& call) const
