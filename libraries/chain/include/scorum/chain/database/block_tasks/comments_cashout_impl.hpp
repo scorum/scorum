@@ -95,11 +95,11 @@ private:
 
         const auto& stat = stat_service.get(comment.id);
         stat_service.update(stat, [&](comment_object_type& c) {
+            c.fund_reward_value += fund_reward;
             c.total_payout_value += total_payout;
             c.author_payout_value += author_payout;
             c.curator_payout_value += curation_payout;
             c.beneficiary_payout_value += beneficiary_payout;
-            c.fund_reward_value += fund_reward;
             c.from_children_payout_value += payout_from_children;
             c.to_parent_payout_value += payout_to_parent;
         });
