@@ -178,6 +178,20 @@ public:
         return get_discussions_by_author(*query.start_author, query.start_permlink, query.limit);
     }
 
+    std::vector<api::discussion> get_posts_comments_by_author(const api::discussion_query& query) const
+    {
+        std::vector<api::discussion> result;
+
+        FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
+                  "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
+        FC_ASSERT(query.start_author && !query.start_author->empty(),
+                  "start_author should be specified and cannot be empty");
+
+        // TODO
+
+        return result;
+    }
+
     discussion get_content(const std::string& author, const std::string& permlink) const
     {
         const auto& by_permlink_idx = _db.get_index<comment_index, by_permlink>();
@@ -418,8 +432,6 @@ private:
 
         boost::transform(tags, std::back_inserter(posts_by_tags),
                          [&](const std::string& t) { return get_posts(t, tag_filter); });
-
-        // TODO: cashout_time_is_reached
 
         // clang-format off
         posts_crefs posts = query.all_tags_exist

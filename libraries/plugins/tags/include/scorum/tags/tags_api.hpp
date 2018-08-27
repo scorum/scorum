@@ -90,6 +90,12 @@ public:
      */
     std::vector<api::discussion> get_discussions_by_author(const api::discussion_query& query) const;
 
+    /**
+     * @brief Returns an array of posts and comments belonging to the given author that have reached cacheout time
+     * @param query use fields cashout_time_is_reached = true, rewarded = true for main purpose
+     */
+    std::vector<api::discussion> get_posts_comments_by_author(const api::discussion_query& query) const;
+
     /// @}
 };
 
