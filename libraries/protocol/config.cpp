@@ -110,9 +110,9 @@ config::config(test_mode) /// test config
 
     , upvote_lockout(fc::minutes(5))
 
-    , active_sp_holders_reward_period(fc::seconds(cashout_window_seconds / 10))
+    , active_sp_holders_reward_period(fc::minutes(15))
 
-    , vote_regeneration_seconds(fc::minutes(30))
+    , vote_regeneration_seconds(fc::minutes(10))
 
     , owner_auth_recovery_period(fc::seconds(60))
     , account_recovery_request_expiration_period(fc::seconds(12))
