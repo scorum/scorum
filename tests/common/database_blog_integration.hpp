@@ -50,7 +50,7 @@ struct database_blog_integration_fixture : public database_trx_integration_fixtu
         std::string permlink() const;
         fc::time_point_sec cashout_time() const;
 
-        vote_op vote(Actor& voter, int16_t weight = 100);
+        vote_op vote(Actor& voter, int16_t weight = SCORUM_PERCENT(100));
 
         comment_op create_comment(Actor& actor);
         comment_op& set_title(const std::string& title);

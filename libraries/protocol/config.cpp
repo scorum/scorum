@@ -33,6 +33,8 @@ config::config() /// production config
     , reverse_auction_window_seconds(fc::minutes(30))
 
     , upvote_lockout(fc::minutes(30))
+
+    , active_sp_holders_reward_period(fc::minutes(1))
 #else
     , vesting_withdraw_interval_seconds(DAYS_TO_SECONDS(7)) // 1 week per interval
 
@@ -41,6 +43,8 @@ config::config() /// production config
     , reverse_auction_window_seconds(fc::minutes(30))
 
     , upvote_lockout(fc::hours(12))
+
+    , active_sp_holders_reward_period(fc::days(7))
 #endif
     , vote_regeneration_seconds(fc::days(5))
 
@@ -77,9 +81,21 @@ config::config() /// production config
 
     , witness_reward_migration_date(
           fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(WITNESS_REWARD_MIGRATION_DATE)))
+
+    , scorum_max_witnesses(21)
+
+    , scorum_max_voted_witnesses(20)
+
+    /// 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75%
+    /// participation on all subsequent rounds.
+    , scorum_hardfork_required_witnesses(17)
 {
     FC_ASSERT(blogging_start_date + cashout_window_seconds < fifa_world_cup_2018_bounty_cashout_date,
               "Required: fifa_world_cup_2018_bounty_cashout_date >= blogging_start_date + cashout_window_seconds.");
+    FC_ASSERT(scorum_max_witnesses <= SCORUM_MAX_WITNESSES_LIMIT);
+    FC_ASSERT(scorum_max_witnesses > scorum_max_voted_witnesses, "No place for runner");
+    FC_ASSERT(scorum_max_witnesses > scorum_hardfork_required_witnesses,
+              "Invalid amount for hardfork required witnesses");
 }
 
 config::config(test_mode) /// test config
@@ -93,6 +109,8 @@ config::config(test_mode) /// test config
     , reverse_auction_window_seconds(fc::seconds(30))
 
     , upvote_lockout(fc::minutes(5))
+
+    , active_sp_holders_reward_period(fc::seconds(cashout_window_seconds / 10))
 
     , vote_regeneration_seconds(fc::minutes(30))
 
@@ -127,8 +145,17 @@ config::config(test_mode) /// test config
     , expiraton_for_registration_bonus(fc::minutes(30))
 
     , witness_reward_migration_date(initial_date + cashout_window_seconds * 10)
+
+    , scorum_max_witnesses(3)
+
+    , scorum_max_voted_witnesses(2)
+
+    , scorum_hardfork_required_witnesses(2)
 {
-    // do nothing
+    FC_ASSERT(scorum_max_witnesses <= SCORUM_MAX_WITNESSES_LIMIT);
+    FC_ASSERT(scorum_max_witnesses > scorum_max_voted_witnesses, "No place for runner");
+    FC_ASSERT(scorum_max_witnesses > scorum_hardfork_required_witnesses,
+              "Invalid amount for hardfork required witnesses");
 }
 
 const config& get_config()

@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(old_tests)
         vote.author = "alice";
         vote.permlink = "test";
         vote.voter = "bob";
-        vote.weight = (int16_t)100;
+        vote.weight = SCORUM_PERCENT(100);
 
         b.beneficiaries.clear();
         b.beneficiaries.push_back(beneficiary_route_type(account_name_type("bob"), 25 * SCORUM_1_PERCENT));

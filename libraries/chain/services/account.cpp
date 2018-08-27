@@ -248,8 +248,6 @@ void dbs_account::increase_balance(const account_object& account, const asset& a
     FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
     update(account, [&](account_object& acnt) { acnt.balance += amount; });
 
-
-
     db_impl().obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& props) {
         props.circulating_capital += amount;
     });
@@ -259,6 +257,20 @@ void dbs_account::increase_balance(const account_object& account, const asset& a
 void dbs_account::decrease_balance(const account_object& account, const asset& amount)
 {
     increase_balance(account, -amount);
+}
+
+void dbs_account::increase_pending_balance(const account_object& account, const asset& amount)
+{
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
+    update(account, [&](account_object& acnt) { acnt.active_sp_holders_pending_scr_reward += amount; });
+
+    db_impl().obtain_service<dbs_dynamic_global_property>().update(
+        [&](dynamic_global_property_object& props) { props.total_pending_scr += amount; });
+}
+
+void dbs_account::decrease_pending_balance(const account_object& account, const asset& amount)
+{
+    increase_pending_balance(account, -amount);
 }
 
 void dbs_account::increase_scorumpower(const account_object& account, const asset& amount)
@@ -277,6 +289,20 @@ void dbs_account::increase_scorumpower(const account_object& account, const asse
 void dbs_account::decrease_scorumpower(const account_object& account, const asset& amount)
 {
     increase_scorumpower(account, -amount);
+}
+
+void dbs_account::increase_pending_scorumpower(const account_object& account, const asset& amount)
+{
+    FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
+    update(account, [&](account_object& acnt) { acnt.active_sp_holders_pending_sp_reward += amount; });
+
+    db_impl().obtain_service<dbs_dynamic_global_property>().update(
+        [&](dynamic_global_property_object& props) { props.total_pending_sp += amount; });
+}
+
+void dbs_account::decrease_pending_scorumpower(const account_object& account, const asset& amount)
+{
+    increase_pending_scorumpower(account, -amount);
 }
 
 const asset dbs_account::create_scorumpower(const account_object& to_account, const asset& scorum)
@@ -365,6 +391,12 @@ void dbs_account::update_voting_power(const account_object& account, uint16_t vo
     time_point_sec t = db_impl().head_block_time();
 
     update(account, [&](account_object& a) {
+        if (voting_power < a.voting_power && a.active_sp_holders_cashout_time == fc::time_point_sec::maximum())
+        {
+            fc::time_point_sec cashout_time = t;
+            cashout_time += SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD;
+            a.active_sp_holders_cashout_time = cashout_time;
+        }
         a.voting_power = voting_power;
         a.last_vote_time = t;
         a.last_vote_cashout_time = scorum::rewards_math::calculate_expected_restoring_time(
@@ -631,6 +663,15 @@ void dbs_account::foreach_account(account_call_type&& call) const
 {
     foreach_by<by_id>(call);
 }
+dbs_account::account_refs_type dbs_account::get_by_cashout_time(const fc::time_point_sec& until) const
+{
+    try
+    {
+        return get_range_by<by_active_sp_holders_cashout_time>(::boost::multi_index::unbounded,
+                                                               ::boost::lambda::_1 <= std::make_tuple(until, ALL_IDS));
+    }
+    FC_CAPTURE_AND_RETHROW((until))
+}
 
 accounts_total dbs_account::accounts_circulating_capital() const
 {
@@ -641,6 +682,9 @@ accounts_total dbs_account::accounts_circulating_capital() const
     {
         totals.scr += itr->balance;
         totals.sp += itr->scorumpower;
+        totals.pending_scr += itr->active_sp_holders_pending_scr_reward;
+        totals.pending_sp += itr->active_sp_holders_pending_sp_reward;
+
         totals.vsf_votes += (itr->proxy == SCORUM_PROXY_TO_SELF_ACCOUNT
                                  ? itr->witness_vote_weight()
                                  : (SCORUM_MAX_PROXY_RECURSION_DEPTH > 0
