@@ -30,6 +30,7 @@ class game_object : public object<game_object_type, game_object>
 public:
     /// @cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(game_object, (name)(markets)(results))
+    /// @endcond
 
     typedef typename object<game_object_type, game_object>::id_type id_type;
 
