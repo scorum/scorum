@@ -42,6 +42,7 @@
  *
  * - @subpage api
  * - @subpage plugins
+ * - @subpage wallet
  */
 
 /**
