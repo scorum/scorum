@@ -211,14 +211,14 @@ SCORUM_TEST_CASE(per_block_payments_are_stopped_after_battary_restored)
     uint16_t used_power
         = scorum::rewards_math::calculate_used_power(current_power, vote_weight, SCORUM_VOTING_POWER_DECAY_PERCENT);
 
-    auto last_vote_cashout_time = scorum::rewards_math::calculate_expected_restoring_time(
+    auto voting_power_restoring_time = scorum::rewards_math::calculate_expected_restoring_time(
         current_power - used_power, dprops_service.head_block_time(), SCORUM_VOTE_REGENERATION_SECONDS);
 
     auto post = create_post(alice).push();
     post.vote(bob, vote_weight).in_block();
 
     auto initial_blocks = db.head_block_num();
-    generate_blocks(last_vote_cashout_time + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
+    generate_blocks(voting_power_restoring_time + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
     auto pass_blocks = db.head_block_num() - initial_blocks;
 
     auto active_sp_holders_reward = get_active_voters_reward(budget_service.get_fund_budget().per_block);
@@ -290,6 +290,44 @@ SCORUM_TEST_CASE(active_sp_holders_op_notifications_check)
     post.vote(bob, SCORUM_PERCENT(90)).in_block();
 
     generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
+
+    BOOST_CHECK_EQUAL(op_times(), 2);
+}
+
+SCORUM_TEST_CASE(second_cashout_if_no_vote_after_first_cashout_check)
+{
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
+
+    set_voter(bob);
+
+    auto start = db.head_block_time();
+
+    auto post = create_post(alice).push();
+    post.vote(bob).in_block();
+
+    generate_blocks(start
+                    + fc::seconds(SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD.to_seconds() - SCORUM_BLOCK_INTERVAL * 2));
+
+    post = create_post(bob).push();
+    post.vote(bob).in_block();
+
+    BOOST_CHECK_EQUAL(op_times(), 0);
+
+    generate_blocks(start + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
+
+    const auto& bob_obj = account_service.get_account(bob.name);
+    BOOST_REQUIRE_GT(bob_obj.voting_power_restoring_time.to_iso_string(), db.head_block_time().to_iso_string());
+    BOOST_REQUIRE_LT(bob_obj.voting_power, SCORUM_100_PERCENT);
+
+    BOOST_CHECK_NE(bob_obj.active_sp_holders_cashout_time.to_iso_string(),
+                   fc::time_point_sec::maximum().to_iso_string());
+
+    BOOST_CHECK_EQUAL(op_times(), 1);
+
+    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
+
+    BOOST_CHECK_EQUAL(bob_obj.active_sp_holders_cashout_time.to_iso_string(),
+                      fc::time_point_sec::maximum().to_iso_string());
 
     BOOST_CHECK_EQUAL(op_times(), 2);
 }

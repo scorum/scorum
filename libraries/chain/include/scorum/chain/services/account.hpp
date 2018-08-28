@@ -117,6 +117,8 @@ struct account_service_i : public base_service_i<account_object>
 
     virtual void update_voting_power(const account_object& account, uint16_t voting_power) = 0;
 
+    virtual void update_active_sp_holders_cashout_time(const account_object& account) = 0;
+
     virtual void update_owner_authority(const account_object& account, const authority& owner_authority) = 0;
 
     virtual void create_account_recovery(const account_name_type& account_to_recover_name,
@@ -255,6 +257,8 @@ public:
     virtual void add_post(const account_object& author_account, const account_name_type& parent_author_name) override;
 
     virtual void update_voting_power(const account_object& account, uint16_t voting_power) override;
+
+    virtual void update_active_sp_holders_cashout_time(const account_object& account) override;
 
     virtual void update_owner_authority(const account_object& account, const authority& owner_authority) override;
 
