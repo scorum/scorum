@@ -6,6 +6,14 @@
 
 #include <limits>
 
+#include <boost/range/any_range.hpp>
+
+namespace scorum {
+namespace utils {
+template <typename TObject> using forward_range = boost::any_range<TObject, boost::forward_traversal_tag>;
+}
+}
+
 namespace scorum {
 namespace chain {
 
@@ -15,6 +23,8 @@ template <class T> struct base_service_i
     using modifier_type = std::function<void(object_type&)>;
     using call_type = std::function<void(const object_type&)>;
     using object_cref_type = std::reference_wrapper<const object_type>;
+
+    using view_type = scorum::utils::forward_range<object_type>;
 
     virtual ~base_service_i()
     {
