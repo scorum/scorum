@@ -2812,6 +2812,19 @@ annotated_signed_transaction wallet_api::development_committee_change_advertisin
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction wallet_api::development_committee_change_betting_moderator_quorum(
+    const std::string& initiator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast)
+{
+    using operation_type = development_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = betting_moderator_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
 annotated_signed_transaction wallet_api::development_committee_empower_advertising_moderator(
     const std::string& initiator, const std::string& moderator, uint32_t lifetime_sec, bool broadcast)
 {
@@ -2819,6 +2832,30 @@ annotated_signed_transaction wallet_api::development_committee_empower_advertisi
 
     signed_transaction tx
         = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account = moderator; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_empower_betting_moderator(const std::string& initiator,
+                                                                                         const std::string& moderator,
+                                                                                         uint32_t lifetime_sec,
+                                                                                         bool broadcast)
+{
+    using operation_type = development_committee_empower_betting_moderator_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account = moderator; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_change_betting_resolve_delay(
+    const std::string& initiator, uint32_t delay_sec, uint32_t lifetime_sec, bool broadcast)
+{
+    using operation_type = development_committee_change_betting_resolve_delay_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.delay_sec = delay_sec; });
 
     return my->sign_transaction(tx, broadcast);
 }

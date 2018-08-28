@@ -1237,6 +1237,13 @@ public:
                                                                                            uint64_t quorum_percent,
                                                                                            uint32_t lifetime_sec,
                                                                                            bool broadcast);
+    /**
+     * Change development committee for changing betting moderator quorum
+     */
+    annotated_signed_transaction development_committee_change_betting_moderator_quorum(const std::string& creator,
+                                                                                       uint64_t quorum_percent,
+                                                                                       uint32_t lifetime_sec,
+                                                                                       bool broadcast);
 
     /**
      * Create proposal for set up the advertising moderator.
@@ -1245,6 +1252,22 @@ public:
                                                                                      const std::string& moderator,
                                                                                      uint32_t lifetime_sec,
                                                                                      bool broadcast);
+
+    /**
+    * Create proposal for set up the betting moderator.
+    */
+    annotated_signed_transaction development_committee_empower_betting_moderator(const std::string& initiator,
+                                                                                 const std::string& moderator,
+                                                                                 uint32_t lifetime_sec,
+                                                                                 bool broadcast);
+
+    /**
+    * Create proposal for changing delay after game was finished before bets will be resolved.
+    */
+    annotated_signed_transaction development_committee_change_betting_resolve_delay(const std::string& initiator,
+                                                                                    uint32_t delay_sec,
+                                                                                    uint32_t lifetime_sec,
+                                                                                    bool broadcast);
 
     /**
      * Create proposal for transfering SCR from development pool to account
@@ -1544,7 +1567,10 @@ FC_API( scorum::wallet::wallet_api,
         (development_committee_change_transfer_quorum)
         (development_committee_change_budget_vcg_properties_quorum)
         (development_committee_change_advertising_moderator_quorum)
+        (development_committee_change_betting_moderator_quorum)
         (development_committee_empower_advertising_moderator)
+        (development_committee_empower_betting_moderator)
+        (development_committee_change_betting_resolve_delay)
         (get_development_committee)
         (development_pool_transfer)
         (development_pool_withdraw_vesting)
