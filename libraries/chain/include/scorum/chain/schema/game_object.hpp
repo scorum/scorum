@@ -18,9 +18,9 @@ using scorum::protocol::betting::wincase_type;
 
 enum class game_status : uint8_t
 {
-    created,
-    started,
-    finished
+    created = 0b0001,
+    started = 0b0010,
+    finished = 0b0100
 };
 
 struct by_name;
