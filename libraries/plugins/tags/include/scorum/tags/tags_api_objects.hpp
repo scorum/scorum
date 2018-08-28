@@ -181,12 +181,6 @@ struct discussion_query
     bool all_tags_exist = true;
     /// tags to select
     std::set<std::string> tags;
-
-    /// require only that was reached cashout time
-    bool cashout_time_is_reached = false;
-
-    /// require only that has no zero reward
-    bool rewarded = false;
 };
 
 struct content_query
@@ -274,9 +268,7 @@ FC_REFLECT(scorum::tags::api::discussion_query,
           (start_permlink)
           (limit)
           (tags)
-          (all_tags_exist)
-          (cashout_time_is_reached)
-          (rewarded))
+          (all_tags_exist))
 
 FC_REFLECT(scorum::tags::api::content_query,
           (truncate_body)

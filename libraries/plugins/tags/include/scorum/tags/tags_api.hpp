@@ -73,9 +73,9 @@ public:
 
     /**
      * @brief Returns all discussions by author/permlink pairs
-     * @param query vector of author/permlink pairs
+     * @param queries vector of @ref api::content_query struct that includes author/permlink pair
      */
-    std::vector<api::discussion> get_contents(const std::vector<api::content_query>& query) const;
+    std::vector<api::discussion> get_contents(const std::vector<api::content_query>& queries) const;
 
     std::vector<api::discussion> get_comments(const std::string& parent_author,
                                               const std::string& parent_permlink,
@@ -84,6 +84,9 @@ public:
     /**
      * @brief This method is used to fetch all posts by author that occur after start_permlink with up to limit being
      * returned.
+     * @param query
+     * @warning query parameter accepts only following @ref api::discussion_query fields: \n
+     *          \e start_author, \e start_permlink, \e limit
      *
      * If start_permlink is empty then discussions are returned from the beginning. This
      * should allow easy pagination.
@@ -91,8 +94,13 @@ public:
     std::vector<api::discussion> get_discussions_by_author(const api::discussion_query& query) const;
 
     /**
-     * @brief Returns an array of posts and comments belonging to the given author that have reached cacheout time
-     * @param query use fields cashout_time_is_reached = true, rewarded = true for main purpose
+     * @brief Returns an array of posts and comments belonging to the given author that have reached cashout time
+     * @param query
+     * @warning query parameter accepts only following @ref api::discussion_query fields: \n
+     *          \e start_author, \e start_permlink, \e limit, \e truncate_body
+     *
+     * If start_permlink is empty then discussions are returned from the beginning. This
+     * should allow easy pagination.
      */
     std::vector<api::discussion> get_posts_comments_by_author(const api::discussion_query& query) const;
 
@@ -116,5 +124,6 @@ FC_API(scorum::tags::tags_api,
        (get_content)
        (get_contents)
        (get_comments)
-       (get_discussions_by_author))
+       (get_discussions_by_author)
+       (get_posts_comments_by_author))
 // clang-format on

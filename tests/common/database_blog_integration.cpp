@@ -239,6 +239,11 @@ database_blog_integration_fixture::vote_op& database_blog_integration_fixture::v
     return *this;
 }
 
+database_blog_integration_fixture::vote_op& database_blog_integration_fixture::vote_op::in_block(uint32_t delay_sec)
+{
+    return this->in_block(fc::seconds(delay_sec));
+}
+
 database_blog_integration_fixture::vote_op& database_blog_integration_fixture::vote_op::in_block(fc::microseconds delay)
 {
     if (!is_pushed)

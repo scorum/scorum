@@ -180,16 +180,13 @@ public:
 
     std::vector<api::discussion> get_posts_comments_by_author(const api::discussion_query& query) const
     {
-        std::vector<api::discussion> result;
-
         FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
                   "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
         FC_ASSERT(query.start_author && !query.start_author->empty(),
                   "start_author should be specified and cannot be empty");
 
-        // TODO
-
-        return result;
+        return get_posts_comments_by_author(*query.start_author, query.start_permlink, query.limit,
+                                            query.truncate_body);
     }
 
     discussion get_content(const std::string& author, const std::string& permlink) const
@@ -203,18 +200,18 @@ public:
         return discussion();
     }
 
-    std::vector<api::discussion> get_contents(const std::vector<api::content_query>& query) const
+    std::vector<api::discussion> get_contents(const std::vector<api::content_query>& queries) const
     {
-        FC_ASSERT(query.size() <= MAX_DISCUSSIONS_LIST_SIZE,
-                  "query size cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
+        FC_ASSERT(queries.size() <= MAX_DISCUSSIONS_LIST_SIZE,
+                  "queries vector size cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
         std::vector<api::discussion> result;
         const auto& by_permlink_idx = _db.get_index<comment_index, by_permlink>();
-        for (const auto& q : query)
+        for (const auto& query : queries)
         {
-            auto itr = by_permlink_idx.find(boost::make_tuple(q.author, q.permlink));
+            auto itr = by_permlink_idx.find(boost::make_tuple(query.author, query.permlink));
             if (itr != by_permlink_idx.end())
             {
-                result.emplace_back(get_discussion(*itr, q.truncate_body));
+                result.emplace_back(get_discussion(*itr, query.truncate_body));
             }
         }
         return result;
@@ -495,6 +492,41 @@ private:
             ++it;
         }
 #endif
+        return result;
+    }
+
+    std::vector<api::discussion> get_posts_comments_by_author(const std::string& author,
+                                                              fc::optional<std::string> start_permlink,
+                                                              uint32_t limit,
+                                                              uint32_t truncate_body) const
+    {
+        std::vector<api::discussion> result;
+
+#ifndef IS_LOW_MEM
+
+        result.reserve(limit);
+
+        const auto& idx = _db.get_index<comment_index, by_author_rewarded>();
+
+        auto it = idx.lower_bound(author);
+        if (start_permlink && !start_permlink->empty())
+            it = idx.iterator_to(_services.comment_service().get(author, *start_permlink));
+
+        while (it != idx.end() && it->author == author && result.size() < limit)
+        {
+            const comment_object& comment = *it;
+            // index started from rewarded comments and  we need in only rewarded comments
+            if (comment.cashout_time != fc::time_point_sec::maximum() || comment.net_votes <= 0)
+                break;
+
+            if (it->parent_author.size() == 0)
+            {
+                result.push_back(get_discussion(*it, truncate_body));
+            }
+            ++it;
+        }
+#endif
+
         return result;
     }
 

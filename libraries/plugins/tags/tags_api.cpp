@@ -92,13 +92,13 @@ discussion tags_api::get_content(const std::string& author, const std::string& p
     FC_CAPTURE_AND_RETHROW((author)(permlink))
 }
 
-std::vector<api::discussion> tags_api::get_contents(const std::vector<api::content_query>& query) const
+std::vector<api::discussion> tags_api::get_contents(const std::vector<api::content_query>& queries) const
 {
     try
     {
-        return guard().with_read_lock([&]() { return _impl->get_contents(query); });
+        return guard().with_read_lock([&]() { return _impl->get_contents(queries); });
     }
-    FC_CAPTURE_AND_RETHROW((query))
+    FC_CAPTURE_AND_RETHROW((queries))
 }
 
 std::vector<discussion>
