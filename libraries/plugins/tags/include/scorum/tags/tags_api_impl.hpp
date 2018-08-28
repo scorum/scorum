@@ -200,7 +200,7 @@ public:
         return discussion();
     }
 
-    std::vector<api::discussion> get_contents(const std::vector<api::content_query>& queries) const
+    std::vector<api::discussion> get_contents(const std::vector<content_query>& queries) const
     {
         FC_ASSERT(queries.size() <= MAX_DISCUSSIONS_LIST_SIZE,
                   "queries vector size cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
@@ -233,6 +233,36 @@ public:
                 result.push_back(get_discussion(comment));
             }
         });
+
+        return result;
+    }
+
+    std::vector<discussion> get_parents(const content_query& query) const
+    {
+        FC_ASSERT(!query.author.empty(), "author could't be empty.");
+        FC_ASSERT(!query.permlink.empty(), "permlink could't be empty.");
+
+        std::vector<discussion> result;
+
+        comment_service_i& service = _services.comment_service();
+
+        const auto& child = service.get(query.author, query.permlink);
+
+        auto depth = child.depth;
+        if (depth > 0)
+            result.reserve(depth);
+
+        auto parent_author = child.parent_author;
+        auto parent_permlink = fc::to_string(child.parent_permlink);
+        while (depth-- && parent_author != SCORUM_ROOT_POST_PARENT_ACCOUNT)
+        {
+            const comment_object& parent = service.get(parent_author, parent_permlink);
+
+            result.push_back(get_discussion(parent, query.truncate_body));
+
+            parent_author = parent.parent_author;
+            parent_permlink = fc::to_string(parent.parent_permlink);
+        }
 
         return result;
     }

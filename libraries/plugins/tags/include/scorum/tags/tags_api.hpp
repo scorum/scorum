@@ -77,9 +77,21 @@ public:
      */
     std::vector<api::discussion> get_contents(const std::vector<api::content_query>& queries) const;
 
+    /**
+     * @brief Returns all children for certain comment
+     * @param parent_author
+     * @param parent_permlink
+     * @param depth limit
+     */
     std::vector<api::discussion> get_comments(const std::string& parent_author,
                                               const std::string& parent_permlink,
                                               uint32_t depth = SCORUM_MAX_COMMENT_DEPTH) const;
+
+    /**
+     * @brief Returns all parents for certain comment
+     * @param query
+     */
+    std::vector<api::discussion> get_parents(const api::content_query& query) const;
 
     /**
      * @brief This method is used to fetch all posts by author that occur after start_permlink with up to limit being
@@ -124,6 +136,7 @@ FC_API(scorum::tags::tags_api,
        (get_content)
        (get_contents)
        (get_comments)
+       (get_parents)
        (get_discussions_by_author)
        (get_posts_comments_by_author))
 // clang-format on
