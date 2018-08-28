@@ -658,6 +658,45 @@ SCORUM_TEST_CASE(dev_committee_withdraw_virtual_op_should_be_raised)
     BOOST_REQUIRE_EQUAL(visitor.withdraw_ops[0].amount, withdraw_amount / SCORUM_VESTING_WITHDRAW_INTERVALS);
 }
 
+SCORUM_TEST_CASE(dev_committee_zero_withdraw_should_cancel_active_withdraw)
+{
+    dev_committee_operation_visitor visitor;
+
+    db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
+
+    unsigned withdraw_amount = 1e3;
+
+    development_committee_withdraw_vesting_operation proposal_inner_op;
+    proposal_inner_op.vesting_shares = asset(withdraw_amount, SP_SYMBOL);
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.creator = alice.name;
+    proposal_create_op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+    proposal_create_op.operation = proposal_inner_op;
+    proposal_vote_operation proposal_vote_op;
+    proposal_vote_op.voting_account = alice.name;
+    proposal_vote_op.proposal_id = 0;
+
+    push_operation(proposal_create_op, initdelegate.private_key);
+    push_operation(proposal_vote_op, initdelegate.private_key, false);
+    generate_blocks(db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS));
+
+    BOOST_REQUIRE_EQUAL(visitor.withdraw_ops.size(), 1u);
+    BOOST_REQUIRE_EQUAL(visitor.withdraw_ops[0].amount, withdraw_amount / SCORUM_VESTING_WITHDRAW_INTERVALS);
+
+    // cancel current active withdraw with zero-withdraw
+    proposal_inner_op.vesting_shares = ASSET_NULL_SP;
+    proposal_create_op.operation = proposal_inner_op;
+    proposal_vote_op.proposal_id = 1;
+
+    push_operation(proposal_create_op, initdelegate.private_key);
+    push_operation(proposal_vote_op, initdelegate.private_key, false);
+    generate_blocks(db.head_block_time() + fc::seconds(SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS));
+
+    BOOST_REQUIRE_EQUAL(visitor.withdraw_ops.size(), 1u);
+    BOOST_REQUIRE_EQUAL(visitor.withdraw_ops[0].amount, withdraw_amount / SCORUM_VESTING_WITHDRAW_INTERVALS);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace proposal_tests

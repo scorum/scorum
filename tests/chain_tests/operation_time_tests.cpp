@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
             vote.voter = voter.name;
             vote.author = voter.favorite_author;
             vote.permlink = "mypost";
-            vote.weight = (int16_t)100;
+            vote.weight = SCORUM_PERCENT(100);
             tx.operations.push_back(vote);
             tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
             tx.sign(voter.private_key, db.get_chain_id());
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test";
-        vote.weight = (int16_t)81;
+        vote.weight = SCORUM_PERCENT(81);
 
         signed_transaction tx;
         tx.operations.push_back(comment);
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(comment_payout_dust)
         comment.author = "bob";
         vote.voter = "bob";
         vote.author = "bob";
-        vote.weight = (int16_t)59;
+        vote.weight = SCORUM_PERCENT(59);
 
         tx.clear();
         tx.operations.push_back(comment);
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(reward_fund)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test";
-        vote.weight = (int16_t)100;
+        vote.weight = SCORUM_PERCENT(100);
 
         push_operations(fc::ecc::private_key(), false, comment, vote);
 
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(recent_claims_decay)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test";
-        vote.weight = (int16_t)100;
+        vote.weight = SCORUM_PERCENT(100);
         tx.operations.push_back(comment);
         tx.operations.push_back(vote);
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         db.push_transaction(tx, 0);
 
         vote_operation vote;
-        vote.weight = (int16_t)100;
+        vote.weight = SCORUM_PERCENT(100);
         vote.voter = "bob";
         vote.author = "alice";
         vote.permlink = "test";
@@ -609,7 +609,7 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).abs_rshares.value == 0);
 
         vote.voter = "bob";
-        vote.weight = (int16_t)100 * -1;
+        vote.weight = -1 * SCORUM_PERCENT(100);
 
         tx.operations.clear();
         tx.signatures.clear();
@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(comment_freeze)
         BOOST_REQUIRE(db.obtain_service<dbs_comment>().get("alice", std::string("test")).abs_rshares.value == 0);
 
         vote.voter = "dave";
-        vote.weight = (int16_t)0;
+        vote.weight = SCORUM_PERCENT(0);
 
         tx.operations.clear();
         tx.signatures.clear();

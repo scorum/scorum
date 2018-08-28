@@ -121,6 +121,10 @@ struct account_api_obj
     asset posting_rewards_scr = asset(0, SCORUM_SYMBOL);
     asset posting_rewards_sp = asset(0, SP_SYMBOL);
 
+    time_point_sec active_sp_holders_cashout_time = fc::time_point_sec::maximum();
+    asset active_sp_holders_pending_scr_reward = asset(0, SCORUM_SYMBOL);
+    asset active_sp_holders_pending_sp_reward = asset(0, SP_SYMBOL);
+
 private:
     inline void set_account(const chain::account_object&);
     inline void set_account_blogging_statistic(const chain::account_blogging_statistic_object&);
@@ -424,7 +428,7 @@ FC_REFLECT_DERIVED(scorum::app::dynamic_global_property_api_obj,
                    (content_reward_scr_balance)
                    (content_reward_sp_balance)
                    )
-FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), )
+FC_REFLECT_DERIVED(scorum::app::development_committee_api_obj, (scorum::chain::dev_committee_object), BOOST_PP_SEQ_NIL)
 
 FC_REFLECT(scorum::app::registration_committee_api_obj, (invite_quorum)(dropout_quorum)(change_quorum))
 
@@ -444,6 +448,9 @@ FC_REFLECT( scorum::app::account_api_obj,
              (curation_rewards_sp)
              (posting_rewards_scr)
              (posting_rewards_sp)
+             (active_sp_holders_cashout_time)
+             (active_sp_holders_pending_scr_reward)
+             (active_sp_holders_pending_sp_reward)
           )
 
 FC_REFLECT (scorum::app::account_balance_info_api_obj,

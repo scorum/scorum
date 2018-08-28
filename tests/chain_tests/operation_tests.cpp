@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(comment_delete_apply)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test1";
-        vote.weight = (int16_t)100;
+        vote.weight = SCORUM_PERCENT(100);
         tx.operations.push_back(comment);
         tx.operations.push_back(vote);
         tx.set_expiration(db.head_block_time() + SCORUM_MIN_TRANSACTION_EXPIRATION_LIMIT);
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(comment_delete_apply)
         BOOST_TEST_MESSAGE("--- Test success deleting a comment with negative rshares");
 
         generate_block();
-        vote.weight = -1 * (int16_t)100;
+        vote.weight = -1 * SCORUM_PERCENT(100);
         tx.clear();
         tx.operations.push_back(vote);
         tx.operations.push_back(op);
@@ -3302,7 +3302,7 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
         vote.voter = "alice";
         vote.author = "alice";
         vote.permlink = "test";
-        vote.weight = (int16_t)100;
+        vote.weight = SCORUM_PERCENT(100);
         tx.clear();
         tx.operations.push_back(comment);
         tx.operations.push_back(vote);
@@ -3333,13 +3333,13 @@ BOOST_AUTO_TEST_CASE(decline_voting_rights_apply)
             boost::make_tuple(db.obtain_service<dbs_comment>().get("alice", std::string("test")).id,
                               db.obtain_service<dbs_account>().get_account("alice").id));
 
-        vote.weight = (int16_t)0;
+        vote.weight = SCORUM_PERCENT(0);
         tx.clear();
         tx.operations.push_back(vote);
         tx.sign(alice_private_key, db.get_chain_id());
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
-        vote.weight = (int16_t)50;
+        vote.weight = SCORUM_PERCENT(50);
         tx.clear();
         tx.operations.push_back(vote);
         tx.sign(alice_private_key, db.get_chain_id());
@@ -3491,8 +3491,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
 
         const auto& account_service = db.account_service();
 
-        const account_object& alice_vested = account_service.get_account("alice");
-        BOOST_REQUIRE_GE(alice_vested.scorumpower, to_delegate);
+        BOOST_REQUIRE_GE(account_service.get_account("alice").scorumpower, to_delegate);
 
         private_key_type priv_key = generate_private_key("temp_key");
 
@@ -3513,7 +3512,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         BOOST_TEST_MESSAGE("--- Test failure when SP are powering down.");
         withdraw_scorumpower_operation withdraw;
         withdraw.account = "alice";
-        withdraw.scorumpower = alice_vested.scorumpower;
+        withdraw.scorumpower = account_service.get_account("alice").scorumpower;
         account_create_with_delegation_operation op;
         op.fee = new_account_creation_fee * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER;
         op.delegation = to_delegate;
@@ -3563,7 +3562,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
             db.obtain_service<dbs_dynamic_global_property>().get().median_chain_props.account_creation_fee.amount
                 * SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER * SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO,
             SCORUM_SYMBOL);
-        op.delegation = asset(0, SP_SYMBOL);
+        op.delegation = account_service.get_account("alice").effective_scorumpower();
         op.new_account_name = "sam";
         tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         tx.operations.push_back(op);
@@ -3589,6 +3588,8 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
         SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), fc::exception);
 
         validate_database();
+
+        vest("alice", ASSET_SCR(1e+6));
 
         BOOST_TEST_MESSAGE("--- Test removing delegation from new account");
         tx.clear();

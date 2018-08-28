@@ -3,6 +3,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
 
@@ -38,6 +39,17 @@ development_committee_withdraw_vesting_evaluator::development_committee_withdraw
 void development_committee_withdraw_vesting_evaluator::do_apply(
     const development_committee_withdraw_vesting_evaluator::operation_type& o)
 {
+    auto& hardfork_service = this->db().hardfork_property_service();
+
+    if (hardfork_service.has_hardfork(SCORUM_HARDFORK_0_2))
+    {
+        FC_ASSERT(o.vesting_shares >= asset(0, SP_SYMBOL), "Must withdraw a non-negative amount");
+    }
+    else
+    {
+        FC_ASSERT(o.vesting_shares > asset(0, SP_SYMBOL), "Must withdraw a nonzero amount");
+    }
+
     withdraw_scorumpower_dev_pool_task create_withdraw;
     withdraw_scorumpower_context ctx(db(), o.vesting_shares);
     create_withdraw.apply(ctx);

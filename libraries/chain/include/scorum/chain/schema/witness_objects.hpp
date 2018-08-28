@@ -115,7 +115,7 @@ public:
     id_type id;
 
     fc::uint128 current_virtual_time;
-    fc::array<account_name_type, SCORUM_MAX_WITNESSES> current_shuffled_witnesses;
+    fc::array<account_name_type, SCORUM_MAX_WITNESSES_LIMIT> current_shuffled_witnesses;
     uint8_t num_scheduled_witnesses = 1;
 };
 
