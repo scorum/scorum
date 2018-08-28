@@ -25,8 +25,8 @@ struct game_service_i : public base_service_i<game_object>
     virtual bool is_exists(const std::string& game_name) const = 0;
     virtual bool is_exists(int64_t game_id) const = 0;
 
-    virtual const game_object& get(const std::string& game_name) const = 0;
-    virtual const game_object& get(int64_t game_id) const = 0;
+    virtual const game_object& get_game(const std::string& game_name) const = 0;
+    virtual const game_object& get_game(int64_t game_id) const = 0;
 
     virtual view_type get_games() const = 0;
 };
@@ -50,8 +50,8 @@ public:
     virtual bool is_exists(const std::string& game_name) const override;
     virtual bool is_exists(int64_t game_id) const override;
 
-    virtual const game_object& get(const std::string& game_name) const override;
-    virtual const game_object& get(int64_t game_id) const override;
+    virtual const game_object& get_game(const std::string& game_name) const override;
+    virtual const game_object& get_game(int64_t game_id) const override;
 
     virtual view_type get_games() const override;
 

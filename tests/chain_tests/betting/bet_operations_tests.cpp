@@ -86,14 +86,12 @@ struct bet_operations_fixture : public database_fixture::database_default_integr
     {
         try
         {
-
             create_game_operation op;
             op.moderator = moderator.name;
             op.start = dgp_service.head_block_time() + fc::hours(1);
             op.name = "test";
             op.game = soccer_game{};
-            op.markets = { { market_kind::result, { { result_home{}, result_draw_away{} } } },
-                           { market_kind::total, { { total_under{ 2000 }, total_over{ 2000 } } } } };
+            op.markets = { result_home_market{}, total_market{ 2000 } };
 
             push_operation_only(op, moderator.private_key);
 
@@ -102,18 +100,14 @@ struct bet_operations_fixture : public database_fixture::database_default_integr
         FC_CAPTURE_LOG_AND_RETHROW(())
     }
 
-    post_bet_operation create_bet(const Actor& better,
-                                  const market_kind& market_kind,
-                                  const wincase_type& wincase,
-                                  const odds_input& odds_value,
-                                  const asset& stake)
+    post_bet_operation
+    create_bet(const Actor& better, const wincase_type& wincase, const odds_input& odds_value, const asset& stake)
     {
         try
         {
             post_bet_operation op;
             op.better = better.name;
-            op.game_id = game_service.get("test").id._id;
-            op.market = market_kind;
+            op.game_id = game_service.get_game("test").id._id;
             op.wincase = wincase;
             op.odds = odds_value;
             op.stake = stake;
@@ -166,11 +160,11 @@ SCORUM_TEST_CASE(post_bet_operation_check)
 {
     generate_block();
 
-    create_bet(alice, market_kind::result, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 
-    create_bet(bob, market_kind::result, result_home{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(bob, result_home{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 }
@@ -179,7 +173,7 @@ SCORUM_TEST_CASE(cancel_single_pending_bet_by_better_operation_check)
 {
     generate_block();
 
-    create_bet(alice, market_kind::result, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 
@@ -192,16 +186,15 @@ SCORUM_TEST_CASE(cancel_some_pending_bets_by_better_operation_check)
 {
     generate_block();
 
-    create_bet(alice, market_kind::total, total_under{ 2000 }, { 10, 2 },
-               asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(alice, total_under{ 2000 }, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 
-    create_bet(alice, market_kind::result, result_home(), { 10, 5 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(alice, result_home(), { 10, 5 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 
-    create_bet(bob, market_kind::total, total_over{ 2000 }, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(bob, total_over{ 2000 }, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 

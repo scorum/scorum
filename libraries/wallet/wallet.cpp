@@ -3069,7 +3069,6 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
 
 annotated_signed_transaction wallet_api::post_bet(account_name_type better,
                                                   int64_t game_id,
-                                                  betting::market_kind market,
                                                   betting::wincase_type wincase,
                                                   odds_input odds,
                                                   asset stake,
@@ -3081,7 +3080,6 @@ annotated_signed_transaction wallet_api::post_bet(account_name_type better,
 
     op.better = better;
     op.game_id = game_id;
-    op.market = market;
     op.odds = odds;
     op.stake = stake;
 

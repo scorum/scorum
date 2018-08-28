@@ -59,12 +59,12 @@ bool dbs_game::is_exists(int64_t game_id) const
     return find_by<by_id>(game_id) != nullptr;
 }
 
-const game_object& dbs_game::get(const std::string& game_name) const
+const game_object& dbs_game::get_game(const std::string& game_name) const
 {
     return get_by<by_name>(game_name);
 }
 
-const game_object& dbs_game::get(int64_t game_id) const
+const game_object& dbs_game::get_game(int64_t game_id) const
 {
     return get_by<by_id>(game_id);
 }

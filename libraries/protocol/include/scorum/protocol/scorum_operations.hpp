@@ -847,8 +847,6 @@ struct post_bet_operation : public base_operation
     account_name_type better;
     /// game for bet creating
     int64_t game_id;
-    /// market kind for wincase
-    betting::market_kind market;
     /// wincase
     betting::wincase_type wincase;
     /// odds - rational coefficient that define potential result (p). p = odds * stake
@@ -877,9 +875,9 @@ struct cancel_pending_bets_operation : public base_operation
     }
 };
 
-    /// bets list that is being canceling
-    /// supervisor
-    /// timepoint from that even matched stake is being canceling
+/// bets list that is being canceling
+/// supervisor
+/// timepoint from that even matched stake is being canceling
 } // namespace protocol
 } // namespace scorum
 
@@ -980,7 +978,6 @@ FC_REFLECT(scorum::protocol::odds_input,
 FC_REFLECT( scorum::protocol::post_bet_operation,
            (better)
            (game_id)
-           (market)
            (wincase)
            (odds)
            (stake))

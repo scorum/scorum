@@ -59,6 +59,7 @@ class matched_bet_object : public object<matched_bet_object_type, matched_bet_ob
 public:
     /// @cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_CONSTRUCTOR(matched_bet_object)
+    /// @endcond
 
     id_type id;
 

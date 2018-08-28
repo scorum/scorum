@@ -44,7 +44,7 @@ bool operator<(const wincase_type& lhs, const TWinCase& rhs)
 template <bool side, market_kind kind, typename tag>
 bool operator==(const over_under<side, kind, tag>& lhs, const over_under<side, kind, tag>& rhs)
 {
-    return lhs.threshold.value == rhs.threshold.value;
+    return lhs.threshold == rhs.threshold;
 }
 
 template <bool side, market_kind kind, typename tag>

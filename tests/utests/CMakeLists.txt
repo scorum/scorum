@@ -55,6 +55,7 @@ set(SOURCES
     betting/bet_evaluators_tests.cpp
     betting/betting_api_tests.cpp
     odds_tests.cpp
+    market_type_tests.cpp
 )
 
 add_executable(utests
