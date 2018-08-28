@@ -87,6 +87,9 @@ public:
     bool allow_curation_rewards = true;
 
     fc::shared_vector<beneficiary_route_type> beneficiaries;
+
+    /// this field is 'true' if comment received any reward from child or itself (not only net_votes > 0)
+    bool rewarded = false;
 };
 
 /**
@@ -241,11 +244,8 @@ typedef shared_multi_index_container<comment_object,
                                                                              account_name_type,
                                                                              &comment_object::author>,
                                                                       member<comment_object,
-                                                                             time_point_sec,
-                                                                             &comment_object::cashout_time>,
-                                                                      member<comment_object,
-                                                                             int32_t,
-                                                                             &comment_object::net_votes>,
+                                                                             bool,
+                                                                             &comment_object::rewarded>,
                                                                       member<comment_object,
                                                                              time_point_sec,
                                                                              &comment_object::created>,
@@ -253,8 +253,7 @@ typedef shared_multi_index_container<comment_object,
                                                                              comment_id_type,
                                                                              &comment_object::id>>,
                                                         composite_key_compare<std::less<account_name_type>,
-                                                                              std::greater<time_point_sec>,
-                                                                              std::greater<int32_t>,
+                                                                              std::greater<bool>,
                                                                               std::greater<time_point_sec>,
                                                                               std::less<comment_id_type>>>
 #endif
@@ -367,6 +366,7 @@ FC_REFLECT( scorum::chain::comment_object,
             (allow_votes)
             (allow_curation_rewards)
             (beneficiaries)
+            (rewarded)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_object, scorum::chain::comment_index )
 

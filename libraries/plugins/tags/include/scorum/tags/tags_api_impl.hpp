@@ -516,7 +516,7 @@ private:
         {
             const comment_object& comment = *it;
             // index started from rewarded comments and  we need in only rewarded comments
-            if (comment.cashout_time != fc::time_point_sec::maximum() || comment.net_votes <= 0)
+            if (!comment.rewarded)
                 break;
 
             if (it->parent_author.size() == 0)
