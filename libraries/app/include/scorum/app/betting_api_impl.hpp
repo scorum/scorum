@@ -86,7 +86,7 @@ public:
     template <typename ApiObjectType, typename ServiceType, typename IdType>
     std::vector<ApiObjectType> get_bets(ServiceType& service, IdType from, int64_t limit) const
     {
-        FC_ASSERT(limit > 0, "Limit can't be negative", ("limit", limit));
+        FC_ASSERT(limit >= 0, "Limit can't be negative", ("limit", limit));
 
         const size_t query_limit = static_cast<size_t>(limit);
 

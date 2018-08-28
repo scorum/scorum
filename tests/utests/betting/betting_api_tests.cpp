@@ -165,6 +165,74 @@ BOOST_FIXTURE_TEST_CASE(return_games_not_finished_status, get_games_fixture)
     BOOST_CHECK(games[1].status == game_status::started);
 }
 
+BOOST_FIXTURE_TEST_CASE(throw_exception_when_limit_is_negative, get_games_fixture)
+{
+    betting_api_impl api(*factory);
+
+    BOOST_REQUIRE_THROW(api.get_user_bets(0, -1), fc::assert_exception);
+    BOOST_REQUIRE_THROW(api.get_pending_bets(0, -1), fc::assert_exception);
+    BOOST_REQUIRE_THROW(api.get_matched_bets(0, -1), fc::assert_exception);
+}
+
+BOOST_FIXTURE_TEST_CASE(throw_exception_when_limit_gt_than_max_limit, get_games_fixture)
+{
+    const auto max_limit = 100;
+
+    betting_api_impl api(*factory, max_limit);
+
+    BOOST_REQUIRE_THROW(api.get_user_bets(0, max_limit + 1), fc::assert_exception);
+    BOOST_REQUIRE_THROW(api.get_pending_bets(0, max_limit + 1), fc::assert_exception);
+    BOOST_REQUIRE_THROW(api.get_matched_bets(0, max_limit + 1), fc::assert_exception);
+}
+
+BOOST_FIXTURE_TEST_CASE(dont_throw_when_limit_is_zero, get_games_fixture)
+{
+    betting_api_impl api(*factory);
+
+    std::vector<bet_object> bets;
+    std::vector<pending_bet_object> pbets;
+    std::vector<matched_bet_object> mbets;
+
+    mocks.OnCall(bet_service, bet_service_i::get_bets).With(_).ReturnByRef({ bets.begin(), bets.end() });
+
+    mocks.OnCall(pending_bet_service, pending_bet_service_i::get_bets)
+        .With(_)
+        .ReturnByRef({ pbets.begin(), pbets.end() });
+
+    mocks.OnCall(matched_bet_service, matched_bet_service_i::get_bets)
+        .With(_)
+        .ReturnByRef({ mbets.begin(), mbets.end() });
+
+    BOOST_REQUIRE_NO_THROW(api.get_user_bets(0, 0));
+    BOOST_REQUIRE_NO_THROW(api.get_pending_bets(0, 0));
+    BOOST_REQUIRE_NO_THROW(api.get_matched_bets(0, 0));
+}
+
+BOOST_FIXTURE_TEST_CASE(dont_throw_when_limit_eq_max, get_games_fixture)
+{
+    const auto max_limit = 100;
+
+    betting_api_impl api(*factory, max_limit);
+
+    std::vector<bet_object> bets;
+    std::vector<pending_bet_object> pbets;
+    std::vector<matched_bet_object> mbets;
+
+    mocks.OnCall(bet_service, bet_service_i::get_bets).With(_).ReturnByRef({ bets.begin(), bets.end() });
+
+    mocks.OnCall(pending_bet_service, pending_bet_service_i::get_bets)
+        .With(_)
+        .ReturnByRef({ pbets.begin(), pbets.end() });
+
+    mocks.OnCall(matched_bet_service, matched_bet_service_i::get_bets)
+        .With(_)
+        .ReturnByRef({ mbets.begin(), mbets.end() });
+
+    BOOST_REQUIRE_NO_THROW(api.get_user_bets(0, max_limit));
+    BOOST_REQUIRE_NO_THROW(api.get_pending_bets(0, max_limit));
+    BOOST_REQUIRE_NO_THROW(api.get_matched_bets(0, max_limit));
+}
+
 template <typename T> struct get_bets_fixture : public fixture
 {
     get_bets_fixture()
