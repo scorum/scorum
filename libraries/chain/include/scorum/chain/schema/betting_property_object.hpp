@@ -16,6 +16,7 @@ public:
     id_type id;
 
     account_name_type moderator;
+    uint32_t resolve_delay_sec = SCORUM_BETTING_RESOLVE_DELAY_SEC;
 };
 
 struct by_moderator;

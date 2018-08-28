@@ -116,6 +116,7 @@ add_library( scorum_chain
              database/block_tasks/process_fifa_world_cup_2018_bounty_initialize.cpp
              database/block_tasks/process_account_registration_bonus_expiration.cpp
              database/block_tasks/process_witness_reward_in_sp_migration.cpp
+             database/block_tasks/process_games_startup.cpp
 
              database/process_user_activity.cpp
 

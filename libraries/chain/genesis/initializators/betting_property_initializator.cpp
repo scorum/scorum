@@ -12,7 +12,10 @@ void betting_property_initializator_impl::on_apply(initializator_context& ctx)
 
     FC_ASSERT(!service.is_exists());
 
-    service.create([&](betting_property_object& obj) { obj.moderator = SCORUM_MISSING_MODERATOR_ACCOUNT; });
+    service.create([&](betting_property_object& obj) {
+        obj.moderator = SCORUM_MISSING_MODERATOR_ACCOUNT;
+        obj.resolve_delay_sec = SCORUM_BETTING_RESOLVE_DELAY_SEC;
+    });
 }
 
 } // namespace genesis

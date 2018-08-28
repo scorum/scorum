@@ -68,6 +68,7 @@
 #include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
+#include <scorum/chain/database/block_tasks/process_games_startup.hpp>
 #include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
@@ -1554,6 +1555,7 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_contracts_expiration().apply(task_ctx);
         database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
+        database_ns::process_games_startup().apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();
