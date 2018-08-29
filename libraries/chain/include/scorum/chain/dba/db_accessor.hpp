@@ -29,14 +29,17 @@ template <typename TObject> const TObject& get_single(db_index& db_idx)
     FC_CAPTURE_AND_RETHROW()
 }
 
-template <typename TObject> void update(db_index& db_idx, const TObject& o, modifier_type<TObject> modifier)
+template <typename TObject> const TObject& update(db_index& db_idx, const TObject& o, modifier_type<TObject> modifier)
 {
     db_idx.modify(o, [&](TObject& o) { modifier(o); });
+    return o;
 }
 
-template <typename TObject> void update_single(db_index& db_idx, modifier_type<TObject> modifier)
+template <typename TObject> const TObject& update_single(db_index& db_idx, modifier_type<TObject> modifier)
 {
-    db_idx.modify(get_single<TObject>(db_idx), [&](TObject& o) { modifier(o); });
+    const auto& o = get_single<TObject>(db_idx);
+    db_idx.modify(o, [&](TObject& o) { modifier(o); });
+    return o;
 }
 
 template <typename TObject> void remove(db_index& db_idx, const TObject& o)
@@ -72,18 +75,15 @@ template <typename TObject, typename IndexBy, typename Key> const TObject* find_
     FC_CAPTURE_AND_RETHROW()
 }
 
-template <typename TKey> void validate_bounds(const detail::bound<TKey>& lower, const detail::bound<TKey>& upper);
 template <typename TIdx, typename TKey> auto get_lower_bound(TIdx& idx, const detail::bound<TKey>& bound);
 template <typename TIdx, typename TKey> auto get_upper_bound(TIdx& idx, const detail::bound<TKey>& bound);
 
 template <typename TObject, typename IndexBy, typename TKey>
-utils::forward_range<TObject>
-get_range(db_index& db_idx, const detail::bound<TKey>& lower, const detail::bound<TKey>& upper)
+utils::bidir_range<TObject>
+get_range_by(db_index& db_idx, const detail::bound<TKey>& lower, const detail::bound<TKey>& upper)
 {
     try
     {
-        validate_bounds(lower, upper);
-
         const auto& idx = db_idx.get_index<typename chainbase::get_index_type<TObject>::type, IndexBy>();
 
         auto from = get_lower_bound(idx, lower);
@@ -92,19 +92,6 @@ get_range(db_index& db_idx, const detail::bound<TKey>& lower, const detail::boun
         return { from, to };
     }
     FC_CAPTURE_AND_RETHROW()
-}
-
-template <typename TKey> void validate_bounds(const detail::bound<TKey>& lower, const detail::bound<TKey>& upper)
-{
-    auto is_lower_asc_order = lower.kind == bound_kind::gt || lower.kind == bound_kind::ge;
-    auto is_upper_asc_order = lower.kind == bound_kind::lt || lower.kind == bound_kind::le;
-    auto is_lower_desc_order = lower.kind == bound_kind::lt || lower.kind == bound_kind::le;
-    auto is_upper_desc_order = lower.kind == bound_kind::gt || lower.kind == bound_kind::ge;
-
-    FC_ASSERT(lower.kind == bound_kind::unbounded || upper.kind == bound_kind::unbounded
-                  || (is_lower_asc_order && is_upper_asc_order && lower.value.get() <= upper.value.get())
-                  || (is_lower_desc_order && is_upper_desc_order && upper.value.get() <= lower.value.get()),
-              "Invalid boundaries.");
 }
 
 template <typename TIdx, typename TKey> auto get_lower_bound(TIdx& idx, const detail::bound<TKey>& bound)
@@ -161,14 +148,14 @@ public:
         return detail::create(_db_idx, modifier);
     }
 
-    void update(modifier_type modifier)
+    const object_type& update(modifier_type modifier)
     {
-        detail::update_single<TObject>(_db_idx, modifier);
+        return detail::update_single<TObject>(_db_idx, modifier);
     }
 
-    void update(const object_type& o, modifier_type modifier)
+    const object_type& update(const object_type& o, modifier_type modifier)
     {
-        detail::update(_db_idx, o, modifier);
+        return detail::update(_db_idx, o, modifier);
     }
 
     void remove()
@@ -202,28 +189,28 @@ public:
     }
 
     template <typename IndexBy, typename TKey>
-    utils::forward_range<object_type> get_range(const detail::bound<TKey>& lower,
-                                                const detail::bound<TKey>& upper) const
+    utils::bidir_range<object_type> get_range_by(const detail::bound<TKey>& lower,
+                                                 const detail::bound<TKey>& upper) const
     {
-        return detail::get_range<TObject, IndexBy, TKey>(_db_idx, lower, upper);
+        return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }
 
     template <typename IndexBy, typename TKey>
-    utils::forward_range<object_type> get_range(unbounded_placeholder lower, const detail::bound<TKey>& upper) const
+    utils::bidir_range<object_type> get_range_by(unbounded_placeholder lower, const detail::bound<TKey>& upper) const
     {
-        return detail::get_range<TObject, IndexBy, TKey>(_db_idx, lower, upper);
+        return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }
 
     template <typename IndexBy, typename TKey>
-    utils::forward_range<object_type> get_range(const detail::bound<TKey>& lower, unbounded_placeholder upper) const
+    utils::bidir_range<object_type> get_range_by(const detail::bound<TKey>& lower, unbounded_placeholder upper) const
     {
-        return detail::get_range<TObject, IndexBy, TKey>(_db_idx, lower, upper);
+        return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }
 
-    template <typename IndexBy>
-    utils::forward_range<object_type> get_range(unbounded_placeholder lower, unbounded_placeholder upper) const
+    template <typename IndexBy, typename TKey = index_key_type<TObject, IndexBy>>
+    utils::bidir_range<object_type> get_range_by(unbounded_placeholder lower, unbounded_placeholder upper) const
     {
-        return detail::get_range<TObject, IndexBy, no_key>(_db_idx, lower, upper);
+        return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }
 
 private:

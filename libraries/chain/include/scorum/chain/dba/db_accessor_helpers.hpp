@@ -1,5 +1,7 @@
 #pragma once
 #include <boost/optional/optional.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <chainbase/generic_index.hpp>
 
 namespace scorum {
 namespace chain {
@@ -16,6 +18,10 @@ enum no_key
 
 const param_placeholder _x = param_placeholder{};
 const unbounded_placeholder unbounded = unbounded_placeholder{};
+
+template <typename TObject, typename TIndexBy>
+using index_key_type =
+    typename boost::multi_index::index<typename chainbase::get_index_type<TObject>::type, TIndexBy>::type::key_type;
 
 namespace detail {
 enum class bound_kind

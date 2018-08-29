@@ -6,9 +6,18 @@
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/schema/betting_property_object.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/schema/comment_objects.hpp>
 
+// clang-format off
 #define DB_TYPES                                                                                                       \
-    (game_object)(proposal_object)(betting_property_object)(bet_object)(pending_bet_object)(matched_bet_object)
+    (game_object)                                                                                                      \
+    (proposal_object)                                                                                                  \
+    (betting_property_object)                                                                                          \
+    (bet_object)                                                                                                       \
+    (pending_bet_object)                                                                                               \
+    (matched_bet_object)                                                                                               \
+    (comment_object)
+// clang-format on
 
 #define INSTANTIATE_DBA_FACTORY_METHODS(_1, _2, TYPE)                                                                  \
     template db_accessor<TYPE>& db_accessor_factory::get_dba<TYPE>() const;
