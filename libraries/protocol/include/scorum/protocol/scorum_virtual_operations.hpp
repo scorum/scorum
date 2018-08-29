@@ -288,6 +288,21 @@ struct active_sp_holders_reward_operation : public virtual_operation
     asset reward; // in SCR or SP
 };
 
+struct active_sp_holders_reward_legacy_operation : public virtual_operation
+{
+    active_sp_holders_reward_legacy_operation() = default;
+
+    using rewarded_type = fc::flat_map<account_name_type, asset>;
+
+    active_sp_holders_reward_legacy_operation(rewarded_type&& rewarded_)
+        : rewarded(rewarded_)
+    {
+    }
+
+    /// rewards map in SCR or SP
+    rewarded_type rewarded;
+};
+
 struct expired_contract_refund_operation : public virtual_operation
 {
     expired_contract_refund_operation()
@@ -360,6 +375,8 @@ FC_REFLECT(scorum::protocol::producer_reward_operation,
 FC_REFLECT(scorum::protocol::active_sp_holders_reward_operation,
            (sp_holder)
            (reward))
+FC_REFLECT(scorum::protocol::active_sp_holders_reward_legacy_operation,
+           (rewarded))
 FC_REFLECT(scorum::protocol::expired_contract_refund_operation,
            (owner)
            (refund))
