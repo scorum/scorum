@@ -37,11 +37,11 @@ dockerized container.
 
 ## Dockerized Node
 
-Create you folder (for example /opt/my_node)
+Create you folder (for example `/opt/scorumd/node`)
 
     mkdir /opt/scorumd/node
 
-Put your config file in /opt/my_node/config.ini (otherwise default config will be used). Run node.
+Put your config file in `/opt/scorumd/node/config.ini` (otherwise default config will be used). Run node.
 
     docker run \
         -v /opt/scorumd/node:/var/lib/scorumd \
@@ -60,7 +60,7 @@ To see node logs
 
     docker logs scorum-node
 
-For detail logs go to `/opt/scorumd/node/logs` (or other folder that set in config.ini)
+For detail logs go to `/opt/scorumd/node/logs` (or other folder that set in `config.ini`)
 
 To stop/start/restart node use
 
