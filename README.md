@@ -37,28 +37,36 @@ dockerized container.
 
 ## Dockerized Node
 
-Create you folder (for example /opt/my_node)
+Create you folder (for example `/opt/scorumd/node`)
 
-    mkdir /opt/my_node
+    mkdir /opt/scorumd/node
 
-Put your config file in /opt/my_node/config.ini (otherwise default config will be used). Run node.
+Put your config file in `/opt/scorumd/node/config.ini` (otherwise default config will be used). Run node.
 
     docker run \
-        -v /opt/my_node:/var/lib/scorumd \
-        -d -p 2001:2001 -p 8090:8090 --name my_node \
-        scorum/release:0.1.1.d671c68
+        -v /opt/scorumd/node:/var/lib/scorumd \
+        -d -p 2001:2001 -p 8090:8090 --name scorum-node \
+        scorum/release:0.2.0.3c2edb7
+
+full node
+
+    docker run \
+        -v /opt/scorumd/node:/var/lib/scorumd \
+        -d -p 2001:2001 -p 8090:8090 --name scorum-node \
+        -e NODE=full \
+        scorum/release:0.2.0.3c2edb7
 
 To see node logs
 
-    docker logs my_node
+    docker logs scorum-node
 
-For detail logs go to /opt/my_node/logs (or other folder that set in config.ini)
+For detail logs go to `/opt/scorumd/node/logs` (or other folder that set in `config.ini`)
 
 To stop/start/restart node use
 
-    docker stop my_node
-    docker start my_node
-    docker restart my_node
+    docker stop scorum-node
+    docker start scorum-node
+    docker restart scorum-node
 
 # Seed Nodes
 
