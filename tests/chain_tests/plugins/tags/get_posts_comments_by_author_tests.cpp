@@ -92,6 +92,22 @@ SCORUM_TEST_CASE(get_post_comments_by_author_nevative_check)
                       fc::assert_exception);
 }
 
+#ifdef IS_LOW_MEM
+SCORUM_TEST_CASE(get_post_comments_by_author_empty_for_low_mem_mode_check)
+{
+    auto test_case = create_test_case_1();
+
+    generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
+
+    auto result = _api.get_posts_comments_by_author(discussion_query_wrapper{ "bob" });
+
+    BOOST_REQUIRE_EQUAL(
+        comments.get(test_case.bob_post.author(), test_case.bob_post.permlink()).cashout_time.to_iso_string(),
+        fc::time_point_sec::maximum().to_iso_string());
+
+    BOOST_CHECK(result.empty());
+}
+#else // IS_LOW_MEM
 SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_cashout_reached_check)
 {
     auto test_case_step1 = create_test_case_1();
@@ -291,5 +307,6 @@ SCORUM_TEST_CASE(get_post_comments_by_author_pagination_for_rewarded_check)
         return lhs.created > rhs.created;
     }));
 }
+#endif //! IS_LOW_MEM
 BOOST_AUTO_TEST_SUITE_END()
 }
