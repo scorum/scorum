@@ -58,15 +58,15 @@ full node
 
 To see node logs
 
-    docker logs my_node
+    docker logs scorum-node
 
-For detail logs go to /opt/my_node/logs (or other folder that set in config.ini)
+For detail logs go to `/opt/scorumd/node/logs` (or other folder that set in config.ini)
 
 To stop/start/restart node use
 
-    docker stop my_node
-    docker start my_node
-    docker restart my_node
+    docker stop scorum-node
+    docker start scorum-node
+    docker restart scorum-node
 
 # Seed Nodes
 
