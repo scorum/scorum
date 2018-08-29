@@ -77,7 +77,44 @@ SCORUM_TEST_CASE(get_parents_positive_check)
 {
     auto test_case = create_test_case_1();
 
-    // TODO
+    auto result
+        = _api.get_parents(content_query_wrapper{ test_case.dave_comment.author(), test_case.dave_comment.permlink() });
+
+    BOOST_REQUIRE_EQUAL(result.size(), 2u);
+
+    BOOST_CHECK(std::find_if(std::begin(result), std::end(result),
+                             [&](const api::discussion& d) {
+                                 return d.author == test_case.sam_comment.author()
+                                     && d.permlink == test_case.sam_comment.permlink();
+                             })
+                != result.end());
+
+    BOOST_CHECK(std::find_if(std::begin(result), std::end(result),
+                             [&](const api::discussion& d) {
+                                 return d.author == test_case.alice_post.author()
+                                     && d.permlink == test_case.alice_post.permlink();
+                             })
+                != result.end());
+
+    result
+        = _api.get_parents(content_query_wrapper{ test_case.sam_comment.author(), test_case.sam_comment.permlink() });
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1u);
+
+    BOOST_CHECK(std::find_if(std::begin(result), std::end(result),
+                             [&](const api::discussion& d) {
+                                 return d.author == test_case.alice_post.author()
+                                     && d.permlink == test_case.alice_post.permlink();
+                             })
+                != result.end());
+
+    result = _api.get_parents(content_query_wrapper{ test_case.alice_post.author(), test_case.alice_post.permlink() });
+
+    BOOST_REQUIRE_EQUAL(result.size(), 0u);
+
+    result = _api.get_parents(content_query_wrapper{ test_case.bob_post.author(), test_case.bob_post.permlink() });
+
+    BOOST_REQUIRE_EQUAL(result.size(), 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
