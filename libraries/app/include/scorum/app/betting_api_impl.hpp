@@ -24,18 +24,6 @@ namespace app {
 
 #define BETTING_API_MAX_QUERY_LIMIT 1000
 
-template <typename T> typename T::iterator get_end_interator(T& collection, size_t limit)
-{
-    if (collection.size() < limit)
-    {
-        return collection.end();
-    }
-    else
-    {
-        return collection.begin() + limit;
-    }
-}
-
 class betting_api_impl
 {
 public:
