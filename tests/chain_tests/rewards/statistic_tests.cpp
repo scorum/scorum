@@ -321,6 +321,7 @@ SCORUM_TEST_CASE(tag_discussion_statistic_check)
     BOOST_CHECK_EQUAL(sam_discussion.to_parent_payout_sp_value, sam_stat.to_parent_payout_value);
 }
 
+#ifndef IS_LOW_MEM
 SCORUM_TEST_CASE(tag_total_statistic_check)
 {
     auto test_case = create_test_case_1();
@@ -334,7 +335,7 @@ SCORUM_TEST_CASE(tag_total_statistic_check)
 
     BOOST_CHECK_EQUAL(alice_tag_stat.total_payouts_sp, alice_stat.total_payout_value);
 }
-
+#endif //! IS_LOW_MEM
 BOOST_AUTO_TEST_SUITE_END()
 }
 
