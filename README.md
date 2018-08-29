@@ -44,14 +44,17 @@ Create you folder (for example /opt/my_node)
 Put your config file in /opt/my_node/config.ini (otherwise default config will be used). Run node.
 
     docker run \
-        -v /opt/my_node:/var/lib/scorumd \
-        -d -p 2001:2001 -p 8090:8090 --name my_node \
-        scorum/release:0.1.1.d671c68
+        -v /opt/scorumd/node:/var/lib/scorumd \
+        -d -p 2001:2001 -p 8090:8090 --name scorum-node \
+        scorum/release:0.2.0.3c2edb7
 
 full node
-```
-docker run -v /home/user/nodes/mynode/:/var/lib/scorumd -d -p 2001:2001 -p 8090:8090 -e NODE=full --name my_node scorum/release:0.2.0.3c2edb7
-```
+
+    docker run \
+        -v /opt/scorumd/node:/var/lib/scorumd \
+        -d -p 2001:2001 -p 8090:8090 --name scorum-node \
+        -e NODE=full \
+        scorum/release:0.2.0.3c2edb7
 
 To see node logs
 
