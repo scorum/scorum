@@ -22,6 +22,8 @@ struct author_reward_operation : public virtual_operation
 
     account_name_type author;
     std::string permlink;
+
+    /// all reward for comment author (with from_children_payout)
     asset reward; // in SCR or SP
 };
 
@@ -51,44 +53,48 @@ struct comment_reward_operation : public virtual_operation
     }
     comment_reward_operation(const account_name_type& a,
                              const std::string& pl,
-                             const asset& payout,
-                             const asset& author_reward,
-                             const asset& curators_reward,
-                             const asset& beneficiaries_reward,
                              const asset& fund_reward,
-                             const asset& commenting_reward)
+                             const asset& total_payout,
+                             const asset& author_payout,
+                             const asset& curators_payout,
+                             const asset& from_children_payout,
+                             const asset& to_parent_payout,
+                             const asset& beneficiaries_payout)
         : author(a)
         , permlink(pl)
-        , payout(payout)
-        , author_reward(author_reward)
-        , curators_reward(curators_reward)
-        , beneficiaries_reward(beneficiaries_reward)
         , fund_reward(fund_reward)
-        , commenting_reward(commenting_reward)
+        , total_payout(total_payout)
+        , author_payout(author_payout)
+        , curators_payout(curators_payout)
+        , from_children_payout(from_children_payout)
+        , to_parent_payout(to_parent_payout)
+        , beneficiaries_payout(beneficiaries_payout)
     {
     }
 
     account_name_type author;
     std::string permlink;
 
-    /// reward distributed within particular comment across author, beneficiaries and curators
-    asset payout;
-
-    /// (fund_reward - curators_reward - beneficiaries_reward + commenting_reward) / 2 same amount will be thrown to the
-    /// parent comment
-    asset author_reward;
-
-    /// reward for curators (voters)
-    asset curators_reward;
-
-    /// reward for beneficiaries
-    asset beneficiaries_reward;
-
     /// reward accrued from fund
     asset fund_reward;
 
+    /// reward distributed within particular comment across author, parents, beneficiaries and curators
+    asset total_payout;
+
+    /// reward for comment author only (without from_children_payout)
+    asset author_payout;
+
+    /// reward for curators (voters)
+    asset curators_payout;
+
     /// reward received from children comments as parent reward
-    asset commenting_reward;
+    asset from_children_payout;
+
+    /// reward sent to parent  as parent reward
+    asset to_parent_payout;
+
+    /// reward for beneficiaries
+    asset beneficiaries_payout;
 };
 
 struct acc_finished_vesting_withdraw_operation : public virtual_operation
@@ -310,24 +316,68 @@ struct proposal_virtual_operation : public virtual_operation
 }
 } // scorum::protocol
 
-FC_REFLECT(scorum::protocol::author_reward_operation, (author)(permlink)(reward))
-FC_REFLECT(scorum::protocol::curation_reward_operation, (curator)(reward)(comment_author)(comment_permlink))
-FC_REFLECT(
-    scorum::protocol::comment_reward_operation,
-    (author)(permlink)(payout)(author_reward)(curators_reward)(beneficiaries_reward)(fund_reward)(commenting_reward))
-FC_REFLECT(scorum::protocol::shutdown_witness_operation, (owner))
-FC_REFLECT(scorum::protocol::witness_miss_block_operation, (owner)(block_num))
-FC_REFLECT(scorum::protocol::hardfork_operation, (hardfork_id))
-FC_REFLECT(scorum::protocol::comment_payout_update_operation, (author)(permlink))
-FC_REFLECT(scorum::protocol::return_scorumpower_delegation_operation, (account)(scorumpower))
-FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation, (benefactor)(author)(permlink)(reward))
-FC_REFLECT(scorum::protocol::producer_reward_operation, (producer)(reward))
-FC_REFLECT(scorum::protocol::active_sp_holders_reward_operation, (sp_holder)(reward))
-FC_REFLECT(scorum::protocol::expired_contract_refund_operation, (owner)(refund))
-FC_REFLECT(scorum::protocol::acc_finished_vesting_withdraw_operation, (from_account))
+// clang-format off
+FC_REFLECT(scorum::protocol::author_reward_operation,
+           (author)
+           (permlink)
+           (reward))
+FC_REFLECT(scorum::protocol::curation_reward_operation,
+           (curator)
+           (reward)
+           (comment_author)
+           (comment_permlink))
+FC_REFLECT(scorum::protocol::comment_reward_operation,
+           (author)
+           (permlink)
+           (fund_reward)
+           (total_payout)
+           (author_payout)
+           (curators_payout)
+           (from_children_payout)
+           (to_parent_payout)
+           (beneficiaries_payout))
+FC_REFLECT(scorum::protocol::shutdown_witness_operation,
+           (owner))
+FC_REFLECT(scorum::protocol::witness_miss_block_operation,
+           (owner)
+           (block_num))
+FC_REFLECT(scorum::protocol::hardfork_operation,
+           (hardfork_id))
+FC_REFLECT(scorum::protocol::comment_payout_update_operation,
+           (author)
+           (permlink))
+FC_REFLECT(scorum::protocol::return_scorumpower_delegation_operation,
+           (account)
+           (scorumpower))
+FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation,
+           (benefactor)
+           (author)
+           (permlink)
+           (reward))
+FC_REFLECT(scorum::protocol::producer_reward_operation,
+           (producer)
+           (reward))
+FC_REFLECT(scorum::protocol::active_sp_holders_reward_operation,
+           (sp_holder)
+           (reward))
+FC_REFLECT(scorum::protocol::expired_contract_refund_operation,
+           (owner)
+           (refund))
+FC_REFLECT(scorum::protocol::acc_finished_vesting_withdraw_operation,
+           (from_account))
 FC_REFLECT_EMPTY(scorum::protocol::devpool_finished_vesting_withdraw_operation)
-FC_REFLECT(scorum::protocol::acc_to_acc_vesting_withdraw_operation, (from_account)(to_account)(withdrawn))
-FC_REFLECT(scorum::protocol::devpool_to_acc_vesting_withdraw_operation, (to_account)(withdrawn))
-FC_REFLECT(scorum::protocol::acc_to_devpool_vesting_withdraw_operation, (from_account)(withdrawn))
-FC_REFLECT(scorum::protocol::devpool_to_devpool_vesting_withdraw_operation, (withdrawn))
-FC_REFLECT(scorum::protocol::proposal_virtual_operation, (proposal_op))
+FC_REFLECT(scorum::protocol::acc_to_acc_vesting_withdraw_operation,
+           (from_account)
+           (to_account)
+           (withdrawn))
+FC_REFLECT(scorum::protocol::devpool_to_acc_vesting_withdraw_operation,
+           (to_account)
+           (withdrawn))
+FC_REFLECT(scorum::protocol::acc_to_devpool_vesting_withdraw_operation,
+           (from_account)
+           (withdrawn))
+FC_REFLECT(scorum::protocol::devpool_to_devpool_vesting_withdraw_operation,
+           (withdrawn))
+FC_REFLECT(scorum::protocol::proposal_virtual_operation,
+           (proposal_op))
+// clang-format on

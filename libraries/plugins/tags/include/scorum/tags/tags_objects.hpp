@@ -127,7 +127,10 @@ public:
     id_type id;
 
     tag_name_type tag;
+
+    /// SCR payout = author_reward + curators_reward + beneficiary_payout
     asset total_payout_scr = asset(0, SCORUM_SYMBOL);
+    /// SP payout = author_reward + curators_reward + beneficiary_payout
     asset total_payout_sp = asset(0, SP_SYMBOL);
     int32_t net_votes = 0;
     uint32_t posts = 0;

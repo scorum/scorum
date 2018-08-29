@@ -58,6 +58,7 @@ struct database_blog_integration_fixture : public database_trx_integration_fixtu
         comment_op& set_author(const std::string& author);
         comment_op& set_permlink(const std::string& permlink);
         comment_op& set_json(const std::string& json_metadata);
+        comment_op& set_beneficiar(const std::string& beneficiar, const percent_type);
 
         void remove();
 
@@ -73,6 +74,7 @@ struct database_blog_integration_fixture : public database_trx_integration_fixtu
         database_blog_integration_fixture* fixture;
         fc::ecc::private_key actor_private_key;
         comment_operation my;
+        comment_options_operation my_options;
         bool is_pushed = false;
     };
 

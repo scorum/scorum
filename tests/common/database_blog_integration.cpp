@@ -42,6 +42,8 @@ database_blog_integration_fixture::comment_op::comment_op(database_blog_integrat
     , actor_private_key(actor_private_key)
     , my(op)
 {
+    my_options.author = op.author;
+    my_options.permlink = op.permlink;
 }
 
 database_blog_integration_fixture::comment_op& database_blog_integration_fixture::comment_op::
@@ -125,6 +127,7 @@ database_blog_integration_fixture::comment_op&
 database_blog_integration_fixture::comment_op::set_author(const std::string& author)
 {
     this->my.author = author;
+    this->my_options.author = author;
     return *this;
 }
 
@@ -132,6 +135,7 @@ database_blog_integration_fixture::comment_op&
 database_blog_integration_fixture::comment_op::set_permlink(const std::string& permlink)
 {
     this->my.permlink = permlink;
+    this->my_options.permlink = permlink;
     return *this;
 }
 
@@ -139,6 +143,15 @@ database_blog_integration_fixture::comment_op&
 database_blog_integration_fixture::comment_op::set_json(const std::string& json_metadata)
 {
     this->my.json_metadata = json_metadata;
+    return *this;
+}
+
+database_blog_integration_fixture::comment_op&
+database_blog_integration_fixture::comment_op::set_beneficiar(const std::string& beneficiar, const percent_type percent)
+{
+    comment_payout_beneficiaries b;
+    b.beneficiaries.push_back(beneficiary_route_type(beneficiar, percent * SCORUM_1_PERCENT));
+    this->my_options.extensions.insert(b);
     return *this;
 }
 
@@ -161,6 +174,10 @@ database_blog_integration_fixture::comment_op::push(fc::ecc::private_key key)
 {
     is_pushed = true;
     fixture->push_operation(this->my, key, false);
+    if (!this->my_options.extensions.empty())
+    {
+        fixture->push_operation(this->my_options, key, false);
+    }
     return *this;
 }
 
