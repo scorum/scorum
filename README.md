@@ -80,7 +80,7 @@ compile-time options, and specific commands for Linux (Ubuntu LTS) or macOS X.
 
 # System Requirements
 
-For a full node, you need at least 30GB of space available. Scorumd uses a memory mapped file which currently holds 2GB of data and by default is set to use up to 20GB. It's highly recommended to run scorumd on a fast disk such as an SSD or by placing the shared memory files in a ramdisk and using the `shared-file-dir` config (or command line) option to specify where. Any CPU with decent single core performance should be sufficient.
+For a full node, you need 10GB of space available. Scorumd uses a memory mapped file which currently holds 2GB of data and by default is set to use up to 10GB. It's highly recommended to run scorumd on a fast disk such as an SSD or by placing the shared memory files in a ramdisk and using the `shared-file-dir` config (or command line) option to specify where. Any CPU with decent single core performance should be sufficient.
 
 # Main net chain_id
 
