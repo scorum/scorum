@@ -44,9 +44,13 @@ public:
     time_point_sec last_account_recovery;
 
     bool can_vote = true;
-    percent_type voting_power = SCORUM_100_PERCENT; ///< current voting power of this account, it falls after every vote
-    time_point_sec last_vote_time;              ///< used to increase the voting power of this account the longer it goes without voting.
-    time_point_sec last_vote_cashout_time;
+    ///current voting power of this account, it falls after every vote
+    percent_type voting_power = SCORUM_100_PERCENT;
+    ///used to increase the voting power of this account the longer it goes without voting.
+    time_point_sec last_vote_time;
+    ///when voting powert will be (or was) restored
+    time_point_sec voting_power_restoring_time;
+    ///SP when account voted to calculate account reward weight
     asset vote_reward_competitive_sp = asset(0, SP_SYMBOL);
 
     asset balance = asset(0, SCORUM_SYMBOL);    ///< total liquid shares held by this account
@@ -206,7 +210,7 @@ struct by_last_post;
 struct by_scorum_balance;
 struct by_smp_balance;
 struct by_created_by_genesis;
-struct by_last_vote_cashout_time;
+struct by_voting_power_restoring_time;
 struct by_active_sp_holders_cashout_time;
 
 /**
@@ -266,10 +270,11 @@ typedef shared_multi_index_container<account_object,
                                                                                     &account_object::id>>,
                                                                composite_key_compare<std::greater<asset>,
                                                                                      std::less<account_id_type>>>,
-                                                ordered_non_unique<tag<by_last_vote_cashout_time>,
+                                                ordered_non_unique<tag<by_voting_power_restoring_time>,
                                                                    member<account_object,
                                                                           time_point_sec,
-                                                                          &account_object::last_vote_cashout_time>>,
+                                                                          &account_object::
+                                                                              voting_power_restoring_time>>,
                                                 ordered_unique<tag<by_active_sp_holders_cashout_time>,
                                                                composite_key<account_object,
                                                                              member<account_object,
@@ -539,7 +544,7 @@ FC_REFLECT( scorum::chain::account_object,
              (id)(name)(memo_key)(json_metadata)(proxy)(last_account_update)
              (created)(created_by_genesis)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
-             (can_vote)(voting_power)(last_vote_time)(last_vote_cashout_time)(vote_reward_competitive_sp)
+             (can_vote)(voting_power)(last_vote_time)(voting_power_restoring_time)(vote_reward_competitive_sp)
              (balance)
              (scorumpower)(delegated_scorumpower)(received_scorumpower)
              (proxied_vsf_votes)(witnesses_voted_for)

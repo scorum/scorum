@@ -886,7 +886,7 @@ public:
      * @param voter The account voting
      * @param author The author of the comment to be voted on
      * @param permlink The permlink of the comment to be voted on. (author, permlink) is a unique pair
-     * @param weight The weight [-100,100] of the vote
+     * @param weight The weight [-10000,10000] of the vote
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction vote(const std::string& voter,
