@@ -39,7 +39,7 @@ dockerized container.
 
 Create you folder (for example /opt/my_node)
 
-    mkdir /opt/my_node
+    mkdir /opt/scorumd/node
 
 Put your config file in /opt/my_node/config.ini (otherwise default config will be used). Run node.
 
