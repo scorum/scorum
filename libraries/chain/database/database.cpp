@@ -86,10 +86,13 @@
 #include <scorum/chain/evaluators/update_game_markets_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_start_time_evaluator.hpp>
 #include <scorum/chain/evaluators/post_game_results_evaluator.hpp>
+#include <scorum/chain/evaluators/post_bet_evalulator.hpp>
+#include <scorum/chain/evaluators/cancel_pending_bets_evaluator.hpp>
 
 #include <cmath>
 
 #include <scorum/chain/betting/betting_service.hpp>
+#include <scorum/chain/betting/betting_matcher.hpp>
 
 namespace scorum {
 namespace chain {
@@ -102,13 +105,27 @@ public:
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
     genesis_persistent_state_type _genesis_persistent_state;
+
+    betting::betting_service_i& betting_service()
+    {
+        return _betting_service;
+    }
+
+    betting::betting_matcher_i& betting_matcher()
+    {
+        return _betting_matcher;
+    }
+
+private:
     betting::betting_service _betting_service;
+    betting::betting_matcher _betting_matcher;
 };
 
 database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
-    , _betting_service(self, self)
+    , _betting_service(static_cast<data_service_factory_i&>(_self), static_cast<dba::db_accessor_factory&>(_self))
+    , _betting_matcher(static_cast<data_service_factory_i&>(_self))
 {
 }
 
@@ -1244,11 +1261,14 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<create_game_evaluator>(_my->_betting_service);
-    _my->_evaluator_registry.register_evaluator<cancel_game_evaluator>(_my->_betting_service);
-    _my->_evaluator_registry.register_evaluator<update_game_markets_evaluator>(_my->_betting_service);
-    _my->_evaluator_registry.register_evaluator<update_game_start_time_evaluator>(_my->_betting_service);
-    _my->_evaluator_registry.register_evaluator<post_game_results_evaluator>(_my->_betting_service);
+    _my->_evaluator_registry.register_evaluator(new create_game_evaluator(*this, _my->betting_service()));
+    _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->betting_service()));
+    _my->_evaluator_registry.register_evaluator(new update_game_markets_evaluator(*this, _my->betting_service()));
+    _my->_evaluator_registry.register_evaluator(new update_game_start_time_evaluator(*this, _my->betting_service()));
+    _my->_evaluator_registry.register_evaluator(new post_game_results_evaluator(*this, _my->betting_service()));
+    _my->_evaluator_registry.register_evaluator(
+        new post_bet_evaluator(*this, _my->betting_service(), _my->betting_matcher()));
+    _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->betting_service()));
 }
 
 void database::initialize_indexes()
@@ -1299,11 +1319,12 @@ void database::initialize_indexes()
     add_index<witness_reward_in_sp_migration_index>();
     add_index<advertising_property_index>();
 
+    add_index<game_index>();
+
     add_index<betting_property_index>();
     add_index<bet_index>();
     add_index<pending_bet_index>();
     add_index<matched_bet_index>();
-    add_index<game_index>();
 
     _plugin_index_signal();
 }
@@ -2150,6 +2171,19 @@ void database::validate_invariants() const
         for (auto itr = atomicswap_contract_idx.begin(); itr != atomicswap_contract_idx.end(); ++itr)
         {
             total_supply += itr->amount;
+        }
+
+        const auto& matched_bets = get_index<matched_bet_index, by_id>();
+        for (auto itr = matched_bets.begin(); itr != matched_bets.end(); ++itr)
+        {
+            total_supply += itr->matched_bet1_stake;
+            total_supply += itr->matched_bet2_stake;
+        }
+
+        const auto& bets = get_index<bet_index, by_id>();
+        for (auto itr = bets.begin(); itr != bets.end(); ++itr)
+        {
+            total_supply += itr->rest_stake;
         }
 
         FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");

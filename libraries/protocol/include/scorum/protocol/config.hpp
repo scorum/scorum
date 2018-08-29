@@ -5,11 +5,12 @@
 // clang-format off
 
 #pragma once
-#include <cstdint>
-#include <fc/time.hpp>
+
+#include <scorum/protocol/types.hpp>
 
 namespace scorum {
 namespace protocol {
+
 namespace detail {
 
     struct config
@@ -60,6 +61,8 @@ namespace detail {
         const fc::microseconds expiraton_for_registration_bonus;
         
         const fc::time_point_sec witness_reward_migration_date;
+
+        const share_type min_bet_stake;
 
         enum test_mode { test };
 
@@ -113,6 +116,8 @@ namespace detail {
 
 #define SCORUM_START_WITHDRAW_COEFFICIENT           10
 
+#define SCORUM_MIN_BET_STAKE_FOR_MATCHING      share_type(1)
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #define SCORUM_BLOCKID_POOL_SIZE                (scorum::protocol::detail::get_config().blockid_pool_size)
@@ -144,6 +149,9 @@ namespace detail {
 #define SCORUM_MIN_VOTE_INTERVAL_SEC            (scorum::protocol::detail::get_config().min_vote_interval_sec)
 
 #define SCORUM_DB_FREE_MEMORY_THRESHOLD_MB      (scorum::protocol::detail::get_config().db_free_memory_threshold_mb)
+
+#define SCORUM_MIN_BET_STAKE                    (scorum::protocol::detail::get_config().min_bet_stake)
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    100 /// * registration_bonus

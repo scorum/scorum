@@ -16,5 +16,10 @@ const bet_object& dbs_bet::get_bet(const bet_id_type& bet_id) const
     }
     FC_CAPTURE_LOG_AND_RETHROW((bet_id))
 }
+
+bool dbs_bet::is_exists(const bet_id_type& bet_id) const
+{
+    return find_by<by_id>(bet_id) != nullptr;
+}
 }
 }

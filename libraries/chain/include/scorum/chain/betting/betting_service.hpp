@@ -15,6 +15,8 @@ template <typename> struct db_accessor;
 struct db_accessor_factory;
 }
 
+struct bet_object;
+
 namespace betting {
 
 using scorum::protocol::betting::wincase_pair;
@@ -34,6 +36,8 @@ struct betting_service_i
     virtual void return_bets(const game_object& game, const std::vector<wincase_pair>& cancelled_wincases) = 0;
     virtual void remove_disputs(const game_object& game) = 0;
     virtual void remove_bets(const game_object& game) = 0;
+
+    virtual bool is_bet_matched(const bet_object& bet) const = 0;
 };
 
 class betting_service : public betting_service_i
@@ -53,6 +57,8 @@ public:
     virtual void return_bets(const game_object& game, const std::vector<wincase_pair>& cancelled_wincases) override;
     virtual void remove_disputs(const game_object& game) override;
     virtual void remove_bets(const game_object& game) override;
+
+    virtual bool is_bet_matched(const bet_object& bet) const override;
 
 private:
     dynamic_global_property_service_i& _dgp_property_service;

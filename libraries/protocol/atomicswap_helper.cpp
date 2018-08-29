@@ -1,4 +1,5 @@
 #include <scorum/protocol/atomicswap_helper.hpp>
+#include <scorum/protocol/config.hpp>
 
 #include <fc/crypto/sha512.hpp>
 #include <fc/crypto/hex.hpp>
