@@ -50,7 +50,7 @@ public:
      * @param limit query limit
      * @return array of matched_bet_api_object's
      */
-    std::vector<bet_api_object> get_user_bets(bet_id_type from, int64_t limit) const;
+    std::vector<bet_api_object> get_user_bets(bet_id_type from, uint32_t limit) const;
 
     /**
      * @brief Returns matched bets
@@ -58,7 +58,7 @@ public:
      * @param limit query limit
      * @return array of matched_bet_api_object's
      */
-    std::vector<matched_bet_api_object> get_matched_bets(matched_bet_id_type from, int64_t limit) const;
+    std::vector<matched_bet_api_object> get_matched_bets(matched_bet_id_type from, uint32_t limit) const;
 
     /**
      * @brief Return pending bets
@@ -66,7 +66,7 @@ public:
      * @param limit query limit
      * @return array of pending_bet_api_object's
      */
-    std::vector<pending_bet_api_object> get_pending_bets(pending_bet_id_type from, int64_t limit) const;
+    std::vector<pending_bet_api_object> get_pending_bets(pending_bet_id_type from, uint32_t limit) const;
 
     /// @}
 
