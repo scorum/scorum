@@ -492,12 +492,12 @@ private:
         boost::set_intersection(query.include_tags, query.exclude_tags, std::back_inserter(diff));
         FC_ASSERT(diff.empty(), "include_tags and exclude_tags can't have intersection");
 
-        auto rng_include = query.include_tags
+        auto rng = query.include_tags
             | boost::adaptors::transformed(utils::to_lower_copy)
             | boost::adaptors::transformed([](const std::string& s) { return utils::substring(s, 0, TAG_LENGTH_MAX); });
         // clang-format on
 
-        std::set<std::string> tags(rng_include.begin(), rng_include.end());
+        std::set<std::string> tags(rng.begin(), rng.end());
         if (tags.empty())
             tags.insert("");
 
