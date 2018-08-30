@@ -497,14 +497,14 @@ private:
             | boost::adaptors::transformed([](const std::string& s) { return utils::substring(s, 0, TAG_LENGTH_MAX); });
         // clang-format on
 
-        std::set<std::string> tags_include(rng_include.begin(), rng_include.end());
-        if (tags_include.empty())
-            tags_include.insert("");
+        std::set<std::string> tags(rng_include.begin(), rng_include.end());
+        if (tags.empty())
+            tags.insert("");
 
         std::vector<posts_crefs> posts_by_tags;
-        posts_by_tags.reserve(tags_include.size());
+        posts_by_tags.reserve(tags.size());
 
-        boost::transform(tags_include, std::back_inserter(posts_by_tags),
+        boost::transform(tags, std::back_inserter(posts_by_tags),
                          [&](const std::string& t) { return get_posts(t, tag_filter); });
 
         // clang-format off

@@ -47,7 +47,7 @@ struct get_discussions_by_query_fixture : public tags_fixture
     //  'Bob' create post
     //  'Dave' create post
     //  'Sam' create post
-    //  Everyone vote for own post
+    //  Everyone votes for own post
     test_case_for_tags_excluding create_test_case_for_tags_excluding()
     {
         auto p1 = create_post(alice)
