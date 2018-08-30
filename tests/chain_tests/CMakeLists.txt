@@ -22,6 +22,7 @@ set( SOURCES
     rewards/comment_hierarchy_reward_tests.cpp
     rewards/witness_reward_in_sp_migration_tests.cpp
     rewards/statistic_tests.cpp
+    rewards/legacy_virtual_op_tests.cpp
     registration/registration_check_common.cpp
     registration/committee_service_tests.cpp
     registration/committee_operations_tests.cpp
