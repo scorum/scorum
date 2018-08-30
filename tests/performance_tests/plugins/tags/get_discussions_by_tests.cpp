@@ -87,8 +87,8 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
         auto t1 = std::chrono::steady_clock::now();
 
         api::discussion_query q;
-        q.tags = { "A", "B", "C", "D" };
-        q.all_tags_exist = true;
+        q.include_tags = { "A", "B", "C", "D" };
+        q.include_all_tags = true;
         q.limit = 100;
         auto posts = _api.get_discussions_by_created(q);
 
