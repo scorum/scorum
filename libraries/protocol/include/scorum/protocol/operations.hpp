@@ -73,7 +73,8 @@ using operation = fc::static_variant<vote_operation,
                                      devpool_to_acc_vesting_withdraw_operation,
                                      acc_to_devpool_vesting_withdraw_operation,
                                      devpool_to_devpool_vesting_withdraw_operation,
-                                     proposal_virtual_operation>;
+                                     proposal_virtual_operation,
+                                     active_sp_holders_reward_legacy_operation>;
 
 /*void operation_get_required_authorities( const operation& op,
                                          flat_set<string>& active,
