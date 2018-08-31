@@ -67,7 +67,7 @@ struct get_parents_fixture : public database_fixture::tags_fixture
 
 BOOST_FIXTURE_TEST_SUITE(tags_get_parents_tests, get_parents_fixture)
 
-SCORUM_TEST_CASE(get_parents_nevative_check)
+SCORUM_TEST_CASE(get_parents_negative_check)
 {
     BOOST_CHECK_THROW(_api.get_parents(content_query_wrapper{ "", "1" }), fc::assert_exception);
     BOOST_CHECK_THROW(_api.get_parents(content_query_wrapper{ "alice", "" }), fc::assert_exception);

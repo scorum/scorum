@@ -437,8 +437,14 @@ private:
                         const discussion_query& query,
                         const std::function<bool(const tag_object&)>& tag_filter) const
     {
-        auto rng_exclude = query.exclude_tags | boost::adaptors::transformed(utils::to_lower_copy)
-            | boost::adaptors::transformed([](const std::string& s) { return utils::substring(s, 0, TAG_LENGTH_MAX); });
+        if (filtering_posts.empty())
+            return filtering_posts;
+
+        // clang-format off
+        auto rng_exclude = query.exclude_tags |
+                boost::adaptors::transformed(utils::to_lower_copy) |
+                boost::adaptors::transformed([](const std::string& s) { return utils::substring(s, 0, TAG_LENGTH_MAX); });
+        // clang-format on
 
         std::set<std::string> tags_exclude(rng_exclude.begin(), rng_exclude.end());
         if (tags_exclude.empty())
@@ -489,10 +495,10 @@ private:
                   "start_author and start_permlink should be either both specified and not empty or both not specified");
 
         std::vector<std::string> diff;
-        boost::set_intersection(query.include_tags, query.exclude_tags, std::back_inserter(diff));
+        boost::set_intersection(query.tags, query.exclude_tags, std::back_inserter(diff));
         FC_ASSERT(diff.empty(), "include_tags and exclude_tags can't have intersection");
 
-        auto rng = query.include_tags
+        auto rng = query.tags
             | boost::adaptors::transformed(utils::to_lower_copy)
             | boost::adaptors::transformed([](const std::string& s) { return utils::substring(s, 0, TAG_LENGTH_MAX); });
         // clang-format on
@@ -508,17 +514,14 @@ private:
                          [&](const std::string& t) { return get_posts(t, tag_filter); });
 
         // clang-format off
-        posts_crefs posts = query.include_all_tags
+        posts_crefs posts = query.tags_logical_and
                 ? intersect(posts_by_tags)
                 : union_all(posts_by_tags);
         // clang-format on
 
         std::vector<discussion> result;
-        if (posts.empty())
-            return result;
 
-        if (!query.exclude_tags.empty())
-            posts = exclude(posts, query, tag_filter);
+        posts = exclude(posts, query, tag_filter);
         if (posts.empty())
             return result;
 

@@ -178,9 +178,9 @@ struct discussion_query
     uint32_t limit = 0;
 
     /// require that all tags in query must exist in querying posts
-    bool include_all_tags = true;
+    bool tags_logical_and = true;
     /// tags to include in selection
-    std::set<std::string> include_tags;
+    std::set<std::string> tags;
 
     /// tags to exclude from selection
     std::set<std::string> exclude_tags;
@@ -270,8 +270,8 @@ FC_REFLECT(scorum::tags::api::discussion_query,
           (start_author)
           (start_permlink)
           (limit)
-          (include_all_tags)
-          (include_tags)
+          (tags_logical_and)
+          (tags)
           (exclude_tags))
 
 FC_REFLECT(scorum::tags::api::content_query,
