@@ -61,6 +61,7 @@ set( SOURCES
     withdraw_scorumpower/lock_tests.cpp
     account/account_service_tests.cpp
     betting/bet_operations_tests.cpp
+    betting/game_operations_tests.cpp
 )
 
 add_executable(chain_tests

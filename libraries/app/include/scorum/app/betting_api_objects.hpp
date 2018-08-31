@@ -28,10 +28,10 @@ struct game_api_object
 
     game_api_object(const chain::game_object& obj)
         : id(obj.id)
-        , moderator(obj.moderator)
         , name(fc::to_string(obj.name))
         , start(obj.start)
-        , finish(obj.finish)
+        , last_update(obj.last_update)
+        , bets_resolve_time(obj.bets_resolve_time)
         , status(obj.status)
         , game(obj.game)
     {
@@ -45,7 +45,8 @@ struct game_api_object
     std::string name;
 
     fc::time_point_sec start = fc::time_point_sec::min();
-    fc::time_point_sec finish = fc::time_point_sec::min();
+    fc::time_point_sec last_update = fc::time_point_sec::min();
+    fc::time_point_sec bets_resolve_time = time_point_sec::maximum();
 
     chain::game_status status = chain::game_status::created;
     chain::game_type game;
@@ -76,7 +77,8 @@ FC_REFLECT(scorum::app::game_api_object,
            (moderator)
            (name)
            (start)
-           (finish)
+           (last_update)
+           (bets_resolve_time)
            (status)
            (game)
            (markets)

@@ -54,6 +54,7 @@ set(SOURCES
     betting/betting_matcher_tests.cpp
     betting/bet_evaluators_tests.cpp
     betting/betting_api_tests.cpp
+    betting/post_game_results_evaluator_tests.cpp
     odds_tests.cpp
     market_type_tests.cpp
 )

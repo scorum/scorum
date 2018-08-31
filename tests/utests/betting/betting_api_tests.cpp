@@ -60,7 +60,10 @@ BOOST_FIXTURE_TEST_CASE(get_games_dont_throw, fixture)
 
     std::vector<game_object> objects;
 
-    mocks.ExpectCall(game_service, game_service_i::get_games).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(game_service,
+                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
+        .Return({ objects.begin(), objects.end() });
 
     BOOST_REQUIRE_NO_THROW(api.get_games(game_filter::all));
 }
@@ -86,7 +89,10 @@ struct get_games_fixture : public fixture
 
 BOOST_FIXTURE_TEST_CASE(get_games_return_all_games, get_games_fixture)
 {
-    mocks.ExpectCall(game_service, game_service_i::get_games).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(game_service,
+                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
+        .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory);
     std::vector<game_api_object> games = api.get_games(game_filter::all);
@@ -96,7 +102,10 @@ BOOST_FIXTURE_TEST_CASE(get_games_return_all_games, get_games_fixture)
 
 BOOST_FIXTURE_TEST_CASE(get_games_does_not_change_order, get_games_fixture)
 {
-    mocks.ExpectCall(game_service, game_service_i::get_games).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(game_service,
+                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
+        .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory);
     std::vector<game_api_object> games = api.get_games(game_filter::all);
@@ -108,7 +117,10 @@ BOOST_FIXTURE_TEST_CASE(get_games_does_not_change_order, get_games_fixture)
 
 BOOST_FIXTURE_TEST_CASE(return_games_with_created_status, get_games_fixture)
 {
-    mocks.ExpectCall(game_service, game_service_i::get_games).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(game_service,
+                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
+        .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory);
     std::vector<game_api_object> games = api.get_games(game_filter::created);
@@ -119,7 +131,10 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_created_status, get_games_fixture)
 
 BOOST_FIXTURE_TEST_CASE(return_games_with_started_status, get_games_fixture)
 {
-    mocks.ExpectCall(game_service, game_service_i::get_games).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(game_service,
+                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
+        .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory);
     std::vector<game_api_object> games = api.get_games(game_filter::started);
@@ -130,7 +145,10 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_started_status, get_games_fixture)
 
 BOOST_FIXTURE_TEST_CASE(return_games_with_finished_status, get_games_fixture)
 {
-    mocks.ExpectCall(game_service, game_service_i::get_games).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(game_service,
+                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
+        .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory);
     std::vector<game_api_object> games = api.get_games(game_filter::finished);
@@ -143,7 +161,10 @@ BOOST_FIXTURE_TEST_CASE(return_two_games_with_finished_status, get_games_fixture
 {
     objects.push_back(create_object<game_object>(shm, [&](game_object& game) { game.status = game_status::finished; }));
 
-    mocks.ExpectCall(game_service, game_service_i::get_games).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(game_service,
+                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
+        .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory);
     std::vector<game_api_object> games = api.get_games(game_filter::finished);
@@ -155,7 +176,10 @@ BOOST_FIXTURE_TEST_CASE(return_two_games_with_finished_status, get_games_fixture
 
 BOOST_FIXTURE_TEST_CASE(return_games_not_finished_status, get_games_fixture)
 {
-    mocks.ExpectCall(game_service, game_service_i::get_games).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(game_service,
+                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
+        .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory);
     std::vector<game_api_object> games = api.get_games(game_filter::not_finished);

@@ -159,6 +159,16 @@ template <typename LeftWincase, typename RightWincase> struct strict_wincase_pai
     using right_wincase = RightWincase;
 };
 
+inline wincase_type create_opposite(const wincase_type& wincase)
+{
+    return wincase.visit([](const auto& w) { return wincase_type(w.create_opposite()); });
+}
+
+inline bool has_trd_state(const wincase_type& wincase)
+{
+    return wincase.visit([](const auto& w) { return w.has_trd_state(); });
+}
+
 #define WINCASE(l, r) strict_wincase_pair_type<l, r>
 }
 }

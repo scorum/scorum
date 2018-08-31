@@ -13,6 +13,7 @@
 #include <scorum/chain/evaluators/cancel_game_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_markets_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_start_time_evaluator.hpp>
+#include <scorum/chain/evaluators/post_game_results_evaluator.hpp>
 
 #include <scorum/protocol/betting/wincase_comparison.hpp>
 

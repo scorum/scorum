@@ -73,6 +73,20 @@ void development_committee_empower_betting_moderator_evaluator::do_apply(
     service.update([&](betting_property_object& obj) { obj.moderator = o.account; });
 }
 
+development_committee_change_betting_resolve_delay_evaluator::
+    development_committee_change_betting_resolve_delay_evaluator(data_service_factory_i& r)
+    : proposal_operation_evaluator<development_committee_change_betting_resolve_delay_evaluator>(r)
+{
+}
+
+void development_committee_change_betting_resolve_delay_evaluator::do_apply(
+    const development_committee_change_betting_resolve_delay_evaluator::operation_type& o)
+{
+    auto& service = this->db().betting_property_service();
+
+    service.update([&](betting_property_object& obj) { obj.resolve_delay_sec = o.delay_sec; });
+}
+
 template <>
 void development_committee_change_budgets_vcg_properties_evaluator<budget_type::post>::do_apply(
     const development_committee_change_budgets_vcg_properties_evaluator::operation_type& o)
