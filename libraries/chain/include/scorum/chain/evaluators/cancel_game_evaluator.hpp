@@ -9,6 +9,7 @@ struct account_service_i;
 struct game_service_i;
 namespace betting {
 struct betting_service_i;
+struct betting_resolver_i;
 }
 
 class cancel_game_evaluator : public evaluator_impl<data_service_factory_i, cancel_game_evaluator>
@@ -16,7 +17,7 @@ class cancel_game_evaluator : public evaluator_impl<data_service_factory_i, canc
 public:
     using operation_type = scorum::protocol::cancel_game_operation;
 
-    cancel_game_evaluator(data_service_factory_i& services, betting::betting_service_i&);
+    cancel_game_evaluator(data_service_factory_i& services, betting::betting_service_i&, betting::betting_resolver_i&);
 
     void do_apply(const operation_type& op);
 

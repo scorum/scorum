@@ -31,6 +31,8 @@ struct game_service_i : public base_service_i<game_object>
 
     virtual view_type get_games() const = 0;
     virtual std::vector<object_cref_type> get_games(fc::time_point_sec start) const = 0;
+
+    virtual std::vector<object_cref_type> get_games_to_resolve(fc::time_point_sec resolve_time) const = 0;
 };
 
 class dbs_game : public dbs_service_base<game_service_i>
@@ -57,6 +59,9 @@ public:
     virtual std::vector<object_cref_type> get_games(fc::time_point_sec start) const override;
 
     virtual view_type get_games() const override;
+
+    virtual std::vector<dbs_game::object_cref_type>
+    get_games_to_resolve(fc::time_point_sec resolve_time) const override;
 
 private:
     dynamic_global_property_service_i& _dprops_service;

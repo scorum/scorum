@@ -5,6 +5,7 @@
 #include <scorum/chain/services/bet.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/matched_bet.hpp>
+#include <scorum/chain/services/game.hpp>
 
 #include <scorum/protocol/betting/wincase_comparison.hpp>
 
@@ -19,7 +20,10 @@ namespace betting {
 betting_service::betting_service(data_service_factory_i& db)
     : _dgp_property_service(db.dynamic_global_property_service())
     , _betting_property_service(db.betting_property_service())
-    , _bet_service(db.bet_service())
+    , _matched_bet_svc(db.matched_bet_service())
+    , _pending_bet_svc(db.pending_bet_service())
+    , _bet_svc(db.bet_service())
+    , _game_svc(db.game_service())
 {
 }
 
@@ -42,7 +46,7 @@ const bet_object& betting_service::create_bet(const account_name_type& better,
     {
         FC_ASSERT(stake.amount > 0);
         FC_ASSERT(stake.symbol() == SCORUM_SYMBOL);
-        return _bet_service.create([&](bet_object& obj) {
+        return _bet_svc.create([&](bet_object& obj) {
             obj.created = _dgp_property_service.head_block_time();
             obj.better = better;
             obj.game = game;
@@ -83,6 +87,19 @@ void betting_service::remove_bets(const game_object& game)
 bool betting_service::is_bet_matched(const bet_object& bet) const
 {
     return bet.rest_stake != bet.stake;
+}
+
+void betting_service::cancel_game(const game_id_type& game_id)
+{
+    auto matched_bets = _matched_bet_svc.get_bets(game_id);
+    auto pending_bets = _pending_bet_svc.get_bets(game_id);
+    auto bets = _bet_svc.get_bets(game_id);
+    const auto& game = _game_svc.get_game(game_id._id);
+
+    _pending_bet_svc.remove_all(pending_bets);
+    _matched_bet_svc.remove_all(matched_bets);
+    _bet_svc.remove_all(bets);
+    _game_svc.remove(game);
 }
 }
 }

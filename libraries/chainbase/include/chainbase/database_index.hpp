@@ -152,7 +152,7 @@ public:
         get_mutable_index<index_type>().modify(obj, m);
     }
 
-    template <typename ObjectType> void remove(const ObjectType& obj)
+    template <typename ObjectType> auto remove(const ObjectType& obj)
     {
         CHAINBASE_REQUIRE_WRITE_LOCK(ObjectType);
         typedef typename get_index_type<ObjectType>::type index_type;

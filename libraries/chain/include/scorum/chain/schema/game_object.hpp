@@ -25,6 +25,7 @@ enum class game_status : uint8_t
 
 struct by_name;
 struct by_start_time;
+struct by_resolve_time;
 
 class game_object : public object<game_object_type, game_object>
 {
@@ -55,6 +56,10 @@ using game_index
                                                              member<game_object,
                                                                     game_object::id_type,
                                                                     &game_object::id>>,
+                                              ordered_non_unique<tag<by_resolve_time>,
+                                                                 member<game_object,
+                                                                        time_point_sec,
+                                                                        &game_object::bets_resolve_time>>,
                                               ordered_unique<tag<by_name>,
                                                              member<game_object, fc::shared_string, &game_object::name>,
                                                              fc::strcmp_less>,

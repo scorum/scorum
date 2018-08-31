@@ -10,6 +10,9 @@ struct data_service_factory_i;
 struct dynamic_global_property_service_i;
 struct betting_property_service_i;
 struct bet_service_i;
+struct matched_bet_service_i;
+struct pending_bet_service_i;
+struct game_service_i;
 
 struct bet_object;
 
@@ -34,6 +37,8 @@ struct betting_service_i
     virtual void remove_bets(const game_object& game) = 0;
 
     virtual bool is_bet_matched(const bet_object& bet) const = 0;
+
+    virtual void cancel_game(const game_id_type& game_id) = 0;
 };
 
 class betting_service : public betting_service_i
@@ -56,10 +61,15 @@ public:
 
     virtual bool is_bet_matched(const bet_object& bet) const override;
 
+    virtual void cancel_game(const game_id_type& game_id) override;
+
 private:
     dynamic_global_property_service_i& _dgp_property_service;
     betting_property_service_i& _betting_property_service;
-    bet_service_i& _bet_service;
+    matched_bet_service_i& _matched_bet_svc;
+    pending_bet_service_i& _pending_bet_svc;
+    bet_service_i& _bet_svc;
+    game_service_i& _game_svc;
 };
 }
 }

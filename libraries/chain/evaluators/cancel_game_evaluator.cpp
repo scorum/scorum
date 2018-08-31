@@ -4,11 +4,13 @@
 #include <scorum/chain/services/game.hpp>
 
 #include <scorum/chain/betting/betting_service.hpp>
+#include <scorum/chain/betting/betting_resolver.hpp>
 
 namespace scorum {
 namespace chain {
 cancel_game_evaluator::cancel_game_evaluator(data_service_factory_i& services,
-                                             betting::betting_service_i& betting_service)
+                                             betting::betting_service_i& betting_service,
+                                             betting::betting_resolver_i& betting_resolver)
     : evaluator_impl<data_service_factory_i, cancel_game_evaluator>(services)
     , _account_service(services.account_service())
     , _betting_service(betting_service)
@@ -29,8 +31,7 @@ void cancel_game_evaluator::do_apply(const operation_type& op)
 
     _betting_service.return_unresolved_bets(game_obj);
 
-    _betting_service.remove_bets(game_obj);
-    _game_service.remove(game_obj);
+    _betting_service.cancel_game(game_obj.id);
 }
 }
 }
