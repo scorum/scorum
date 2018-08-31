@@ -7,6 +7,7 @@
 #include <boost/multi_index/composite_key.hpp>
 
 #include <scorum/protocol/betting/wincase.hpp>
+#include <scorum/protocol/betting/wincase_comparison.hpp>
 
 namespace scorum {
 namespace chain {
@@ -84,9 +85,13 @@ typedef shared_multi_index_container<bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<bet_object, bet_id_type, &bet_object::id>>,
                                                 ordered_non_unique<tag<by_game_id>,
-                                                                   member<bet_object,
-                                                                          game_id_type,
-                                                                          &bet_object::game>>>>
+                                                                   composite_key<bet_object,
+                                                                                 member<bet_object,
+                                                                                        game_id_type,
+                                                                                        &bet_object::game>,
+                                                                                 member<bet_object,
+                                                                                        wincase_type,
+                                                                                        &bet_object::wincase>>>>>
     bet_index;
 
 struct by_bet_id;

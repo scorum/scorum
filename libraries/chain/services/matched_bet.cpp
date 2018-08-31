@@ -59,7 +59,25 @@ dbs_matched_bet::view_type dbs_matched_bet::get_bets(matched_bet_id_type lower_b
     return { idx.lower_bound(lower_bound), idx.end() };
 }
 
-std::vector<dbs_matched_bet::object_cref_type> dbs_matched_bet::get_bets(const game_id_type& game_id) const
+std::vector<dbs_matched_bet::object_cref_type> dbs_matched_bet::get_bets_by_fst_better(bet_id_type bet_id) const
+{
+    try
+    {
+        return get_range_by<by_matched_bet1_id>(bet_id <= ::boost::lambda::_1, ::boost::lambda::_1 <= bet_id);
+    }
+    FC_CAPTURE_LOG_AND_RETHROW((bet_id))
+}
+
+std::vector<dbs_matched_bet::object_cref_type> dbs_matched_bet::get_bets_by_snd_better(bet_id_type bet_id) const
+{
+    try
+    {
+        return get_range_by<by_matched_bet2_id>(bet_id <= ::boost::lambda::_1, ::boost::lambda::_1 <= bet_id);
+    }
+    FC_CAPTURE_LOG_AND_RETHROW((bet_id))
+}
+
+std::vector<dbs_matched_bet::object_cref_type> dbs_matched_bet::get_bets(game_id_type game_id) const
 {
     try
     {

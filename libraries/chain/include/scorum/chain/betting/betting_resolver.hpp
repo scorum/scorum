@@ -13,6 +13,7 @@ struct asset;
 namespace chain {
 
 using scorum::protocol::betting::wincase_type;
+using scorum::protocol::betting::wincase_pair;
 
 struct data_service_factory_i;
 struct pending_bet_service_i;
@@ -20,6 +21,7 @@ struct matched_bet_service_i;
 struct bet_service_i;
 struct account_service_i;
 class game_object;
+class bet_object;
 class matched_bet_object;
 class pending_bet_object;
 
@@ -31,8 +33,9 @@ struct betting_resolver_i
                                       const fc::shared_flat_set<wincase_type>& results) const = 0;
 
     virtual void return_pending_bets(const chainbase::oid<game_object>& game_id) const = 0;
-
     virtual void return_matched_bets(const chainbase::oid<game_object>& game_id) const = 0;
+
+    virtual void return_bets(const std::vector<std::reference_wrapper<const bet_object>>& bets) const = 0;
 };
 
 class betting_resolver : public betting_resolver_i
@@ -47,16 +50,17 @@ public:
                               const fc::shared_flat_set<wincase_type>& results) const override;
 
     void return_pending_bets(const chainbase::oid<game_object>& game_id) const override;
-
     void return_matched_bets(const chainbase::oid<game_object>& game_id) const override;
 
-private:
-    void resolve_balance(const protocol::account_name_type& winner_name,
-                         const protocol::account_name_type& loser_name,
-                         const protocol::asset& winner_stake,
-                         const protocol::asset& loser_stake) const;
+    void return_bets(const std::vector<std::reference_wrapper<const bet_object>>& bets) const override;
 
-    void return_balance(const protocol::account_name_type& acc_name, const protocol::asset& stake) const;
+private:
+    void resolve_stakes(const protocol::account_name_type& winner_name,
+                        const protocol::account_name_type& loser_name,
+                        const protocol::asset& winner_stake,
+                        const protocol::asset& loser_stake) const;
+
+    void return_stake(const protocol::account_name_type& acc_name, const protocol::asset& stake) const;
 
 private:
     pending_bet_service_i& _pending_bet_svc;

@@ -1,5 +1,8 @@
 #include <scorum/chain/betting/betting_service.hpp>
 
+#include <boost/range/algorithm/set_algorithm.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/betting_property.hpp>
 #include <scorum/chain/services/bet.hpp>
@@ -59,29 +62,50 @@ const bet_object& betting_service::create_bet(const account_name_type& better,
     FC_CAPTURE_LOG_AND_RETHROW((better)(game)(wincase)(odds_value)(stake))
 }
 
-void betting_service::return_unresolved_bets(const game_object& game)
+std::vector<std::reference_wrapper<const bet_object>>
+betting_service::get_bets(const game_id_type& game, const std::vector<wincase_pair>& wincase_pairs) const
 {
-    boost::ignore_unused_variable_warning(game);
-    FC_THROW("not implemented");
+    auto bets = _bet_svc.get_bets(game);
+
+    fc::flat_set<wincase_type> wincases;
+    wincases.reserve(wincase_pairs.size() * 2);
+
+    for (const auto& pair : wincase_pairs)
+    {
+        wincases.emplace(pair.first);
+        wincases.emplace(pair.second);
+    }
+
+    // clang-format off
+    struct less
+    {
+        bool operator()(const bet_object& b, const wincase_type& w) const { return cmp(b.wincase, w); }
+        bool operator()(const wincase_type& w, const bet_object& b) const { return cmp(w, b.wincase); }
+        std::less<wincase_type> cmp;
+    };
+    // clang-format on
+
+    std::vector<std::reference_wrapper<const bet_object>> filtered_bets;
+    boost::set_intersection(bets, wincases, std::back_inserter(filtered_bets), less{});
+
+    return filtered_bets;
 }
 
-void betting_service::return_bets(const game_object& game, const std::vector<wincase_pair>& cancelled_wincases)
+void betting_service::cancel_bets(const std::vector<std::reference_wrapper<const bet_object>>& bets) const
 {
-    boost::ignore_unused_variable_warning(game);
-    boost::ignore_unused_variable_warning(cancelled_wincases);
-    FC_THROW("not implemented");
-}
+    for (const bet_object& bet : bets)
+    {
+        auto matched_bets_fst = _matched_bet_svc.get_bets_by_fst_better(bet.id);
+        _matched_bet_svc.remove_all(matched_bets_fst);
 
-void betting_service::remove_disputs(const game_object& game)
-{
-    boost::ignore_unused_variable_warning(game);
-    FC_THROW("not implemented");
-}
+        auto matched_bets_snd = _matched_bet_svc.get_bets_by_snd_better(bet.id);
+        _matched_bet_svc.remove_all(matched_bets_snd);
 
-void betting_service::remove_bets(const game_object& game)
-{
-    boost::ignore_unused_variable_warning(game);
-    FC_THROW("not implemented");
+        auto pending_bets = _pending_bet_svc.get_bets(bet.id);
+        _pending_bet_svc.remove_all(pending_bets);
+    }
+
+    _bet_svc.remove_all(bets);
 }
 
 bool betting_service::is_bet_matched(const bet_object& bet) const

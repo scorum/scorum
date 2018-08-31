@@ -33,7 +33,11 @@ std::vector<dbs_bet::object_cref_type> dbs_bet::get_bets(const game_id_type& gam
 {
     try
     {
-        return get_range_by<by_game_id>(game_id <= ::boost::lambda::_1, ::boost::lambda::_1 <= game_id);
+        // TODO: refactor later using db_accessors
+        auto& idx = db_impl().get_index<bet_index, by_game_id>();
+        auto from = idx.lower_bound(game_id);
+        auto to = idx.upper_bound(game_id);
+        return { from, to };
     }
     FC_CAPTURE_LOG_AND_RETHROW((game_id))
 }

@@ -31,13 +31,12 @@ struct betting_service_i
                                          const asset& stake)
         = 0;
 
-    virtual void return_unresolved_bets(const game_object& game) = 0;
-    virtual void return_bets(const game_object& game, const std::vector<wincase_pair>& cancelled_wincases) = 0;
-    virtual void remove_disputs(const game_object& game) = 0;
-    virtual void remove_bets(const game_object& game) = 0;
-
     virtual bool is_bet_matched(const bet_object& bet) const = 0;
 
+    virtual std::vector<std::reference_wrapper<const bet_object>>
+    get_bets(const game_id_type& game, const std::vector<wincase_pair>& wincase_pairs) const = 0;
+
+    virtual void cancel_bets(const std::vector<std::reference_wrapper<const bet_object>>& bets) const = 0;
     virtual void cancel_game(const game_id_type& game_id) = 0;
 };
 
@@ -54,13 +53,12 @@ public:
                                          const odds& odds_value,
                                          const asset& stake) override;
 
-    virtual void return_unresolved_bets(const game_object& game) override;
-    virtual void return_bets(const game_object& game, const std::vector<wincase_pair>& cancelled_wincases) override;
-    virtual void remove_disputs(const game_object& game) override;
-    virtual void remove_bets(const game_object& game) override;
-
     virtual bool is_bet_matched(const bet_object& bet) const override;
 
+    virtual std::vector<std::reference_wrapper<const bet_object>>
+    get_bets(const game_id_type& game, const std::vector<wincase_pair>& wincase_pairs) const override;
+
+    virtual void cancel_bets(const std::vector<std::reference_wrapper<const bet_object>>& bets) const override;
     virtual void cancel_game(const game_id_type& game_id) override;
 
 private:
