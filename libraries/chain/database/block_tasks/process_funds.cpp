@@ -9,6 +9,7 @@
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/advertising_property.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
@@ -115,6 +116,7 @@ void process_funds::on_apply(block_task_context& ctx)
         original_fund_reward += fund_budget_management_algorithm(fund_budget_service, dgp_service)
                                     .allocate_cash(fund_budget_service.get());
     }
+
     distribute_reward(ctx, original_fund_reward); // distribute SP
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
@@ -160,7 +162,7 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
 
     distribute_active_sp_holders_reward(ctx, active_sp_holder_reward);
 
-    charge_content_reward(ctx, content_reward);
+    pay_content_reward(ctx, content_reward);
 }
 
 void process_funds::distribute_witness_reward(block_task_context& ctx, const asset& witness_reward)
@@ -179,7 +181,7 @@ void process_funds::distribute_witness_reward(block_task_context& ctx, const ass
 
     const auto& witness = account_service.get_account(cwit.owner);
 
-    charge_witness_reward(ctx, witness, witness_reward);
+    pay_witness_reward(ctx, witness, witness_reward);
 
     if (witness_reward.amount != 0)
         ctx.push_virtual_operation(producer_reward_operation(witness.name, witness_reward));
@@ -189,6 +191,7 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
 {
     data_service_factory_i& services = ctx.services();
     account_service_i& account_service = services.account_service();
+    hardfork_property_service_i& hardfork_service = services.hardfork_property_service();
 
     asset total_reward = get_activity_reward(ctx, reward);
 
@@ -211,21 +214,30 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
                 asset account_reward
                     = total_reward * utils::make_fraction(account.vote_reward_competitive_sp.amount, total_sp.amount);
 
-                charge_account_reward(ctx, account, account_reward);
+                if (hardfork_service.has_hardfork(SCORUM_HARDFORK_0_2))
+                {
+                    pay_account_pending_reward(ctx, account, account_reward);
+                }
+                else
+                {
+                    pay_account_reward(ctx, account, account_reward);
+                }
 
                 distributed_reward += account_reward;
 
-                if (account_reward.amount != 0)
+                if (!hardfork_service.has_hardfork(SCORUM_HARDFORK_0_2) && account_reward.amount > 0)
+                {
                     ctx.push_virtual_operation(active_sp_holders_reward_operation(account.name, account_reward));
+                }
             }
         }
     }
 
     // put undistributed money in special fund
-    charge_activity_reward(ctx, total_reward - distributed_reward);
+    pay_activity_reward(ctx, total_reward - distributed_reward);
 }
 
-void process_funds::charge_account_reward(block_task_context& ctx, const account_object& account, const asset& reward)
+void process_funds::pay_account_reward(block_task_context& ctx, const account_object& account, const asset& reward)
 {
     if (reward.amount <= 0)
         return;
@@ -243,7 +255,27 @@ void process_funds::charge_account_reward(block_task_context& ctx, const account
     }
 }
 
-void process_funds::charge_witness_reward(block_task_context& ctx, const account_object& witness, const asset& reward)
+void process_funds::pay_account_pending_reward(block_task_context& ctx,
+                                               const account_object& account,
+                                               const asset& reward)
+{
+    if (reward.amount <= 0)
+        return;
+
+    data_service_factory_i& services = ctx.services();
+    account_service_i& account_service = services.account_service();
+
+    if (reward.symbol() == SCORUM_SYMBOL)
+    {
+        account_service.increase_pending_balance(account, reward);
+    }
+    else
+    {
+        account_service.increase_pending_scorumpower(account, reward);
+    }
+}
+
+void process_funds::pay_witness_reward(block_task_context& ctx, const account_object& witness, const asset& reward)
 {
     data_service_factory_i& services = ctx.services();
     dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
@@ -257,10 +289,10 @@ void process_funds::charge_witness_reward(block_task_context& ctx, const account
         dgp_service.update([&](dynamic_global_property_object& p) { p.total_witness_reward_sp += reward; });
     }
 
-    charge_account_reward(ctx, witness, reward);
+    pay_account_reward(ctx, witness, reward);
 }
 
-void process_funds::charge_content_reward(block_task_context& ctx, const asset& reward)
+void process_funds::pay_content_reward(block_task_context& ctx, const asset& reward)
 {
     if (reward.amount <= 0)
         return;
@@ -279,7 +311,7 @@ void process_funds::charge_content_reward(block_task_context& ctx, const asset& 
     }
 }
 
-void process_funds::charge_activity_reward(block_task_context& ctx, const asset& reward)
+void process_funds::pay_activity_reward(block_task_context& ctx, const asset& reward)
 {
     if (reward.amount <= 0)
         return;

@@ -24,7 +24,6 @@ percent_type development_committee_transfer_operation::get_required_quorum(commi
 
 void development_committee_withdraw_vesting_operation::validate() const
 {
-    FC_ASSERT(vesting_shares > asset(0, SP_SYMBOL), "Must withdraw a nonzero amount");
 }
 
 percent_type

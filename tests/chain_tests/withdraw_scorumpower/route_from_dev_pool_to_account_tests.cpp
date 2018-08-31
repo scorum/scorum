@@ -40,13 +40,9 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
     static const int sam_pie_percent = 20;
     static const int pool_withdrawal_percent = 100 - (bob_pie_percent + sam_pie_percent);
 
-    const auto& pool = pool_service.get();
-    const auto& bob = account_service.get_account("bob");
-    const auto& sam = account_service.get_account("sam");
-
-    asset old_pool_balance_scr = pool.scr_balance;
-    asset old_bob_balance_scr = bob.balance;
-    asset old_sam_balance_sp = sam.scorumpower;
+    asset old_pool_balance_scr = pool_service.get().scr_balance;
+    asset old_bob_balance_scr = account_service.get_account("bob").balance;
+    asset old_sam_balance_sp = account_service.get_account("sam").scorumpower;
 
     db_plugin->debug_update(
         [&](database&) {
@@ -59,7 +55,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
     db_plugin->debug_update(
         [&](database&) {
             set_withdraw_scorumpower_route_from_dev_pool_task create_withdraw_route;
-            set_withdraw_scorumpower_route_context ctx(db, bob.name, bob_pie_percent * SCORUM_1_PERCENT, false);
+            set_withdraw_scorumpower_route_context ctx(db, "bob", bob_pie_percent * SCORUM_1_PERCENT, false);
             create_withdraw_route.apply(ctx);
         },
         get_skip_flags());
@@ -67,7 +63,7 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
     db_plugin->debug_update(
         [&](database&) {
             set_withdraw_scorumpower_route_from_dev_pool_task create_withdraw_route;
-            set_withdraw_scorumpower_route_context ctx(db, sam.name, sam_pie_percent * SCORUM_1_PERCENT, true);
+            set_withdraw_scorumpower_route_context ctx(db, "sam", sam_pie_percent * SCORUM_1_PERCENT, true);
             create_withdraw_route.apply(ctx);
         },
         get_skip_flags());
@@ -78,14 +74,15 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
 
     generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);
 
-    BOOST_CHECK_EQUAL(pool.scr_balance - old_pool_balance_scr,
+    BOOST_CHECK_EQUAL(pool_service.get().scr_balance - old_pool_balance_scr,
                       pool_to_withdraw_scr * pool_withdrawal_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
-    BOOST_CHECK_EQUAL(bob.balance - old_bob_balance_scr,
+    BOOST_CHECK_EQUAL(account_service.get_account("bob").balance - old_bob_balance_scr,
                       pool_to_withdraw_scr * bob_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS);
     asset sam_recived = pool_to_withdraw_scr * sam_pie_percent / 100 / SCORUM_VESTING_WITHDRAW_INTERVALS;
-    BOOST_CHECK_EQUAL(sam.scorumpower - old_sam_balance_sp, asset(sam_recived.amount, SP_SYMBOL));
+    BOOST_CHECK_EQUAL(account_service.get_account("sam").scorumpower - old_sam_balance_sp,
+                      asset(sam_recived.amount, SP_SYMBOL));
 
-    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(pool.id));
+    BOOST_REQUIRE(withdraw_scorumpower_service.is_exists(pool_service.get().id));
 
     for (uint32_t ci = 1; ci < SCORUM_VESTING_WITHDRAW_INTERVALS; ++ci)
     {
@@ -93,12 +90,15 @@ BOOST_FIXTURE_TEST_CASE(withdrawal_tree_check, withdraw_scorumpower_route_from_d
         generate_blocks(next_withdrawal + (SCORUM_BLOCK_INTERVAL / 2), true);
     }
 
-    BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(pool.id));
+    BOOST_REQUIRE(!withdraw_scorumpower_service.is_exists(pool_service.get().id));
 
-    BOOST_CHECK_EQUAL(pool.scr_balance - old_pool_balance_scr, pool_to_withdraw_scr * pool_withdrawal_percent / 100);
-    BOOST_CHECK_EQUAL(bob.balance - old_bob_balance_scr, pool_to_withdraw_scr * bob_pie_percent / 100);
+    BOOST_CHECK_EQUAL(pool_service.get().scr_balance - old_pool_balance_scr,
+                      pool_to_withdraw_scr * pool_withdrawal_percent / 100);
+    BOOST_CHECK_EQUAL(account_service.get_account("bob").balance - old_bob_balance_scr,
+                      pool_to_withdraw_scr * bob_pie_percent / 100);
     sam_recived = pool_to_withdraw_scr * sam_pie_percent / 100;
-    BOOST_CHECK_EQUAL(sam.scorumpower - old_sam_balance_sp, asset(sam_recived.amount, SP_SYMBOL));
+    BOOST_CHECK_EQUAL(account_service.get_account("sam").scorumpower - old_sam_balance_sp,
+                      asset(sam_recived.amount, SP_SYMBOL));
 
     fc::time_point_sec end_time = db.head_block_time();
 

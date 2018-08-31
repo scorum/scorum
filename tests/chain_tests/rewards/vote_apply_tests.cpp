@@ -129,7 +129,7 @@ SCORUM_TEST_CASE(voting_non_existent_comment_check)
     op.voter = "bob";
     op.author = "sam"; // Sam has not commented yet
     op.permlink = "foo";
-    op.weight = (int16_t)100;
+    op.weight = SCORUM_PERCENT(100);
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -147,7 +147,7 @@ SCORUM_TEST_CASE(voting_with_zerro_weight_check)
     op.voter = "bob";
     op.author = "alice";
     op.permlink = "foo";
-    op.weight = (int16_t)0;
+    op.weight = SCORUM_PERCENT(0);
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -165,7 +165,7 @@ SCORUM_TEST_CASE(voting_with_dust_sp_check)
     op.voter = "alice"; // Alice has not enough scorum power to vote
     op.author = "alice";
     op.permlink = "foo";
-    op.weight = (int16_t)100;
+    op.weight = SCORUM_PERCENT(100);
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -187,7 +187,7 @@ SCORUM_TEST_CASE(success_vote_for_100_weight_check)
     op.voter = "bob"; // bob has enough scorum power to vote
     op.author = "alice";
     op.permlink = "foo";
-    op.weight = (int16_t)100;
+    op.weight = SCORUM_PERCENT(100);
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -286,7 +286,7 @@ SCORUM_TEST_CASE(reduced_power_for_50_weight_check)
     op.voter = "alice";
     op.author = "bob";
     op.permlink = "foo";
-    op.weight = (int16_t)(100 / 2);
+    op.weight = SCORUM_PERCENT(50);
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -314,7 +314,7 @@ SCORUM_TEST_CASE(restore_power_check)
 
     const account_object& alice_vested = account_service.get_account("alice");
 
-    vote("alice", "bob", 50);
+    vote("alice", "bob", SCORUM_PERCENT(50));
 
     auto old_abs_rshares = bob_comment.abs_rshares;
 
@@ -324,7 +324,7 @@ SCORUM_TEST_CASE(restore_power_check)
         * (SCORUM_100_PERCENT - alice_vested.voting_power) / SCORUM_100_PERCENT;
     generate_blocks(global_property_service.head_block_time() + elapsed_seconds, true);
 
-    vote("alice", "bob", 100);
+    vote("alice", "bob", SCORUM_PERCENT(100));
 
     // voting_power is total restored
 
@@ -351,13 +351,13 @@ SCORUM_TEST_CASE(negative_vote_check)
 
     asset sam_effective_sp = sam_vested.effective_scorumpower();
 
-    vote("alice", "bob", 100); // make not zerro abs_rshares for bob_comment
+    vote("alice", "bob", SCORUM_PERCENT(100)); // make not zerro abs_rshares for bob_comment
 
     auto old_abs_rshares = bob_comment.abs_rshares;
 
     generate_blocks(global_property_service.head_block_time() + fc::seconds((SCORUM_CASHOUT_WINDOW_SECONDS / 2)), true);
 
-    vote("sam", "bob", -50);
+    vote("sam", "bob", -1 * SCORUM_PERCENT(50));
 
     share_type rshares = (uint128_t(sam_effective_sp.amount.value) * (SCORUM_100_PERCENT - sam_vested.voting_power)
                           / SCORUM_100_PERCENT)
@@ -382,7 +382,7 @@ SCORUM_TEST_CASE(nested_comment_vote_check)
     // root is itself
     BOOST_REQUIRE_EQUAL(parent_comment.root_comment._id, parent_comment.id._id);
 
-    vote("dave", "alice", 80);
+    vote("dave", "alice", SCORUM_PERCENT(80));
 
     // create child comment for alice comment
 
@@ -396,7 +396,7 @@ SCORUM_TEST_CASE(nested_comment_vote_check)
 
     generate_blocks(global_property_service.head_block_time() + fc::seconds((SCORUM_CASHOUT_WINDOW_SECONDS / 2)), true);
 
-    vote("dave", "sam", 100);
+    vote("dave", "sam", SCORUM_PERCENT(100));
 
     share_type rshares = (uint128_t(dave_vested.scorumpower.amount.value)
                           * (SCORUM_100_PERCENT - dave_vested.voting_power) / SCORUM_100_PERCENT)
@@ -414,15 +414,15 @@ SCORUM_TEST_CASE(increasing_rshares_for_2_different_voters_check)
 
     const account_object& alice_vested = account_service.get_account("alice");
 
-    vote("sam", "bob", 50);
+    vote("sam", "bob", SCORUM_PERCENT(50));
 
     auto old_abs_rshares = bob_comment.abs_rshares;
     auto old_net_rshares = bob_comment.net_rshares;
 
-    const auto alice_vote_weight = 25;
+    const auto alice_vote_weight = SCORUM_PERCENT(25);
 
-    auto used_power = calculate_used_power(alice_vested.voting_power, SCORUM_1_PERCENT * alice_vote_weight,
-                                           SCORUM_VOTING_POWER_DECAY_PERCENT);
+    auto used_power
+        = calculate_used_power(alice_vested.voting_power, alice_vote_weight, SCORUM_VOTING_POWER_DECAY_PERCENT);
     auto alice_voting_power = alice_vested.voting_power - used_power;
     auto new_rshares = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
 
@@ -432,7 +432,7 @@ SCORUM_TEST_CASE(increasing_rshares_for_2_different_voters_check)
 
     BOOST_REQUIRE_EQUAL(alice_vote.rshares, (int64_t)new_rshares);
 
-    BOOST_REQUIRE_EQUAL(alice_vote.vote_percent, alice_vote_weight * SCORUM_1_PERCENT);
+    BOOST_REQUIRE_EQUAL(alice_vote.vote_percent, alice_vote_weight);
 
     BOOST_REQUIRE_EQUAL(alice_vested.voting_power, alice_voting_power);
 
@@ -450,7 +450,7 @@ SCORUM_TEST_CASE(increasing_rshares_for_2_same_voters_check)
 
     const account_object& alice_vested = account_service.get_account("alice");
 
-    vote("alice", "bob", 50);
+    vote("alice", "bob", SCORUM_PERCENT(50));
 
     const auto& alice_vote = comment_vote_service.get(bob_comment.id, alice_vested.id);
 
@@ -458,13 +458,14 @@ SCORUM_TEST_CASE(increasing_rshares_for_2_same_voters_check)
     auto old_net_rshares = bob_comment.net_rshares;
     auto old_vote_rshares = alice_vote.rshares;
 
-    const auto alice_second_vote_weight = 35;
+    const auto alice_second_vote_weight = SCORUM_PERCENT(35);
 
     auto alice_voting_power
         = calculate_restoring_power(alice_vested.voting_power, db.head_block_time() + SCORUM_BLOCK_INTERVAL,
                                     db.head_block_time(), SCORUM_VOTE_REGENERATION_SECONDS);
-    auto used_power = calculate_used_power(alice_voting_power, SCORUM_1_PERCENT * alice_second_vote_weight,
-                                           SCORUM_VOTING_POWER_DECAY_PERCENT);
+    auto used_power
+        = calculate_used_power(alice_voting_power, alice_second_vote_weight, SCORUM_VOTING_POWER_DECAY_PERCENT);
+
     alice_voting_power = alice_voting_power - used_power;
     auto new_rshares = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
 
@@ -476,7 +477,7 @@ SCORUM_TEST_CASE(increasing_rshares_for_2_same_voters_check)
 
     BOOST_REQUIRE_EQUAL(alice_vote.rshares, (int64_t)new_rshares);
 
-    BOOST_REQUIRE_EQUAL(alice_vote.vote_percent, alice_second_vote_weight * SCORUM_1_PERCENT);
+    BOOST_REQUIRE_EQUAL(alice_vote.vote_percent, alice_second_vote_weight);
 
     BOOST_REQUIRE_EQUAL(alice_vested.voting_power, alice_voting_power);
 
@@ -496,7 +497,7 @@ SCORUM_TEST_CASE(decreasing_rshares_for_2_same_voters_check)
 
     const account_object& alice_vested = account_service.get_account("alice");
 
-    vote("alice", "bob", 50);
+    vote("alice", "bob", SCORUM_PERCENT(50));
 
     const auto& alice_vote = comment_vote_service.get(bob_comment.id, alice_vested.id);
 
@@ -504,12 +505,12 @@ SCORUM_TEST_CASE(decreasing_rshares_for_2_same_voters_check)
     auto old_net_rshares = bob_comment.net_rshares;
     auto old_vote_rshares = alice_vote.rshares;
 
-    const auto alice_second_vote_weight = -75;
+    const auto alice_second_vote_weight = -1 * SCORUM_PERCENT(75);
 
     auto alice_voting_power
         = calculate_restoring_power(alice_vested.voting_power, db.head_block_time() + SCORUM_BLOCK_INTERVAL,
                                     db.head_block_time(), SCORUM_VOTE_REGENERATION_SECONDS);
-    auto used_power = calculate_used_power(alice_voting_power, SCORUM_1_PERCENT * std::abs(alice_second_vote_weight),
+    auto used_power = calculate_used_power(alice_voting_power, std::abs(alice_second_vote_weight),
                                            SCORUM_VOTING_POWER_DECAY_PERCENT);
     alice_voting_power = alice_voting_power - used_power;
     auto new_rshares = (uint128_t(alice_vested.scorumpower.amount.value) * used_power / SCORUM_100_PERCENT).to_uint64();
@@ -518,7 +519,7 @@ SCORUM_TEST_CASE(decreasing_rshares_for_2_same_voters_check)
 
     BOOST_REQUIRE_EQUAL(alice_vote.rshares, -(int64_t)new_rshares);
 
-    BOOST_REQUIRE_EQUAL(alice_vote.vote_percent, alice_second_vote_weight * SCORUM_1_PERCENT);
+    BOOST_REQUIRE_EQUAL(alice_vote.vote_percent, alice_second_vote_weight);
 
     BOOST_REQUIRE_EQUAL(alice_vested.voting_power, alice_voting_power);
 
@@ -536,7 +537,7 @@ SCORUM_TEST_CASE(removing_vote_check)
 
     const account_object& alice_vested = account_service.get_account("alice");
 
-    vote("alice", "bob", -50);
+    vote("alice", "bob", -1 * SCORUM_PERCENT(50));
 
     const auto& alice_vote = comment_vote_service.get(bob_comment.id, alice_vested.id);
 
@@ -561,7 +562,7 @@ SCORUM_TEST_CASE(failure_when_increasing_rshares_within_lockout_period_check)
 {
     const auto& bob_comment = comment_service.get("bob", comment("bob"));
 
-    vote("alice", "bob", 90);
+    vote("alice", "bob", SCORUM_PERCENT(90));
 
     generate_blocks(fc::time_point_sec((bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT).sec_since_epoch()
                                        + SCORUM_BLOCK_INTERVAL),
@@ -571,7 +572,7 @@ SCORUM_TEST_CASE(failure_when_increasing_rshares_within_lockout_period_check)
     op.voter = "alice";
     op.author = "bob";
     op.permlink = "foo";
-    op.weight = (int16_t)100;
+    op.weight = SCORUM_PERCENT(100);
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -585,7 +586,7 @@ SCORUM_TEST_CASE(success_when_reducing_rshares_within_lockout_period_check)
 {
     const auto& bob_comment = comment_service.get("bob", comment("bob"));
 
-    vote("alice", "bob", 90);
+    vote("alice", "bob", SCORUM_PERCENT(90));
 
     generate_blocks(fc::time_point_sec((bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT).sec_since_epoch()
                                        + SCORUM_BLOCK_INTERVAL),
@@ -595,7 +596,7 @@ SCORUM_TEST_CASE(success_when_reducing_rshares_within_lockout_period_check)
     op.voter = "alice";
     op.author = "bob";
     op.permlink = "foo";
-    op.weight = (int16_t)-100;
+    op.weight = -1 * SCORUM_PERCENT(100);
 
     signed_transaction tx;
     tx.operations.push_back(op);
@@ -609,7 +610,7 @@ SCORUM_TEST_CASE(failure_with_a_new_vote_within_lockout_period_check)
 {
     const auto& bob_comment = comment_service.get("bob", comment("bob"));
 
-    vote("alice", "bob", 90);
+    vote("alice", "bob", SCORUM_PERCENT(90));
 
     generate_blocks(fc::time_point_sec((bob_comment.cashout_time - SCORUM_UPVOTE_LOCKOUT).sec_since_epoch()
                                        + SCORUM_BLOCK_INTERVAL),
@@ -619,7 +620,7 @@ SCORUM_TEST_CASE(failure_with_a_new_vote_within_lockout_period_check)
     op.voter = "dave";
     op.author = "bob";
     op.permlink = "foo";
-    op.weight = (int16_t)50;
+    op.weight = SCORUM_PERCENT(50);
 
     signed_transaction tx;
     tx.operations.push_back(op);
