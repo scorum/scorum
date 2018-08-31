@@ -56,6 +56,20 @@ void betting_resolver::return_pending_bets(const game_id_type& game_id) const
     }
 }
 
+void betting_resolver::return_matched_bets(const game_id_type& game_id) const
+{
+    auto matched_bets = _matched_bet_svc.get_bets(game_id);
+
+    for (const matched_bet_object& matched_bet : matched_bets)
+    {
+        const auto& bet1 = _bet_svc.get_bet(matched_bet.bet1);
+        const auto& bet2 = _bet_svc.get_bet(matched_bet.bet2);
+
+        return_balance(bet1.better, matched_bet.matched_bet1_stake);
+        return_balance(bet2.better, matched_bet.matched_bet2_stake);
+    }
+}
+
 void betting_resolver::resolve_balance(const account_name_type& winner_name,
                                        const account_name_type& loser_name,
                                        const asset& winner_stake,

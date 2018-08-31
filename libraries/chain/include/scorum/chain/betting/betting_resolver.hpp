@@ -31,6 +31,8 @@ struct betting_resolver_i
                                       const fc::shared_flat_set<wincase_type>& results) const = 0;
 
     virtual void return_pending_bets(const chainbase::oid<game_object>& game_id) const = 0;
+
+    virtual void return_matched_bets(const chainbase::oid<game_object>& game_id) const = 0;
 };
 
 class betting_resolver : public betting_resolver_i
@@ -45,6 +47,8 @@ public:
                               const fc::shared_flat_set<wincase_type>& results) const override;
 
     void return_pending_bets(const chainbase::oid<game_object>& game_id) const override;
+
+    void return_matched_bets(const chainbase::oid<game_object>& game_id) const override;
 
 private:
     void resolve_balance(const protocol::account_name_type& winner_name,

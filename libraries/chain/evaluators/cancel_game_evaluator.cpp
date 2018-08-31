@@ -14,6 +14,7 @@ cancel_game_evaluator::cancel_game_evaluator(data_service_factory_i& services,
     : evaluator_impl<data_service_factory_i, cancel_game_evaluator>(services)
     , _account_service(services.account_service())
     , _betting_service(betting_service)
+    , _betting_resolver(betting_resolver)
     , _game_service(services.game_service())
 {
 }
@@ -29,7 +30,8 @@ void cancel_game_evaluator::do_apply(const operation_type& op)
 
     FC_ASSERT(game_obj.status != game_status::finished, "Cannot cancel the game after it is finished");
 
-    _betting_service.return_unresolved_bets(game_obj);
+    _betting_resolver.return_pending_bets(game_obj.id);
+    _betting_resolver.return_matched_bets(game_obj.id);
 
     _betting_service.cancel_game(game_obj.id);
 }
