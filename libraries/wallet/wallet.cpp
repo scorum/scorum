@@ -3,6 +3,7 @@
 
 #include <scorum/app/api.hpp>
 #include <scorum/app/chain_api.hpp>
+#include <scorum/app/betting_api.hpp>
 #include <scorum/protocol/base.hpp>
 #include <scorum/wallet/wallet.hpp>
 #include <scorum/wallet/api_documentation.hpp>
@@ -3134,6 +3135,34 @@ void wallet_api::exit()
 chain_capital_api_obj wallet_api::get_chain_capital() const
 {
     return my->_chain_api->get_chain_capital();
+}
+
+std::vector<game_api_object> wallet_api::get_games(game_filter filter) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_games(filter);
+}
+
+std::vector<bet_api_object> wallet_api::get_user_bets(bet_id_type from, int64_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_user_bets(from, limit);
+}
+
+std::vector<matched_bet_api_object> wallet_api::get_matched_bets(matched_bet_id_type from, int64_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_matched_bets(from, limit);
+}
+
+std::vector<pending_bet_api_object> wallet_api::get_pending_bets(pending_bet_id_type from, int64_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_pending_bets(from, limit);
 }
 
 } // namespace wallet

@@ -34,6 +34,7 @@ set(SOURCES
     rewards_math/calculate_voting_power_tests.cpp
     rewards/comment_reward_tests.cpp
     utils/string_algorithm_tests.cpp
+    utils/take_n_range_tests.cpp
     fc/static_variant_visitor_tests.cpp
     tasks_base_tests.cpp
     app_tests.cpp
@@ -52,6 +53,7 @@ set(SOURCES
     betting/betting_math_tests.cpp
     betting/betting_matcher_tests.cpp
     betting/bet_evaluators_tests.cpp
+    betting/betting_api_tests.cpp
     odds_tests.cpp
     market_type_tests.cpp
 )

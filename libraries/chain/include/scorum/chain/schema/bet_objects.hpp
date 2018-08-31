@@ -20,6 +20,7 @@ class bet_object : public object<bet_object_type, bet_object>
 public:
     /// @cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_CONSTRUCTOR(bet_object)
+    /// @endcond
 
     id_type id;
 
@@ -44,6 +45,7 @@ class pending_bet_object : public object<pending_bet_object_type, pending_bet_ob
 public:
     /// @cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_CONSTRUCTOR(pending_bet_object)
+    /// @endcond
 
     id_type id;
 
@@ -57,6 +59,7 @@ class matched_bet_object : public object<matched_bet_object_type, matched_bet_ob
 public:
     /// @cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_CONSTRUCTOR(matched_bet_object)
+    /// @endcond
 
     id_type id;
 

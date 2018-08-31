@@ -53,5 +53,12 @@ void dbs_matched_bet::foreach_bets(const bet_id_type& bet_id, dbs_matched_bet::m
     }
     FC_CAPTURE_LOG_AND_RETHROW((bet_id))
 }
+
+dbs_matched_bet::view_type dbs_matched_bet::get_bets(matched_bet_id_type lower_bound) const
+{
+    auto& idx = db_impl().get_index<matched_bet_index, by_id>();
+    return { idx.lower_bound(lower_bound), idx.end() };
 }
-}
+
+} // namespace chain
+} // namespace scorum

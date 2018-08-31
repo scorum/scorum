@@ -27,6 +27,8 @@ struct game_service_i : public base_service_i<game_object>
 
     virtual const game_object& get_game(const std::string& game_name) const = 0;
     virtual const game_object& get_game(int64_t game_id) const = 0;
+
+    virtual view_type get_games() const = 0;
 };
 
 class dbs_game : public dbs_service_base<game_service_i>
@@ -50,6 +52,8 @@ public:
 
     virtual const game_object& get_game(const std::string& game_name) const override;
     virtual const game_object& get_game(int64_t game_id) const override;
+
+    virtual view_type get_games() const override;
 
 private:
     dynamic_global_property_service_i& _dprops_service;

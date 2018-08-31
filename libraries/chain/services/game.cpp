@@ -69,5 +69,11 @@ const game_object& dbs_game::get_game(int64_t game_id) const
     return get_by<by_id>(game_id);
 }
 
+dbs_game::view_type dbs_game::get_games() const
+{
+    auto& idx = db_impl().get_index<game_index, by_id>();
+    return { idx.begin(), idx.end() };
+}
+
 } // namespace scorum
 } // namespace chain
