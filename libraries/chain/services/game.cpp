@@ -78,5 +78,12 @@ std::vector<dbs_game::object_cref_type> dbs_game::get_games(fc::time_point_sec s
 {
     return get_range_by<by_start_time>(start <= boost::lambda::_1, boost::lambda::_1 <= start);
 }
+
+dbs_game::view_type dbs_game::get_games() const
+{
+    auto& idx = db_impl().get_index<game_index, by_id>();
+    return { idx.begin(), idx.end() };
+}
+
 } // namespace scorum
 } // namespace chain

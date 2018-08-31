@@ -10,8 +10,9 @@ using scorum::protocol::percent_type;
 class betting_property_object : public object<betting_property_object_type, betting_property_object>
 {
 public:
-    /// \cond DO_NOT_DOCUMENT
+    /// @cond DO_NOT_DOCUMENT
     CHAINBASE_DEFAULT_CONSTRUCTOR(betting_property_object)
+    /// @endcond
 
     id_type id;
 
