@@ -433,6 +433,55 @@ private:
         return result;
     }
 
+    posts_crefs exclude(const posts_crefs& filtering_posts,
+                        const discussion_query& query,
+                        const std::function<bool(const tag_object&)>& tag_filter) const
+    {
+        if (filtering_posts.empty())
+            return filtering_posts;
+
+        // clang-format off
+        auto rng_exclude = query.exclude_tags |
+                boost::adaptors::transformed(utils::to_lower_copy) |
+                boost::adaptors::transformed([](const std::string& s) { return utils::substring(s, 0, TAG_LENGTH_MAX); });
+        // clang-format on
+
+        std::set<std::string> tags_exclude(rng_exclude.begin(), rng_exclude.end());
+        if (tags_exclude.empty())
+            return filtering_posts;
+
+        std::vector<posts_crefs> exclude_posts_by_tags;
+        exclude_posts_by_tags.reserve(tags_exclude.size());
+
+        boost::transform(tags_exclude, std::back_inserter(exclude_posts_by_tags),
+                         [&](const std::string& t) { return get_posts(t, tag_filter); });
+
+        if (exclude_posts_by_tags.empty())
+            return filtering_posts;
+
+        using post_cref = posts_crefs::value_type;
+
+        struct less_by_comment
+        {
+            bool operator()(post_cref lhs, post_cref rhs) const
+            {
+                return lhs.get().comment < rhs.get().comment;
+            }
+        };
+
+        std::set<post_cref, less_by_comment> exclude_set;
+        for (const auto& posts : exclude_posts_by_tags)
+            boost::copy(posts, std::inserter(exclude_set, end(exclude_set)));
+
+        posts_crefs result;
+        result.reserve(filtering_posts.size());
+
+        std::copy_if(begin(filtering_posts), end(filtering_posts), std::back_inserter(result),
+                     [&](post_cref post) { return exclude_set.find(post) == exclude_set.end(); });
+
+        return result;
+    }
+
     std::vector<discussion> get_discussions(const discussion_query& query,
                                             const std::function<bool(const tag_object&, const tag_object&)>& ordering,
                                             const std::function<bool(const tag_object&)>& tag_filter
@@ -444,6 +493,10 @@ private:
         FC_ASSERT((query.start_author && query.start_permlink && !query.start_author->empty() && !query.start_permlink->empty()) ||
                   (!query.start_author && !query.start_permlink),
                   "start_author and start_permlink should be either both specified and not empty or both not specified");
+
+        std::vector<std::string> diff;
+        boost::set_intersection(query.tags, query.exclude_tags, std::back_inserter(diff));
+        FC_ASSERT(diff.empty(), "include_tags and exclude_tags can't have intersection");
 
         auto rng = query.tags
             | boost::adaptors::transformed(utils::to_lower_copy)
@@ -467,6 +520,8 @@ private:
         // clang-format on
 
         std::vector<discussion> result;
+
+        posts = exclude(posts, query, tag_filter);
         if (posts.empty())
             return result;
 
