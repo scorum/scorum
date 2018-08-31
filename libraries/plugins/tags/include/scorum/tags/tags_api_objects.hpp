@@ -177,8 +177,22 @@ struct discussion_query
     /// query limit
     uint32_t limit = 0;
 
+    /// require that all tags in query must exist in querying posts
     bool tags_logical_and = true;
+    /// tags to select
     std::set<std::string> tags;
+};
+
+struct content_query
+{
+    /// the number of bytes of the post body to return, 0 for all
+    uint32_t truncate_body = 0;
+
+    /// author
+    std::string author;
+
+    /// permlink
+    std::string permlink;
 };
 
 /// @}
@@ -255,4 +269,9 @@ FC_REFLECT(scorum::tags::api::discussion_query,
           (limit)
           (tags)
           (tags_logical_and))
+
+FC_REFLECT(scorum::tags::api::content_query,
+          (truncate_body)
+          (author)
+          (permlink))
 // clang-format on

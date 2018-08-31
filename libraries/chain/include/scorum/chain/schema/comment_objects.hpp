@@ -87,6 +87,9 @@ public:
     bool allow_curation_rewards = true;
 
     fc::shared_vector<beneficiary_route_type> beneficiaries;
+
+    /// this field is 'true' if comment received any reward from child or itself (not only net_votes > 0)
+    bool rewarded = false;
 };
 
 /**
@@ -161,6 +164,7 @@ struct by_root;
 struct by_parent;
 struct by_last_update;
 struct by_author_created;
+struct by_author_rewarded;
 
 typedef shared_multi_index_container<comment_object,
                                      indexed_by<
@@ -232,6 +236,24 @@ typedef shared_multi_index_container<comment_object,
                                                                              comment_id_type,
                                                                              &comment_object::id>>,
                                                         composite_key_compare<std::less<account_name_type>,
+                                                                              std::greater<time_point_sec>,
+                                                                              std::less<comment_id_type>>>,
+                                         ordered_unique<tag<by_author_rewarded>,
+                                                        composite_key<comment_object,
+                                                                      member<comment_object,
+                                                                             account_name_type,
+                                                                             &comment_object::author>,
+                                                                      member<comment_object,
+                                                                             bool,
+                                                                             &comment_object::rewarded>,
+                                                                      member<comment_object,
+                                                                             time_point_sec,
+                                                                             &comment_object::created>,
+                                                                      member<comment_object,
+                                                                             comment_id_type,
+                                                                             &comment_object::id>>,
+                                                        composite_key_compare<std::less<account_name_type>,
+                                                                              std::greater<bool>,
                                                                               std::greater<time_point_sec>,
                                                                               std::less<comment_id_type>>>
 #endif
@@ -344,6 +366,7 @@ FC_REFLECT( scorum::chain::comment_object,
             (allow_votes)
             (allow_curation_rewards)
             (beneficiaries)
+            (rewarded)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_object, scorum::chain::comment_index )
 

@@ -147,6 +147,7 @@ struct pay_for_comments_fixture : public shared_memory_fixture
         mock_do_nothing();
         // 'comments' already contains all required posts/comments so we don't care which comment we should return here
         mocks.OnCallOverload(comment_service, (get_acc_ptr)&comment_service_i::get).ReturnByRef(comment_refs[0].get());
+        mocks.OnCall(comment_service, comment_service_i::set_rewarded_flag);
         mocks.OnCall(acc_service, account_service_i::get_account).With("alice").ReturnByRef(alice_acc);
         mocks.OnCall(acc_service, account_service_i::get_account).With("bob").ReturnByRef(bob_acc);
         mocks.OnCall(acc_service, account_service_i::create_scorumpower).Do(create_scorumpower);

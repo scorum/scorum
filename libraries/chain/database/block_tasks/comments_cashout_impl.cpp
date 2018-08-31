@@ -196,6 +196,11 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
 
         author_reward -= payout_from_children;
 
+        if (author_reward.amount > 0 || payout_from_children.amount > 0)
+        {
+            comment_service.set_rewarded_flag(comment);
+        }
+
         // clang-format off
         _ctx.push_virtual_operation(comment_reward_operation(
                              comment.author,

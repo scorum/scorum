@@ -70,5 +70,17 @@ comment_service_i::comment_refs_type dbs_comment::get_children(const account_nam
     return range;
 }
 
+void dbs_comment::set_rewarded_flag(const comment_object& comment)
+{
+    try
+    {
+        if (!comment.rewarded)
+        {
+            update(comment, [](comment_object& c) { c.rewarded = true; });
+        }
+    }
+    FC_CAPTURE_AND_RETHROW((comment.author)(comment.permlink))
+}
+
 } // namespace chain
 } // namespace scorum
