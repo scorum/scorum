@@ -26,7 +26,7 @@ struct tags_get_contents_fixture : public database_fixture::tags_fixture
 
 BOOST_FIXTURE_TEST_SUITE(tags_get_contents_tests, tags_get_contents_fixture)
 
-SCORUM_TEST_CASE(get_contents_nevative_check)
+SCORUM_TEST_CASE(get_contents_negative_check)
 {
     std::vector<api::content_query> qs;
     qs.reserve(2 * MAX_DISCUSSIONS_LIST_SIZE);

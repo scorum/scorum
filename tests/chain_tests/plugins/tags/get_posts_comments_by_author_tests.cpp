@@ -83,7 +83,7 @@ struct get_post_comments_by_author_fixture : public database_fixture::tags_fixtu
 
 BOOST_FIXTURE_TEST_SUITE(tags_get_post_comments_by_author_tests, get_post_comments_by_author_fixture)
 
-SCORUM_TEST_CASE(get_post_comments_by_author_nevative_check)
+SCORUM_TEST_CASE(get_post_comments_by_author_negative_check)
 {
     BOOST_CHECK_THROW(
         _api.get_posts_comments_by_author(discussion_query_wrapper{ "alice", "1", MAX_DISCUSSIONS_LIST_SIZE * 2 }),
