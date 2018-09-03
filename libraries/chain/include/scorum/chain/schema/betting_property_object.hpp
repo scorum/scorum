@@ -35,6 +35,11 @@ typedef shared_multi_index_container<betting_property_object,
 }
 }
 
-FC_REFLECT(scorum::chain::betting_property_object, (id)(moderator))
+// clang-format off
+FC_REFLECT(scorum::chain::betting_property_object,
+           (id)
+           (moderator)
+           (resolve_delay_sec))
+// clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::betting_property_object, scorum::chain::betting_property_index)
