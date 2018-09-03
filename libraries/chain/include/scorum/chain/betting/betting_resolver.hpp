@@ -56,12 +56,7 @@ public:
     void return_bets(const std::vector<std::reference_wrapper<const bet_object>>& bets) const override;
 
 private:
-    void resolve_stakes(const protocol::account_name_type& winner_name,
-                        const protocol::account_name_type& loser_name,
-                        const protocol::asset& winner_stake,
-                        const protocol::asset& loser_stake) const;
-
-    void return_stake(const protocol::account_name_type& acc_name, const protocol::asset& stake) const;
+    void increase_balance(const protocol::account_name_type& acc_name, const protocol::asset& stake) const;
 
 private:
     pending_bet_service_i& _pending_bet_svc;

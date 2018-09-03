@@ -34,13 +34,13 @@ void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
         auto snd_won = results.find(bet2.wincase) != results.end();
 
         if (fst_won)
-            resolve_stakes(bet1.better, bet2.better, matched_bet.matched_bet1_stake, matched_bet.matched_bet2_stake);
+            increase_balance(bet1.better, matched_bet.matched_bet1_stake + matched_bet.matched_bet2_stake);
         else if (snd_won)
-            resolve_stakes(bet2.better, bet1.better, matched_bet.matched_bet2_stake, matched_bet.matched_bet1_stake);
+            increase_balance(bet2.better, matched_bet.matched_bet1_stake + matched_bet.matched_bet2_stake);
         else
         {
-            return_stake(bet1.better, matched_bet.matched_bet1_stake);
-            return_stake(bet2.better, matched_bet.matched_bet2_stake);
+            increase_balance(bet1.better, matched_bet.matched_bet1_stake);
+            increase_balance(bet2.better, matched_bet.matched_bet2_stake);
         }
     }
 }
@@ -52,7 +52,7 @@ void betting_resolver::return_pending_bets(const game_id_type& game_id) const
     for (const pending_bet_object& pending_bet : pending_bets)
     {
         const auto& bet = _bet_svc.get_bet(pending_bet.bet);
-        return_stake(bet.better, bet.rest_stake);
+        increase_balance(bet.better, bet.rest_stake);
     }
 }
 
@@ -65,8 +65,8 @@ void betting_resolver::return_matched_bets(const game_id_type& game_id) const
         const auto& bet1 = _bet_svc.get_bet(matched_bet.bet1);
         const auto& bet2 = _bet_svc.get_bet(matched_bet.bet2);
 
-        return_stake(bet1.better, matched_bet.matched_bet1_stake);
-        return_stake(bet2.better, matched_bet.matched_bet2_stake);
+        increase_balance(bet1.better, matched_bet.matched_bet1_stake);
+        increase_balance(bet2.better, matched_bet.matched_bet2_stake);
     }
 }
 
@@ -74,23 +74,11 @@ void betting_resolver::return_bets(const std::vector<std::reference_wrapper<cons
 {
     for (const bet_object& bet : bets)
     {
-        return_stake(bet.better, bet.stake);
+        increase_balance(bet.better, bet.stake);
     }
 }
 
-void betting_resolver::resolve_stakes(const account_name_type& winner_name,
-                                      const account_name_type& loser_name,
-                                      const asset& winner_stake,
-                                      const asset& loser_stake) const
-{
-    const auto& winner_acc = _account_svc.get_account(winner_name);
-    const auto& loser_acc = _account_svc.get_account(loser_name);
-
-    _account_svc.increase_balance(winner_acc, winner_stake + loser_stake);
-    _account_svc.decrease_balance(loser_acc, loser_stake);
-}
-
-void betting_resolver::return_stake(const protocol::account_name_type& acc_name, const protocol::asset& stake) const
+void betting_resolver::increase_balance(const protocol::account_name_type& acc_name, const protocol::asset& stake) const
 {
     const auto& acc = _account_svc.get_account(acc_name);
 

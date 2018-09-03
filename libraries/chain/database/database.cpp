@@ -70,6 +70,7 @@
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/database/block_tasks/process_games_startup.hpp>
 #include <scorum/chain/database/block_tasks/process_bets_resolving.hpp>
+#include <scorum/chain/database/block_tasks/process_bets_auto_resolving.hpp>
 #include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
@@ -1569,6 +1570,7 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
         database_ns::process_games_startup().apply(task_ctx);
         database_ns::process_bets_resolving(_my->betting_service(), _my->betting_resolver()).apply(task_ctx);
+        database_ns::process_bets_auto_resolving(_my->betting_service(), _my->betting_resolver()).apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();
