@@ -60,7 +60,7 @@ SCORUM_TEST_CASE(bets_resolve_test_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, fc::seconds(SCORUM_BLOCK_INTERVAL * 2));
+    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
     create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
@@ -94,8 +94,8 @@ SCORUM_TEST_CASE(bets_auto_resolve_test_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    auto start_time = db.head_block_time();
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, fc::seconds(SCORUM_BLOCK_INTERVAL * 2));
+    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    auto start_time = game_service.get().start;
     generate_block();
 
     create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
@@ -120,7 +120,7 @@ SCORUM_TEST_CASE(cancel_game_before_start_return_all_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, fc::seconds(SCORUM_BLOCK_INTERVAL * 3));
+    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 3);
     generate_block();
 
     create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
@@ -142,7 +142,7 @@ SCORUM_TEST_CASE(cancel_game_after_start_return_all_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, fc::seconds(SCORUM_BLOCK_INTERVAL * 2));
+    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
     create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
@@ -163,7 +163,7 @@ SCORUM_TEST_CASE(update_markets_trigger_bets_cancelling_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, result_draw_market{} }, fc::seconds(SCORUM_BLOCK_INTERVAL * 3));
+    create_game(moderator, { result_home_market{}, result_draw_market{} }, SCORUM_BLOCK_INTERVAL * 3);
     generate_block();
 
     create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 4, SCORUM_SYMBOL)); // 250'000

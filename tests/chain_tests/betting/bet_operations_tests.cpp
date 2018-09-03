@@ -50,7 +50,7 @@ struct bet_operations_fixture : public database_fixture::database_betting_integr
         BOOST_REQUIRE(betting_property_service.is_exists());
         BOOST_REQUIRE_EQUAL(betting_property_service.get().moderator, moderator.name);
 
-        create_game(moderator, { result_home_market{}, total_market{ 2000 } }, fc::hours(1));
+        create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 60 * 20);
 
         generate_block();
     }

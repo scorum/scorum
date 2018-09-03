@@ -17,14 +17,14 @@ dbs_game::dbs_game(database& db)
 const game_object& dbs_game::create_game(const account_name_type& moderator,
                                          const std::string& game_name,
                                          fc::time_point_sec start,
-                                         fc::time_point_sec auto_resolve_time,
+                                         uint32_t auto_resolve_delay_sec,
                                          const game_type& game,
                                          const fc::flat_set<market_type>& markets)
 {
     return dbs_service_base<game_service_i>::create([&](game_object& obj) {
         fc::from_string(obj.name, game_name);
         obj.start = start;
-        obj.auto_resolve_time = auto_resolve_time;
+        obj.auto_resolve_time = start + auto_resolve_delay_sec;
         obj.original_start = start;
         obj.last_update = _dprops_service.head_block_time();
         obj.game = game;
@@ -79,7 +79,7 @@ const game_object& dbs_game::get_game(int64_t game_id) const
 }
 std::vector<dbs_game::object_cref_type> dbs_game::get_games(fc::time_point_sec start) const
 {
-    return get_range_by<by_start_time>(start <= boost::lambda::_1, boost::lambda::_1 <= start);
+    return get_range_by<by_start_time>(boost::multi_index::unbounded, boost::lambda::_1 <= start);
 }
 
 dbs_game::view_type dbs_game::get_games() const
@@ -90,12 +90,12 @@ dbs_game::view_type dbs_game::get_games() const
 
 std::vector<dbs_game::object_cref_type> dbs_game::get_games_to_resolve(fc::time_point_sec resolve_time) const
 {
-    return get_range_by<by_bets_resolve_time>(resolve_time <= boost::lambda::_1, boost::lambda::_1 <= resolve_time);
+    return get_range_by<by_bets_resolve_time>(boost::multi_index::unbounded, boost::lambda::_1 <= resolve_time);
 }
 
 std::vector<dbs_game::object_cref_type> dbs_game::get_games_to_auto_resolve(fc::time_point_sec resolve_time) const
 {
-    return get_range_by<by_auto_resolve_time>(resolve_time <= boost::lambda::_1, boost::lambda::_1 <= resolve_time);
+    return get_range_by<by_auto_resolve_time>(boost::multi_index::unbounded, boost::lambda::_1 <= resolve_time);
 }
 
 } // namespace scorum

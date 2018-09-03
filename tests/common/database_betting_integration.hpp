@@ -14,8 +14,8 @@
 
 namespace database_fixture {
 
-const fc::microseconds start_delay_default = fc::seconds(3);
-const fc::microseconds auto_resolve_delay_default = fc::minutes(1);
+const uint32_t start_delay_default = SCORUM_BLOCK_INTERVAL;
+const uint32_t auto_resolve_delay_default = DAYS_TO_SECONDS(1);
 
 struct database_betting_integration_fixture : public database_trx_integration_fixture
 {
@@ -26,8 +26,8 @@ struct database_betting_integration_fixture : public database_trx_integration_fi
     void empower_moderator(const Actor& moderator);
     create_game_operation create_game(const Actor& moderator,
                                       fc::flat_set<betting::market_type> markets,
-                                      fc::microseconds start_delay = start_delay_default,
-                                      fc::microseconds auto_resolve_delay = auto_resolve_delay_default);
+                                      uint32_t start_delay = start_delay_default,
+                                      uint32_t auto_resolve_delay_sec = auto_resolve_delay_default);
     post_bet_operation create_bet(const Actor& better,
                                   const betting::wincase_type& wincase,
                                   const odds_input& odds_value,
@@ -35,6 +35,7 @@ struct database_betting_integration_fixture : public database_trx_integration_fi
     cancel_pending_bets_operation cancel_pending_bet(const Actor& better, const fc::flat_set<int64_t>& bet_ids);
     cancel_game_operation cancel_game(const Actor& moderator);
     update_game_markets_operation update_markets(const Actor& moderator, fc::flat_set<betting::market_type> markets);
+    update_game_start_time_operation update_start_time(const Actor& moderator, uint32_t start_delay);
     post_game_results_operation post_results(const Actor& moderator,
                                              const fc::flat_set<betting::wincase_type>& winners);
 

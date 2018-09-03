@@ -43,8 +43,8 @@ public:
     time_point_sec start = time_point_sec::min();
     time_point_sec original_start = time_point_sec::min();
     time_point_sec last_update = time_point_sec::min();
-    time_point_sec auto_resolve_time = time_point_sec::maximum();
     time_point_sec bets_resolve_time = time_point_sec::maximum();
+    time_point_sec auto_resolve_time = time_point_sec::maximum();
 
     game_status status = game_status::created;
 
@@ -79,6 +79,7 @@ using game_index
 
 FC_REFLECT_ENUM(scorum::chain::game_status, (created)(started)(finished))
 FC_REFLECT(scorum::chain::game_object,
-           (id)(name)(start)(original_start)(last_update)(bets_resolve_time)(status)(game)(markets)(results))
+           (id)(name)(start)(original_start)(last_update)(bets_resolve_time)(auto_resolve_time)(status)(game)(markets)(
+               results))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_object, scorum::chain::game_index)

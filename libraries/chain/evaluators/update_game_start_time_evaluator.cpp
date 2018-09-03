@@ -36,7 +36,11 @@ void update_game_start_time_evaluator::do_apply(const operation_type& op)
               "Cannot change start time more than ${1} seconds",
               ("1", SCORUM_BETTING_START_TIME_DIFF_MAX.to_seconds()));
 
-    _game_service.update(game, [&](game_object& g) { g.start = op.start; });
+    _game_service.update(game, [&](game_object& g) {
+        auto delta = op.start - g.start;
+        g.auto_resolve_time += delta;
+        g.start = op.start;
+    });
 }
 }
 }

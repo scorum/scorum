@@ -16,7 +16,7 @@ struct game_service_i : public base_service_i<game_object>
     virtual const game_object& create_game(const account_name_type& moderator,
                                            const std::string& game_name,
                                            fc::time_point_sec start,
-                                           fc::time_point_sec auto_resolve_time,
+                                           uint32_t auto_resolve_delay_sec,
                                            const game_type& game,
                                            const fc::flat_set<market_type>& markets)
         = 0;
@@ -48,7 +48,7 @@ public:
     virtual const game_object& create_game(const account_name_type& moderator,
                                            const std::string& game_name,
                                            fc::time_point_sec start,
-                                           fc::time_point_sec auto_resolve_time,
+                                           uint32_t auto_resolve_delay_sec,
                                            const game_type& game,
                                            const fc::flat_set<market_type>& markets) override;
     virtual void finish(const game_object& game, const fc::flat_set<wincase_type>& wincases) override;

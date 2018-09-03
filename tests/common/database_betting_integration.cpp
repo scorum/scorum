@@ -50,15 +50,15 @@ void database_betting_integration_fixture::empower_moderator(const Actor& modera
 
 create_game_operation database_betting_integration_fixture::create_game(const Actor& moderator,
                                                                         fc::flat_set<betting::market_type> markets,
-                                                                        fc::microseconds start_delay,
-                                                                        fc::microseconds auto_resolve_delay)
+                                                                        uint32_t start_delay,
+                                                                        uint32_t auto_resolve_delay_sec)
 {
     try
     {
         create_game_operation op;
         op.moderator = moderator.name;
         op.start = dgp_service.head_block_time() + start_delay;
-        op.auto_resolve_time = dgp_service.head_block_time() + auto_resolve_delay;
+        op.auto_resolve_delay_sec = auto_resolve_delay_sec;
         op.name = "test";
         op.game = soccer_game{};
         op.markets = markets;
@@ -131,6 +131,23 @@ database_betting_integration_fixture::update_markets(const Actor& moderator, fc:
         op.moderator = moderator.name;
         op.game_id = game_service.get_game("test").id._id;
         op.markets = markets;
+
+        push_operation_only(op, moderator.private_key);
+
+        return op;
+    }
+    FC_CAPTURE_LOG_AND_RETHROW(())
+}
+
+update_game_start_time_operation database_betting_integration_fixture::update_start_time(const Actor& moderator,
+                                                                                         uint32_t start_delay)
+{
+    try
+    {
+        update_game_start_time_operation op;
+        op.moderator = moderator.name;
+        op.game_id = game_service.get_game("test").id._id;
+        op.start = dgp_service.head_block_time() + start_delay;
 
         push_operation_only(op, moderator.private_key);
 
