@@ -44,7 +44,8 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
             auto shared_file_size_4gb = 1024 * 1024 * 1024 * 4ul;
 
             data_dir = fc::temp_directory(graphene::utilities::temp_directory_path());
-            db.open(data_dir->path(), data_dir->path(), shared_file_size_4gb, chainbase::database::read_write, genesis);
+            db.open(data_dir->path(), data_dir->path(), shared_file_size_4gb,
+                    scorum::to_underlying(database::open_flags::read_write), genesis);
             genesis_state = genesis;
         }
     }

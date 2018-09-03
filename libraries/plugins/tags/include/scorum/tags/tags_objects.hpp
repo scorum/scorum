@@ -31,7 +31,7 @@ using chainbase::oid;
 // time.
 //
 #ifndef TAG_SPACE_ID
-#define TAG_SPACE_ID 5
+#define TAG_SPACE_ID 6
 #endif
 
 #define TAGS_PLUGIN_NAME "tags"
@@ -43,9 +43,9 @@ typedef fc::fixed_utf8_string_24 tag_name_type;
 // globally. If each plugin uses the upper 8 bits as a space identifier,
 // with 0 being for chain, then the lower 8 bits are free for each plugin
 // to define as they see fit.
-enum
+enum tags_object_types
 {
-    tag_object_type = (TAG_SPACE_ID << 8),
+    tag_object_type = (TAG_SPACE_ID << OBJECT_TYPE_SPACE_ID_OFFSET),
     tag_stats_object_type,
     peer_stats_object_type,
     author_tag_stats_object_type,

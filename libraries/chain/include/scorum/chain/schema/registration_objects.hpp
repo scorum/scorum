@@ -107,4 +107,8 @@ FC_REFLECT(scorum::chain::registration_committee_member_object,
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::registration_committee_member_object,
                          scorum::chain::registration_committee_member_index)
+
+FC_REFLECT(scorum::chain::registration_pool_object::schedule_item,
+           (users)
+           (bonus_percent))
 // clang-format on

@@ -66,8 +66,13 @@ FC_REFLECT(scorum::chain::dev_committee_object,
            (invite_quorum)
            (dropout_quorum)
            (change_quorum))
-// clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dev_committee_object, scorum::chain::dev_committee_index)
 
+FC_REFLECT(scorum::chain::dev_committee_member_object,
+           (id)
+           (account))
+
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dev_committee_member_object, scorum::chain::dev_committee_member_index)
+
+// clang-format on

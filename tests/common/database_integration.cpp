@@ -6,6 +6,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/blockchain_history/schema/operation_objects.hpp>
 #include <scorum/witness/witness_plugin.hpp>
+
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
 
@@ -150,8 +151,8 @@ void database_integration_fixture::open_database_impl(const genesis_state_type& 
     if (!data_dir)
     {
         data_dir = fc::temp_directory(graphene::utilities::temp_directory_path());
-        db.open(data_dir->path(), data_dir->path(), TEST_SHARED_MEM_SIZE_10MB, chainbase::database::read_write,
-                genesis);
+        db.open(data_dir->path(), data_dir->path(), TEST_SHARED_MEM_SIZE_10MB,
+                scorum::to_underlying(database::open_flags::read_write), genesis);
         genesis_state = genesis;
     }
 }

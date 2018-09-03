@@ -45,7 +45,7 @@ using reward_fund_index
 using content_reward_fund_scr_object = reward_fund_object<content_reward_fund_scr_object_type, SCORUM_SYMBOL>;
 using content_reward_fund_sp_object = reward_fund_object<content_reward_fund_sp_object_type, SP_SYMBOL>;
 using content_fifa_world_cup_2018_bounty_reward_fund_object
-    = reward_fund_object<content_fifa_world_cup_2018_bounty_reward_fund_type, SP_SYMBOL>;
+    = reward_fund_object<content_fifa_world_cup_2018_bounty_reward_fund_object_type, SP_SYMBOL>;
 
 using content_reward_fund_scr_index = reward_fund_index<content_reward_fund_scr_object>;
 using content_reward_fund_sp_index = reward_fund_index<content_reward_fund_sp_object>;

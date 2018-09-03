@@ -63,8 +63,6 @@ public:
             r.apply(ctx);
         }
 
-        auto impl = boost::typeindex::type_id_runtime(*this).pretty_name();
-
         on_apply(ctx);
 
         for (task& r : _before)

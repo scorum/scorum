@@ -134,12 +134,14 @@ uint32_t database::get_reindex_skip_flags() const
 void database::open(const fc::path& data_dir,
                     const fc::path& shared_mem_dir,
                     uint64_t shared_file_size,
-                    uint32_t chainbase_flags,
+                    underlying(database::open_flags) chainbase_flags,
                     const genesis_state_type& genesis_state)
 {
     try
     {
         chainbase::database::open(shared_mem_dir, chainbase_flags, shared_file_size);
+
+        _data_dir = data_dir;
 
         // must be initialized before evaluators creation
         _my->_genesis_persistent_state = static_cast<const genesis_persistent_state_type&>(genesis_state);
@@ -149,7 +151,7 @@ void database::open(const fc::path& data_dir,
 
         set_initial_timestamp(genesis_state);
 
-        if (chainbase_flags & chainbase::database::read_write)
+        if (chainbase_flags & to_underlying(open_flags::read_write))
         {
             if (!find<dynamic_global_property_object>())
                 with_write_lock([&]() { init_genesis(genesis_state); });
@@ -216,14 +218,15 @@ void database::reindex(const fc::path& data_dir,
                        const fc::path& shared_mem_dir,
                        uint64_t shared_file_size,
                        uint32_t skip_flags,
-                       const genesis_state_type& genesis_state)
+                       const genesis_state_type& genesis_state,
+                       uint32_t apply_from_block_num)
 {
     try
     {
         ilog("Reindexing Blockchain");
 
         wipe(data_dir, shared_mem_dir, false);
-        open(data_dir, shared_mem_dir, shared_file_size, chainbase::database::read_write, genesis_state);
+        open(data_dir, shared_mem_dir, shared_file_size, to_underlying(open_flags::read_write), genesis_state);
         _fork_db.reset(); // override effect of _fork_db.start_block() call in open()
 
         auto start = fc::time_point::now();
@@ -234,18 +237,26 @@ void database::reindex(const fc::path& data_dir,
 
         ilog("Replaying ${n} blocks...", ("n", last_block_num));
 
-        with_write_lock([&]() {
+        {
             auto itr = _block_log.read_block(0);
             while (itr.first.block_num() <= last_block_num)
             {
-                auto cur_block_num = itr.first.block_num();
+                signed_block& block = itr.first;
+                auto cur_block_num = block.block_num();
+
                 if (cur_block_num % log_interval_sz == 0 || cur_block_num == last_block_num)
                 {
                     double percent = (cur_block_num * double(100)) / last_block_num;
-                    ilog("${p}% applied. ${m}M free.",
-                         ("p", (boost::format("%5.2f") % percent).str())("m", get_free_memory() / (1024 * 1024)));
+                    ilog("Current block number ${n}. ${p}% applied. ${m}M free.",
+                         ("n", cur_block_num)("p", (boost::format("%5.2f") % percent).str())(
+                             "m", get_free_memory() / (1024 * 1024)));
                 }
-                apply_block(itr.first, skip_flags);
+
+                if (block.block_num() > apply_from_block_num)
+                    apply_block(block, skip_flags);
+                else if (block.block_num() == apply_from_block_num)
+                    notify_applied_block(block);
+
                 if (cur_block_num != last_block_num)
                     itr = _block_log.read_block(itr.second);
                 else
@@ -253,7 +264,7 @@ void database::reindex(const fc::path& data_dir,
             }
 
             for_each_index([&](chainbase::abstract_generic_index_i& item) { item.set_revision(head_block_num()); });
-        });
+        }
 
         if (_block_log.head()->block_num())
         {
@@ -263,7 +274,7 @@ void database::reindex(const fc::path& data_dir,
         auto end = fc::time_point::now();
         ilog("Done reindexing, elapsed time: ${t} sec", ("t", double((end - start).count()) / 1000000.0));
     }
-    FC_CAPTURE_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size)(skip_flags)(genesis_state))
+    FC_CAPTURE_AND_RETHROW((data_dir)(shared_mem_dir)(shared_file_size)(skip_flags))
 }
 
 void database::wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks)
@@ -302,6 +313,11 @@ void database::close()
         _fork_db.reset();
     }
     FC_CAPTURE_AND_RETHROW()
+}
+
+void database::notify_runtime_config(const runtime_config_mode& mode)
+{
+    SCORUM_TRY_NOTIFY(runtime_config, mode)
 }
 
 bool database::is_known_block(const block_id_type& id) const

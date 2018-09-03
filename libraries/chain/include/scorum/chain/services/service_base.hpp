@@ -33,6 +33,8 @@ template <class T> struct base_service_i
     virtual bool is_exists() const = 0;
 
     virtual const object_type& get() const = 0;
+
+    virtual const object_type& get(const typename object_type::id_type&) const = 0;
 };
 
 template <class service_interface> class dbs_service_base : public dbs_base, public service_interface
@@ -87,6 +89,15 @@ public:
         try
         {
             return db_impl().template get<object_type>();
+        }
+        FC_CAPTURE_AND_RETHROW()
+    }
+
+    virtual const object_type& get(const typename object_type::id_type& id) const override
+    {
+        try
+        {
+            return db_impl().template get<object_type>(id);
         }
         FC_CAPTURE_AND_RETHROW()
     }

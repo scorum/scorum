@@ -19,12 +19,12 @@ namespace blockchain_history {
 using scorum::protocol::transaction_id_type;
 using scorum::protocol::operation;
 
-class operation_object : public object<operations_history, operation_object>
+class operation_object : public object<operations_history_object_type, operation_object>
 {
 public:
     CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(operation_object, (serialized_op))
 
-    typedef typename object<operations_history, operation_object>::id_type id_type;
+    typedef typename object<operations_history_object_type, operation_object>::id_type id_type;
 
     id_type id;
 
@@ -101,13 +101,17 @@ using filtered_operation_index
                                                                         id_type,
                                                                     &filtered_operation_object<OperationType>::id>>>>;
 
-using filtered_not_virt_operations_history_object = filtered_operation_object<filtered_not_virt_operations_history>;
-using filtered_virt_operations_history_object = filtered_operation_object<filtered_virt_operations_history>;
-using filtered_market_operations_history_object = filtered_operation_object<filtered_market_operations_history>;
+using filtered_not_virt_operations_history_object
+    = filtered_operation_object<filtered_not_virt_operations_history_object_type>;
+using filtered_virt_operations_history_object = filtered_operation_object<filtered_virt_operations_history_object_type>;
+using filtered_market_operations_history_object
+    = filtered_operation_object<filtered_market_operations_history_object_type>;
 
-using filtered_not_virt_operations_history_index = filtered_operation_index<filtered_not_virt_operations_history>;
-using filtered_virt_operations_history_index = filtered_operation_index<filtered_virt_operations_history>;
-using filtered_market_operations_history_index = filtered_operation_index<filtered_market_operations_history>;
+using filtered_not_virt_operations_history_index
+    = filtered_operation_index<filtered_not_virt_operations_history_object_type>;
+using filtered_virt_operations_history_index = filtered_operation_index<filtered_virt_operations_history_object_type>;
+using filtered_market_operations_history_index
+    = filtered_operation_index<filtered_market_operations_history_object_type>;
 }
 }
 

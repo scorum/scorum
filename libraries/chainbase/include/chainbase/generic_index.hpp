@@ -68,11 +68,12 @@ protected:
         auto constructor = [&](value_type& v) {
             v.id = new_id;
             c(v);
+            new_id = v.id;
         };
 
         const auto& val = emplace_(constructor, get_allocator());
 
-        ++_next_id;
+        _next_id = new_id._id + 1;
 
         return val;
     }
@@ -442,22 +443,4 @@ private:
     fc::shared_deque<undo_state> _stack;
 };
 
-/** this class is meant to be specified to enable lookup of index type by object type using
-* the SET_INDEX_TYPE macro.
-**/
-template <typename T> struct get_index_type
-{
-};
-
 } // namespace chainbase
-
-/**
-*  This macro must be used at global scope and OBJECT_TYPE and INDEX_TYPE must be fully qualified
-*/
-#define CHAINBASE_SET_INDEX_TYPE(OBJECT_TYPE, INDEX_TYPE)                                                              \
-    namespace chainbase {                                                                                              \
-    template <> struct get_index_type<OBJECT_TYPE>                                                                     \
-    {                                                                                                                  \
-        typedef INDEX_TYPE type;                                                                                       \
-    };                                                                                                                 \
-    }

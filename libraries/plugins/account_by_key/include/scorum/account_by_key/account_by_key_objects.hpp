@@ -9,12 +9,12 @@ namespace account_by_key {
 using namespace scorum::chain;
 
 #ifndef ACCOUNT_BY_KEY_SPACE_ID
-#define ACCOUNT_BY_KEY_SPACE_ID 11
+#define ACCOUNT_BY_KEY_SPACE_ID 2
 #endif
 
 enum account_by_key_object_types
 {
-    key_lookup_object_type = (ACCOUNT_BY_KEY_SPACE_ID << 8)
+    key_lookup_object_type = (ACCOUNT_BY_KEY_SPACE_ID << OBJECT_TYPE_SPACE_ID_OFFSET)
 };
 
 class key_lookup_object : public object<key_lookup_object_type, key_lookup_object>

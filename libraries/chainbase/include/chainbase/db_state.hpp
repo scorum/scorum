@@ -6,7 +6,7 @@
 
 namespace chainbase {
 
-class undo_db_state : public database_index<segment_manager>
+class db_state : public database_index<segment_manager>
 {
 public:
     template <typename Lambda> void for_each_index(Lambda&& functor)
@@ -15,6 +15,14 @@ public:
         {
             abstract_generic_index_i* index = static_cast<abstract_generic_index_i*>(item.second);
             functor(*index);
+        }
+    }
+
+    template <typename Lambda> void for_each_index_key(Lambda&& functor)
+    {
+        for (auto& item : _index_map)
+        {
+            functor(item.first);
         }
     }
 

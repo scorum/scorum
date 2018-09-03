@@ -99,11 +99,13 @@ using devcommittee_history_index
                                                                     &history_object_t::id>,
                                                              std::greater<typename history_object_t::id_type>>>>;
 
-using account_history_object = impl::account_history_object<account_all_operations_history>;
-using account_transfers_to_scr_history_object = impl::account_history_object<account_scr_to_scr_transfers_history>;
-using account_transfers_to_sp_history_object = impl::account_history_object<account_scr_to_sp_transfers_history>;
+using account_history_object = impl::account_history_object<account_all_operations_history_object_type>;
+using account_transfers_to_scr_history_object
+    = impl::account_history_object<account_scr_to_scr_transfers_history_object_type>;
+using account_transfers_to_sp_history_object
+    = impl::account_history_object<account_scr_to_sp_transfers_history_object_type>;
 using account_withdrawals_to_scr_history_object
-    = impl::withdrawals_account_history_object<account_sp_to_scr_withdrawals_history>;
+    = impl::withdrawals_account_history_object<account_sp_to_scr_withdrawals_history_object_type>;
 
 using devcommittee_history_object = impl::devcommittee_history_object<devcommittee_all_operations_history>;
 using devcommittee_transfers_to_scr_history_object

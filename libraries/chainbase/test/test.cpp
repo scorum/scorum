@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+#include <scorum/typeid/get_object_types.hpp>
+
 using namespace boost::multi_index;
 
 // BOOST_TEST_SUITE( serialization_tests, database_default_integration_fixture )
@@ -57,7 +59,7 @@ BOOST_AUTO_TEST_CASE(open_and_create)
         moc_database db;
         BOOST_CHECK_THROW(db.open(temp), std::runtime_error); /// temp does not exist
 
-        db.open(temp, chainbase::database::read_write, 1024 * 1024 * 8);
+        db.open(temp, scorum::to_underlying(moc_database::open_flags::read_write), 1024 * 1024 * 8);
 
         moc_database db2; /// open an already created db
         db2.open(temp);

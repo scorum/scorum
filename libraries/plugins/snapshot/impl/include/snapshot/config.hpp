@@ -1,0 +1,3 @@
+#pragma once
+
+#define SCORUM_SNAPSHOT_SERIALIZER_VER 1

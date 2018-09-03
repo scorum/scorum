@@ -23,9 +23,13 @@ target_link_libraries(common_test
                       chainbase
                       scorum_chain
                       scorum_protocol
-                      scorum_blockchain_history
                       scorum_witness
                       scorum_debug_node
+                      scorum_account_by_key
+                      scorum_account_statistics
+                      scorum_blockchain_history
+                      scorum_blockchain_monitoring
+                      scorum_tags
                       cli
                       fc
                       ${PLATFORM_SPECIFIC_LIBS}

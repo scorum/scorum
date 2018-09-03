@@ -1,4 +1,4 @@
-#include <chainbase/undo_db_state.hpp>
+#include <chainbase/db_state.hpp>
 #include <chainbase/database_index.hpp>
 
 namespace chainbase {
@@ -9,7 +9,7 @@ struct session_container : public abstract_undo_session
     abstract_undo_session_list _session_list;
 
 private:
-    friend class undo_db_state;
+    friend class db_state;
 
 public:
     session_container(abstract_undo_session_list&& s)
@@ -25,7 +25,7 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
-abstract_undo_session_ptr undo_db_state::start_undo_session()
+abstract_undo_session_ptr db_state::start_undo_session()
 {
     abstract_undo_session_list sub_sessions;
     sub_sessions.reserve(_index_map.size());

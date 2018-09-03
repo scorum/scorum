@@ -69,9 +69,6 @@ public:
         }
     }
 
-protected:
-    virtual void open_database_impl(const genesis_state_type& genesis);
-
     template <class Plugin> std::shared_ptr<Plugin> init_plugin()
     {
         boost::program_options::variables_map options;
@@ -83,6 +80,9 @@ protected:
 
         return plugin;
     }
+
+protected:
+    virtual void open_database_impl(const genesis_state_type& genesis);
 
 private:
     bool opened = false;

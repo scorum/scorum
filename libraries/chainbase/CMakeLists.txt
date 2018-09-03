@@ -67,13 +67,16 @@ add_library( chainbase
              chainbase.cpp
              database_guard.cpp
              segment_manager.cpp
-             undo_db_state.cpp
+             db_state.cpp
 
              ${HEADERS} )
 target_link_libraries( chainbase
                        fc
                        ${Boost_LIBRARIES} )
-target_include_directories( chainbase PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"  ${Boost_INCLUDE_DIR} )
+target_include_directories( chainbase PUBLIC
+                           "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                           "${CMAKE_CURRENT_SOURCE_DIR}/../typeid/include"
+                           ${Boost_INCLUDE_DIR} )
 
 add_subdirectory( test )
 
