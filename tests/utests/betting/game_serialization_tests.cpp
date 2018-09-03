@@ -235,6 +235,49 @@ struct game_serialization_test_fixture
 
 BOOST_FIXTURE_TEST_SUITE(game_serialization_tests, game_serialization_test_fixture)
 
+template <typename T> std::string to_hex(T t)
+{
+    return fc::to_hex(fc::raw::pack(market_type(t)));
+}
+
+SCORUM_TEST_CASE(serialize_markets)
+{
+    BOOST_CHECK_EQUAL(to_hex(result_home_market()), "00");
+    BOOST_CHECK_EQUAL(to_hex(result_draw_market()), "01");
+    BOOST_CHECK_EQUAL(to_hex(result_away_market()), "02");
+    BOOST_CHECK_EQUAL(to_hex(round_market()), "03");
+    BOOST_CHECK_EQUAL(to_hex(handicap_market()), "040000");
+    BOOST_CHECK_EQUAL(to_hex(correct_score_market()), "05");
+    BOOST_CHECK_EQUAL(to_hex(correct_score_parametrized_market()), "0600000000");
+    BOOST_CHECK_EQUAL(to_hex(goal_market()), "07");
+    BOOST_CHECK_EQUAL(to_hex(total_market()), "080000");
+    BOOST_CHECK_EQUAL(to_hex(total_goals_market()), "090000");
+}
+
+SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
+{
+    create_game_operation op;
+    op.moderator = "admin";
+    op.name = "game name";
+    op.start = time_point_sec::from_iso_string("2018-08-03T10:12:43");
+    op.game = soccer_game{};
+    op.markets = {};
+
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(op)), "0561646d696e0967616d65206e616d659b2a645b0000");
+}
+
+SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
+{
+    create_game_operation op;
+    op.moderator = "admin";
+    op.name = "game name";
+    op.start = time_point_sec::from_iso_string("2018-08-03T10:12:43");
+    op.game = soccer_game{};
+    op.markets = { total_market{ 1000 } };
+
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(op)), "0561646d696e0967616d65206e616d659b2a645b000108e803");
+}
+
 SCORUM_TEST_CASE(create_game_json_serialization_test)
 {
     auto op = get_soccer_create_game_operation();
