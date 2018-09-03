@@ -1,6 +1,7 @@
 #include <scorum/chain/betting/betting_service.hpp>
 
 #include <boost/range/algorithm/set_algorithm.hpp>
+#include <boost/range/algorithm/sort.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
 #include <scorum/chain/services/dynamic_global_property.hpp>
@@ -65,7 +66,18 @@ const bet_object& betting_service::create_bet(const account_name_type& better,
 std::vector<std::reference_wrapper<const bet_object>>
 betting_service::get_bets(const game_id_type& game, const std::vector<wincase_pair>& wincase_pairs) const
 {
+    // clang-format off
+    struct less
+    {
+        bool operator()(const bet_object& l, const bet_object& r) const { return cmp(l.wincase, r.wincase); }
+        bool operator()(const bet_object& b, const wincase_type& w) const { return cmp(b.wincase, w); }
+        bool operator()(const wincase_type& w, const bet_object& b) const { return cmp(w, b.wincase); }
+        std::less<wincase_type> cmp;
+    };
+    // clang-format on
+
     auto bets = _bet_svc.get_bets(game);
+    boost::sort(bets, less{});
 
     fc::flat_set<wincase_type> wincases;
     wincases.reserve(wincase_pairs.size() * 2);
@@ -75,15 +87,6 @@ betting_service::get_bets(const game_id_type& game, const std::vector<wincase_pa
         wincases.emplace(pair.first);
         wincases.emplace(pair.second);
     }
-
-    // clang-format off
-    struct less
-    {
-        bool operator()(const bet_object& b, const wincase_type& w) const { return cmp(b.wincase, w); }
-        bool operator()(const wincase_type& w, const bet_object& b) const { return cmp(w, b.wincase); }
-        std::less<wincase_type> cmp;
-    };
-    // clang-format on
 
     std::vector<std::reference_wrapper<const bet_object>> filtered_bets;
     boost::set_intersection(bets, wincases, std::back_inserter(filtered_bets), less{});
