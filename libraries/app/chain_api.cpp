@@ -141,12 +141,41 @@ chain_capital_api_obj chain_api::get_chain_capital() const
         {
             capital.content_reward_fifa_world_cup_2018_bounty_fund_sp_balance = fifa_world_cup_2018_bounty_fund_service.get().activity_reward_balance;
         }
-        
+
         const auto& migration_service = _db.obtain_service<dbs_witness_reward_in_sp_migration>();
         if (migration_service.is_exists())
         {
             capital.witness_reward_in_sp_migration_fund = asset(migration_service.get().balance, SP_SYMBOL);
         }
+
+        capital.total_pending_scr = dpo.total_pending_scr;
+        capital.total_pending_sp = dpo.total_pending_sp;
+
+        capital.circulating_scr = capital.active_voters_balancer_scr
+                + capital.content_balancer_scr
+                + capital.content_reward_fund_scr_balance
+                + capital.dev_pool_scr_balance
+                + capital.registration_pool_balance
+                + capital.total_scr
+                + capital.total_pending_scr;
+
+        capital.circulating_sp = capital.active_voters_balancer_sp
+                + capital.fund_budget_balance
+                + capital.content_reward_fifa_world_cup_2018_bounty_fund_sp_balance
+                + capital.content_reward_fund_sp_balance
+                + capital.dev_pool_sp_balance
+                + capital.witness_reward_in_sp_migration_fund
+                + capital.total_scorumpower
+                + capital.total_pending_sp;
+
+        if (capital.total_supply.amount != capital.circulating_scr.amount + capital.circulating_sp.amount)
+        {
+            wlog("total_supply != circulating_scr + circulating_sp",
+                 ("capital.total_supply", capital.total_supply)
+                 ("capital.circulating_scr", capital.circulating_scr)
+                 ("capital.circulating_sp", capital.circulating_sp));
+        }
+
         // clang-format on
 
         return capital;

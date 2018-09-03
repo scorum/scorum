@@ -6,6 +6,23 @@
 namespace scorum {
 namespace chain {
 
+struct accounts_total
+{
+    /// sum of all SCR balances
+    asset scr = asset(0, SCORUM_SYMBOL);
+
+    /// sum of all SP balances
+    asset sp = asset(0, SP_SYMBOL);
+
+    /// sum of all pending SCR balances
+    asset pending_scr = asset(0, SCORUM_SYMBOL);
+
+    /// sum of all pending SP balances
+    asset pending_sp = asset(0, SP_SYMBOL);
+
+    share_type vsf_votes = 0;
+};
+
 struct account_service_i : public base_service_i<account_object>
 {
     virtual const account_object& get(const account_id_type&) const = 0;
@@ -73,10 +90,16 @@ struct account_service_i : public base_service_i<account_object>
     virtual void increase_balance(const account_object& account, const asset& amount) = 0;
     virtual void decrease_balance(const account_object& account, const asset& amount) = 0;
 
+    virtual void increase_pending_balance(const account_object& account, const asset& amount) = 0;
+    virtual void decrease_pending_balance(const account_object& account, const asset& amount) = 0;
+
     virtual void increase_scorumpower(const account_object& account, const asset& amount) = 0;
     virtual void decrease_scorumpower(const account_object& account, const asset& amount) = 0;
 
-    virtual asset create_scorumpower(const account_object& to_account, const asset& scorum) = 0;
+    virtual void increase_pending_scorumpower(const account_object& account, const asset& amount) = 0;
+    virtual void decrease_pending_scorumpower(const account_object& account, const asset& amount) = 0;
+
+    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) = 0;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) = 0;
 
@@ -93,6 +116,8 @@ struct account_service_i : public base_service_i<account_object>
     virtual void add_post(const account_object& author_account, const account_name_type& parent_author_name) = 0;
 
     virtual void update_voting_power(const account_object& account, uint16_t voting_power) = 0;
+
+    virtual void update_active_sp_holders_cashout_time(const account_object& account) = 0;
 
     virtual void update_owner_authority(const account_object& account, const authority& owner_authority) = 0;
 
@@ -130,6 +155,10 @@ struct account_service_i : public base_service_i<account_object>
     using account_call_type = typename base_service_i::call_type;
 
     virtual void foreach_account(account_call_type&&) const = 0;
+
+    virtual accounts_total accounts_circulating_capital() const = 0;
+
+    virtual account_refs_type get_by_cashout_time(const fc::time_point_sec& until) const = 0;
 };
 
 // DB operations with account_*** objects
@@ -202,10 +231,16 @@ public:
     virtual void increase_balance(const account_object& account, const asset& amount) override;
     virtual void decrease_balance(const account_object& account, const asset& amount) override;
 
+    virtual void increase_pending_balance(const account_object& account, const asset& amount) override;
+    virtual void decrease_pending_balance(const account_object& account, const asset& amount) override;
+
     virtual void increase_scorumpower(const account_object& account, const asset& amount) override;
     virtual void decrease_scorumpower(const account_object& account, const asset& amount) override;
 
-    virtual asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
+    virtual void increase_pending_scorumpower(const account_object& account, const asset& amount) override;
+    virtual void decrease_pending_scorumpower(const account_object& account, const asset& amount) override;
+
+    virtual const asset create_scorumpower(const account_object& to_account, const asset& scorum) override;
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) override;
 
@@ -222,6 +257,8 @@ public:
     virtual void add_post(const account_object& author_account, const account_name_type& parent_author_name) override;
 
     virtual void update_voting_power(const account_object& account, uint16_t voting_power) override;
+
+    virtual void update_active_sp_holders_cashout_time(const account_object& account) override;
 
     virtual void update_owner_authority(const account_object& account, const authority& owner_authority) override;
 
@@ -256,6 +293,10 @@ public:
     virtual account_refs_type get_active_sp_holders() const override;
 
     virtual void foreach_account(account_call_type&&) const override;
+
+    virtual accounts_total accounts_circulating_capital() const override;
+
+    virtual account_refs_type get_by_cashout_time(const fc::time_point_sec& until) const override;
 
 private:
     const account_object& _create_account_objects(const account_name_type& new_account_name,

@@ -470,7 +470,7 @@ SCORUM_TEST_CASE(check_active_votes_if_comment_was_voted_with_negative_weight)
 {
     auto p1 = create_post(alice).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A"]})").in_block();
 
-    p1.vote(sam, -100).in_block();
+    p1.vote(sam, -1 * SCORUM_PERCENT(100)).in_block();
 
     discussion_query q;
     q.limit = 100;

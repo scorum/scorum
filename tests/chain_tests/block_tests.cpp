@@ -41,6 +41,8 @@
 #include "database_default_integration.hpp"
 #include "database_integration.hpp"
 
+#include <boost/make_unique.hpp>
+
 namespace {
 
 using namespace scorum::chain;
@@ -613,7 +615,22 @@ BOOST_FIXTURE_TEST_CASE(pop_block_twice, database_default_integration_fixture)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(rsf_missed_blocks, database_default_integration_fixture)
+struct rsf_missed_blocks_fixture : public database_default_integration_fixture
+{
+    rsf_missed_blocks_fixture()
+    {
+        // to use active witnesses count like in mainnet
+        scorum::protocol::detail::override_config(boost::make_unique<scorum::protocol::detail::config>());
+    }
+
+    ~rsf_missed_blocks_fixture()
+    {
+        scorum::protocol::detail::override_config(
+            boost::make_unique<scorum::protocol::detail::config>(scorum::protocol::detail::config::test));
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(rsf_missed_blocks, rsf_missed_blocks_fixture)
 {
     try
     {

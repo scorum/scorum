@@ -118,7 +118,7 @@ SCORUM_TEST_CASE(get_missed_blocks_via_api_test)
 
     BOOST_REQUIRE_EQUAL(stat.missed_blocks.size(), 1u);
     BOOST_REQUIRE_EQUAL(stat.missed_blocks.begin()->first, current_block + 1);
-    BOOST_REQUIRE_EQUAL(stat.missed_blocks.begin()->second, initdelegate.name);
+    BOOST_REQUIRE_EQUAL(stat.missed_blocks.begin()->second, witness1.name);
 }
 
 SCORUM_TEST_CASE(produced_blocks_stat_test)

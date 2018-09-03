@@ -85,3 +85,4 @@ For a full node, you need at least 30GB of space available. Scorumd uses a memor
 # Main net chain_id
 
 genesis.json hash sum: `db4007d45f04c1403a7e66a5c66b5b1cdfc2dde8b5335d1d2f116d592ca3dbb1`
+

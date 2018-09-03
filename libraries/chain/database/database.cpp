@@ -65,6 +65,7 @@
 #include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
+#include <scorum/chain/database/block_tasks/process_active_sp_holders_cashout.hpp>
 #include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
@@ -78,6 +79,7 @@
 #include <scorum/chain/evaluators/close_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/update_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/close_budget_by_advertising_moderator_evaluator.hpp>
+#include <scorum/chain/evaluators/vote_evaluator.hpp>
 
 #include <cmath>
 
@@ -149,6 +151,8 @@ void database::open(const fc::path& data_dir,
 
         initialize_indexes();
         initialize_evaluators();
+
+        set_initial_timestamp(genesis_state);
 
         if (chainbase_flags & chainbase::database::read_write)
         {
@@ -1510,6 +1514,7 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_contracts_expiration().apply(task_ctx);
         database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
+        database_ns::process_active_sp_holders_cashout().apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();
@@ -1952,9 +1957,13 @@ void database::init_hardforks(time_point_sec genesis_time)
 
     // SCORUM: structure to initialize hardofrks
 
-    FC_ASSERT(SCORUM_HARDFORK_0_1 == 1, "Invalid hardfork configuration");
+    FC_ASSERT(SCORUM_HARDFORK_0_1 == 1, "Invalid hardfork #1 configuration");
     _hardfork_times[SCORUM_HARDFORK_0_1] = fc::time_point_sec(SCORUM_HARDFORK_0_1_TIME);
     _hardfork_versions[SCORUM_HARDFORK_0_1] = SCORUM_HARDFORK_0_1_VERSION;
+
+    FC_ASSERT(SCORUM_HARDFORK_0_2 == 2, "Invalid hardfork #2 configuration");
+    _hardfork_times[SCORUM_HARDFORK_0_2] = fc::time_point_sec(SCORUM_HARDFORK_0_2_TIME);
+    _hardfork_versions[SCORUM_HARDFORK_0_2] = SCORUM_HARDFORK_0_2_VERSION;
 
     const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",
@@ -2045,10 +2054,16 @@ void database::validate_invariants() const
     try
     {
         asset total_supply = asset(0, SCORUM_SYMBOL);
-        asset total_scorumpower = asset(0, SP_SYMBOL);
-        share_type total_vsf_votes = share_type(0);
 
+        const auto& account_service = obtain_service<dbs_account>();
         const auto& gpo = obtain_service<dbs_dynamic_global_property>().get();
+
+        const auto accounts_circulating = account_service.accounts_circulating_capital();
+
+        total_supply += accounts_circulating.scr;
+        // following two field do not represented in global properties
+        total_supply += accounts_circulating.pending_scr;
+        total_supply += asset(accounts_circulating.pending_sp.amount, SCORUM_SYMBOL);
 
         /// verify no witness has too many votes
         const auto& witness_idx = get_index<witness_index>().indices();
@@ -2056,18 +2071,6 @@ void database::validate_invariants() const
         {
             FC_ASSERT(itr->votes <= gpo.total_scorumpower.amount, "${vs} > ${tvs}",
                       ("vs", itr->votes)("tvs", gpo.total_scorumpower.amount));
-        }
-
-        const auto& account_idx = get_index<account_index>().indices().get<by_name>();
-        for (auto itr = account_idx.begin(); itr != account_idx.end(); ++itr)
-        {
-            total_supply += itr->balance;
-            total_scorumpower += itr->scorumpower;
-            total_vsf_votes += (itr->proxy == SCORUM_PROXY_TO_SELF_ACCOUNT
-                                    ? itr->witness_vote_weight()
-                                    : (SCORUM_MAX_PROXY_RECURSION_DEPTH > 0
-                                           ? itr->proxied_vsf_votes[SCORUM_MAX_PROXY_RECURSION_DEPTH - 1]
-                                           : itr->scorumpower.amount));
         }
 
         const auto& escrow_idx = get_index<escrow_index>().indices().get<by_id>();
@@ -2081,12 +2084,10 @@ void database::validate_invariants() const
         total_supply
             += asset(obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance.amount, SCORUM_SYMBOL);
 
-        auto& fifa_world_cup_2018_bounty_reward_fund_service
-            = obtain_service<dbs_content_fifa_world_cup_2018_bounty_reward_fund>();
-        if (fifa_world_cup_2018_bounty_reward_fund_service.is_exists())
+        auto& fifa_2018_reward_service = obtain_service<dbs_content_fifa_world_cup_2018_bounty_reward_fund>();
+        if (fifa_2018_reward_service.is_exists())
         {
-            total_supply += asset(fifa_world_cup_2018_bounty_reward_fund_service.get().activity_reward_balance.amount,
-                                  SCORUM_SYMBOL);
+            total_supply += asset(fifa_2018_reward_service.get().activity_reward_balance.amount, SCORUM_SYMBOL);
         }
 
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
@@ -2128,15 +2129,41 @@ void database::validate_invariants() const
             total_supply += itr->amount;
         }
 
+        // clang-format off
         FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");
-        FC_ASSERT(total_scorumpower <= asset::maximum(SP_SYMBOL), "Assets SP overflow");
+        FC_ASSERT(accounts_circulating.sp <= asset::maximum(SP_SYMBOL), "Assets SP overflow");
 
         FC_ASSERT(gpo.total_supply == total_supply, "",
-                  ("gpo.total_supply", gpo.total_supply)("total_supply", total_supply));
-        FC_ASSERT(gpo.total_scorumpower == total_scorumpower, "",
-                  ("gpo.total_scorumpower", gpo.total_scorumpower)("total_scorumpower", total_scorumpower));
-        FC_ASSERT(gpo.total_scorumpower.amount == total_vsf_votes, "",
-                  ("total_scorumpower", gpo.total_scorumpower)("total_vsf_votes", total_vsf_votes));
+                  ("gpo.total_supply", gpo.total_supply)
+                  ("total_supply", total_supply));
+
+        FC_ASSERT(gpo.total_scorumpower == accounts_circulating.sp, "",
+                  ("gpo.total_supply", gpo.total_supply)
+                  ("gpo.total_scorumpower", gpo.total_scorumpower)
+                  ("gpo.circulating_capital", gpo.circulating_capital)
+                  ("accounts_circulating.sp", accounts_circulating.sp)
+                  ("accounts_circulating.scr", accounts_circulating.scr));
+
+        FC_ASSERT(gpo.circulating_capital.amount - gpo.total_scorumpower.amount == accounts_circulating.scr.amount, "",
+                  ("gpo.total_supply", gpo.total_supply)
+                  ("gpo.total_scorumpower", gpo.total_scorumpower)
+                  ("gpo.circulating_capital", gpo.circulating_capital)
+                  ("accounts_circulating.sp", accounts_circulating.sp)
+                  ("accounts_circulating.scr", accounts_circulating.scr));
+
+        FC_ASSERT(gpo.total_scorumpower.amount == accounts_circulating.vsf_votes, "",
+                  ("total_scorumpower", gpo.total_scorumpower)
+                  ("accounts_circulating.total_vsf_votes", accounts_circulating.vsf_votes));
+
+        FC_ASSERT(gpo.total_pending_scr == accounts_circulating.pending_scr, "",
+                  ("total_pending_scr", gpo.total_pending_scr)
+                  ("accounts_circulating.pending_scr", accounts_circulating.pending_scr));
+
+        FC_ASSERT(gpo.total_pending_sp == accounts_circulating.pending_sp, "",
+                  ("total_pending_sp", gpo.total_pending_sp)
+                  ("accounts_circulating.pending_sp", accounts_circulating.pending_sp));
+
+        // clang-format on
     }
     FC_CAPTURE_LOG_AND_RETHROW((head_block_num()));
 }
