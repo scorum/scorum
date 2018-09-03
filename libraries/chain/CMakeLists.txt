@@ -118,6 +118,7 @@ add_library( scorum_chain
              database/block_tasks/process_witness_reward_in_sp_migration.cpp
              database/block_tasks/process_games_startup.cpp
              database/block_tasks/process_bets_resolving.cpp
+             database/block_tasks/process_bets_auto_resolving.cpp
 
              database/process_user_activity.cpp
 

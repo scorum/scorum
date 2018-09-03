@@ -52,6 +52,7 @@ public:
     void return_pending_bets(const chainbase::oid<game_object>& game_id) const override;
     void return_matched_bets(const chainbase::oid<game_object>& game_id) const override;
 
+    // TODO: signature will be changed with new db_accessors mechanism
     void return_bets(const std::vector<std::reference_wrapper<const bet_object>>& bets) const override;
 
 private:

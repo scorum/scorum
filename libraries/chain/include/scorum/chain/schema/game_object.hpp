@@ -25,7 +25,8 @@ enum class game_status : uint8_t
 
 struct by_name;
 struct by_start_time;
-struct by_resolve_time;
+struct by_bets_resolve_time;
+struct by_auto_resolve_time;
 
 class game_object : public object<game_object_type, game_object>
 {
@@ -42,6 +43,7 @@ public:
     time_point_sec start = time_point_sec::min();
     time_point_sec original_start = time_point_sec::min();
     time_point_sec last_update = time_point_sec::min();
+    time_point_sec auto_resolve_time = time_point_sec::maximum();
     time_point_sec bets_resolve_time = time_point_sec::maximum();
 
     game_status status = game_status::created;
@@ -57,7 +59,11 @@ using game_index
                                                              member<game_object,
                                                                     game_object::id_type,
                                                                     &game_object::id>>,
-                                              ordered_non_unique<tag<by_resolve_time>,
+                                              ordered_non_unique<tag<by_auto_resolve_time>,
+                                                                 member<game_object,
+                                                                        time_point_sec,
+                                                                        &game_object::auto_resolve_time>>,
+                                              ordered_non_unique<tag<by_bets_resolve_time>,
                                                                  member<game_object,
                                                                         time_point_sec,
                                                                         &game_object::bets_resolve_time>>,
