@@ -31,8 +31,7 @@ void process_bets_resolving::on_apply(block_task_context& ctx)
     for (const game_object& game : games)
     {
         _resolver.resolve_matched_bets(game.id, game.results);
-        _resolver.return_pending_bets(game.id);
-
+        _betting_svc.cancel_pending_bets(game.id);
         _betting_svc.cancel_game(game.id);
     }
 

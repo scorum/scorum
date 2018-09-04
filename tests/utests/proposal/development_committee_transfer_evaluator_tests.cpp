@@ -66,7 +66,11 @@ BOOST_FIXTURE_TEST_CASE(decrease_dev_pool_scr_balance, fixture)
     account_object account = create_object<account_object>(shm);
 
     mocks.OnCall(account_service, account_service_i::get_account).With(_).ReturnByRef(account);
-    mocks.OnCall(account_service, account_service_i::increase_balance).With(_, _);
+    mocks
+        .OnCallOverload(account_service,
+                        (void (account_service_i::*)(const account_object&, const asset&))
+                            & account_service_i::increase_balance)
+        .With(_, _);
 
     BOOST_CHECK_NO_THROW(evaluator.do_apply(op));
 }
@@ -86,7 +90,11 @@ BOOST_FIXTURE_TEST_CASE(increase_account_balance, fixture)
     account_object account = create_object<account_object>(shm);
 
     mocks.ExpectCall(account_service, account_service_i::get_account).With("jim").ReturnByRef(account);
-    mocks.ExpectCall(account_service, account_service_i::increase_balance).With(_, op.amount);
+    mocks
+        .ExpectCallOverload(account_service,
+                            (void (account_service_i::*)(const account_object&, const asset&))
+                                & account_service_i::increase_balance)
+        .With(_, op.amount);
 
     BOOST_CHECK_NO_THROW(evaluator.do_apply(op));
 }

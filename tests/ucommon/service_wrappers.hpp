@@ -363,7 +363,10 @@ public:
                 FC_ASSERT(it_by_name != this->_index_by_name.end());
             });
 
-        _mocks.OnCall(_service, account_service_i::increase_balance)
+        _mocks
+            .OnCallOverload(_service,
+                            (void (account_service_i::*)(const account_object&, const asset&))
+                                & account_service_i::increase_balance)
             .Do([this](const account_object& account, const asset& amount) {
 
                 update(account, [&](account_object& obj) { obj.balance += amount; });

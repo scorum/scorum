@@ -25,16 +25,12 @@ void process_bets_auto_resolving::on_apply(block_task_context& ctx)
 
     auto& dprops_svc = ctx.services().dynamic_global_property_service();
     auto& game_svc = ctx.services().game_service();
-    auto& bet_svc = ctx.services().bet_service();
 
     auto games = game_svc.get_games_to_auto_resolve(dprops_svc.head_block_time());
 
     for (const game_object& game : games)
     {
-        auto bets = bet_svc.get_bets(game.id);
-
-        _resolver.return_bets(bets);
-
+        _betting_svc.cancel_bets(game.id);
         _betting_svc.cancel_game(game.id);
     }
 

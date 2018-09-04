@@ -9,12 +9,10 @@
 namespace scorum {
 namespace chain {
 cancel_game_evaluator::cancel_game_evaluator(data_service_factory_i& services,
-                                             betting::betting_service_i& betting_service,
-                                             betting::betting_resolver_i& betting_resolver)
+                                             betting::betting_service_i& betting_service)
     : evaluator_impl<data_service_factory_i, cancel_game_evaluator>(services)
     , _account_service(services.account_service())
     , _betting_service(betting_service)
-    , _betting_resolver(betting_resolver)
     , _game_service(services.game_service())
 {
 }
@@ -26,14 +24,13 @@ void cancel_game_evaluator::do_apply(const operation_type& op)
               ("u", op.moderator));
     FC_ASSERT(_game_service.is_exists(op.game_id), "Game with id '${g}' doesn't exist", ("g", op.game_id));
 
-    auto game_obj = _game_service.get_game(op.game_id);
+    auto game = _game_service.get_game(op.game_id);
 
-    FC_ASSERT(game_obj.status != game_status::finished, "Cannot cancel the game after it is finished");
+    FC_ASSERT(game.status != game_status::finished, "Cannot cancel the game after it is finished");
 
-    _betting_resolver.return_pending_bets(game_obj.id);
-    _betting_resolver.return_matched_bets(game_obj.id);
-
-    _betting_service.cancel_game(game_obj.id);
+    _betting_service.cancel_pending_bets(game.id);
+    _betting_service.cancel_matched_bets(game.id);
+    _betting_service.cancel_game(game.id);
 }
 }
 }
