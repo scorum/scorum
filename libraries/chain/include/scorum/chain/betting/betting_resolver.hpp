@@ -24,6 +24,7 @@ class game_object;
 class bet_object;
 class matched_bet_object;
 class pending_bet_object;
+enum class pending_bet_kind : uint8_t;
 
 namespace betting {
 
@@ -32,6 +33,7 @@ struct betting_resolver_i
     virtual void resolve_matched_bets(const chainbase::oid<game_object>& game_id,
                                       const fc::shared_flat_set<wincase_type>& results) const = 0;
 
+    virtual void return_pending_bets(const chainbase::oid<game_object>& game_id, pending_bet_kind kind) const = 0;
     virtual void return_pending_bets(const chainbase::oid<game_object>& game_id) const = 0;
     virtual void return_matched_bets(const chainbase::oid<game_object>& game_id) const = 0;
 
@@ -49,6 +51,7 @@ public:
     void resolve_matched_bets(const chainbase::oid<game_object>& game_id,
                               const fc::shared_flat_set<wincase_type>& results) const override;
 
+    void return_pending_bets(const chainbase::oid<game_object>& game_id, pending_bet_kind kind) const override;
     void return_pending_bets(const chainbase::oid<game_object>& game_id) const override;
     void return_matched_bets(const chainbase::oid<game_object>& game_id) const override;
 
@@ -56,6 +59,7 @@ public:
     void return_bets(const std::vector<std::reference_wrapper<const bet_object>>& bets) const override;
 
 private:
+    void return_pending_bets(const std::vector<std::reference_wrapper<const pending_bet_object>>& bets) const;
     void increase_balance(const protocol::account_name_type& acc_name, const protocol::asset& stake) const;
 
 private:

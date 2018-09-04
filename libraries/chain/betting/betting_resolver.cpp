@@ -45,15 +45,16 @@ void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
     }
 }
 
+void betting_resolver::return_pending_bets(const game_id_type& game_id, pending_bet_kind kind) const
+{
+    auto pending_bets = _pending_bet_svc.get_bets(game_id, kind);
+    return_pending_bets(pending_bets);
+}
+
 void betting_resolver::return_pending_bets(const game_id_type& game_id) const
 {
     auto pending_bets = _pending_bet_svc.get_bets(game_id);
-
-    for (const pending_bet_object& pending_bet : pending_bets)
-    {
-        const auto& bet = _bet_svc.get_bet(pending_bet.bet);
-        increase_balance(bet.better, bet.rest_stake);
-    }
+    return_pending_bets(pending_bets);
 }
 
 void betting_resolver::return_matched_bets(const game_id_type& game_id) const
@@ -75,6 +76,16 @@ void betting_resolver::return_bets(const std::vector<std::reference_wrapper<cons
     for (const bet_object& bet : bets)
     {
         increase_balance(bet.better, bet.stake);
+    }
+}
+
+void betting_resolver::return_pending_bets(
+    const std::vector<std::reference_wrapper<const pending_bet_object>>& pending_bets) const
+{
+    for (const pending_bet_object& pending_bet : pending_bets)
+    {
+        const auto& bet = _bet_svc.get_bet(pending_bet.bet);
+        increase_balance(bet.better, bet.rest_stake);
     }
 }
 

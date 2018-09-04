@@ -854,6 +854,8 @@ struct post_bet_operation : public base_operation
     odds_input odds;
     /// stake amount in SCR
     asset stake;
+    /// keep pending bet after game started and return it to the owner otherwise
+    bool keep;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -981,7 +983,8 @@ FC_REFLECT( scorum::protocol::post_bet_operation,
            (game_id)
            (wincase)
            (odds)
-           (stake))
+           (stake)
+           (keep))
 FC_REFLECT( scorum::protocol::cancel_pending_bets_operation,
            (bet_ids)
            (better))

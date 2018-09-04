@@ -69,7 +69,12 @@ betting_service::get_bets(const game_id_type& game, const std::vector<wincase_pa
     // clang-format off
     struct less
     {
-        bool operator()(const bet_object& l, const bet_object& r) const { return cmp(l.wincase, r.wincase); }
+        //TODO: will be refactored using bidir_range
+        bool operator()(std::reference_wrapper<const bet_object>& l, std::reference_wrapper<const bet_object>& r) const
+        {
+            return cmp(l.get().wincase, r.get().wincase);
+        }
+
         bool operator()(const bet_object& b, const wincase_type& w) const { return cmp(b.wincase, w); }
         bool operator()(const wincase_type& w, const bet_object& b) const { return cmp(w, b.wincase); }
         std::less<wincase_type> cmp;
