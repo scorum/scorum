@@ -136,8 +136,7 @@ database_impl::database_impl(database& self)
     , _evaluator_registry(self)
     , _betting_service(static_cast<data_service_factory_i&>(_self))
     , _betting_matcher(static_cast<data_service_factory_i&>(_self))
-    , _betting_resolver(
-          _self.pending_bet_service(), _self.matched_bet_service(), _self.bet_service(), _self.account_service())
+    , _betting_resolver(_betting_service, _self.matched_bet_service(), _self.bet_service(), _self.account_service())
 {
 }
 
@@ -1273,10 +1272,8 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator(new create_game_evaluator(*this, _my->betting_service()));
-    _my->_evaluator_registry.register_evaluator(
-        new cancel_game_evaluator(*this, _my->betting_service(), _my->betting_resolver()));
-    _my->_evaluator_registry.register_evaluator(
-        new update_game_markets_evaluator(*this, _my->betting_service(), _my->betting_resolver()));
+    _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->betting_service()));
+    _my->_evaluator_registry.register_evaluator(new update_game_markets_evaluator(*this, _my->betting_service()));
     _my->_evaluator_registry.register_evaluator(new update_game_start_time_evaluator(*this, _my->betting_service()));
     _my->_evaluator_registry.register_evaluator(new post_game_results_evaluator(*this, _my->betting_service()));
     _my->_evaluator_registry.register_evaluator(

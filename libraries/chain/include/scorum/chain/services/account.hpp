@@ -71,6 +71,7 @@ struct account_service_i : public base_service_i<account_object>
         = 0;
 
     virtual void increase_balance(const account_object& account, const asset& amount) = 0;
+    virtual void increase_balance(account_name_type account_name, const asset& amount) = 0;
     virtual void decrease_balance(const account_object& account, const asset& amount) = 0;
 
     virtual void increase_scorumpower(const account_object& account, const asset& amount) = 0;
@@ -200,6 +201,7 @@ public:
                                const optional<authority>& posting) override;
 
     virtual void increase_balance(const account_object& account, const asset& amount) override;
+    virtual void increase_balance(account_name_type account_name, const asset& amount) override;
     virtual void decrease_balance(const account_object& account, const asset& amount) override;
 
     virtual void increase_scorumpower(const account_object& account, const asset& amount) override;

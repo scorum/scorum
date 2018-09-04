@@ -80,7 +80,7 @@ SCORUM_TEST_CASE(bets_resolve_test_check)
 
     generate_blocks(db.head_block_time() + resolve_delay / 2);
 
-    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
+    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000 + 375'000);
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
 
     generate_blocks(db.head_block_time() + resolve_delay / 2);

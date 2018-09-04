@@ -19,6 +19,7 @@ void process_games_startup::on_apply(block_task_context& ctx)
     for (const auto& game : filter(games, [](const auto& g) { return g.get().status == game_status::created; }))
     {
         game_service.update(game, [](game_object& o) { o.status = game_status::started; });
+        // TODO: cancel non-live pending bets
     }
 
     debug_log(ctx.get_block_info(), "process_games_startup END");

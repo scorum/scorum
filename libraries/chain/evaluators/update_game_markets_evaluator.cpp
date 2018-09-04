@@ -15,12 +15,10 @@
 namespace scorum {
 namespace chain {
 update_game_markets_evaluator::update_game_markets_evaluator(data_service_factory_i& services,
-                                                             betting::betting_service_i& betting_service,
-                                                             betting::betting_resolver_i& betting_resolver)
+                                                             betting::betting_service_i& betting_service)
     : evaluator_impl<data_service_factory_i, update_game_markets_evaluator>(services)
     , _account_service(services.account_service())
     , _betting_service(betting_service)
-    , _betting_resolver(betting_resolver)
     , _game_service(services.game_service())
 {
 }
@@ -52,9 +50,7 @@ void update_game_markets_evaluator::do_apply(const operation_type& op)
     FC_ASSERT(game.status == game_status::created || cancelled_wincases.empty(),
               "Cannot cancel markets after game was started");
 
-    auto bets = _betting_service.get_bets(game.id, cancelled_wincases);
-    _betting_resolver.return_bets(bets);
-    _betting_service.cancel_bets(bets);
+    _betting_service.cancel_bets(game.id, cancelled_wincases);
 
     _game_service.update_markets(game, op.markets);
 }
