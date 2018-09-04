@@ -55,7 +55,7 @@ struct bet_resolving_fixture : public database_fixture::database_betting_integra
 
 BOOST_FIXTURE_TEST_SUITE(bet_resolving_tests, bet_resolving_fixture)
 
-SCORUM_TEST_CASE(bets_resolve_test_check)
+SCORUM_TEST_CASE(live_bets_no_pending_bets_return_after_start_check)
 {
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
@@ -66,12 +66,53 @@ SCORUM_TEST_CASE(bets_resolve_test_check)
     create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
     create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
 
+    BOOST_CHECK(game_service.get().status == game_status::created);
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
 
     generate_block(); // game started
 
+    BOOST_CHECK(game_service.get().status == game_status::started);
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000); // pending bets are keeping for live bets
+    BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000); // pending bets are keeping for live bets
+}
+
+SCORUM_TEST_CASE(non_live_bets_return_pending_bets_after_start_check)
+{
+    const auto& alice_acc = account_service.get_account(alice.name);
+    const auto& bob_acc = account_service.get_account(bob.name);
+
+    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    generate_block();
+
+    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL), false); // 500'000
+    create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL), false); // 500'000
+
+    BOOST_CHECK(game_service.get().status == game_status::created);
+    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
+    BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
+
+    generate_block(); // game started
+
+    BOOST_CHECK(game_service.get().status == game_status::started);
+    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000 + 375'000); // 375'000 returned after game was started
+    BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000); // nothing to return
+}
+
+SCORUM_TEST_CASE(non_live_bets_resolve_test_check)
+{
+    const auto& alice_acc = account_service.get_account(alice.name);
+    const auto& bob_acc = account_service.get_account(bob.name);
+
+    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    generate_block();
+
+    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+
+    generate_block(); // game started
+
+    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000); // live pending bets weren't returned
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
 
     auto resolve_delay = betting_property_service.get().resolve_delay_sec;
@@ -80,12 +121,12 @@ SCORUM_TEST_CASE(bets_resolve_test_check)
 
     generate_blocks(db.head_block_time() + resolve_delay / 2);
 
-    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000 + 375'000);
+    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000 + 375'000); // live pending bets were returned
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
 
     generate_blocks(db.head_block_time() + resolve_delay / 2);
 
-    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000 + 375'000); // returned unmatched
+    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000 + 375'000);
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000 + 500'000 + 125'000); // returned it's own bet + won 125'000
 }
 
@@ -100,9 +141,6 @@ SCORUM_TEST_CASE(bets_auto_resolve_test_check)
 
     create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
     create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-
-    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
-    BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
 
     generate_block(); // game started
 

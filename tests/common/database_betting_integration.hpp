@@ -31,7 +31,8 @@ struct database_betting_integration_fixture : public database_trx_integration_fi
     post_bet_operation create_bet(const Actor& better,
                                   const betting::wincase_type& wincase,
                                   const odds_input& odds_value,
-                                  const asset& stake);
+                                  const asset& stake,
+                                  bool is_live = true);
     cancel_pending_bets_operation cancel_pending_bet(const Actor& better, const fc::flat_set<int64_t>& bet_ids);
     cancel_game_operation cancel_game(const Actor& moderator);
     update_game_markets_operation update_markets(const Actor& moderator, fc::flat_set<betting::market_type> markets);

@@ -2,6 +2,7 @@
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/game.hpp>
+#include <scorum/chain/schema/bet_objects.hpp>
 
 #include <scorum/chain/betting/betting_service.hpp>
 #include <scorum/chain/betting/betting_matcher.hpp>
@@ -42,7 +43,10 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     _account_service.decrease_balance(better, op.stake);
 
-    _betting_matcher.match(bet_obj);
+    auto kind = op.keep //
+        ? pending_bet_kind::live
+        : pending_bet_kind::non_live;
+    _betting_matcher.match(bet_obj, kind);
 }
 }
 }

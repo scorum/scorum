@@ -23,7 +23,7 @@ betting_matcher::betting_matcher(data_service_factory_i& db)
 {
 }
 
-void betting_matcher::match(const bet_object& bet)
+void betting_matcher::match(const bet_object& bet, pending_bet_kind bet_kind)
 {
     try
     {
@@ -78,6 +78,7 @@ void betting_matcher::match(const bet_object& bet)
             _pending_bet_service.create([&](pending_bet_object& obj) {
                 obj.game = bet.game;
                 obj.bet = bet.id;
+                obj.kind = bet_kind;
             });
         }
 

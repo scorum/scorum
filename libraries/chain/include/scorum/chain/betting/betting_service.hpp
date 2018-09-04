@@ -17,6 +17,7 @@ struct game_service_i;
 struct account_service_i;
 
 struct bet_object;
+struct pending_bet_object;
 
 namespace betting {
 
@@ -24,7 +25,8 @@ using scorum::protocol::betting::wincase_pair;
 
 struct betting_service_i
 {
-    using object_crefs_type = std::vector<std::reference_wrapper<const bet_object>>;
+    using bet_crefs_type = std::vector<std::reference_wrapper<const bet_object>>;
+    using pending_bet_crefs_type = std::vector<std::reference_wrapper<const pending_bet_object>>;
 
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;
 
@@ -39,6 +41,7 @@ struct betting_service_i
     virtual void cancel_bets(const game_id_type& game_id) = 0;
     virtual void cancel_bets(const game_id_type& game_id, const std::vector<wincase_pair>& wincase_pairs) = 0;
     virtual void cancel_pending_bets(const game_id_type& game_id) = 0;
+    virtual void cancel_pending_bets(const game_id_type& game_id, pending_bet_kind kind) = 0;
     virtual void cancel_matched_bets(const game_id_type& game_id) = 0;
 
     virtual bool is_bet_matched(const bet_object& bet) const = 0;
@@ -61,12 +64,15 @@ public:
     void cancel_bets(const game_id_type& game_id) override;
     void cancel_bets(const game_id_type& game_id, const std::vector<wincase_pair>& wincase_pairs) override;
     void cancel_pending_bets(const game_id_type& game_id) override;
+    void cancel_pending_bets(const game_id_type& game_id, pending_bet_kind kind) override;
     void cancel_matched_bets(const game_id_type& game_id) override;
 
     bool is_bet_matched(const bet_object& bet) const override;
 
 private:
-    void cancel_bets(const object_crefs_type& bets);
+    // TODO: signature will be changed (after db_accessors introduction)
+    void cancel_bets(const bet_crefs_type& bets);
+    void cancel_pending_bets(const pending_bet_crefs_type& pending_bets);
 
 private:
     dynamic_global_property_service_i& _dgp_property_service;

@@ -1,7 +1,10 @@
 #include <scorum/chain/database/block_tasks/process_games_startup.hpp>
+
+#include <boost/range/adaptor/filtered.hpp>
+
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/game.hpp>
-#include <boost/range/adaptor/filtered.hpp>
+#include <scorum/chain/betting/betting_service.hpp>
 
 namespace scorum {
 namespace chain {
@@ -24,7 +27,8 @@ void process_games_startup::on_apply(block_task_context& ctx)
     for (const auto& game : filter(games, [](const auto& g) { return g.get().status == game_status::created; }))
     {
         game_service.update(game, [](game_object& o) { o.status = game_status::started; });
-        // TODO: cancel non-live pending bets
+
+        _betting_svc.cancel_pending_bets(game.get().id, pending_bet_kind::non_live);
     }
 
     debug_log(ctx.get_block_info(), "process_games_startup END");

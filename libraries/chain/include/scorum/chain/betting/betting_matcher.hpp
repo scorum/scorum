@@ -14,12 +14,13 @@ struct betting_property_service_i;
 struct bet_service_i;
 struct pending_bet_service_i;
 struct matched_bet_service_i;
+enum class pending_bet_kind : uint8_t;
 
 namespace betting {
 
 struct betting_matcher_i
 {
-    virtual void match(const bet_object& bet) = 0;
+    virtual void match(const bet_object& bet, pending_bet_kind bet_kind) = 0;
 };
 
 class betting_matcher : public betting_matcher_i
@@ -27,7 +28,7 @@ class betting_matcher : public betting_matcher_i
 public:
     betting_matcher(data_service_factory_i&);
 
-    virtual void match(const bet_object& bet) override;
+    virtual void match(const bet_object& bet, pending_bet_kind bet_kind) override;
 
 private:
     bool is_bets_matched(const bet_object& bet1, const bet_object& bet2) const;

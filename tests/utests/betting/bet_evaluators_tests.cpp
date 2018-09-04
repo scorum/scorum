@@ -123,7 +123,7 @@ SCORUM_TEST_CASE(post_bet_evaluator_positive_check)
 
     mocks.ExpectCall(betting_service_moc, betting_service_i::create_bet).ReturnByRef(bet);
 
-    mocks.ExpectCall(betting_matcher_moc, betting_matcher_i::match).With(_);
+    mocks.ExpectCall(betting_matcher_moc, betting_matcher_i::match);
 
     BOOST_CHECK_NO_THROW(evaluator_for_test.do_apply(test_op));
 }

@@ -118,20 +118,13 @@ void betting_service::cancel_bets(const game_id_type& game_id, const std::vector
 void betting_service::cancel_pending_bets(const game_id_type& game_id)
 {
     auto pending_bets = _pending_bet_svc.get_bets(game_id);
+    cancel_pending_bets(pending_bets);
+}
 
-    for (const pending_bet_object& pending_bet : pending_bets)
-    {
-        const auto& bet = _bet_svc.get_bet(pending_bet.bet);
-
-        _account_svc.increase_balance(bet.better, bet.rest_stake);
-
-        _bet_svc.update(bet, [&](bet_object& o) {
-            o.rest_stake.amount = 0;
-            o.stake -= o.rest_stake;
-        });
-    }
-
-    _pending_bet_svc.remove_all(pending_bets);
+void betting_service::cancel_pending_bets(const game_id_type& game_id, pending_bet_kind kind)
+{
+    auto pending_bets = _pending_bet_svc.get_bets(game_id, kind);
+    cancel_pending_bets(pending_bets);
 }
 
 void betting_service::cancel_matched_bets(const game_id_type& game_id)
@@ -155,7 +148,7 @@ bool betting_service::is_bet_matched(const bet_object& bet) const
     return bet.rest_stake != bet.stake;
 }
 
-void betting_service::cancel_bets(const object_crefs_type& bets)
+void betting_service::cancel_bets(const bet_crefs_type& bets)
 {
     for (const bet_object& bet : bets)
     {
@@ -172,6 +165,23 @@ void betting_service::cancel_bets(const object_crefs_type& bets)
     }
 
     _bet_svc.remove_all(bets);
+}
+
+void betting_service::cancel_pending_bets(const pending_bet_crefs_type& pending_bets)
+{
+    for (const pending_bet_object& pending_bet : pending_bets)
+    {
+        const auto& bet = _bet_svc.get_bet(pending_bet.bet);
+
+        _account_svc.increase_balance(bet.better, bet.rest_stake);
+
+        _bet_svc.update(bet, [&](bet_object& o) {
+            o.rest_stake.amount = 0;
+            o.stake -= o.rest_stake;
+        });
+    }
+
+    _pending_bet_svc.remove_all(pending_bets);
 }
 }
 }
