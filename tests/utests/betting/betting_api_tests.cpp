@@ -21,6 +21,7 @@ public:
     bet_service_i* bet_service = mocks.Mock<bet_service_i>();
     pending_bet_service_i* pending_bet_service = mocks.Mock<pending_bet_service_i>();
     matched_bet_service_i* matched_bet_service = mocks.Mock<matched_bet_service_i>();
+    betting_property_service_i* betting_property_service = mocks.Mock<betting_property_service_i>();
 
     fixture()
     {
@@ -32,6 +33,7 @@ public:
         mocks.OnCall(factory, data_service_factory_i::bet_service).ReturnByRef(*bet_service);
         mocks.OnCall(factory, data_service_factory_i::pending_bet_service).ReturnByRef(*pending_bet_service);
         mocks.OnCall(factory, data_service_factory_i::matched_bet_service).ReturnByRef(*matched_bet_service);
+        mocks.OnCall(factory, data_service_factory_i::betting_property_service).ReturnByRef(*betting_property_service);
     }
 };
 
@@ -48,6 +50,7 @@ BOOST_FIXTURE_TEST_CASE(get_services_in_constructor, fixture)
     mocks.ExpectCall(factory, data_service_factory_i::bet_service).ReturnByRef(*bet_service);
     mocks.ExpectCall(factory, data_service_factory_i::pending_bet_service).ReturnByRef(*pending_bet_service);
     mocks.ExpectCall(factory, data_service_factory_i::matched_bet_service).ReturnByRef(*matched_bet_service);
+    mocks.ExpectCall(factory, data_service_factory_i::betting_property_service).ReturnByRef(*betting_property_service);
 
     BOOST_REQUIRE_NO_THROW(betting_api_impl api(*factory));
 }

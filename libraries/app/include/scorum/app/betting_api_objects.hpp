@@ -3,6 +3,7 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/chain/schema/game_object.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/schema/betting_property_object.hpp>
 
 #include <scorum/app/schema/api_template.hpp>
 
@@ -58,6 +59,7 @@ struct game_api_object
 using bet_api_object = api_obj<chain::bet_object>;
 using matched_bet_api_object = api_obj<chain::matched_bet_object>;
 using pending_bet_api_object = api_obj<chain::pending_bet_object>;
+using betting_property_api_object = api_obj<chain::betting_property_object>;
 
 } // namespace app
 } // namespace scorum
@@ -88,3 +90,4 @@ FC_REFLECT(scorum::app::game_api_object,
 FC_REFLECT_DERIVED(scorum::app::bet_api_object, (scorum::chain::bet_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::matched_bet_api_object, (scorum::chain::matched_bet_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::pending_bet_api_object, (scorum::chain::pending_bet_object), BOOST_PP_SEQ_NIL)
+FC_REFLECT_DERIVED(scorum::app::betting_property_api_object, (scorum::chain::betting_property_object), BOOST_PP_SEQ_NIL)

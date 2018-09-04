@@ -768,72 +768,6 @@ struct close_budget_by_advertising_moderator_operation : public base_operation
     }
 };
 
-struct create_game_operation : public base_operation
-{
-    account_name_type moderator;
-    std::string name;
-    time_point_sec start;
-    betting::game_type game;
-    fc::flat_set<betting::market_type> markets;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
-struct cancel_game_operation : public base_operation
-{
-    int64_t game_id;
-    account_name_type moderator;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
-struct update_game_markets_operation : public base_operation
-{
-    int64_t game_id;
-    account_name_type moderator;
-    fc::flat_set<betting::market_type> markets;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
-struct update_game_start_time_operation : public base_operation
-{
-    int64_t game_id;
-    account_name_type moderator;
-    time_point_sec start;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
-struct post_game_results_operation : public base_operation
-{
-    int64_t game_id;
-    account_name_type moderator;
-    fc::flat_set<betting::wincase_type> wincases;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
 /// rational number
 struct odds_input
 {
@@ -841,39 +775,193 @@ struct odds_input
     odds_value_type denominator;
 };
 
+/// @defgroup betting_operations Betting operations
+///
+/// This is a set of betting operations
+/// @{
+
+/**
+ * @brief This operation creates game object
+ *
+ * Game will have status 'created' until start_time < head_block_time. Game status changed to 'started' when
+ * start_time >= head_block_time. Game status changed to 'finished' when moderator performs post_game_results_operation
+ */
+struct create_game_operation : public base_operation
+{
+    /// moderator account name
+    account_name_type moderator;
+
+    /// game title
+    std::string name;
+
+    /// game start time
+    time_point_sec start;
+
+    /// game type (soccer, hockey, etc ...)
+    betting::game_type game;
+
+    /// list of markets
+    fc::flat_set<betting::market_type> markets;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @brief This operation canceling game.
+ *
+ * Moderator could cancel game any time. All accepted bets would be canceled and returned back.
+ */
+struct cancel_game_operation : public base_operation
+{
+    /// game id
+    int64_t game_id;
+
+    /// moderator account name
+    account_name_type moderator;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @brief This operation updates game markets list
+ *
+ * Before game started moderator could add or remove markets. All accepted bets would be canceled and returned back when
+ * moderator removes markets. After game started moderator could only add new markets.
+ */
+struct update_game_markets_operation : public base_operation
+{
+    /// game id
+    int64_t game_id;
+
+    /// moderator account name
+    account_name_type moderator;
+
+    /// list of markets
+    fc::flat_set<betting::market_type> markets;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @brief This operation updates game start time.
+ *
+ * After game started moderator could update start_time only in 12 hours range.
+ */
+struct update_game_start_time_operation : public base_operation
+{
+    /// game id
+    int64_t game_id;
+
+    /// moderator account name
+    account_name_type moderator;
+
+    /// game start time
+    time_point_sec start;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @brief With this operation moderator provides game results(wincases)
+ *
+ * This operation changes game status to 'finished'. Stop accepting bets. All unmatched bets returned back. This
+ * operation triger resolving delay. After this delay all bets would be resolved. During resolving delay moderator could
+ * update results several times.
+ */
+struct post_game_results_operation : public base_operation
+{
+    /// game id
+    int64_t game_id;
+
+    /// moderator account name
+    account_name_type moderator;
+
+    /// list of wincases
+    fc::flat_set<betting::wincase_type> wincases;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @brief This operation creates bet
+ */
 struct post_bet_operation : public base_operation
 {
     /// owner for new bet
     account_name_type better;
+
     /// game for bet creating
     int64_t game_id;
+
     /// wincase
     betting::wincase_type wincase;
+
     /// odds - rational coefficient that define potential result (p). p = odds * stake
     odds_input odds;
+
     /// stake amount in SCR
     asset stake;
 
+    /// @cond DO_NOT_DOCUMENT
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
         a.insert(better);
     }
+    /// @endcond
 };
 
+/**
+ * @brief This operation cancel unmatched bets by id
+ */
 struct cancel_pending_bets_operation : public base_operation
 {
     /// bets list that is being canceling
     fc::flat_set<int64_t> bet_ids;
+
     /// owner
     account_name_type better;
 
+    /// @cond DO_NOT_DOCUMENT
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
         a.insert(better);
     }
+    /// @endcond
 };
+
+/// @}
 
 /// bets list that is being canceling
 /// supervisor
