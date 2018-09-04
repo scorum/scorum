@@ -16,7 +16,10 @@ public:
 
     id_type id;
 
+    /// moderator account name
     account_name_type moderator;
+
+    /// resolve delay time after gam
     uint32_t resolve_delay_sec = SCORUM_BETTING_RESOLVE_DELAY_SEC;
 };
 
