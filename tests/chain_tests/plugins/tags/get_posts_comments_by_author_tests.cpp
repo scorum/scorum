@@ -86,10 +86,11 @@ BOOST_FIXTURE_TEST_SUITE(tags_get_post_comments_by_author_tests, get_post_commen
 SCORUM_TEST_CASE(get_post_comments_by_author_negative_check)
 {
     BOOST_CHECK_THROW(
-        _api.get_posts_comments_by_author(discussion_query_wrapper{ "alice", "1", MAX_DISCUSSIONS_LIST_SIZE * 2 }),
+        _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "alice", "1", MAX_DISCUSSIONS_LIST_SIZE * 2 }),
         fc::assert_exception);
-    BOOST_CHECK_THROW(_api.get_posts_comments_by_author(discussion_query_wrapper{ "", "1", MAX_DISCUSSIONS_LIST_SIZE }),
-                      fc::assert_exception);
+    BOOST_CHECK_THROW(
+        _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "", "1", MAX_DISCUSSIONS_LIST_SIZE }),
+        fc::assert_exception);
 }
 
 #ifdef IS_LOW_MEM
@@ -99,7 +100,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_empty_for_low_mem_mode_check)
 
     generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
-    auto result = _api.get_posts_comments_by_author(discussion_query_wrapper{ "bob" });
+    auto result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "bob" });
 
     BOOST_REQUIRE_EQUAL(
         comments.get(test_case.bob_post.author(), test_case.bob_post.permlink()).cashout_time.to_iso_string(),
@@ -118,7 +119,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_cashout_reached_check)
 
     auto test_case_step2 = create_test_case_1();
 
-    auto result = _api.get_posts_comments_by_author(discussion_query_wrapper{ "bob" });
+    auto result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "bob" });
 
     BOOST_REQUIRE(result.empty());
 
@@ -144,7 +145,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_cashout_reached_check)
     BOOST_REQUIRE_EQUAL(bob_stat_step2.total_payout_value, ASSET_NULL_SP);
     BOOST_REQUIRE_EQUAL(bob_stat_step2.author_payout_value, ASSET_NULL_SP);
 
-    result = _api.get_posts_comments_by_author(discussion_query_wrapper{ "bob" });
+    result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "bob" });
 
     BOOST_REQUIRE_EQUAL(result.size(), 1u);
 
@@ -163,7 +164,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_cashout_reached_check)
                             .cashout_time.to_iso_string(),
                         fc::time_point_sec::maximum().to_iso_string());
 
-    result = _api.get_posts_comments_by_author(discussion_query_wrapper{ "bob" });
+    result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "bob" });
 
     BOOST_REQUIRE_EQUAL(result.size(), 2u);
 
@@ -191,7 +192,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_rewarded_check)
 {
     auto test_case = create_test_case_1();
 
-    auto result = _api.get_posts_comments_by_author(discussion_query_wrapper{ "dave" });
+    auto result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "dave" });
 
     BOOST_REQUIRE(result.empty());
 
@@ -212,11 +213,11 @@ SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_rewarded_check)
     BOOST_REQUIRE_GT(bob_stat.total_payout_value, ASSET_NULL_SP);
     BOOST_REQUIRE_GT(bob_stat.author_payout_value, ASSET_NULL_SP);
 
-    result = _api.get_posts_comments_by_author(discussion_query_wrapper{ "dave" });
+    result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "dave" });
 
     BOOST_REQUIRE(result.empty());
 
-    result = _api.get_posts_comments_by_author(discussion_query_wrapper{ "bob" });
+    result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "bob" });
 
     BOOST_REQUIRE_EQUAL(result.size(), 1u);
 
@@ -232,7 +233,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_rewarded_by_children_c
 {
     auto test_case = create_test_case_1();
 
-    auto result = _api.get_posts_comments_by_author(discussion_query_wrapper{ "alice" });
+    auto result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "alice" });
 
     BOOST_REQUIRE(result.empty());
 
@@ -244,7 +245,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_rewarded_by_children_c
     BOOST_REQUIRE_GT(alice_stat.total_payout_value, ASSET_NULL_SP);
     BOOST_REQUIRE_EQUAL(alice_stat.author_payout_value, ASSET_NULL_SP);
 
-    result = _api.get_posts_comments_by_author(discussion_query_wrapper{ "alice" });
+    result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "alice" });
 
     BOOST_REQUIRE_EQUAL(result.size(), 1u);
 
@@ -271,7 +272,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_pagination_for_rewarded_check)
 
     generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
-    auto result_page1 = _api.get_posts_comments_by_author(discussion_query_wrapper{ "bob", "", page_size });
+    auto result_page1 = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "bob", "", page_size });
 
     wdump((result_page1));
 
@@ -281,7 +282,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_pagination_for_rewarded_check)
         begin(result_page1), end(result_page1),
         [](const api::discussion& lhs, const api::discussion& rhs) { return lhs.created > rhs.created; }));
 
-    auto result_page2 = _api.get_posts_comments_by_author(
+    auto result_page2 = _api.get_paid_posts_comments_by_author(
         discussion_query_wrapper{ "bob", result_page1.rbegin()->permlink, page_size + 1 });
     // next page includes last record from previous page. It is Ok for front-end
     result_page2.erase(result_page2.begin());

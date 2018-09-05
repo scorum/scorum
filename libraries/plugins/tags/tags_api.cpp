@@ -129,11 +129,11 @@ std::vector<discussion> tags_api::get_discussions_by_author(const api::discussio
     FC_CAPTURE_AND_RETHROW((query))
 }
 
-std::vector<api::discussion> tags_api::get_posts_comments_by_author(const api::discussion_query& query) const
+std::vector<api::discussion> tags_api::get_paid_posts_comments_by_author(const api::discussion_query& query) const
 {
     try
     {
-        return guard().with_read_lock([&]() { return _impl->get_posts_comments_by_author(query); });
+        return guard().with_read_lock([&]() { return _impl->get_paid_posts_comments_by_author(query); });
     }
     FC_CAPTURE_AND_RETHROW((query))
 }
