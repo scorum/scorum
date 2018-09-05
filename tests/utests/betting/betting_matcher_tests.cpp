@@ -16,7 +16,7 @@ using namespace service_wrappers;
 struct betting_matcher_fixture : public betting_common::betting_service_fixture_impl
 {
     betting_matcher_fixture()
-        : service(*dbs_services)
+        : service(*dbs_services, *virt_op_emitter)
     {
     }
 
@@ -200,6 +200,25 @@ SCORUM_TEST_CASE(matched_from_larger_potential_result_check)
     asset total_result = total_matched(matched_bets.get(1), matched_bets.get(2));
     total_result += total_stake_rest(bet1, bet2, bet3);
     BOOST_REQUIRE_EQUAL(total_start, total_result);
+}
+
+SCORUM_TEST_CASE(virt_operation_should_be_emitted_check)
+{
+    mocks.ExpectCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation)
+        .Do([](const operation& op) {
+            auto& typed_op = op.get<bets_matched_operation>();
+            BOOST_CHECK_EQUAL(typed_op.better1, "bob");
+            BOOST_CHECK_EQUAL(typed_op.better2, "alice");
+            BOOST_CHECK_EQUAL(typed_op.matched_stake1.amount, 8e9);
+            BOOST_CHECK_EQUAL(typed_op.matched_stake2.amount, 1e9 - 111'111'112);
+        });
+
+    const auto& bet1 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9));
+    service.match(bet1);
+
+    // set not enough stake to pay gain 'alice'
+    const auto& bet2 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(8e+9));
+    service.match(bet2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

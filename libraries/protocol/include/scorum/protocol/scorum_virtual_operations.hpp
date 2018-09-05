@@ -353,6 +353,26 @@ struct cash_back_from_advertising_budget_to_owner_operation : public virtual_ope
     int64_t id = -1;
     asset cash = asset(0, SCORUM_SYMBOL);
 };
+
+struct bets_matched_operation : public virtual_operation
+{
+    bets_matched_operation() = default;
+    bets_matched_operation(
+        account_name_type better1, account_name_type better2, asset matched_stake1, asset matched_stake2, int64_t id)
+        : better1(better1)
+        , better2(better2)
+        , matched_stake1(matched_stake1)
+        , matched_stake2(matched_stake2)
+        , id(id)
+    {
+    }
+
+    account_name_type better1;
+    account_name_type better2;
+    asset matched_stake1 = asset(0, SCORUM_SYMBOL);
+    asset matched_stake2 = asset(0, SCORUM_SYMBOL);
+    int64_t id = -1;
+};
 }
 } // scorum::protocol
 
@@ -379,3 +399,4 @@ FC_REFLECT(scorum::protocol::devpool_to_devpool_vesting_withdraw_operation, (wit
 FC_REFLECT(scorum::protocol::proposal_virtual_operation, (proposal_op))
 FC_REFLECT(scorum::protocol::allocate_cash_from_advertising_budget_operation, (type)(owner)(id)(cash))
 FC_REFLECT(scorum::protocol::cash_back_from_advertising_budget_to_owner_operation, (type)(owner)(id)(cash))
+FC_REFLECT(scorum::protocol::bets_matched_operation, (better1)(better2)(matched_stake1)(matched_stake2)(id))

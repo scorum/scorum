@@ -126,7 +126,8 @@ database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
     , _betting_service(static_cast<data_service_factory_i&>(_self))
-    , _betting_matcher(static_cast<data_service_factory_i&>(_self))
+    , _betting_matcher(static_cast<data_service_factory_i&>(_self),
+                       static_cast<database_virtual_operations_emmiter_i&>(_self))
 {
 }
 
