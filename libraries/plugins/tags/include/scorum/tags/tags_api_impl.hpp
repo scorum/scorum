@@ -178,14 +178,14 @@ public:
         return get_discussions_by_author(*query.start_author, query.start_permlink, query.limit);
     }
 
-    std::vector<api::discussion> get_posts_comments_by_author(const api::discussion_query& query) const
+    std::vector<api::discussion> get_paid_posts_comments_by_author(const api::discussion_query& query) const
     {
         FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
                   "limit cannot be more than " + std::to_string(MAX_DISCUSSIONS_LIST_SIZE));
         FC_ASSERT(query.start_author && !query.start_author->empty(),
                   "start_author should be specified and cannot be empty");
 
-        return get_posts_comments_by_author(*query.start_author, query.start_permlink, query.limit,
+        return get_paid_posts_comments_by_author(*query.start_author, query.start_permlink, query.limit,
                                             query.truncate_body);
     }
 
@@ -580,7 +580,7 @@ private:
         return result;
     }
 
-    std::vector<api::discussion> get_posts_comments_by_author(const std::string& author,
+    std::vector<api::discussion> get_paid_posts_comments_by_author(const std::string& author,
                                                               fc::optional<std::string> start_permlink,
                                                               uint32_t limit,
                                                               uint32_t truncate_body) const

@@ -106,7 +106,8 @@ public:
     std::vector<api::discussion> get_discussions_by_author(const api::discussion_query& query) const;
 
     /**
-     * @brief Returns an array of posts and comments belonging to the given author that have reached cashout time
+     * @brief Returns an array of posts and comments belonging to the given author that have reached cashout time and it
+     * is reward > 0
      * @param query
      * @warning query parameter accepts only following @ref api::discussion_query fields: \n
      *          \e start_author, \e start_permlink, \e limit, \e truncate_body
@@ -114,7 +115,7 @@ public:
      * If start_permlink is empty then discussions are returned from the beginning. This
      * should allow easy pagination.
      */
-    std::vector<api::discussion> get_posts_comments_by_author(const api::discussion_query& query) const;
+    std::vector<api::discussion> get_paid_posts_comments_by_author(const api::discussion_query& query) const;
 
     /// @}
 };
@@ -138,5 +139,5 @@ FC_API(scorum::tags::tags_api,
        (get_comments)
        (get_parents)
        (get_discussions_by_author)
-       (get_posts_comments_by_author))
+       (get_paid_posts_comments_by_author))
 // clang-format on
