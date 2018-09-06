@@ -88,7 +88,7 @@ struct bet_operations_fixture : public database_fixture::database_default_integr
         {
             create_game_operation op;
             op.moderator = moderator.name;
-            op.start = dgp_service.head_block_time() + fc::hours(1);
+            op.start_time = dgp_service.head_block_time() + fc::hours(1);
             op.name = "test";
             op.game = soccer_game{};
             op.markets = { result_home_market{}, total_market{ 2000 } };

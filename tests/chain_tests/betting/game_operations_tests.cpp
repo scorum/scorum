@@ -56,7 +56,7 @@ struct game_operations_fixture : public database_fixture::database_default_integ
         {
             create_game_operation op;
             op.moderator = moderator.name;
-            op.start = dgp_service.head_block_time() + fc::seconds(3);
+            op.start_time = dgp_service.head_block_time() + fc::seconds(3);
             op.name = "test";
             op.game = soccer_game{};
             op.markets = { markets... };

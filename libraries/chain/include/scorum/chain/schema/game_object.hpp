@@ -38,7 +38,7 @@ public:
     id_type id;
 
     fc::shared_string name;
-    time_point_sec start = time_point_sec::min();
+    time_point_sec start_time = time_point_sec::min();
     time_point_sec last_update = time_point_sec::min();
     time_point_sec bets_resolve_time = time_point_sec::maximum();
 
@@ -61,12 +61,12 @@ using game_index
                                               ordered_non_unique<tag<by_start_time>,
                                                                  member<game_object,
                                                                         fc::time_point_sec,
-                                                                        &game_object::start>>>>;
+                                                                        &game_object::start_time>>>>;
 }
 }
 
 FC_REFLECT_ENUM(scorum::chain::game_status, (created)(started)(finished))
 FC_REFLECT(scorum::chain::game_object,
-           (id)(name)(start)(last_update)(bets_resolve_time)(status)(game)(markets)(results))
+           (id)(name)(start_time)(last_update)(bets_resolve_time)(status)(game)(markets)(results))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_object, scorum::chain::game_index)

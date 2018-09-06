@@ -23,7 +23,7 @@ struct game_serialization_test_fixture
         op.moderator = "moderator_name";
         op.name = "game_name";
         op.game = soccer_game{};
-        op.start = time_point_sec{ 1461605400 };
+        op.start_time = time_point_sec{ 1461605400 };
         op.markets = get_markets();
 
         return op;
@@ -146,7 +146,7 @@ struct game_serialization_test_fixture
     {
         BOOST_CHECK_EQUAL(obj.moderator, "moderator_name");
         BOOST_CHECK_EQUAL(obj.name, "game_name");
-        BOOST_CHECK(obj.start == time_point_sec{ 1461605400 });
+        BOOST_CHECK(obj.start_time == time_point_sec{ 1461605400 });
         BOOST_CHECK_NO_THROW(obj.game.get<soccer_game>());
 
         validate_markets(obj.markets);
@@ -259,7 +259,7 @@ SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
     create_game_operation op;
     op.moderator = "admin";
     op.name = "game name";
-    op.start = time_point_sec::from_iso_string("2018-08-03T10:12:43");
+    op.start_time = time_point_sec::from_iso_string("2018-08-03T10:12:43");
     op.game = soccer_game{};
     op.markets = {};
 
@@ -271,7 +271,7 @@ SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
     create_game_operation op;
     op.moderator = "admin";
     op.name = "game name";
-    op.start = time_point_sec::from_iso_string("2018-08-03T10:12:43");
+    op.start_time = time_point_sec::from_iso_string("2018-08-03T10:12:43");
     op.game = soccer_game{};
     op.markets = { total_market{ 1000 } };
 
