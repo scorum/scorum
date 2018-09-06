@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include <scorum/protocol/scorum_operations.hpp>
 #include <scorum/chain/evaluators/evaluator.hpp>
 

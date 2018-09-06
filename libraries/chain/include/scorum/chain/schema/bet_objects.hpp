@@ -7,6 +7,7 @@
 #include <boost/multi_index/composite_key.hpp>
 
 #include <scorum/protocol/betting/wincase.hpp>
+#include <scorum/protocol/betting/wincase_comparison.hpp>
 
 namespace scorum {
 namespace chain {
@@ -63,6 +64,8 @@ public:
 
     id_type id;
 
+    game_id_type game;
+
     fc::time_point_sec when_matched;
 
     bet_id_type bet1;
@@ -80,7 +83,15 @@ struct by_game_id;
 
 typedef shared_multi_index_container<bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
-                                                               member<bet_object, bet_id_type, &bet_object::id>>>>
+                                                               member<bet_object, bet_id_type, &bet_object::id>>,
+                                                ordered_non_unique<tag<by_game_id>,
+                                                                   composite_key<bet_object,
+                                                                                 member<bet_object,
+                                                                                        game_id_type,
+                                                                                        &bet_object::game>,
+                                                                                 member<bet_object,
+                                                                                        wincase_type,
+                                                                                        &bet_object::wincase>>>>>
     bet_index;
 
 struct by_bet_id;
@@ -94,16 +105,10 @@ typedef shared_multi_index_container<pending_bet_object,
                                                                member<pending_bet_object,
                                                                       bet_id_type,
                                                                       &pending_bet_object::bet>>,
-                                                ordered_unique<tag<by_game_id>,
-                                                               composite_key<pending_bet_object,
-                                                                             member<pending_bet_object,
-                                                                                    game_id_type,
-                                                                                    &pending_bet_object::game>,
-                                                                             member<pending_bet_object,
-                                                                                    bet_id_type,
-                                                                                    &pending_bet_object::bet>>,
-                                                               composite_key_compare<std::less<game_id_type>,
-                                                                                     std::less<bet_id_type>>>>>
+                                                ordered_non_unique<tag<by_game_id>,
+                                                                   member<pending_bet_object,
+                                                                          game_id_type,
+                                                                          &pending_bet_object::game>>>>
     pending_bet_index;
 
 struct by_matched_bets_id;
@@ -125,6 +130,10 @@ typedef shared_multi_index_container<matched_bet_object,
                                                                                     &matched_bet_object::bet2>>,
                                                                composite_key_compare<std::less<bet_id_type>,
                                                                                      std::less<bet_id_type>>>,
+                                                ordered_non_unique<tag<by_game_id>,
+                                                                   member<matched_bet_object,
+                                                                          game_id_type,
+                                                                          &matched_bet_object::game>>,
                                                 ordered_non_unique<tag<by_matched_bet1_id>,
                                                                    member<matched_bet_object,
                                                                           bet_id_type,
@@ -159,6 +168,7 @@ CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pendi
 
 FC_REFLECT(scorum::chain::matched_bet_object,
            (id)
+           (game)
            (when_matched)
            (bet1)
            (bet2)

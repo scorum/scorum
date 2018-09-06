@@ -220,13 +220,23 @@ BOOST_FIXTURE_TEST_CASE(dont_throw_when_limit_is_zero, get_games_fixture)
     std::vector<pending_bet_object> pbets;
     std::vector<matched_bet_object> mbets;
 
-    mocks.OnCall(bet_service, bet_service_i::get_bets).With(_).ReturnByRef({ bets.begin(), bets.end() });
+    mocks
+        .OnCallOverload(bet_service,
+                        (bet_service_i::view_type(bet_service_i::*)(bet_id_type) const) & bet_service_i::get_bets)
+        .With(_)
+        .ReturnByRef({ bets.begin(), bets.end() });
 
-    mocks.OnCall(pending_bet_service, pending_bet_service_i::get_bets)
+    mocks
+        .OnCallOverload(pending_bet_service,
+                        (pending_bet_service_i::view_type(pending_bet_service_i::*)(pending_bet_id_type) const)
+                            & pending_bet_service_i::get_bets)
         .With(_)
         .ReturnByRef({ pbets.begin(), pbets.end() });
 
-    mocks.OnCall(matched_bet_service, matched_bet_service_i::get_bets)
+    mocks
+        .OnCallOverload(matched_bet_service,
+                        (matched_bet_service_i::view_type(matched_bet_service_i::*)(matched_bet_id_type) const)
+                            & matched_bet_service_i::get_bets)
         .With(_)
         .ReturnByRef({ mbets.begin(), mbets.end() });
 
@@ -245,13 +255,23 @@ BOOST_FIXTURE_TEST_CASE(dont_throw_when_limit_eq_max, get_games_fixture)
     std::vector<pending_bet_object> pbets;
     std::vector<matched_bet_object> mbets;
 
-    mocks.OnCall(bet_service, bet_service_i::get_bets).With(_).ReturnByRef({ bets.begin(), bets.end() });
+    mocks
+        .OnCallOverload(bet_service,
+                        (bet_service_i::view_type(bet_service_i::*)(bet_id_type) const) & bet_service_i::get_bets)
+        .With(_)
+        .ReturnByRef({ bets.begin(), bets.end() });
 
-    mocks.OnCall(pending_bet_service, pending_bet_service_i::get_bets)
+    mocks
+        .OnCallOverload(pending_bet_service,
+                        (pending_bet_service_i::view_type(pending_bet_service_i::*)(pending_bet_id_type) const)
+                            & pending_bet_service_i::get_bets)
         .With(_)
         .ReturnByRef({ pbets.begin(), pbets.end() });
 
-    mocks.OnCall(matched_bet_service, matched_bet_service_i::get_bets)
+    mocks
+        .OnCallOverload(matched_bet_service,
+                        (matched_bet_service_i::view_type(matched_bet_service_i::*)(matched_bet_id_type) const)
+                            & matched_bet_service_i::get_bets)
         .With(_)
         .ReturnByRef({ mbets.begin(), mbets.end() });
 
@@ -277,7 +297,11 @@ template <typename T> struct get_bets_fixture : public fixture
 BOOST_FIXTURE_TEST_CASE(check_get_bets_from_arg, get_bets_fixture<bet_object>)
 {
     bet_id_type from = 0;
-    mocks.ExpectCall(bet_service, bet_service_i::get_bets).With(from).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(bet_service,
+                            (bet_service_i::view_type(bet_service_i::*)(bet_id_type) const) & bet_service_i::get_bets)
+        .With(from)
+        .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory);
     api.get_user_bets(from, 1);
@@ -285,7 +309,11 @@ BOOST_FIXTURE_TEST_CASE(check_get_bets_from_arg, get_bets_fixture<bet_object>)
 
 BOOST_FIXTURE_TEST_CASE(get_one_bet, get_bets_fixture<bet_object>)
 {
-    mocks.ExpectCall(bet_service, bet_service_i::get_bets).With(_).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(bet_service,
+                            (bet_service_i::view_type(bet_service_i::*)(bet_id_type) const) & bet_service_i::get_bets)
+        .With(_)
+        .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory);
     auto bets = api.get_user_bets(0, 1);
@@ -297,7 +325,11 @@ BOOST_FIXTURE_TEST_CASE(get_one_bet, get_bets_fixture<bet_object>)
 
 BOOST_FIXTURE_TEST_CASE(get_all_bets, get_bets_fixture<bet_object>)
 {
-    mocks.ExpectCall(bet_service, bet_service_i::get_bets).With(_).Return({ objects.begin(), objects.end() });
+    mocks
+        .ExpectCallOverload(bet_service,
+                            (bet_service_i::view_type(bet_service_i::*)(bet_id_type) const) & bet_service_i::get_bets)
+        .With(_)
+        .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory);
     auto bets = api.get_user_bets(0, 100);
@@ -312,7 +344,10 @@ BOOST_FIXTURE_TEST_CASE(get_all_bets, get_bets_fixture<bet_object>)
 BOOST_FIXTURE_TEST_CASE(check_get_pending_bets_from_arg, get_bets_fixture<pending_bet_object>)
 {
     pending_bet_id_type from = 0;
-    mocks.ExpectCall(pending_bet_service, pending_bet_service_i::get_bets)
+    mocks
+        .ExpectCallOverload(pending_bet_service,
+                            (pending_bet_service_i::view_type(pending_bet_service_i::*)(pending_bet_id_type) const)
+                                & pending_bet_service_i::get_bets)
         .With(from)
         .Return({ objects.begin(), objects.end() });
 
@@ -322,7 +357,10 @@ BOOST_FIXTURE_TEST_CASE(check_get_pending_bets_from_arg, get_bets_fixture<pendin
 
 BOOST_FIXTURE_TEST_CASE(get_one_pending_bet, get_bets_fixture<pending_bet_object>)
 {
-    mocks.ExpectCall(pending_bet_service, pending_bet_service_i::get_bets)
+    mocks
+        .ExpectCallOverload(pending_bet_service,
+                            (pending_bet_service_i::view_type(pending_bet_service_i::*)(pending_bet_id_type) const)
+                                & pending_bet_service_i::get_bets)
         .With(_)
         .Return({ objects.begin(), objects.end() });
 
@@ -336,7 +374,10 @@ BOOST_FIXTURE_TEST_CASE(get_one_pending_bet, get_bets_fixture<pending_bet_object
 
 BOOST_FIXTURE_TEST_CASE(get_all_pending_bets, get_bets_fixture<pending_bet_object>)
 {
-    mocks.ExpectCall(pending_bet_service, pending_bet_service_i::get_bets)
+    mocks
+        .ExpectCallOverload(pending_bet_service,
+                            (pending_bet_service_i::view_type(pending_bet_service_i::*)(pending_bet_id_type) const)
+                                & pending_bet_service_i::get_bets)
         .With(_)
         .Return({ objects.begin(), objects.end() });
 
@@ -353,7 +394,10 @@ BOOST_FIXTURE_TEST_CASE(get_all_pending_bets, get_bets_fixture<pending_bet_objec
 BOOST_FIXTURE_TEST_CASE(check_get_matched_bets_from_arg, get_bets_fixture<matched_bet_object>)
 {
     matched_bet_id_type from = 0;
-    mocks.ExpectCall(matched_bet_service, matched_bet_service_i::get_bets)
+    mocks
+        .ExpectCallOverload(matched_bet_service,
+                            (matched_bet_service_i::view_type(matched_bet_service_i::*)(matched_bet_id_type) const)
+                                & matched_bet_service_i::get_bets)
         .With(from)
         .Return({ objects.begin(), objects.end() });
 
@@ -363,7 +407,10 @@ BOOST_FIXTURE_TEST_CASE(check_get_matched_bets_from_arg, get_bets_fixture<matche
 
 BOOST_FIXTURE_TEST_CASE(get_one_matched_bet, get_bets_fixture<matched_bet_object>)
 {
-    mocks.ExpectCall(matched_bet_service, matched_bet_service_i::get_bets)
+    mocks
+        .ExpectCallOverload(matched_bet_service,
+                            (matched_bet_service_i::view_type(matched_bet_service_i::*)(matched_bet_id_type) const)
+                                & matched_bet_service_i::get_bets)
         .With(_)
         .Return({ objects.begin(), objects.end() });
 
@@ -377,7 +424,10 @@ BOOST_FIXTURE_TEST_CASE(get_one_matched_bet, get_bets_fixture<matched_bet_object
 
 BOOST_FIXTURE_TEST_CASE(get_all_matched_bets, get_bets_fixture<matched_bet_object>)
 {
-    mocks.ExpectCall(matched_bet_service, matched_bet_service_i::get_bets)
+    mocks
+        .ExpectCallOverload(matched_bet_service,
+                            (matched_bet_service_i::view_type(matched_bet_service_i::*)(matched_bet_id_type) const)
+                                & matched_bet_service_i::get_bets)
         .With(_)
         .Return({ objects.begin(), objects.end() });
 

@@ -1,4 +1,5 @@
 #include <scorum/chain/services/bet.hpp>
+#include <boost/lambda/lambda.hpp>
 
 namespace scorum {
 namespace chain {
@@ -28,5 +29,17 @@ bool dbs_bet::is_exists(const bet_id_type& bet_id) const
     return find_by<by_id>(bet_id) != nullptr;
 }
 
+std::vector<dbs_bet::object_cref_type> dbs_bet::get_bets(const game_id_type& game_id) const
+{
+    try
+    {
+        // TODO: refactor later using db_accessors
+        auto& idx = db_impl().get_index<bet_index, by_game_id>();
+        auto from = idx.lower_bound(game_id);
+        auto to = idx.upper_bound(game_id);
+        return { from, to };
+    }
+    FC_CAPTURE_LOG_AND_RETHROW((game_id))
+}
 } // namespace chain
 } // namespace scorum

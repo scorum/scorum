@@ -2,7 +2,7 @@
 
 #include "defines.hpp"
 
-#include "database_default_integration.hpp"
+#include "database_betting_integration.hpp"
 #include "actor.hpp"
 
 #include <scorum/protocol/proposal_operations.hpp>
@@ -20,8 +20,9 @@ namespace {
 using namespace scorum::protocol;
 using namespace scorum::protocol::betting;
 using namespace scorum::chain;
+using namespace database_fixture;
 
-struct game_operations_fixture : public database_fixture::database_default_integration_fixture
+struct game_operations_fixture : public database_fixture::database_betting_integration_fixture
 {
     game_operations_fixture()
         : dgp_service(db.dynamic_global_property_service())
@@ -29,6 +30,8 @@ struct game_operations_fixture : public database_fixture::database_default_integ
         , account_service(db.account_service())
         , game_service(db.game_service())
     {
+        open_database();
+
         alice.scorum(ASSET_SCR(1e+9));
         actor(initdelegate).create_account(alice);
         actor(initdelegate).give_sp(alice, 1e+9);
@@ -49,64 +52,6 @@ struct game_operations_fixture : public database_fixture::database_default_integ
         BOOST_REQUIRE_EQUAL(betting_property_service.get().moderator, moderator.name);
     }
 
-    template <typename... TMarkets>
-    create_game_operation create_game(const Actor& moderator, const TMarkets&... markets)
-    {
-        try
-        {
-            create_game_operation op;
-            op.moderator = moderator.name;
-            op.start_time = dgp_service.head_block_time() + fc::seconds(3);
-            op.name = "test";
-            op.game = soccer_game{};
-            op.markets = { markets... };
-
-            push_operation_only(op, moderator.private_key);
-
-            return op;
-        }
-        FC_CAPTURE_LOG_AND_RETHROW(())
-    }
-
-    void empower_moderator(const Actor& moderator)
-    {
-        try
-        {
-            development_committee_empower_betting_moderator_operation operation;
-            operation.account = moderator.name;
-
-            {
-                proposal_create_operation op;
-                op.creator = initdelegate.name;
-                op.operation = operation;
-                op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
-
-                push_operation_only(op, initdelegate.private_key);
-            }
-
-            {
-                proposal_vote_operation op;
-                op.voting_account = initdelegate.name;
-                op.proposal_id = get_last_proposal_id()._id;
-
-                push_operation_only(op, initdelegate.private_key);
-            }
-
-            generate_block();
-        }
-        FC_CAPTURE_LOG_AND_RETHROW(())
-    }
-
-    proposal_id_type get_last_proposal_id()
-    {
-        auto& proposal_service = db.obtain_service<dbs_proposal>();
-        std::vector<proposal_object::cref_type> proposals = proposal_service.get_proposals();
-
-        BOOST_REQUIRE_GT(proposals.size(), static_cast<size_t>(0));
-
-        return proposals[proposals.size() - 1].get().id;
-    }
-
     Actor alice = "alice";
     Actor bob = "bob";
     Actor moderator = "smit";
@@ -122,11 +67,11 @@ BOOST_FIXTURE_TEST_SUITE(post_game_results_operation_tests, game_operations_fixt
 SCORUM_TEST_CASE(post_game_results_positive_test)
 {
     // clang-format off
-    create_game(moderator,
-            result_home_market{},
-            total_market{ 2000 },
-            total_market{ 500 },
-            correct_score_parametrized_market{ 0, 0 });
+    create_game(moderator, {
+        result_home_market{},
+        total_market{ 2000 },
+        total_market{ 500 },
+        correct_score_parametrized_market{ 0, 0 } });
     // clang-format on
 
     auto creation_time = db.head_block_time();
@@ -139,14 +84,10 @@ SCORUM_TEST_CASE(post_game_results_positive_test)
     BOOST_REQUIRE_EQUAL(game.results.size(), 0u);
     BOOST_REQUIRE_EQUAL(game.last_update.to_iso_string(), creation_time.to_iso_string());
 
-    post_game_results_operation op;
-    op.moderator = moderator.name;
-    op.game_id = 0;
-    op.wincases = { result_draw_away{}, total_over{ 500 }, correct_score_no{ 0, 0 } };
-
+    post_results(moderator, { result_draw_away{}, total_over{ 500 }, correct_score_no{ 0, 0 } });
     auto update_time = db.head_block_time();
 
-    push_operation(op, moderator.private_key);
+    generate_block();
 
     BOOST_REQUIRE_EQUAL((int)game.status, (int)game_status::finished);
     BOOST_REQUIRE_EQUAL(game.results.size(), 3u);
@@ -157,11 +98,11 @@ SCORUM_TEST_CASE(post_game_results_positive_test)
 SCORUM_TEST_CASE(post_game_results_twice_positive_test)
 {
     // clang-format off
-    create_game(moderator,
-                result_home_market{},
-                total_market{ 2000 },
-                total_market{ 500 },
-                correct_score_parametrized_market{ 0, 0 });
+    create_game(moderator, {
+        result_home_market{},
+        total_market{ 2000 },
+        total_market{ 500 },
+        correct_score_parametrized_market{ 0, 0 } });
     // clang-format on
 
     generate_block();
@@ -193,6 +134,29 @@ SCORUM_TEST_CASE(post_game_results_twice_positive_test)
     BOOST_REQUIRE_EQUAL(game.last_update.to_iso_string(), snd_update_time.to_iso_string());
     BOOST_REQUIRE_EQUAL(game.bets_resolve_time.to_iso_string(),
                         (fst_update_time + SCORUM_BETTING_RESOLVE_DELAY_SEC).to_iso_string());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(update_start_time_operation_tests, game_operations_fixture)
+
+SCORUM_TEST_CASE(auto_resolve_time_updating_test)
+{
+    auto time = db.head_block_time();
+
+    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    generate_block();
+
+    BOOST_CHECK_EQUAL((game_service.get().start_time - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 2);
+    BOOST_CHECK_EQUAL((game_service.get().auto_resolve_time - game_service.get().start_time).to_seconds(),
+                      auto_resolve_delay_default);
+
+    time = db.head_block_time();
+    update_start_time(moderator, SCORUM_BLOCK_INTERVAL * 3);
+
+    BOOST_CHECK_EQUAL((game_service.get().start_time - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 3);
+    BOOST_CHECK_EQUAL((game_service.get().auto_resolve_time - game_service.get().start_time).to_seconds(),
+                      auto_resolve_delay_default);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
