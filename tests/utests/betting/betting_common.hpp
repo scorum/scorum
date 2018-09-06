@@ -32,6 +32,7 @@ protected:
     MockRepository mocks;
 
     data_service_factory_i* dbs_services = mocks.Mock<data_service_factory_i>();
+    database_virtual_operations_emmiter_i* virt_op_emitter = mocks.Mock<database_virtual_operations_emmiter_i>();
 
     betting_service_fixture_impl()
         : betting_property(*this, mocks, [&](betting_property_object& bp) { bp.moderator = moderator; })
@@ -54,6 +55,7 @@ protected:
         mocks.OnCall(dbs_services, data_service_factory_i::matched_bet_service).ReturnByRef(matched_bets.service());
         mocks.OnCall(dbs_services, data_service_factory_i::dynamic_global_property_service)
             .ReturnByRef(dgp_service.service());
+        mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
     }
 
     const account_name_type test_bet_better = "alice";

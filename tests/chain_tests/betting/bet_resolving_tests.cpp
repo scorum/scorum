@@ -95,7 +95,7 @@ SCORUM_TEST_CASE(bets_auto_resolve_test_check)
     const auto& bob_acc = account_service.get_account(bob.name);
 
     create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
-    auto start_time = game_service.get().start;
+    auto start_time = game_service.get().start_time;
     generate_block();
 
     create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
