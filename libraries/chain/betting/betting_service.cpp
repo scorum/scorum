@@ -145,6 +145,9 @@ void betting_service::cancel_matched_bets(const game_id_type& game_id)
 
         _account_svc.increase_balance(bet1.better, matched_bet.matched_bet1_stake);
         _account_svc.increase_balance(bet2.better, matched_bet.matched_bet2_stake);
+
+        _bet_svc.update(bet1, [&](bet_object& o) { o.stake -= matched_bet.matched_bet1_stake; });
+        _bet_svc.update(bet2, [&](bet_object& o) { o.stake -= matched_bet.matched_bet2_stake; });
     }
 
     _matched_bet_svc.remove_all(matched_bets);

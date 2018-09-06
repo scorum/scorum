@@ -182,5 +182,42 @@ SCORUM_TEST_CASE(update_markets_trigger_bets_cancelling_check)
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 250'000);
 }
 
+SCORUM_TEST_CASE(cancel_game_after_markets_update_check)
+{
+    const auto& alice_acc = account_service.get_account(alice.name);
+    const auto& bob_acc = account_service.get_account(bob.name);
+
+    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 4);
+    generate_block();
+
+    create_bet(alice, result_home{}, { 10, 2 }, alice.scr_amount / 4); // 250'000 (125'000 matched)
+    create_bet(bob, result_draw_away{}, { 10, 8 }, bob.scr_amount / 2); // 500'000 (500'000 matched)
+
+    create_bet(alice, total_over{ 2000 }, { 10, 2 }, alice.scr_amount / 2); // 500'000 (62'500 matched)
+    create_bet(bob, total_under{ 2000 }, { 10, 8 }, bob.scr_amount / 4); // 250'000 (250'000 matched)
+
+    generate_block();
+
+    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 250'000);
+    BOOST_CHECK_EQUAL(bob_acc.balance.amount, 250'000);
+
+    // game isn't started yet so 'result_home_market' market will be cancelled
+    update_markets(moderator, { total_market{ 2000 } });
+
+    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 250'000 + 125'000 + 125'000); // matched 125000+pending 125000 returned
+    BOOST_CHECK_EQUAL(bob_acc.balance.amount, 250'000 + 500'000); // matched 500'000 + 0 pending returned
+
+    generate_block();
+    generate_block(); // game started now.
+
+    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000); // live. no pending bets return
+    BOOST_CHECK_EQUAL(bob_acc.balance.amount, 750'000); // live. no pending bets return
+
+    cancel_game(moderator);
+
+    BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000 + 62'500 + 437'500); // matched 62'500+pending 437'500 returned
+    BOOST_CHECK_EQUAL(bob_acc.balance.amount, 750'000 + 250'000); // matched 250'000 + 0 pending returned
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }
