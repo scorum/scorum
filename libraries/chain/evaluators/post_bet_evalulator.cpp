@@ -31,6 +31,7 @@ void post_bet_evaluator::do_apply(const operation_type& op)
     protocol::betting::validate_if_wincase_in_game(game_obj.game, op.wincase);
 
     FC_ASSERT(game_obj.status != game_status::finished, "Cannot post bet for game that is finished");
+    FC_ASSERT(game_obj.status == game_status::created || op.live, "Cannot create non-live bet after game was started");
 
     _account_service.check_account_existence(op.better);
 
@@ -43,7 +44,7 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     _account_service.decrease_balance(better, op.stake);
 
-    auto kind = op.keep //
+    auto kind = op.live //
         ? pending_bet_kind::live
         : pending_bet_kind::non_live;
     _betting_matcher.match(bet_obj, kind);

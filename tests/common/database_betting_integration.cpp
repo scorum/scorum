@@ -84,7 +84,7 @@ post_bet_operation database_betting_integration_fixture::create_bet(const Actor&
         op.wincase = wincase;
         op.odds = odds_value;
         op.stake = stake;
-        op.keep = is_live;
+        op.live = is_live;
 
         push_operation_only(op, better.private_key);
 
