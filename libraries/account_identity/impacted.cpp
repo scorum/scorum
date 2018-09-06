@@ -279,6 +279,12 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
+    void operator()(const bets_matched_operation& op)
+    {
+        _impacted.insert(op.better1);
+        _impacted.insert(op.better2);
+    }
+
 private:
     fc::flat_set<account_name_type>& _impacted;
 };

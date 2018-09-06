@@ -23,7 +23,7 @@ struct game_serialization_test_fixture
         op.moderator = "moderator_name";
         op.name = "game_name";
         op.game = soccer_game{};
-        op.start = time_point_sec{ 1461605400 };
+        op.start_time = time_point_sec{ 1461605400 };
         op.auto_resolve_delay_sec = 33;
         op.markets = get_markets();
 
@@ -119,7 +119,7 @@ struct game_serialization_test_fixture
                                 ]
                               ]
                               )";
-    fc::string create_markets_json_tpl = "{\"moderator\":\"moderator_name\",\"name\":\"game_name\",\"start\":\"2016-04-25T17:30:00\",\"auto_resolve_delay_sec\":33,\"game\":[\"soccer_game\",{}], ${markets}}";
+    fc::string create_markets_json_tpl = "{\"moderator\":\"moderator_name\",\"name\":\"game_name\",\"start_time\":\"2016-04-25T17:30:00\",\"auto_resolve_delay_sec\":33,\"game\":[\"soccer_game\",{}], ${markets}}";
     fc::string update_markets_json_tpl = "{\"moderator\":\"moderator_name\", \"game_id\":0,${markets}}";
     // clang-format on
 
@@ -147,7 +147,7 @@ struct game_serialization_test_fixture
     {
         BOOST_CHECK_EQUAL(obj.moderator, "moderator_name");
         BOOST_CHECK_EQUAL(obj.name, "game_name");
-        BOOST_CHECK(obj.start == time_point_sec{ 1461605400 });
+        BOOST_CHECK(obj.start_time == time_point_sec{ 1461605400 });
         BOOST_CHECK_NO_THROW(obj.game.get<soccer_game>());
 
         validate_markets(obj.markets);
@@ -236,6 +236,55 @@ struct game_serialization_test_fixture
 
 BOOST_FIXTURE_TEST_SUITE(game_serialization_tests, game_serialization_test_fixture)
 
+template <typename T> std::string to_hex(T t)
+{
+    return fc::to_hex(fc::raw::pack(market_type(t)));
+}
+
+SCORUM_TEST_CASE(serialize_markets)
+{
+    BOOST_CHECK_EQUAL(to_hex(result_home_market()), "00");
+    BOOST_CHECK_EQUAL(to_hex(result_draw_market()), "01");
+    BOOST_CHECK_EQUAL(to_hex(result_away_market()), "02");
+    BOOST_CHECK_EQUAL(to_hex(round_market()), "03");
+    BOOST_CHECK_EQUAL(to_hex(handicap_market()), "040000");
+    BOOST_CHECK_EQUAL(to_hex(correct_score_market()), "05");
+    BOOST_CHECK_EQUAL(to_hex(correct_score_parametrized_market()), "0600000000");
+    BOOST_CHECK_EQUAL(to_hex(goal_market()), "07");
+    BOOST_CHECK_EQUAL(to_hex(total_market()), "080000");
+    BOOST_CHECK_EQUAL(to_hex(total_goals_market()), "090000");
+}
+
+SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
+{
+    create_game_operation op;
+    op.moderator = "admin";
+    op.name = "game name";
+    op.start_time = time_point_sec::from_iso_string("2018-08-03T10:12:43");
+    op.auto_resolve_delay_sec = 33;
+    op.game = soccer_game{};
+    op.markets = {};
+
+    auto hex = fc::to_hex(fc::raw::pack(op));
+
+    BOOST_CHECK_EQUAL(hex, "0561646d696e0967616d65206e616d659b2a645b210000000000");
+}
+
+SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
+{
+    create_game_operation op;
+    op.moderator = "admin";
+    op.name = "game name";
+    op.start_time = time_point_sec::from_iso_string("2018-08-03T10:12:43");
+    op.auto_resolve_delay_sec = 33;
+    op.game = soccer_game{};
+    op.markets = { total_market{ 1000 } };
+
+    auto hex = fc::to_hex(fc::raw::pack(op));
+
+    BOOST_CHECK_EQUAL(hex, "0561646d696e0967616d65206e616d659b2a645b21000000000108e803");
+}
+
 SCORUM_TEST_CASE(create_game_json_serialization_test)
 {
     auto op = get_soccer_create_game_operation();
@@ -270,7 +319,7 @@ SCORUM_TEST_CASE(markets_duplicates_serialization_test)
                                            {
                                               "moderator":"",
                                               "name":"",
-                                              "start":"1970-01-01T00:00:00",
+                                              "start_time":"1970-01-01T00:00:00",
                                               "auto_resolve_delay_sec": 33,
                                               "game":[
                                                  "soccer_game",
@@ -334,7 +383,7 @@ SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
                                            {
                                               "moderator":"",
                                               "name":"",
-                                              "start":"1970-01-01T00:00:00",
+                                              "start_time":"1970-01-01T00:00:00",
                                               "auto_resolve_delay_sec":33,
                                               "game":[
                                                  "soccer_game",
@@ -367,7 +416,7 @@ SCORUM_TEST_CASE(wincases_duplicates_deserialization_test)
                                            {
                                               "moderator":"",
                                               "name":"",
-                                              "start":"1970-01-01T00:00:00",
+                                              "start_time":"1970-01-01T00:00:00",
                                               "game":[
                                                  "soccer_game",
                                                  {}

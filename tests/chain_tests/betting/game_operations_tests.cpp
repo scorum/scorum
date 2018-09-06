@@ -147,15 +147,15 @@ SCORUM_TEST_CASE(auto_resolve_time_updating_test)
     create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    BOOST_CHECK_EQUAL((game_service.get().start - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 2);
-    BOOST_CHECK_EQUAL((game_service.get().auto_resolve_time - game_service.get().start).to_seconds(),
+    BOOST_CHECK_EQUAL((game_service.get().start_time - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 2);
+    BOOST_CHECK_EQUAL((game_service.get().auto_resolve_time - game_service.get().start_time).to_seconds(),
                       auto_resolve_delay_default);
 
     time = db.head_block_time();
     update_start_time(moderator, SCORUM_BLOCK_INTERVAL * 3);
 
-    BOOST_CHECK_EQUAL((game_service.get().start - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 3);
-    BOOST_CHECK_EQUAL((game_service.get().auto_resolve_time - game_service.get().start).to_seconds(),
+    BOOST_CHECK_EQUAL((game_service.get().start_time - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 3);
+    BOOST_CHECK_EQUAL((game_service.get().auto_resolve_time - game_service.get().start_time).to_seconds(),
                       auto_resolve_delay_default);
 }
 

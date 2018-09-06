@@ -20,7 +20,7 @@ update_game_start_time_evaluator::update_game_start_time_evaluator(data_service_
 
 void update_game_start_time_evaluator::do_apply(const operation_type& op)
 {
-    FC_ASSERT(op.start > _dprops_service.head_block_time(), "Game should start after head block time");
+    FC_ASSERT(op.start_time > _dprops_service.head_block_time(), "Game should start after head block time");
     _account_service.check_account_existence(op.moderator);
 
     FC_ASSERT(_betting_service.is_betting_moderator(op.moderator), "User ${u} isn't a betting moderator",
@@ -31,15 +31,15 @@ void update_game_start_time_evaluator::do_apply(const operation_type& op)
 
     FC_ASSERT(game.status == game_status::created, "Cannot change the start time when game is started");
 
-    auto ordered_pair = std::minmax(game.original_start, op.start);
+    auto ordered_pair = std::minmax(game.original_start_time, op.start_time);
     FC_ASSERT(ordered_pair.second - ordered_pair.first <= SCORUM_BETTING_START_TIME_DIFF_MAX,
               "Cannot change start time more than ${1} seconds",
               ("1", SCORUM_BETTING_START_TIME_DIFF_MAX.to_seconds()));
 
     _game_service.update(game, [&](game_object& g) {
-        auto delta = op.start - g.start;
+        auto delta = op.start_time - g.start_time;
         g.auto_resolve_time += delta;
-        g.start = op.start;
+        g.start_time = op.start_time;
     });
 }
 }

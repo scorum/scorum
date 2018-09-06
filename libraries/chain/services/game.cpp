@@ -23,9 +23,9 @@ const game_object& dbs_game::create_game(const account_name_type& moderator,
 {
     return dbs_service_base<game_service_i>::create([&](game_object& obj) {
         fc::from_string(obj.name, game_name);
-        obj.start = start;
+        obj.start_time = start;
         obj.auto_resolve_time = start + auto_resolve_delay_sec;
-        obj.original_start = start;
+        obj.original_start_time = start;
         obj.last_update = _dprops_service.head_block_time();
         obj.game = game;
         obj.status = game_status::created;

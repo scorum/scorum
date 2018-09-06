@@ -9,75 +9,70 @@
 #include <scorum/chain/services/matched_bet.hpp>
 
 #include <scorum/protocol/betting/wincase_comparison.hpp>
+#include <scorum/protocol/operations.hpp>
 
 namespace scorum {
 namespace chain {
 namespace betting {
 
-betting_matcher::betting_matcher(data_service_factory_i& db)
+betting_matcher::betting_matcher(data_service_factory_i& db, database_virtual_operations_emmiter_i& virt_op_emitter)
     : _dgp_property(db.dynamic_global_property_service())
     , _betting_property(db.betting_property_service())
     , _bet_service(db.bet_service())
     , _pending_bet_service(db.pending_bet_service())
     , _matched_bet_service(db.matched_bet_service())
+    , _virt_op_emitter(virt_op_emitter)
 {
 }
 
-void betting_matcher::match(const bet_object& bet, pending_bet_kind bet_kind)
+void betting_matcher::match(const bet_object& bet1, pending_bet_kind bet_kind)
 {
     try
     {
-        FC_ASSERT(is_need_matching(bet));
+        FC_ASSERT(is_need_matching(bet1));
 
         using pending_bets_type = std::vector<pending_bet_service_i::object_cref_type>;
 
         pending_bets_type removing_pending_bets;
 
-        _pending_bet_service.foreach_pending_bets(bet.game, [&](const pending_bet_object& pending) -> bool {
+        _pending_bet_service.foreach_pending_bets(bet1.game, [&](const pending_bet_object& pending_bet) {
 
-            const bet_object& pending_bet = _bet_service.get_bet(pending.bet);
+            const bet_object& bet2 = _bet_service.get_bet(pending_bet.bet);
 
-            if (is_bets_matched(bet, pending_bet))
+            if (!is_bets_matched(bet1, bet2))
+                return true;
+
+            auto matched = calculate_matched_stake(bet1.rest_stake, bet2.rest_stake, bet1.odds_value, bet2.odds_value);
+            if (matched.bet1_matched.amount > 0 && matched.bet2_matched.amount > 0)
             {
-                auto matched = calculate_matched_stake(bet.rest_stake, pending_bet.rest_stake, bet.odds_value,
-                                                       pending_bet.odds_value);
-                if (matched.bet1_matched.amount > 0 && matched.bet2_matched.amount > 0)
-                {
-                    // clang-format off
-                    _bet_service.update(bet, [&](bet_object& obj)
-                    {
-                        obj.rest_stake -= matched.bet1_matched;
-                    });
-                    _bet_service.update(pending_bet, [&](bet_object& obj)
-                    {
-                        obj.rest_stake -= matched.bet2_matched;
-                    });
-                    _matched_bet_service.create([&](matched_bet_object& obj) {
-                        obj.when_matched = _dgp_property.head_block_time();
-                        obj.bet1 = bet.id;
-                        obj.bet2 = pending_bet.id;
-                        obj.matched_bet1_stake = matched.bet1_matched;
-                        obj.matched_bet2_stake = matched.bet2_matched;
-                    });
-                    // clang-format on
-                }
+                _bet_service.update(bet1, [&](bet_object& obj) { obj.rest_stake -= matched.bet1_matched; });
+                _bet_service.update(bet2, [&](bet_object& obj) { obj.rest_stake -= matched.bet2_matched; });
 
-                if (!is_need_matching(pending_bet))
-                {
-                    removing_pending_bets.emplace_back(std::cref(pending));
-                }
+                auto matched_bet = _matched_bet_service.create([&](matched_bet_object& obj) {
+                    obj.when_matched = _dgp_property.head_block_time();
+                    obj.bet1 = bet1.id;
+                    obj.bet2 = bet2.id;
+                    obj.matched_bet1_stake = matched.bet1_matched;
+                    obj.matched_bet2_stake = matched.bet2_matched;
+                });
 
-                return is_need_matching(bet);
+                _virt_op_emitter.push_virtual_operation(protocol::bets_matched_operation(
+                    bet1.better, bet2.better, matched.bet1_matched, matched.bet2_matched, matched_bet.id._id));
             }
 
-            return true;
+            if (!is_need_matching(bet2))
+            {
+                removing_pending_bets.emplace_back(std::cref(pending_bet));
+            }
+
+            return is_need_matching(bet1);
         });
 
-        if (is_need_matching(bet))
+        if (is_need_matching(bet1))
         {
             _pending_bet_service.create([&](pending_bet_object& obj) {
-                obj.game = bet.game;
-                obj.bet = bet.id;
+                obj.game = bet1.game;
+                obj.bet = bet1.id;
                 obj.kind = bet_kind;
             });
         }
@@ -87,7 +82,7 @@ void betting_matcher::match(const bet_object& bet, pending_bet_kind bet_kind)
             _pending_bet_service.remove(pending_bet);
         }
     }
-    FC_CAPTURE_LOG_AND_RETHROW((bet))
+    FC_CAPTURE_LOG_AND_RETHROW((bet1))
 }
 
 bool betting_matcher::is_bets_matched(const bet_object& bet1, const bet_object& bet2) const

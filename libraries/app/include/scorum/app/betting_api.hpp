@@ -68,6 +68,12 @@ public:
      */
     std::vector<pending_bet_api_object> get_pending_bets(pending_bet_id_type from, uint32_t limit) const;
 
+    /**
+     * @brief Return betting properties
+     * @return betting propery api object
+     */
+    betting_property_api_object get_betting_properties() const;
+
     /// @}
 
 private:
@@ -83,5 +89,6 @@ private:
 FC_API(scorum::app::betting_api, (get_games)
                                  (get_user_bets)
                                  (get_matched_bets)
-                                 (get_pending_bets))
+                                 (get_pending_bets)
+                                 (get_betting_properties))
 // clang-format on

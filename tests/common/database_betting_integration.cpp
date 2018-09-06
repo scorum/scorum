@@ -57,7 +57,7 @@ create_game_operation database_betting_integration_fixture::create_game(const Ac
     {
         create_game_operation op;
         op.moderator = moderator.name;
-        op.start = dgp_service.head_block_time() + start_delay;
+        op.start_time = dgp_service.head_block_time() + start_delay;
         op.auto_resolve_delay_sec = auto_resolve_delay_sec;
         op.name = "test";
         op.game = soccer_game{};
@@ -149,7 +149,7 @@ update_game_start_time_operation database_betting_integration_fixture::update_st
         update_game_start_time_operation op;
         op.moderator = moderator.name;
         op.game_id = game_service.get_game("test").id._id;
-        op.start = dgp_service.head_block_time() + start_delay;
+        op.start_time = dgp_service.head_block_time() + start_delay;
 
         push_operation_only(op, moderator.private_key);
 

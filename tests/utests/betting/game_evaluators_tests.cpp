@@ -65,7 +65,7 @@ SCORUM_TEST_CASE(create_invalid_start_time_throw)
     create_game_evaluator ev(*dbs_services, *betting_service);
 
     create_game_operation op;
-    op.start = fc::time_point_sec(0);
+    op.start_time = fc::time_point_sec(0);
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
 
@@ -77,7 +77,7 @@ SCORUM_TEST_CASE(create_with_already_existing_name_throw)
     create_game_evaluator ev(*dbs_services, *betting_service);
 
     create_game_operation op;
-    op.start = fc::time_point_sec(0);
+    op.start_time = fc::time_point_sec(0);
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {});
 
@@ -92,7 +92,7 @@ SCORUM_TEST_CASE(create_by_no_moderator_throw)
     create_game_evaluator ev(*dbs_services, *betting_service);
 
     create_game_operation op;
-    op.start = fc::time_point_sec(1);
+    op.start_time = fc::time_point_sec(1);
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
     mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
@@ -110,7 +110,7 @@ SCORUM_TEST_CASE(game_should_be_created)
     op.name = "game";
     op.moderator = "cartman";
     op.game = soccer_game{};
-    op.start = fc::time_point_sec(1);
+    op.start_time = fc::time_point_sec(1);
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
     mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
@@ -321,7 +321,7 @@ SCORUM_TEST_CASE(update_invalid_time_throw)
     update_game_start_time_evaluator ev(*dbs_services, *betting_service);
 
     update_game_start_time_operation op;
-    op.start = fc::time_point_sec(0);
+    op.start_time = fc::time_point_sec(0);
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
 
@@ -333,7 +333,7 @@ SCORUM_TEST_CASE(update_by_no_moderator_throw)
     update_game_start_time_evaluator ev(*dbs_services, *betting_service);
 
     update_game_start_time_operation op;
-    op.start = fc::time_point_sec(1);
+    op.start_time = fc::time_point_sec(1);
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
@@ -347,7 +347,7 @@ SCORUM_TEST_CASE(cannot_find_game_throw)
     update_game_start_time_evaluator ev(*dbs_services, *betting_service);
 
     update_game_start_time_operation op;
-    op.start = fc::time_point_sec(1);
+    op.start_time = fc::time_point_sec(1);
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
@@ -362,7 +362,7 @@ SCORUM_TEST_CASE(after_game_started_throw)
     update_game_start_time_evaluator ev(*dbs_services, *betting_service);
 
     update_game_start_time_operation op;
-    op.start = fc::time_point_sec(1);
+    op.start_time = fc::time_point_sec(1);
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) { o.status = game_status::started; });
 
@@ -380,7 +380,7 @@ SCORUM_TEST_CASE(expected_time_update)
     update_game_start_time_evaluator ev(*dbs_services, *betting_service);
 
     update_game_start_time_operation op;
-    op.start = fc::time_point_sec(1);
+    op.start_time = fc::time_point_sec(1);
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) { o.status = game_status::created; });
 
@@ -395,9 +395,9 @@ SCORUM_TEST_CASE(expected_time_update)
                         (void (game_service_i::*)(const game_object&, const game_service_i::modifier_type&))
                             & game_service_i::update)
         .Do([](const game_object& obj, const game_service_i::modifier_type& mod) -> void {
-            BOOST_CHECK_EQUAL(obj.start.sec_since_epoch(), 0u);
+            BOOST_CHECK_EQUAL(obj.start_time.sec_since_epoch(), 0u);
             mod(const_cast<game_object&>(obj));
-            BOOST_CHECK_EQUAL(obj.start.sec_since_epoch(), 1u);
+            BOOST_CHECK_EQUAL(obj.start_time.sec_since_epoch(), 1u);
         });
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));

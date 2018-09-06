@@ -34,5 +34,10 @@ std::vector<pending_bet_api_object> betting_api::get_pending_bets(pending_bet_id
     return _guard->with_read_lock([&] { return _impl->get_pending_bets(from, limit); });
 }
 
+betting_property_api_object betting_api::get_betting_properties() const
+{
+    return _guard->with_read_lock([&] { return _impl->get_betting_properties(); });
+}
+
 } // namespace app
 } // namespace scorum
