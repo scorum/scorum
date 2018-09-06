@@ -908,13 +908,13 @@ struct post_game_results_operation : public base_operation
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;
+
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
         a.insert(moderator);
     }
     /// @endcond
 };
-
 /**
  * @brief This operation creates bet
  */
@@ -934,6 +934,9 @@ struct post_bet_operation : public base_operation
 
     /// stake amount in SCR
     asset stake;
+
+    /// is this bet is active in live
+    bool live = true;
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;
@@ -1071,7 +1074,8 @@ FC_REFLECT( scorum::protocol::post_bet_operation,
            (game_id)
            (wincase)
            (odds)
-           (stake))
+           (stake)
+           (live))
 FC_REFLECT( scorum::protocol::cancel_pending_bets_operation,
            (bet_ids)
            (better))

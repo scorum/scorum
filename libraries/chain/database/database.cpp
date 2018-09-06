@@ -1566,7 +1566,7 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_contracts_expiration().apply(task_ctx);
         database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
-        database_ns::process_games_startup().apply(task_ctx);
+        database_ns::process_games_startup(_my->betting_service()).apply(task_ctx);
         database_ns::process_bets_resolving(_my->betting_service(), _my->betting_resolver()).apply(task_ctx);
         database_ns::process_bets_auto_resolving(_my->betting_service(), _my->betting_resolver()).apply(task_ctx);
 

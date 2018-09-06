@@ -25,7 +25,7 @@ betting_matcher::betting_matcher(data_service_factory_i& db, database_virtual_op
 {
 }
 
-void betting_matcher::match(const bet_object& bet1)
+void betting_matcher::match(const bet_object& bet1, pending_bet_kind bet_kind)
 {
     try
     {
@@ -66,7 +66,6 @@ void betting_matcher::match(const bet_object& bet1)
             }
 
             return is_need_matching(bet1);
-
         });
 
         if (is_need_matching(bet1))
@@ -74,6 +73,7 @@ void betting_matcher::match(const bet_object& bet1)
             _pending_bet_service.create([&](pending_bet_object& obj) {
                 obj.game = bet1.game;
                 obj.bet = bet1.id;
+                obj.kind = bet_kind;
             });
         }
 

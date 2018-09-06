@@ -63,7 +63,7 @@ SCORUM_TEST_CASE(matching_not_found_and_created_pending_check)
 {
     const auto& new_bet = create_bet();
 
-    service.match(new_bet);
+    service.match(new_bet, pending_bet_kind::live);
 
     BOOST_CHECK(!pending_bets.empty());
     BOOST_CHECK(matched_bets.empty());
@@ -73,11 +73,12 @@ SCORUM_TEST_CASE(matched_for_full_stake_check)
 {
     const auto& bet1 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9));
 
-    service.match(bet1); // call this one bacause every bet creation followed by 'match' in evaluators
+    service.match(bet1,
+                  pending_bet_kind::live); // call this one bacause every bet creation followed by 'match' in evaluators
 
     const auto& bet2 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(9e+9));
 
-    service.match(bet2);
+    service.match(bet2, pending_bet_kind::live);
 
     BOOST_CHECK(pending_bets.empty());
     BOOST_CHECK(!matched_bets.empty());
@@ -101,12 +102,12 @@ SCORUM_TEST_CASE(matched_for_part_stake_check)
 {
     const auto& bet1 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9)); // 1 SCR
 
-    service.match(bet1);
+    service.match(bet1, pending_bet_kind::live);
 
     // set not enough stake to pay gain 'alice'
     const auto& bet2 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(8e+9));
 
-    service.match(bet2);
+    service.match(bet2, pending_bet_kind::live);
 
     BOOST_CHECK(!pending_bets.empty());
     BOOST_CHECK(!matched_bets.empty());
@@ -133,11 +134,11 @@ SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
 {
     const auto& bet1 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9)); // 1 SCR
 
-    service.match(bet1);
+    service.match(bet1, pending_bet_kind::live);
 
     const auto& bet2 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(8e+9)); // 8 SCR
 
-    service.match(bet2);
+    service.match(bet2, pending_bet_kind::live);
 
     BOOST_CHECK(!pending_bets.empty());
     BOOST_CHECK(!matched_bets.empty());
@@ -152,7 +153,7 @@ SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
 
     const auto& bet3 = create_bet("sam", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(1e+9)); // 1 SCR
 
-    service.match(bet3);
+    service.match(bet3, pending_bet_kind::live);
 
     BOOST_CHECK(pending_bets.empty());
     BOOST_CHECK(!matched_bets.empty());
@@ -173,15 +174,15 @@ SCORUM_TEST_CASE(matched_from_larger_potential_result_check)
 {
     const auto& bet1 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(8e+9)); // 8 SCR
 
-    service.match(bet1);
+    service.match(bet1, pending_bet_kind::live);
 
     const auto& bet2 = create_bet("sam", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(1e+9)); // 1 SCR
 
-    service.match(bet2);
+    service.match(bet2, pending_bet_kind::live);
 
     const auto& bet3 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9)); // 1 SCR
 
-    service.match(bet3);
+    service.match(bet3, pending_bet_kind::live);
 
     BOOST_CHECK(pending_bets.empty());
     BOOST_CHECK(!matched_bets.empty());
@@ -214,11 +215,11 @@ SCORUM_TEST_CASE(virt_operation_should_be_emitted_check)
         });
 
     const auto& bet1 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9));
-    service.match(bet1);
+    service.match(bet1, pending_bet_kind::live);
 
     // set not enough stake to pay gain 'alice'
     const auto& bet2 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(8e+9));
-    service.match(bet2);
+    service.match(bet2, pending_bet_kind::live);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

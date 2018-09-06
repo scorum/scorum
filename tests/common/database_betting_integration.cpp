@@ -73,7 +73,8 @@ create_game_operation database_betting_integration_fixture::create_game(const Ac
 post_bet_operation database_betting_integration_fixture::create_bet(const Actor& better,
                                                                     const betting::wincase_type& wincase,
                                                                     const odds_input& odds_value,
-                                                                    const asset& stake)
+                                                                    const asset& stake,
+                                                                    bool is_live)
 {
     try
     {
@@ -83,6 +84,7 @@ post_bet_operation database_betting_integration_fixture::create_bet(const Actor&
         op.wincase = wincase;
         op.odds = odds_value;
         op.stake = stake;
+        op.live = is_live;
 
         push_operation_only(op, better.private_key);
 

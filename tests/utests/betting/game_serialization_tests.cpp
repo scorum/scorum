@@ -310,6 +310,7 @@ SCORUM_TEST_CASE(markets_duplicates_serialization_test)
     create_game_operation op;
     op.game = soccer_game{};
     op.markets = { correct_score_market{}, correct_score_market{} };
+    op.auto_resolve_delay_sec = 33;
 
     auto json = fc::json::to_string(op);
     // clang-format off
@@ -319,7 +320,7 @@ SCORUM_TEST_CASE(markets_duplicates_serialization_test)
                                               "moderator":"",
                                               "name":"",
                                               "start_time":"1970-01-01T00:00:00",
-                                              "auto_resolve_delay_sec": 0,
+                                              "auto_resolve_delay_sec": 33,
                                               "game":[
                                                  "soccer_game",
                                                  {}
@@ -373,6 +374,7 @@ SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
     create_game_operation op;
     op.game = soccer_game{};
     op.markets = { correct_score_parametrized_market{ 1, 1 }, correct_score_market{} };
+    op.auto_resolve_delay_sec = 33;
 
     auto json = fc::json::to_string(op);
     // clang-format off
@@ -382,7 +384,7 @@ SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
                                               "moderator":"",
                                               "name":"",
                                               "start_time":"1970-01-01T00:00:00",
-                                              "auto_resolve_delay_sec":0,
+                                              "auto_resolve_delay_sec":33,
                                               "game":[
                                                  "soccer_game",
                                                  {}
