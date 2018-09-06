@@ -40,6 +40,8 @@ template <class T> struct base_service_i
 
     virtual void remove(const object_type& o) = 0;
 
+    virtual void remove_all(const std::vector<object_cref_type>& os) = 0;
+
     virtual bool is_exists() const = 0;
 
     virtual const object_type& get() const = 0;
@@ -85,6 +87,18 @@ public:
     virtual void remove(const object_type& o) override
     {
         db_impl().remove(o);
+    }
+
+    virtual void remove_all(const std::vector<object_cref_type>& os) override
+    {
+        try
+        {
+            for (const auto& o : os)
+            {
+                remove(o);
+            }
+        }
+        FC_CAPTURE_AND_RETHROW()
     }
 
     virtual bool is_exists() const override

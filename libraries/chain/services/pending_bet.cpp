@@ -1,5 +1,4 @@
 #include <scorum/chain/services/pending_bet.hpp>
-
 #include <boost/lambda/lambda.hpp>
 
 namespace scorum {
@@ -53,5 +52,22 @@ dbs_pending_bet::view_type dbs_pending_bet::get_bets(pending_bet_id_type lower_b
     return { idx.lower_bound(lower_bound), idx.end() };
 }
 
+std::vector<dbs_pending_bet::object_cref_type> dbs_pending_bet::get_bets(bet_id_type bet_id) const
+{
+    try
+    {
+        return get_range_by<by_bet_id>(bet_id <= ::boost::lambda::_1, ::boost::lambda::_1 <= bet_id);
+    }
+    FC_CAPTURE_LOG_AND_RETHROW((bet_id))
+}
+
+std::vector<dbs_pending_bet::object_cref_type> dbs_pending_bet::get_bets(game_id_type game_id) const
+{
+    try
+    {
+        return get_range_by<by_game_id>(game_id <= ::boost::lambda::_1, ::boost::lambda::_1 <= game_id);
+    }
+    FC_CAPTURE_LOG_AND_RETHROW((game_id))
+}
 } // namespace chain
 } // namespace scorum

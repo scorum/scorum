@@ -797,6 +797,9 @@ struct create_game_operation : public base_operation
     /// game start time
     time_point_sec start;
 
+    /// delay starting from start after which all bets are automatically resolved if game results weren't provided
+    uint32_t auto_resolve_delay_sec;
+
     /// game type (soccer, hockey, etc ...)
     betting::game_type game;
 
@@ -1044,7 +1047,7 @@ FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
 FC_REFLECT( scorum::protocol::close_budget_by_advertising_moderator_operation, (type)(budget_id)(moderator) )
-FC_REFLECT( scorum::protocol::create_game_operation, (moderator)(name)(start)(game)(markets) )
+FC_REFLECT( scorum::protocol::create_game_operation, (moderator)(name)(start)(auto_resolve_delay_sec)(game)(markets) )
 FC_REFLECT( scorum::protocol::cancel_game_operation, (moderator)(game_id) )
 FC_REFLECT( scorum::protocol::update_game_markets_operation, (moderator)(game_id)(markets) )
 FC_REFLECT( scorum::protocol::update_game_start_time_operation, (moderator)(game_id)(start) )

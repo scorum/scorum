@@ -24,6 +24,7 @@ struct game_serialization_test_fixture
         op.name = "game_name";
         op.game = soccer_game{};
         op.start = time_point_sec{ 1461605400 };
+        op.auto_resolve_delay_sec = 33;
         op.markets = get_markets();
 
         return op;
@@ -118,7 +119,7 @@ struct game_serialization_test_fixture
                                 ]
                               ]
                               )";
-    fc::string create_markets_json_tpl = "{\"moderator\":\"moderator_name\", \"name\":\"game_name\",\"start\":\"2016-04-25T17:30:00\", \"game\":[\"soccer_game\",{}], ${markets}}";
+    fc::string create_markets_json_tpl = "{\"moderator\":\"moderator_name\",\"name\":\"game_name\",\"start\":\"2016-04-25T17:30:00\",\"auto_resolve_delay_sec\":33,\"game\":[\"soccer_game\",{}], ${markets}}";
     fc::string update_markets_json_tpl = "{\"moderator\":\"moderator_name\", \"game_id\":0,${markets}}";
     // clang-format on
 
@@ -260,10 +261,13 @@ SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
     op.moderator = "admin";
     op.name = "game name";
     op.start = time_point_sec::from_iso_string("2018-08-03T10:12:43");
+    op.auto_resolve_delay_sec = 33;
     op.game = soccer_game{};
     op.markets = {};
 
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(op)), "0561646d696e0967616d65206e616d659b2a645b0000");
+    auto hex = fc::to_hex(fc::raw::pack(op));
+
+    BOOST_CHECK_EQUAL(hex, "0561646d696e0967616d65206e616d659b2a645b210000000000");
 }
 
 SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
@@ -272,10 +276,13 @@ SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
     op.moderator = "admin";
     op.name = "game name";
     op.start = time_point_sec::from_iso_string("2018-08-03T10:12:43");
+    op.auto_resolve_delay_sec = 33;
     op.game = soccer_game{};
     op.markets = { total_market{ 1000 } };
 
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(op)), "0561646d696e0967616d65206e616d659b2a645b000108e803");
+    auto hex = fc::to_hex(fc::raw::pack(op));
+
+    BOOST_CHECK_EQUAL(hex, "0561646d696e0967616d65206e616d659b2a645b21000000000108e803");
 }
 
 SCORUM_TEST_CASE(create_game_json_serialization_test)
@@ -312,6 +319,7 @@ SCORUM_TEST_CASE(markets_duplicates_serialization_test)
                                               "moderator":"",
                                               "name":"",
                                               "start":"1970-01-01T00:00:00",
+                                              "auto_resolve_delay_sec": 0,
                                               "game":[
                                                  "soccer_game",
                                                  {}
@@ -374,6 +382,7 @@ SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
                                               "moderator":"",
                                               "name":"",
                                               "start":"1970-01-01T00:00:00",
+                                              "auto_resolve_delay_sec":0,
                                               "game":[
                                                  "soccer_game",
                                                  {}
@@ -469,14 +478,14 @@ SCORUM_TEST_CASE(create_game_binary_serialization_test)
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e57000e000102030"
-                           "40cfe04000004e80305060100000006010001000708000008f40108e803");
+    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e5721000000000e00010203040cfe0400000"
+                           "4e80305060100000006010001000708000008f40108e803");
 }
 
 SCORUM_TEST_CASE(create_game_binary_deserialization_test)
 {
-    auto hex = "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e57000e000102030"
-               "40cfe04000004e80305060100000006010001000708000008f40108e803";
+    auto hex = "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e5721000000000e00010203040cfe0400000"
+               "4e80305060100000006010001000708000008f40108e803";
 
     char buffer[1000];
     fc::from_hex(hex, buffer, sizeof(buffer));

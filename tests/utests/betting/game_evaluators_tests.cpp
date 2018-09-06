@@ -8,6 +8,7 @@
 #include <scorum/chain/services/bet.hpp>
 
 #include <scorum/chain/betting/betting_service.hpp>
+#include <scorum/chain/betting/betting_resolver.hpp>
 
 #include <scorum/chain/evaluators/create_game_evaluator.hpp>
 #include <scorum/chain/evaluators/cancel_game_evaluator.hpp>
@@ -39,6 +40,7 @@ struct game_evaluator_fixture : public shared_memory_fixture
 
     data_service_factory_i* dbs_services = mocks.Mock<data_service_factory_i>();
     betting_service_i* betting_service = mocks.Mock<betting_service_i>();
+    betting_resolver_i* betting_resolver = mocks.Mock<betting_resolver_i>();
     betting_property_service_i* betting_prop_service = mocks.Mock<betting_property_service_i>();
     bet_service_i* bet_service = mocks.Mock<bet_service_i>();
     dynamic_global_property_service_i* dynprop_service = mocks.Mock<dynamic_global_property_service_i>();
@@ -233,11 +235,13 @@ SCORUM_TEST_CASE(update_game_new_markets_is_overset_no_cancelled_bets)
     mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
-    mocks.OnCall(betting_service, betting_service_i::return_bets)
-        .Do([](const game_object& obj, const std::vector<wincase_pair>& cancelled_wincases) -> void {
+    mocks
+        .ExpectCallOverload(betting_service,
+                            (void (betting_service_i::*)(const game_id_type&, const std::vector<wincase_pair>&))
+                                & betting_service_i::cancel_bets)
+        .Do([](const game_id_type&, const std::vector<wincase_pair>& cancelled_wincases) {
             BOOST_CHECK_EQUAL(cancelled_wincases.size(), 0u);
         });
-    mocks.OnCall(betting_service, betting_service_i::return_bets);
     mocks.OnCall(game_service, game_service_i::update_markets);
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
@@ -251,7 +255,7 @@ SCORUM_TEST_CASE(update_game_new_markets_is_subset_some_bets_cancelled)
     op.markets = { total_market{ 1000 }, result_home_market{} };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
-        o.status = game_status::started;
+        o.status = game_status::created;
         o.markets = { total_market{ 1000 }, total_market{ 0 }, total_market{ 500 }, result_home_market{} };
     });
 
@@ -259,8 +263,11 @@ SCORUM_TEST_CASE(update_game_new_markets_is_subset_some_bets_cancelled)
     mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
-    mocks.OnCall(betting_service, betting_service_i::return_bets)
-        .Do([](const game_object& obj, const std::vector<wincase_pair>& cancelled_wincases) -> void {
+    mocks
+        .ExpectCallOverload(betting_service,
+                            (void (betting_service_i::*)(const game_id_type&, const std::vector<wincase_pair>&))
+                                & betting_service_i::cancel_bets)
+        .Do([](const game_id_type&, const std::vector<wincase_pair>& cancelled_wincases) {
             BOOST_REQUIRE_EQUAL(cancelled_wincases.size(), 2u);
             BOOST_CHECK_NO_THROW(cancelled_wincases[0].first.get<total_over>());
             BOOST_CHECK_NO_THROW(cancelled_wincases[0].second.get<total_under>());
@@ -280,7 +287,7 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
     op.markets = { total_market{ 1000 }, total_market{ 0 }, correct_score_market{} /* this one is new */ };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
-        o.status = game_status::started;
+        o.status = game_status::created;
         o.markets = { total_market{ 1000 }, total_market{ 0 }, total_market{ 500 }, /* should be returned */
                       result_home_market{} /* should be returned */ };
     });
@@ -289,8 +296,11 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
     mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
-    mocks.OnCall(betting_service, betting_service_i::return_bets)
-        .Do([](const game_object& obj, const std::vector<wincase_pair>& cancelled_wincases) -> void {
+    mocks
+        .ExpectCallOverload(betting_service,
+                            (void (betting_service_i::*)(const game_id_type&, const std::vector<wincase_pair>&))
+                                & betting_service_i::cancel_bets)
+        .Do([](const game_id_type&, const std::vector<wincase_pair>& cancelled_wincases) {
             BOOST_REQUIRE_EQUAL(cancelled_wincases.size(), 2u);
             BOOST_CHECK_NO_THROW(cancelled_wincases[0].first.get<result_home>());
             BOOST_CHECK_NO_THROW(cancelled_wincases[0].second.get<result_draw_away>());
