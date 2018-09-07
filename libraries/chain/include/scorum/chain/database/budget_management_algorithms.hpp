@@ -12,14 +12,14 @@ namespace scorum {
 namespace chain {
 
 template <typename TPerBlockContainer, typename TCoeffsContainer>
-std::vector<asset> calculate_vcg_bets(const TPerBlockContainer& per_block_list, const TCoeffsContainer& coeffs)
+std::vector<asset> calculate_auction_bets(const TPerBlockContainer& per_block_list, const TCoeffsContainer& coeffs)
 {
     FC_ASSERT(coeffs.size() > 0, "invalid coefficient's list");
     FC_ASSERT(per_block_list.size() <= coeffs.size() + 1, "invalid list of per-block values");
     FC_ASSERT(std::is_sorted(coeffs.rbegin(), coeffs.rend()), "per-block list isn't sorted");
-    FC_ASSERT(std::is_sorted(per_block_list.rbegin(), per_block_list.rend()), "VCG coefficients aren't sorted");
-    FC_ASSERT(*coeffs.rbegin() > 0, "VCG coefficients should be positive");
-    FC_ASSERT(*coeffs.begin() <= 100, "VCG coefficients should be less than 100");
+    FC_ASSERT(std::is_sorted(per_block_list.rbegin(), per_block_list.rend()), "Auction coefficients aren't sorted");
+    FC_ASSERT(*coeffs.rbegin() > 0, "Auction coefficients should be positive");
+    FC_ASSERT(*coeffs.begin() <= 100, "Auction coefficients should be less than 100");
     FC_ASSERT(per_block_list.empty() || per_block_list.rbegin()->amount > 0, "per-block amount should be positive");
 
     if (per_block_list.empty())

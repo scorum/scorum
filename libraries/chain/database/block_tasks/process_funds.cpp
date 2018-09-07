@@ -33,11 +33,11 @@ namespace database_ns {
 
 using scorum::protocol::producer_reward_operation;
 
-template <typename ServiceIterfaceType, typename VCGCoeffListType>
+template <typename ServiceIterfaceType, typename CoeffListType>
 asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
                                                dynamic_global_property_service_i& dgp_service,
                                                account_service_i& account_service,
-                                               const VCGCoeffListType& vcg_coefficients,
+                                               const CoeffListType& auction_coefficients,
                                                const budget_type type,
                                                database_virtual_operations_emmiter_i& ctx)
 {
@@ -51,8 +51,8 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
     std::vector<asset> per_block_list;
     br::transform(budgets, std::back_inserter(per_block_list), [](auto b) { return b.get().per_block; });
 
-    auto valuable_per_block_vec = utils::take_n(per_block_list, vcg_coefficients.size() + 1);
-    auto vcg_bets = calculate_vcg_bets(valuable_per_block_vec, vcg_coefficients);
+    auto valuable_per_block_vec = utils::take_n(per_block_list, auction_coefficients.size() + 1);
+    auto auction_bets = calculate_auction_bets(valuable_per_block_vec, auction_coefficients);
 
     for (size_t i = 0; i < budgets.size(); ++i)
     {
@@ -63,8 +63,8 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
         auto per_block = manager.allocate_cash(budget);
 
         auto adv_cash = asset(0, per_block.symbol());
-        if (i < vcg_bets.size())
-            adv_cash = vcg_bets[i];
+        if (i < auction_bets.size())
+            adv_cash = auction_bets[i];
 
         if (adv_cash.amount > 0)
         {
@@ -121,12 +121,12 @@ void process_funds::on_apply(block_task_context& ctx)
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
 
-    advertising_budgets_reward
-        += allocate_advertising_cash(post_budget_service, dgp_service, account_service,
-                                     advertising_property_service.get().vcg_post_coefficients, budget_type::post, ctx);
-    advertising_budgets_reward += allocate_advertising_cash(banner_budget_service, dgp_service, account_service,
-                                                            advertising_property_service.get().vcg_banner_coefficients,
-                                                            budget_type::banner, ctx);
+    advertising_budgets_reward += allocate_advertising_cash(
+        post_budget_service, dgp_service, account_service, advertising_property_service.get().auction_post_coefficients,
+        budget_type::post, ctx);
+    advertising_budgets_reward += allocate_advertising_cash(
+        banner_budget_service, dgp_service, account_service,
+        advertising_property_service.get().auction_banner_coefficients, budget_type::banner, ctx);
 
     // 50% of the revenue goes to support and develop the product, namely,
     // towards the company's R&D center.

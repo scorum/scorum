@@ -92,7 +92,7 @@ namespace detail {
 
 #define SCORUM_CURRENCY_PRECISION  9
 
-#define SCORUM_DEFAULT_BUDGETS_VCG_SET  {100, 85, 75, 65}
+#define SCORUM_DEFAULT_BUDGETS_AUCTION_SET  {100, 85, 75, 65}
 
 // Scorum Coin = SCR with 9 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))

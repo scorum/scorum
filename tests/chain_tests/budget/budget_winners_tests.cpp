@@ -110,8 +110,8 @@ public:
         db_plugin->debug_update(
             [=](database& db) {
                 advertising_property_service.update([](advertising_property_object& o) {
-                    o.vcg_post_coefficients.assign({ 100, 85, 75, 45 });
-                    o.vcg_banner_coefficients.assign({ 100, 85, 75, 45 });
+                    o.auction_post_coefficients.assign({ 100, 85, 75, 45 });
+                    o.auction_banner_coefficients.assign({ 100, 85, 75, 45 });
                 });
             },
             get_skip_flags());
@@ -138,7 +138,7 @@ public:
         create_budget(bob, type, budget_balance * 2, start, budget_deadline);
         create_budget(sam, type, budget_balance / 2, start, budget_deadline);
 
-        auto top_count = advertising_property_service.get().vcg_post_coefficients.size();
+        auto top_count = advertising_property_service.get().auction_post_coefficients.size();
         for (size_t ci = 0; ci < top_count - 3; ++ci)
         {
             create_budget(zorro, type, budget_balance / 2, start, budget_deadline);
@@ -532,7 +532,7 @@ SCORUM_TEST_CASE(no_winnerse_to_arrange_for_any_budget_types_check)
     BOOST_CHECK(banner_budget_service.get_budgets(alice.name).empty());
 }
 
-SCORUM_TEST_CASE(two_post_budget_from_same_acc_vcg_algorithm_test)
+SCORUM_TEST_CASE(two_post_budget_from_same_acc_auction_algorithm_test)
 {
     create_budget(alice, budget_type::post, 100, 10);
     generate_block();

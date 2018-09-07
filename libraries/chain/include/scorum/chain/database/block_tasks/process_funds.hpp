@@ -36,11 +36,11 @@ private:
     const asset get_activity_reward(block_task_context& ctx, const asset& reward);
     bool apply_mainnet_schedule_crutches(block_task_context&);
 
-    template <typename ServiceIterfaceType, typename VCGCoeffListType>
+    template <typename ServiceIterfaceType, typename CoeffListType>
     asset allocate_advertising_cash(ServiceIterfaceType& service,
                                     dynamic_global_property_service_i& dgp_service,
                                     account_service_i& account_service,
-                                    const VCGCoeffListType& vcg_coefficients,
+                                    const CoeffListType& auction_coefficients,
                                     const budget_type type,
                                     database_virtual_operations_emmiter_i& ctx);
 };
