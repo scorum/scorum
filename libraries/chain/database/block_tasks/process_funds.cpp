@@ -48,8 +48,8 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
     advertising_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
 
     auto budgets = service.get_top_budgets(dgp_service.head_block_time());
-    std::vector<share_type> per_block_list;
-    br::transform(budgets, std::back_inserter(per_block_list), [](auto b) { return b.get().per_block.amount; });
+    std::vector<asset> per_block_list;
+    br::transform(budgets, std::back_inserter(per_block_list), [](auto b) { return b.get().per_block; });
 
     auto valuable_per_block_vec = utils::take_n(per_block_list, vcg_coefficients.size() + 1);
     auto vcg_bets = calculate_vcg_bets(valuable_per_block_vec, vcg_coefficients);
@@ -64,7 +64,7 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
 
         auto adv_cash = asset(0, per_block.symbol());
         if (i < vcg_bets.size())
-            adv_cash = asset(vcg_bets[i], per_block.symbol());
+            adv_cash = vcg_bets[i];
 
         if (adv_cash.amount > 0)
         {

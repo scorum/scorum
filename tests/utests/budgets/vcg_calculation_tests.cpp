@@ -18,8 +18,8 @@ struct vcg_calculation_fixture
 {
     vcg_calculation_fixture()
         : default_position_weights{ 100, 85, 75, 65 }
-        , default_per_block_values{ ASSET_SCR(10e+9).amount, ASSET_SCR(7e+9).amount, ASSET_SCR(5e+9).amount,
-                                    ASSET_SCR(3e+9).amount, ASSET_SCR(2e+9).amount }
+        , default_per_block_values{ ASSET_SCR(10e+9), ASSET_SCR(7e+9), ASSET_SCR(5e+9), ASSET_SCR(3e+9),
+                                    ASSET_SCR(2e+9) }
     {
     }
 
@@ -30,15 +30,15 @@ struct vcg_calculation_fixture
         return current - current * delta / 100;
     }
 
-    share_type next_decreasing_per_block(const share_type current, const share_type delta = ASSET_SCR(0.5e+9).amount)
+    asset next_decreasing_per_block(const asset& current, const share_type delta = ASSET_SCR(0.5e+9).amount)
     {
         BOOST_REQUIRE_GT(delta, 0);
-        BOOST_REQUIRE_LT(delta, current);
+        BOOST_REQUIRE_LT(delta, current.amount);
         return current - delta;
     }
 
     using position_weights_type = std::vector<percent_type>;
-    using per_block_values_type = std::vector<share_type>;
+    using per_block_values_type = std::vector<asset>;
 
     const position_weights_type default_position_weights;
     const per_block_values_type default_per_block_values;
@@ -76,21 +76,21 @@ SCORUM_TEST_CASE(etalon_calculation_check)
 {
     auto result = calculate_vcg_bets(default_per_block_values, default_position_weights);
     BOOST_REQUIRE_EQUAL(result.size(), 4);
-    BOOST_CHECK_EQUAL(result[0], ASSET_SCR(3.15e+9).amount);
-    BOOST_CHECK_EQUAL(result[1], ASSET_SCR(2.470588235e+9).amount);
-    BOOST_CHECK_EQUAL(result[2], ASSET_SCR(2.133333333e+9).amount);
-    BOOST_CHECK_EQUAL(result[3], ASSET_SCR(2e+9).amount);
+    BOOST_CHECK_EQUAL(result[0], ASSET_SCR(3.85e+9));
+    BOOST_CHECK_EQUAL(result[1], ASSET_SCR(2.8e+9));
+    BOOST_CHECK_EQUAL(result[2], ASSET_SCR(2.3e+9));
+    BOOST_CHECK_EQUAL(result[3], ASSET_SCR(2e+9));
 }
 
 SCORUM_TEST_CASE(check_top_less_that_coefficients)
 {
-    per_block_values_type per_block_values = { 10e+9, 7e+9, 5e+9 };
+    per_block_values_type per_block_values = { ASSET_SCR(10e+9), ASSET_SCR(7e+9), ASSET_SCR(5e+9) };
 
     auto result = calculate_vcg_bets(per_block_values, default_position_weights);
     BOOST_REQUIRE_EQUAL(result.size(), 3);
-    BOOST_CHECK_EQUAL(result[0], 5.3e+9);
-    BOOST_CHECK_EQUAL(result[1], 5e+9);
-    BOOST_CHECK_EQUAL(result[2], 5e+9);
+    BOOST_CHECK_EQUAL(result[0], ASSET_SCR(6.55e+9));
+    BOOST_CHECK_EQUAL(result[1], ASSET_SCR(5.5e+9));
+    BOOST_CHECK_EQUAL(result[2], ASSET_SCR(5e+9));
 }
 
 SCORUM_TEST_CASE(check_no_budgets)
