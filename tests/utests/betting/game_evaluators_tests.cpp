@@ -111,6 +111,7 @@ SCORUM_TEST_CASE(game_should_be_created)
     op.moderator = "cartman";
     op.game = soccer_game{};
     op.start_time = fc::time_point_sec(1);
+    op.auto_resolve_delay_sec = 42;
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
     mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
