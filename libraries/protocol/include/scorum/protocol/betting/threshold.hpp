@@ -9,7 +9,9 @@ struct threshold_type
 {
     using value_type = int16_t;
 
+    /// @cond DO_NOT_DOCUMENT
     static constexpr value_type factor = 1000;
+    /// @endcond
 
     value_type value;
 

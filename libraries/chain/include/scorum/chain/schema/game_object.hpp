@@ -80,6 +80,6 @@ using game_index
 FC_REFLECT_ENUM(scorum::chain::game_status, (created)(started)(finished))
 FC_REFLECT(scorum::chain::game_object,
            (id)(name)(start_time)(original_start_time)(last_update)(bets_resolve_time)(auto_resolve_time)(status)(game)(
-               results))
+               markets)(results))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_object, scorum::chain::game_index)
