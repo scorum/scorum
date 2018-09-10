@@ -60,7 +60,7 @@ protected:
 
     const account_name_type test_bet_better = "alice";
     const game_id_type test_bet_game = 15;
-    const wincase_type test_bet_wincase = goal_home_yes();
+    const wincase_type test_bet_wincase = goal_home::yes();
     const std::string test_bet_k = "100/1";
     const asset test_bet_stake = ASSET_SCR(1e+9);
 

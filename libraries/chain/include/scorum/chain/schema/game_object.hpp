@@ -3,8 +3,6 @@
 #include <fc/shared_containers.hpp>
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
-#include <scorum/protocol/betting/wincase.hpp>
-#include <scorum/protocol/betting/wincase_comparison.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
 namespace scorum {

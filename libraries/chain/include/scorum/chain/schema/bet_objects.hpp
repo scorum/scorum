@@ -6,8 +6,7 @@
 
 #include <boost/multi_index/composite_key.hpp>
 
-#include <scorum/protocol/betting/wincase.hpp>
-#include <scorum/protocol/betting/wincase_comparison.hpp>
+#include <scorum/protocol/betting/market.hpp>
 
 namespace scorum {
 namespace chain {

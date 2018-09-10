@@ -50,7 +50,7 @@ struct bet_operations_fixture : public database_fixture::database_betting_integr
         BOOST_REQUIRE(betting_property_service.is_exists());
         BOOST_REQUIRE_EQUAL(betting_property_service.get().moderator, moderator.name);
 
-        create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 60 * 20);
+        create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 60 * 20);
 
         generate_block();
     }
@@ -71,11 +71,11 @@ SCORUM_TEST_CASE(post_bet_operation_check)
 {
     generate_block();
 
-    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(alice, result_home::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 
-    create_bet(bob, result_home{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(bob, result_home::yes{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 }
@@ -84,7 +84,7 @@ SCORUM_TEST_CASE(cancel_single_pending_bet_by_better_operation_check)
 {
     generate_block();
 
-    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(alice, result_home::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 
@@ -97,15 +97,15 @@ SCORUM_TEST_CASE(cancel_some_pending_bets_by_better_operation_check)
 {
     generate_block();
 
-    create_bet(alice, total_under{ 2000 }, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(alice, total::under{ 2000 }, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 
-    create_bet(alice, result_home(), { 10, 5 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(alice, result_home::yes(), { 10, 5 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 
-    create_bet(bob, total_over{ 2000 }, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(bob, total::over{ 2000 }, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL));
 
     generate_block();
 

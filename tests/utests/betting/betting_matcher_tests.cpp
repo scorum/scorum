@@ -71,12 +71,12 @@ SCORUM_TEST_CASE(matching_not_found_and_created_pending_check)
 
 SCORUM_TEST_CASE(matched_for_full_stake_check)
 {
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9));
+    const auto& bet1 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1e+9));
 
     service.match(bet1,
                   pending_bet_kind::live); // call this one bacause every bet creation followed by 'match' in evaluators
 
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(9e+9));
+    const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(9e+9));
 
     service.match(bet2, pending_bet_kind::live);
 
@@ -100,12 +100,12 @@ SCORUM_TEST_CASE(matched_for_full_stake_check)
 
 SCORUM_TEST_CASE(matched_for_part_stake_check)
 {
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9)); // 1 SCR
+    const auto& bet1 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1e+9)); // 1 SCR
 
     service.match(bet1, pending_bet_kind::live);
 
     // set not enough stake to pay gain 'alice'
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(8e+9));
+    const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(8e+9));
 
     service.match(bet2, pending_bet_kind::live);
 
@@ -132,11 +132,11 @@ SCORUM_TEST_CASE(matched_for_part_stake_check)
 
 SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
 {
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9)); // 1 SCR
+    const auto& bet1 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1e+9)); // 1 SCR
 
     service.match(bet1, pending_bet_kind::live);
 
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(8e+9)); // 8 SCR
+    const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(8e+9)); // 8 SCR
 
     service.match(bet2, pending_bet_kind::live);
 
@@ -151,7 +151,7 @@ SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
 
     auto old_bet1_rest_stake = bet1.rest_stake;
 
-    const auto& bet3 = create_bet("sam", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(1e+9)); // 1 SCR
+    const auto& bet3 = create_bet("sam", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(1e+9)); // 1 SCR
 
     service.match(bet3, pending_bet_kind::live);
 
@@ -172,15 +172,15 @@ SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
 
 SCORUM_TEST_CASE(matched_from_larger_potential_result_check)
 {
-    const auto& bet1 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(8e+9)); // 8 SCR
+    const auto& bet1 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(8e+9)); // 8 SCR
 
     service.match(bet1, pending_bet_kind::live);
 
-    const auto& bet2 = create_bet("sam", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(1e+9)); // 1 SCR
+    const auto& bet2 = create_bet("sam", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(1e+9)); // 1 SCR
 
     service.match(bet2, pending_bet_kind::live);
 
-    const auto& bet3 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9)); // 1 SCR
+    const auto& bet3 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1e+9)); // 1 SCR
 
     service.match(bet3, pending_bet_kind::live);
 
@@ -214,11 +214,11 @@ SCORUM_TEST_CASE(virt_operation_should_be_emitted_check)
             BOOST_CHECK_EQUAL(typed_op.matched_stake2.amount, 1e9 - 111'111'112);
         });
 
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home_yes(), "10/1", ASSET_SCR(1e+9));
+    const auto& bet1 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1e+9));
     service.match(bet1, pending_bet_kind::live);
 
     // set not enough stake to pay gain 'alice'
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home_no(), "10/9", ASSET_SCR(8e+9));
+    const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(8e+9));
     service.match(bet2, pending_bet_kind::live);
 }
 

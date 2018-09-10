@@ -1,6 +1,6 @@
 #pragma once
 #include <fc/shared_containers.hpp>
-#include <scorum/protocol/betting/wincase.hpp>
+#include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/types.hpp>
 
 namespace chainbase {
@@ -13,7 +13,6 @@ struct asset;
 namespace chain {
 
 using scorum::protocol::betting::wincase_type;
-using scorum::protocol::betting::wincase_pair;
 
 struct data_service_factory_i;
 struct matched_bet_service_i;

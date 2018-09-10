@@ -60,11 +60,11 @@ SCORUM_TEST_CASE(live_bets_no_pending_bets_return_after_start_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-    create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(alice, result_home::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(bob, result_home::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
 
     BOOST_CHECK(game_service.get().status == game_status::created);
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
@@ -82,11 +82,11 @@ SCORUM_TEST_CASE(non_live_bets_return_pending_bets_after_start_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL), false); // 500'000
-    create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL), false); // 500'000
+    create_bet(alice, result_home::yes{}, { 10, 2 }, alice.scr_amount / 2, false); // 500'000
+    create_bet(bob, result_home::no{}, { 10, 8 }, bob.scr_amount / 2, false); // 500'000
 
     BOOST_CHECK(game_service.get().status == game_status::created);
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
@@ -104,11 +104,11 @@ SCORUM_TEST_CASE(non_live_bets_resolve_test_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-    create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(alice, result_home::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(bob, result_home::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
 
     generate_block(); // game started
 
@@ -117,7 +117,7 @@ SCORUM_TEST_CASE(non_live_bets_resolve_test_check)
 
     auto resolve_delay = betting_property_service.get().resolve_delay_sec;
 
-    post_results(moderator, { result_draw_away{} });
+    post_results(moderator, { result_home::no{} });
 
     generate_blocks(db.head_block_time() + resolve_delay / 2);
 
@@ -135,12 +135,12 @@ SCORUM_TEST_CASE(bets_auto_resolve_test_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     auto start_time = game_service.get().start_time;
     generate_block();
 
-    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-    create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(alice, result_home::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(bob, result_home::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
 
     generate_block(); // game started
 
@@ -158,11 +158,11 @@ SCORUM_TEST_CASE(cancel_game_before_start_return_all_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 3);
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 3);
     generate_block();
 
-    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-    create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(alice, result_home::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(bob, result_home::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
 
     generate_block();
 
@@ -180,11 +180,11 @@ SCORUM_TEST_CASE(cancel_game_after_start_return_all_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-    create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(alice, result_home::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(bob, result_home::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
 
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
@@ -201,20 +201,20 @@ SCORUM_TEST_CASE(update_markets_trigger_bets_cancelling_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, result_draw_market{} }, SCORUM_BLOCK_INTERVAL * 3);
+    create_game(moderator, { result_home{}, result_draw{} }, SCORUM_BLOCK_INTERVAL * 3);
     generate_block();
 
-    create_bet(alice, result_home{}, { 10, 2 }, asset(alice.scr_amount.amount / 4, SCORUM_SYMBOL)); // 250'000
-    create_bet(bob, result_draw_away{}, { 10, 8 }, asset(bob.scr_amount.amount / 4, SCORUM_SYMBOL)); // 250'000
-    create_bet(alice, result_draw{}, { 10, 2 }, asset(3 * alice.scr_amount.amount / 4, SCORUM_SYMBOL)); // 750'000
-    create_bet(bob, result_home_away{}, { 10, 8 }, asset(3 * bob.scr_amount.amount / 4, SCORUM_SYMBOL)); // 750'000
+    create_bet(alice, result_home::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 4, SCORUM_SYMBOL)); // 250'000
+    create_bet(bob, result_home::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 4, SCORUM_SYMBOL)); // 250'000
+    create_bet(alice, result_draw::yes{}, { 10, 2 }, asset(3 * alice.scr_amount.amount / 4, SCORUM_SYMBOL)); // 750'000
+    create_bet(bob, result_draw::no{}, { 10, 8 }, asset(3 * bob.scr_amount.amount / 4, SCORUM_SYMBOL)); // 750'000
 
     generate_block();
 
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 0);
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 0);
 
-    update_markets(moderator, { result_draw_market{} });
+    update_markets(moderator, { result_draw{} });
 
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 250'000);
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 250'000);
@@ -225,14 +225,14 @@ SCORUM_TEST_CASE(cancel_game_after_markets_update_check)
     const auto& alice_acc = account_service.get_account(alice.name);
     const auto& bob_acc = account_service.get_account(bob.name);
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 4);
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 4);
     generate_block();
 
-    create_bet(alice, result_home{}, { 10, 2 }, alice.scr_amount / 4); // 250'000 (125'000 matched)
-    create_bet(bob, result_draw_away{}, { 10, 8 }, bob.scr_amount / 2); // 500'000 (500'000 matched)
+    create_bet(alice, result_home::yes{}, { 10, 2 }, alice.scr_amount / 4); // 250'000 (125'000 matched)
+    create_bet(bob, result_home::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000 (500'000 matched)
 
-    create_bet(alice, total_over{ 2000 }, { 10, 2 }, alice.scr_amount / 2); // 500'000 (62'500 matched)
-    create_bet(bob, total_under{ 2000 }, { 10, 8 }, bob.scr_amount / 4); // 250'000 (250'000 matched)
+    create_bet(alice, total::over{ 2000 }, { 10, 2 }, alice.scr_amount / 2); // 500'000 (62'500 matched)
+    create_bet(bob, total::under{ 2000 }, { 10, 8 }, bob.scr_amount / 4); // 250'000 (250'000 matched)
 
     generate_block();
 
@@ -240,7 +240,7 @@ SCORUM_TEST_CASE(cancel_game_after_markets_update_check)
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 250'000);
 
     // game isn't started yet so 'result_home_market' market will be cancelled
-    update_markets(moderator, { total_market{ 2000 } });
+    update_markets(moderator, { total{ 2000 } });
 
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 250'000 + 125'000 + 125'000); // matched 125000+pending 125000 returned
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 250'000 + 500'000); // matched 500'000 + 0 pending returned

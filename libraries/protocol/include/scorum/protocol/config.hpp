@@ -257,6 +257,8 @@ namespace detail {
 #define SCORUM_BETTING_RESOLVE_DELAY_SEC        (DAYS_TO_SECONDS(1u))
 #define SCORUM_BETTING_START_TIME_DIFF_MAX      (fc::hours(12))
 
+#define SCORUM_BETTING_THRESHOLD_FACTOR         1000
+
 /**
  *  Reserved Account IDs with special meaning
  */

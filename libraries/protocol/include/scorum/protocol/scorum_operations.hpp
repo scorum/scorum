@@ -8,7 +8,6 @@
 
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
-#include <scorum/protocol/betting/wincase_comparison.hpp>
 #include <scorum/protocol/proposal_operations.hpp>
 
 #include <fc/crypto/ripemd160.hpp>

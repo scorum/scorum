@@ -12,7 +12,7 @@
 #include <scorum/chain/services/game.hpp>
 #include <scorum/chain/services/account.hpp>
 
-#include <scorum/protocol/betting/wincase_comparison.hpp>
+#include <scorum/protocol/betting/market.hpp>
 
 #include <scorum/chain/betting/betting_math.hpp>
 
@@ -87,15 +87,16 @@ void betting_service::cancel_bets(const game_id_type& game_id)
     cancel_bets(bets);
 }
 
-void betting_service::cancel_bets(const game_id_type& game_id, const std::vector<wincase_pair>& wincase_pairs)
+void betting_service::cancel_bets(const game_id_type& game_id, const std::vector<market_type>& cancelled_markets)
 {
     auto bets = _bet_svc.get_bets(game_id);
 
     fc::flat_set<wincase_type> wincases;
-    wincases.reserve(wincase_pairs.size() * 2);
+    wincases.reserve(cancelled_markets.size() * 2);
 
-    for (const auto& pair : wincase_pairs)
+    for (const auto& market : cancelled_markets)
     {
+        auto pair = create_wincases(market);
         wincases.emplace(pair.first);
         wincases.emplace(pair.second);
     }

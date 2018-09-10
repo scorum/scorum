@@ -15,7 +15,7 @@
 #include <scorum/chain/evaluators/update_game_start_time_evaluator.hpp>
 #include <scorum/chain/evaluators/post_game_results_evaluator.hpp>
 
-#include <scorum/protocol/betting/wincase_comparison.hpp>
+#include <scorum/protocol/betting/market.hpp>
 
 namespace {
 
@@ -121,12 +121,12 @@ SCORUM_TEST_CASE(wincases_and_markets_mismatch_should_throw)
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
     post_game_results_operation op;
-    op.wincases = { round_away{} };
+    op.wincases = { round_home::no{} };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
         o.bets_resolve_time = fc::time_point_sec(10);
-        o.markets = { result_home_market{} };
+        o.markets = { result_home{} };
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
@@ -145,12 +145,12 @@ SCORUM_TEST_CASE(both_wincases_from_pair_were_provided_should_throw)
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
     post_game_results_operation op;
-    op.wincases = { round_home{}, round_away{} };
+    op.wincases = { round_home::yes{}, round_home::no{} };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
         o.bets_resolve_time = fc::time_point_sec(10);
-        o.markets = { round_market{} };
+        o.markets = { round_home{} };
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
@@ -169,12 +169,12 @@ SCORUM_TEST_CASE(not_all_winners_were_posted_should_throw)
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
     post_game_results_operation op;
-    op.wincases = { total_over{ 500 } };
+    op.wincases = { total::over{ 500 } };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
         o.bets_resolve_time = fc::time_point_sec(10);
-        o.markets = { total_market{ 1500 }, total_market{ 500 } };
+        o.markets = { total{ 1500 }, total{ 500 } };
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
@@ -193,12 +193,12 @@ SCORUM_TEST_CASE(wrong_coefficient_should_throw)
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
     post_game_results_operation op;
-    op.wincases = { total_over{ 500 } };
+    op.wincases = { total::over{ 500 } };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
         o.bets_resolve_time = fc::time_point_sec(10);
-        o.markets = { total_market{ 1500 } };
+        o.markets = { total{ 1500 } };
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
@@ -217,12 +217,12 @@ SCORUM_TEST_CASE(winners_with_same_wincase_type_but_diff_coefficients_shouldnt_t
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
     post_game_results_operation op;
-    op.wincases = { total_over{ 500 }, total_over{ 1500 } };
+    op.wincases = { total::over{ 500 }, total::over{ 1500 } };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
         o.bets_resolve_time = fc::time_point_sec(10);
-        o.markets = { total_market{ 500 }, total_market{ 1500 } };
+        o.markets = { total{ 500 }, total{ 1500 } };
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
@@ -249,7 +249,7 @@ SCORUM_TEST_CASE(three_state_market_no_posted_result_shouldnt_throw)
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
         o.bets_resolve_time = fc::time_point_sec(10);
-        o.markets = { total_market{ 1000 }, total_market{ 2000 } };
+        o.markets = { total{ 1000 }, total{ 2000 } };
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);

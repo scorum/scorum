@@ -4,8 +4,7 @@
 #include <scorum/chain/betting/betting_service.hpp>
 #include <scorum/chain/services/game.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/protocol/betting/wincase.hpp>
-#include <scorum/protocol/betting/wincase_comparison.hpp>
+#include <scorum/protocol/betting/market.hpp>
 
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/range/adaptor/filtered.hpp>
@@ -50,21 +49,14 @@ void post_game_results_evaluator::validate_all_winners_present(const fc::shared_
     using namespace boost::adaptors;
     using namespace boost::algorithm;
 
-    std::equal_to<wincase_type> eq;
-
-    for (const auto& market : markets)
+    for (const auto& market : markets | filtered([](const auto& m) { return !has_trd_state(m); }))
     {
         market.visit([&](const auto& m) {
-            auto pairs = m.create_wincase_pairs();
-            auto two_state_wincases = filter(pairs, [](const auto& pair) { return !has_trd_state(pair.first); });
+            auto pair = create_wincases(m);
+            auto exists = any_of(winners, [&](const auto& w) { return pair.first == w || pair.second == w; });
 
-            for (const auto& pair : two_state_wincases)
-            {
-                auto exists = any_of(winners, [&](const auto& w) { return eq(pair.first, w) || eq(pair.second, w); });
-
-                FC_ASSERT(exists, "Wincase winners list do not contain neither '${1}' nor '${2}'",
-                          ("1", pair.first)("2", pair.second));
-            }
+            FC_ASSERT(exists, "Wincase winners list do not contain neither '${1}' nor '${2}'",
+                      ("1", pair.first)("2", pair.second));
         });
     }
 }

@@ -4,8 +4,7 @@
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/betting/wincase.hpp>
-#include <scorum/protocol/betting/wincase_serialization.hpp>
-#include <scorum/protocol/betting/game_serialization.hpp>
+#include <scorum/protocol/betting/betting_serialization.hpp>
 
 #include <defines.hpp>
 #include <iostream>
