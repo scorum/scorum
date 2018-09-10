@@ -102,6 +102,15 @@ SCORUM_TEST_CASE(check_no_budgets)
     BOOST_REQUIRE_EQUAL(result.size(), 0);
 }
 
+SCORUM_TEST_CASE(check_single_budget)
+{
+    per_block_values_type per_blocks = { ASSET_SCR(1000) };
+
+    auto result = calculate_auction_bets(per_blocks, default_position_weights);
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    BOOST_CHECK_EQUAL(result[0].amount.value, 1000);
+}
+
 SCORUM_TEST_CASE(extrapolations_check)
 {
     position_weights_type next_position_weights = default_position_weights;
