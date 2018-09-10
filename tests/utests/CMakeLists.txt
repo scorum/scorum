@@ -37,7 +37,7 @@ set(SOURCES
     app_tests.cpp
     budgets/management_algorithms_tests.cpp
     budgets/evaluators_tests.cpp
-    budgets/vcg_calculation_tests.cpp
+        budgets/auction_calculation_tests.cpp
     budgets/advertising_api_tests.cpp
     fraction_tests.cpp
     config_api_tests.cpp

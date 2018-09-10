@@ -4,51 +4,45 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/budgets.hpp>
 
+#include <boost/range/algorithm/reverse.hpp>
 #include <boost/range/algorithm_ext/copy_n.hpp>
+#include <scorum/utils/fraction.hpp>
 
 namespace scorum {
 namespace chain {
 
 template <typename TPerBlockContainer, typename TCoeffsContainer>
-std::vector<share_type> calculate_vcg_bets(const TPerBlockContainer& per_block_list,
-                                           const TCoeffsContainer& vcg_coefficients)
+std::vector<asset> calculate_auction_bets(const TPerBlockContainer& per_block_list, const TCoeffsContainer& coeffs)
 {
-    FC_ASSERT(vcg_coefficients.size() > 0, "invalid coefficient's list");
-    FC_ASSERT(per_block_list.size() <= vcg_coefficients.size() + 1, "invalid list of per-block values");
-    FC_ASSERT(std::is_sorted(vcg_coefficients.rbegin(), vcg_coefficients.rend()), "per-block list isn't sorted");
-    FC_ASSERT(std::is_sorted(per_block_list.rbegin(), per_block_list.rend()), "VCG coefficients aren't sorted");
-    FC_ASSERT(*vcg_coefficients.rbegin() > 0, "VCG coefficients should be positive");
-    FC_ASSERT(*vcg_coefficients.begin() <= 100, "VCG coefficients should be less than 100");
-    FC_ASSERT(per_block_list.empty() || *per_block_list.rbegin() > 0, "per-block amount should be positive");
+    FC_ASSERT(coeffs.size() > 0, "invalid coefficient's list");
+    FC_ASSERT(per_block_list.size() <= coeffs.size() + 1, "invalid list of per-block values");
+    FC_ASSERT(std::is_sorted(coeffs.rbegin(), coeffs.rend()), "per-block list isn't sorted");
+    FC_ASSERT(std::is_sorted(per_block_list.rbegin(), per_block_list.rend()), "Auction coefficients aren't sorted");
+    FC_ASSERT(*coeffs.rbegin() > 0, "Auction coefficients should be positive");
+    FC_ASSERT(*coeffs.begin() <= 100, "Auction coefficients should be less than 100");
+    FC_ASSERT(per_block_list.empty() || per_block_list.rbegin()->amount > 0, "per-block amount should be positive");
 
-    int64_t valuable_vcg_coeff_count = std::max((int64_t)per_block_list.size() - 1, 0l);
+    if (per_block_list.empty())
+        return {};
 
-    std::vector<share_type> vcg_bets;
-    vcg_bets.reserve(std::min(per_block_list.size(), vcg_coefficients.size()));
+    int64_t bets_size = std::min(per_block_list.size(), coeffs.size());
+    std::vector<asset> bets;
 
-    for (int64_t bet_no = 0l; bet_no < valuable_vcg_coeff_count; ++bet_no)
+    auto smallest_bet = bets_size < (int64_t)per_block_list.size() //
+        ? per_block_list[bets_size]
+        : per_block_list[bets_size - 1];
+    bets.push_back(smallest_bet);
+
+    for (int64_t ridx = bets_size - 2; ridx >= 0l; --ridx)
     {
-        uint128_t result = 0;
-        percent_type superior_coeff = 0;
-        for (int64_t coeff_no = valuable_vcg_coeff_count - 1; coeff_no >= bet_no; --coeff_no)
-        {
-            auto coeff = vcg_coefficients[coeff_no];
-            auto per_block = per_block_list[coeff_no + 1];
-
-            uint128_t factor = coeff - superior_coeff;
-            factor *= per_block.value;
-            result += factor;
-            superior_coeff = coeff;
-        }
-
-        result /= vcg_coefficients[bet_no];
-        vcg_bets.push_back(result.to_uint64());
+        auto factor = utils::make_fraction((coeffs[ridx] - coeffs[ridx + 1]), coeffs.front());
+        auto bet = bets.back() + per_block_list[ridx + 1] * factor;
+        bets.push_back(std::min(bet, per_block_list[ridx]));
     }
 
-    if (valuable_vcg_coeff_count < (int64_t)vcg_coefficients.size() && !per_block_list.empty())
-        vcg_bets.push_back(per_block_list[valuable_vcg_coeff_count]);
+    boost::reverse(bets);
 
-    return vcg_bets;
+    return bets;
 }
 
 template <typename BudgetService> class base_budget_management_algorithm

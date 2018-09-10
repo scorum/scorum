@@ -14,9 +14,9 @@ void advertising_property_initializator_impl::on_apply(initializator_context& ct
 
     adv_service.create([&](advertising_property_object& obj) {
         obj.moderator = SCORUM_MISSING_MODERATOR_ACCOUNT;
-        std::vector<percent_type> vcg_coeffs(SCORUM_DEFAULT_BUDGETS_VCG_SET);
-        std::copy(std::begin(vcg_coeffs), std::end(vcg_coeffs), std::back_inserter(obj.vcg_post_coefficients));
-        std::copy(std::begin(vcg_coeffs), std::end(vcg_coeffs), std::back_inserter(obj.vcg_banner_coefficients));
+        std::vector<percent_type> coeffs(SCORUM_DEFAULT_BUDGETS_AUCTION_SET);
+        std::copy(std::begin(coeffs), std::end(coeffs), std::back_inserter(obj.auction_post_coefficients));
+        std::copy(std::begin(coeffs), std::end(coeffs), std::back_inserter(obj.auction_banner_coefficients));
     });
 }
 

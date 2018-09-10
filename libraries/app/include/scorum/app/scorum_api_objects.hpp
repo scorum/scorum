@@ -38,9 +38,9 @@ struct advertising_property_api_obj
 
     account_name_type moderator;
 
-    std::vector<percent_type> vcg_post_coefficients;
+    std::vector<percent_type> auction_post_coefficients;
 
-    std::vector<percent_type> vcg_banner_coefficients;
+    std::vector<percent_type> auction_banner_coefficients;
 };
 
 typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
@@ -443,8 +443,8 @@ struct registration_committee_api_obj
 
 FC_REFLECT(scorum::app::advertising_property_api_obj,
            (moderator)
-           (vcg_post_coefficients)
-           (vcg_banner_coefficients))
+           (auction_post_coefficients)
+           (auction_banner_coefficients))
 
 FC_REFLECT_DERIVED(scorum::app::account_bandwidth_api_obj, (scorum::witness::account_bandwidth_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::block_summary_api_obj, (scorum::chain::block_summary_object), BOOST_PP_SEQ_NIL)

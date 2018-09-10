@@ -106,6 +106,15 @@ public:
         budget_balance = account_service.get_account(alice.name).balance / 10;
         budget_start = db.head_block_time();
         budget_deadline = budget_start + fc::hours(1);
+
+        db_plugin->debug_update(
+            [=](database& db) {
+                advertising_property_service.update([](advertising_property_object& o) {
+                    o.auction_post_coefficients.assign({ 100, 85, 75, 45 });
+                    o.auction_banner_coefficients.assign({ 100, 85, 75, 45 });
+                });
+            },
+            get_skip_flags());
     }
 
     template <typename ServiceType>
@@ -129,7 +138,7 @@ public:
         create_budget(bob, type, budget_balance * 2, start, budget_deadline);
         create_budget(sam, type, budget_balance / 2, start, budget_deadline);
 
-        auto top_count = advertising_property_service.get().vcg_post_coefficients.size();
+        auto top_count = advertising_property_service.get().auction_post_coefficients.size();
         for (size_t ci = 0; ci < top_count - 3; ++ci)
         {
             create_budget(zorro, type, budget_balance / 2, start, budget_deadline);
@@ -155,29 +164,6 @@ public:
                           get_single_budget(service, kenny.name).per_block);
     }
 
-    template <typename ServiceType>
-    void winners_less_then_top_arranging_test(ServiceType& service, const budget_type type)
-    {
-        auto start = budget_start + budget_start_interval;
-
-        create_budget(alice, type, budget_balance, start, budget_deadline);
-        create_budget(bob, type, budget_balance * 2, start, budget_deadline);
-        create_budget(sam, type, budget_balance * 3, start, budget_deadline);
-
-        generate_blocks(start);
-
-        BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 3);
-
-        BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(bob.name),
-                          budget_visitor.get_advertising_summ(alice.name));
-        BOOST_CHECK_GT(budget_visitor.get_advertising_summ(sam.name), budget_visitor.get_advertising_summ(bob.name));
-
-        BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(alice.name)
-                              + budget_visitor.get_cashback_summ(alice.name),
-                          get_single_budget(service, alice.name).per_block);
-        BOOST_CHECK_EQUAL(budget_visitor.get_advertising_summ(bob.name) + budget_visitor.get_cashback_summ(bob.name),
-                          get_single_budget(service, bob.name).per_block);
-    }
 
     account_service_i& account_service;
     advertising_property_service_i& advertising_property_service;
@@ -203,7 +189,7 @@ BOOST_FIXTURE_TEST_SUITE(budget_winners_check, budget_winners_tests_fixture)
 SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
 {
     /*
-     * Coefficients: {100, 85, 75, 65}
+     * Coefficients: {100, 85, 75, 45}
      */
 
     // per block
@@ -230,7 +216,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
         auto bs = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(bs.size(), 2u);
         auto alice_adv_payment = pb(bs[0]);
-        auto bob_adv_payment = pb(bs[0]);
+        auto bob_adv_payment = alice_adv_payment + ((100 - 85) * pb(bs[0])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
@@ -244,8 +230,8 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
         auto bs = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(bs.size(), 3u);
         auto alice_adv_payment = pb(bs[0]);
-        auto bob_adv_payment = pb(bs[0]);
-        auto sam_adv_payment = (85 * pb(bs[0]) + 15 * pb(bs[1])) / 100;
+        auto bob_adv_payment = alice_adv_payment + ((85 - 75) * pb(bs[0])) / 100;
+        auto sam_adv_payment = bob_adv_payment + ((100 - 85) * pb(bs[1])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
@@ -261,9 +247,9 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
         auto bs = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(bs.size(), 4u);
         auto alice_adv_payment = pb(bs[0]);
-        auto bob_adv_payment = pb(bs[0]);
-        auto sam_adv_payment = (75 * pb(bs[0]) + 10 * pb(bs[1])) / 85;
-        auto zorro_adv_payment = (75 * pb(bs[0]) + 10 * pb(bs[1]) + 15 * pb(bs[2])) / 100;
+        auto bob_adv_payment = alice_adv_payment + ((75 - 45) * pb(bs[0])) / 100;
+        auto sam_adv_payment = bob_adv_payment + ((85 - 75) * pb(bs[1])) / 100;
+        auto zorro_adv_payment = sam_adv_payment + ((100 - 85) * pb(bs[2])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
@@ -282,9 +268,9 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
         BOOST_REQUIRE_EQUAL(bs.size(), 5u);
         auto alice_adv_payment = 0;
         auto bob_adv_payment = pb(bs[0]);
-        auto sam_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1])) / 75;
-        auto zorro_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1]) + 10 * pb(bs[2])) / 85;
-        auto kenny_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1]) + 10 * pb(bs[2]) + 15 * pb(bs[3])) / 100;
+        auto sam_adv_payment = bob_adv_payment + ((75 - 45) * pb(bs[1])) / 100;
+        auto zorro_adv_payment = sam_adv_payment + ((85 - 75) * pb(bs[2])) / 100;
+        auto kenny_adv_payment = zorro_adv_payment + ((100 - 85) * pb(bs[3])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
@@ -306,9 +292,9 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
         auto alice_adv_payment = 0;
         auto bob_adv_payment = 0;
         auto sam_adv_payment = pb(bs[1]);
-        auto zorro_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[2])) / 75;
-        auto kenny_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[2]) + 10 * pb(bs[3])) / 85;
-        auto cartman_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[2]) + 10 * pb(bs[3]) + 15 * pb(bs[4])) / 100;
+        auto zorro_adv_payment = sam_adv_payment + ((75 - 45) * pb(bs[2])) / 100;
+        auto kenny_adv_payment = zorro_adv_payment + ((85 - 75) * pb(bs[3])) / 100;
+        auto cartman_adv_payment = kenny_adv_payment + ((100 - 85) * pb(bs[4])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
@@ -327,7 +313,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
 SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
 {
     /*
-     * Coefficients: {100, 85, 75, 65}
+     * Coefficients: {100, 85, 75, 45}
      */
 
     // per block
@@ -353,8 +339,8 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
 
         auto bs = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(bs.size(), 2u);
-        auto alice_adv_payment = pb(bs[1]);
         auto bob_adv_payment = pb(bs[1]);
+        auto alice_adv_payment = bob_adv_payment + ((100 - 85) * pb(bs[1])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_cashback(alice.name).amount, pb(bs[0]) - alice_adv_payment);
@@ -367,9 +353,9 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
 
         auto bs = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(bs.size(), 3u);
-        auto alice_adv_payment = (85 * pb(bs[2]) + 15 * pb(bs[1])) / 100;
-        auto bob_adv_payment = pb(bs[2]);
         auto sam_adv_payment = pb(bs[2]);
+        auto bob_adv_payment = sam_adv_payment + ((85 - 75) * pb(bs[2])) / 100;
+        auto alice_adv_payment = bob_adv_payment + ((100 - 85) * pb(bs[1])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
@@ -384,10 +370,10 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
 
         auto bs = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(bs.size(), 4u);
-        auto alice_adv_payment = (75 * pb(bs[3]) + 10 * pb(bs[2]) + 15 * pb(bs[1])) / 100;
-        auto bob_adv_payment = (75 * pb(bs[3]) + 10 * pb(bs[2])) / 85;
-        auto sam_adv_payment = pb(bs[3]);
         auto zorro_adv_payment = pb(bs[3]);
+        auto sam_adv_payment = zorro_adv_payment + ((75 - 45) * pb(bs[3])) / 100;
+        auto bob_adv_payment = sam_adv_payment + ((85 - 75) * pb(bs[2])) / 100;
+        auto alice_adv_payment = bob_adv_payment + ((100 - 85) * pb(bs[1])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
@@ -404,11 +390,11 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
 
         auto bs = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(bs.size(), 5u);
-        auto alice_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3]) + 10 * pb(bs[2]) + 15 * pb(bs[1])) / 100;
-        auto bob_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3]) + 10 * pb(bs[2])) / 85;
-        auto sam_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3])) / 75;
-        auto zorro_adv_payment = pb(bs[4]);
         auto kenny_adv_payment = 0;
+        auto zorro_adv_payment = pb(bs[4]);
+        auto sam_adv_payment = zorro_adv_payment + ((75 - 45) * pb(bs[3])) / 100;
+        auto bob_adv_payment = sam_adv_payment + ((85 - 75) * pb(bs[2])) / 100;
+        auto alice_adv_payment = bob_adv_payment + ((100 - 85) * pb(bs[1])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
@@ -427,12 +413,12 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
 
         auto bs = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(bs.size(), 6u);
-        auto alice_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3]) + 10 * pb(bs[2]) + 15 * pb(bs[1])) / 100;
-        auto bob_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3]) + 10 * pb(bs[2])) / 85;
-        auto sam_adv_payment = (65 * pb(bs[4]) + 10 * pb(bs[3])) / 75;
-        auto zorro_adv_payment = pb(bs[4]);
-        auto kenny_adv_payment = 0;
         auto cartman_adv_payment = 0;
+        auto kenny_adv_payment = 0;
+        auto zorro_adv_payment = pb(bs[4]);
+        auto sam_adv_payment = zorro_adv_payment + ((75 - 45) * pb(bs[3])) / 100;
+        auto bob_adv_payment = sam_adv_payment + ((85 - 75) * pb(bs[2])) / 100;
+        auto alice_adv_payment = bob_adv_payment + ((100 - 85) * pb(bs[1])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
@@ -469,9 +455,9 @@ SCORUM_TEST_CASE(insert_new_budget_in_the_middle_test)
         BOOST_REQUIRE_EQUAL(bs.size(), 5u);
         auto alice_adv_payment = 0;
         auto bob_adv_payment = pb(bs[0]);
-        auto zorro_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1])) / 75;
-        auto kenny_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1]) + 10 * pb(bs[2])) / 85;
-        auto cartman_adv_payment = (65 * pb(bs[0]) + 10 * pb(bs[1]) + 10 * pb(bs[2]) + 15 * pb(bs[3])) / 100;
+        auto zorro_adv_payment = bob_adv_payment + ((75 - 45) * pb(bs[1])) / 100;
+        auto kenny_adv_payment = zorro_adv_payment + ((85 - 75) * pb(bs[2])) / 100;
+        auto cartman_adv_payment = kenny_adv_payment + ((100 - 85) * pb(bs[3])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(zorro.name).amount, zorro_adv_payment);
@@ -488,15 +474,16 @@ SCORUM_TEST_CASE(insert_new_budget_in_the_middle_test)
         create_budget(sam, budget_type::banner, 300, deadline);
         generate_block();
 
-        // NOTE: the order of budgets: alice-bob-zorro-kenny-cartman-sam
+        // NOTE: budgets order by creator:  alice -bob-zorro-kenny-cartman-sam
+        //       budgets order by perblock: b[0] -b[1] -b[5] -b[2]   -b[3]-b[4]
         auto bs = banner_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(bs.size(), 6u);
         auto alice_adv_payment = 0;
         auto bob_adv_payment = 0;
         auto sam_adv_payment = pb(bs[1]);
-        auto zorro_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[5])) / 75;
-        auto kenny_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[5]) + 10 * pb(bs[2])) / 85;
-        auto cartman_adv_payment = (65 * pb(bs[1]) + 10 * pb(bs[5]) + 10 * pb(bs[2]) + 15 * pb(bs[3])) / 100;
+        auto zorro_adv_payment = sam_adv_payment + ((75 - 45) * pb(bs[5])) / 100;
+        auto kenny_adv_payment = zorro_adv_payment + ((85 - 75) * pb(bs[2])) / 100;
+        auto cartman_adv_payment = kenny_adv_payment + ((100 - 85) * pb(bs[3])) / 100;
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(alice.name).amount, alice_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(bob.name).amount, bob_adv_payment);
         BOOST_CHECK_EQUAL(v.get_last_adv_payment(sam.name).amount, sam_adv_payment);
@@ -545,22 +532,8 @@ SCORUM_TEST_CASE(no_winnerse_to_arrange_for_any_budget_types_check)
     BOOST_CHECK(banner_budget_service.get_budgets(alice.name).empty());
 }
 
-SCORUM_TEST_CASE(two_post_budget_from_same_acc_vcg_algorithm_test)
+SCORUM_TEST_CASE(two_post_budget_from_same_acc_auction_algorithm_test)
 {
-    /*
-     * VCG algorithm for 3 bets/2 coefficients:
-     *
-     * CPB3=Bid3 -- this one is not handled by VCG algorithm. So we decided that CPB3 will be equal to CPB2
-     * CPB2=Bid3
-     * CPB1=(X2*Bid3+(X1-X2)*Bid2)/X1
-     * -------------------------------------------------------
-     *
-     * VCG algorithm for 2 bets/1 coefficients [current test case]:
-     * CPB2=Bid2 -- this one is not handled by VCG algorithm. So we decided that CPB2 will be equal to CPB1
-     * CPB1=Bid2
-     *
-     * NOTE: winner's per-block payment equals looser's bet in this case.
-     */
     create_budget(alice, budget_type::post, 100, 10);
     generate_block();
 
@@ -568,7 +541,7 @@ SCORUM_TEST_CASE(two_post_budget_from_same_acc_vcg_algorithm_test)
         auto budgets = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(budgets.size(), 1);
         // There is a single budget so whole 'per-block' amount should be decreased from budget
-        BOOST_CHECK_EQUAL(budgets[0].get().balance.amount, 100 - budgets[0].get().per_block.amount);
+        BOOST_CHECK_EQUAL(budgets[0].get().balance.amount, 100 - 10);
     }
 
     auto alice_balance_before = account_service.get_account(alice.name).balance;
@@ -577,14 +550,17 @@ SCORUM_TEST_CASE(two_post_budget_from_same_acc_vcg_algorithm_test)
     auto alice_balance_after = account_service.get_account(alice.name).balance;
 
     {
+        // b0 - loser, b1 - winner
         auto budgets = post_budget_service.get_budgets();
         BOOST_REQUIRE_EQUAL(budgets.size(), 2);
-        // 'b1' is a loser
+        auto b0_payment = 10;
+        auto b1_payment = b0_payment + (100 - 85) * b0_payment / 100; // rounded to 11
+        BOOST_CHECK_EQUAL(b1_payment, 11);
         BOOST_CHECK_EQUAL(budgets[0].get().balance.amount, 100 - 2 * budgets[0].get().per_block.amount);
-        // There are two budgets. 'b2' is a winner. According to VCG algorithm its payment should be equal to
-        // looser's per-block payment. The rest should be returned to account.
         BOOST_CHECK_EQUAL(budgets[1].get().balance.amount, 200 - budgets[1].get().per_block.amount);
-        auto returned_to_acc = budgets[1].get().per_block.amount - budgets[0].get().per_block.amount;
+        auto returned_to_acc = //
+            budgets[0].get().per_block.amount - b0_payment + //
+            budgets[1].get().per_block.amount - b1_payment;
         BOOST_CHECK_EQUAL(alice_balance_before.amount - 200 + returned_to_acc, alice_balance_after.amount);
     }
 }
@@ -599,15 +575,6 @@ SCORUM_TEST_CASE(banner_budget_winners_arranging_check)
     winners_arranging_test(banner_budget_service, budget_type::banner);
 }
 
-SCORUM_TEST_CASE(post_budget_winners_less_then_top_arranging_check)
-{
-    winners_less_then_top_arranging_test(post_budget_service, budget_type::post);
-}
-
-SCORUM_TEST_CASE(bunner_budget_winners_less_then_top_arranging_check)
-{
-    winners_less_then_top_arranging_test(banner_budget_service, budget_type::banner);
-}
 
 BOOST_AUTO_TEST_SUITE_END()
 }

@@ -22,19 +22,19 @@ using namespace scorum::protocol;
 
 SCORUM_TEST_CASE(validate_development_committee_top_budgets_operaton)
 {
-    development_committee_change_post_budgets_vcg_properties_operation op;
+    development_committee_change_post_budgets_auction_properties_operation op;
 
     SCORUM_REQUIRE_THROW(op.validate(), fc::assert_exception);
 
-    op.vcg_coefficients = {};
+    op.auction_coefficients = {};
 
     SCORUM_REQUIRE_THROW(op.validate(), fc::assert_exception);
 
-    op.vcg_coefficients = SCORUM_DEFAULT_BUDGETS_VCG_SET;
+    op.auction_coefficients = SCORUM_DEFAULT_BUDGETS_AUCTION_SET;
 
     BOOST_CHECK_NO_THROW(op.validate());
 
-    op.vcg_coefficients = { 90, 50 };
+    op.auction_coefficients = { 90, 50 };
 
     BOOST_CHECK_NO_THROW(op.validate());
 }
@@ -59,27 +59,27 @@ struct fixture : public shared_memory_fixture
 
 BOOST_FIXTURE_TEST_CASE(change_top_budgets_amount, fixture)
 {
-    static const position_weights_type initial_vcg_coeffs(SCORUM_DEFAULT_BUDGETS_VCG_SET);
-    static const position_weights_type new_vcg_coeffs{ 90, 50 };
+    static const position_weights_type initial_auction_coeffs(SCORUM_DEFAULT_BUDGETS_AUCTION_SET);
+    static const position_weights_type new_auction_coeffs{ 90, 50 };
 
-    development_committee_change_post_budgets_vcg_properties_operation op;
+    development_committee_change_post_budgets_auction_properties_operation op;
 
-    BOOST_REQUIRE(
-        !std::equal(std::begin(initial_vcg_coeffs), std::end(initial_vcg_coeffs), std::begin(new_vcg_coeffs)));
+    BOOST_REQUIRE(!std::equal(std::begin(initial_auction_coeffs), std::end(initial_auction_coeffs),
+                              std::begin(new_auction_coeffs)));
 
-    op.vcg_coefficients = new_vcg_coeffs;
+    op.auction_coefficients = new_auction_coeffs;
 
     development_committee_change_top_post_budgets_amount_evaluator evaluator(*services);
 
     advertising_property_object adv_property
         = create_object<advertising_property_object>(shm, [](advertising_property_object& pool) {
-              std::copy(std::begin(initial_vcg_coeffs), std::end(initial_vcg_coeffs),
-                        std::back_inserter(pool.vcg_post_coefficients));
+              std::copy(std::begin(initial_auction_coeffs), std::end(initial_auction_coeffs),
+                        std::back_inserter(pool.auction_post_coefficients));
           });
 
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(std::begin(adv_property.vcg_post_coefficients),
-                                    std::end(adv_property.vcg_post_coefficients), std::begin(initial_vcg_coeffs),
-                                    std::end(initial_vcg_coeffs));
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(std::begin(adv_property.auction_post_coefficients),
+                                    std::end(adv_property.auction_post_coefficients),
+                                    std::begin(initial_auction_coeffs), std::end(initial_auction_coeffs));
 
     mocks
         .ExpectCallOverload(
@@ -90,9 +90,9 @@ BOOST_FIXTURE_TEST_CASE(change_top_budgets_amount, fixture)
 
     BOOST_REQUIRE_NO_THROW(evaluator.do_apply(op));
 
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(std::begin(adv_property.vcg_post_coefficients),
-                                    std::end(adv_property.vcg_post_coefficients), std::begin(op.vcg_coefficients),
-                                    std::end(op.vcg_coefficients));
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(std::begin(adv_property.auction_post_coefficients),
+                                    std::end(adv_property.auction_post_coefficients),
+                                    std::begin(op.auction_coefficients), std::end(op.auction_coefficients));
 }
 
 } // namespace development_committee_top_budgets_evaluator_tests
