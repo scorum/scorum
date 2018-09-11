@@ -1,6 +1,20 @@
 #include <scorum/protocol/betting/betting_serialization.hpp>
 #include <scorum/utils/static_variant_serialization.hpp>
 
+namespace scorum {
+namespace utils {
+template <>
+template <typename TVariantItem>
+std::string static_variant_convertor<protocol::wincase_type>::get_type_name(const TVariantItem& obj) const
+{
+    std::string type_name = fc::get_typename<TVariantItem>::name();
+    auto nested_type_threshold = type_name.find_last_of(':') - 2;
+    auto type_threshold = type_name.find_last_of(':', nested_type_threshold) + 1;
+    return type_name.substr(type_threshold, type_name.size() - type_threshold);
+}
+}
+}
+
 namespace fc {
 
 using namespace scorum;

@@ -38,104 +38,35 @@ struct game_serialization_test_fixture
         return op;
     }
 
-    // clang-format off
-    fc::string markets_json = R"(
-                              "markets": [
-                                [
-                                  "result_home",
-                                  {}
-                                ],
-                                [
-                                  "result_draw",
-                                  {}
-                                ],
-                                [
-                                  "result_away",
-                                  {}
-                                ],
-                                [
-                                  "round_home",
-                                  {}
-                                ],
-                                [
-                                  "handicap",
-                                  {
-                                    "threshold": -500
-                                  }
-                                ],
-                                [
-                                  "handicap",
-                                  {
-                                    "threshold": 0
-                                  }
-                                ],
-                                [
-                                  "handicap",
-                                  {
-                                    "threshold": 1000
-                                  }
-                                ],
-                                [
-                                  "correct_score_home",
-                                  {}
-                                ],
-                                [
-                                  "correct_score_draw",
-                                  {}
-                                ],
-                                [
-                                  "correct_score_away",
-                                  {}
-                                ],
-                                [
-                                  "correct_score",
-                                  {
-                                    "home": 1,
-                                    "away": 0
-                                  }
-                                ],
-                                [
-                                  "correct_score",
-                                  {
-                                    "home": 1,
-                                    "away": 1
-                                  }
-                                ],
-                                [
-                                  "goal_home",
-                                  {}
-                                ],
-                                [
-                                  "goal_both",
-                                  {}
-                                ],
-                                [
-                                  "goal_away",
-                                  {}
-                                ],
-                                [
-                                  "total",
-                                  {
-                                    "threshold": 0
-                                  }
-                                ],
-                                [
-                                  "total",
-                                  {
-                                    "threshold": 500
-                                  }
-                                ],
-                                [
-                                  "total",
-                                  {
-                                    "threshold": 1000
-                                  }
-                                ]
-                              ]
-                              )";
-    fc::string create_markets_json_tpl = "{\"moderator\":\"moderator_name\",\"name\":\"game_name\",\"start_time\":\"2016-04-25T17:30:00\",\"auto_resolve_delay_sec\":33,\"game\":[\"soccer_game\",{}], ${markets}}";
-    fc::string update_markets_json_tpl = "{\"moderator\":\"moderator_name\", \"game_id\":0,${markets}}";
-    // clang-format on
+    const std::string markets_json = R"([ [ "result_home", {} ],
+                                          [ "result_draw", {} ],
+                                          [ "result_away", {} ],
+                                          [ "round_home", {} ],
+                                          [ "handicap", { "threshold": -500 } ],
+                                          [ "handicap", { "threshold": 0 } ],
+                                          [ "handicap", { "threshold": 1000 } ],
+                                          [ "correct_score_home", {} ],
+                                          [ "correct_score_draw", {} ],
+                                          [ "correct_score_away", {} ],
+                                          [ "correct_score", { "home": 1, "away": 0 } ],
+                                          [ "correct_score", { "home": 1, "away": 1 } ],
+                                          [ "goal_home", {} ],
+                                          [ "goal_both", {} ],
+                                          [ "goal_away", {} ],
+                                          [ "total", { "threshold": 0 } ],
+                                          [ "total", { "threshold": 500 } ],
+                                          [ "total", { "threshold": 1000 } ] ])";
+
+    const std::string create_markets_json_tpl = R"({ "moderator": "moderator_name",
+                                                     "name": "game_name",
+                                                     "start_time": "2016-04-25T17:30:00",
+                                                     "auto_resolve_delay_sec": 33,
+                                                     "game": [ "soccer_game", {} ],
+                                                     "markets": ${markets} })";
+
+    const std::string update_markets_json_tpl = R"({ "moderator": "moderator_name",
+                                                     "game_id": 0,
+                                                     "markets": ${markets} })";
 
     fc::flat_set<market_type> get_markets() const
     {
