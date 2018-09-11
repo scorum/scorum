@@ -8,9 +8,7 @@
 namespace bet_evaluators_tests {
 
 using namespace scorum::chain;
-using namespace scorum::chain::betting;
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 
 struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fixture_impl
 {

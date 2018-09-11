@@ -17,8 +17,6 @@ struct matched_bet_service_i;
 struct database_virtual_operations_emmiter_i;
 enum class pending_bet_kind : uint8_t;
 
-namespace betting {
-
 struct betting_matcher_i
 {
     virtual void match(const bet_object& bet1, pending_bet_kind bet_kind) = 0;
@@ -42,6 +40,5 @@ private:
     matched_bet_service_i& _matched_bet_service;
     database_virtual_operations_emmiter_i& _virt_op_emitter;
 };
-}
 }
 }

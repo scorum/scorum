@@ -8,7 +8,6 @@
 
 namespace scorum {
 namespace protocol {
-namespace betting {
 
 namespace bf = boost::fusion;
 
@@ -88,7 +87,6 @@ void validate_bet_ids(const fc::flat_set<int64_t>& bet_ids)
     {
         FC_ASSERT(id >= 0, "Invalid bet Id");
     }
-}
 }
 }
 }

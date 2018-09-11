@@ -18,7 +18,6 @@
 namespace bet_operations_tests {
 
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 using namespace scorum::chain;
 
 struct bet_operations_fixture : public database_fixture::database_betting_integration_fixture

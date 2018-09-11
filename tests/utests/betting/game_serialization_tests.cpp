@@ -12,7 +12,6 @@
 namespace {
 using namespace scorum;
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 
 struct game_serialization_test_fixture
 {
@@ -138,7 +137,7 @@ struct game_serialization_test_fixture
     fc::string update_markets_json_tpl = "{\"moderator\":\"moderator_name\", \"game_id\":0,${markets}}";
     // clang-format on
 
-    fc::flat_set<betting::market_type> get_markets() const
+    fc::flat_set<market_type> get_markets() const
     {
         // clang-format off
         return { result_home{},
@@ -186,7 +185,7 @@ struct game_serialization_test_fixture
         return result;
     }
 
-    void validate_markets(const fc::flat_set<betting::market_type>& markets) const
+    void validate_markets(const fc::flat_set<market_type>& markets) const
     {
         BOOST_REQUIRE_EQUAL(markets.size(), 18u);
 

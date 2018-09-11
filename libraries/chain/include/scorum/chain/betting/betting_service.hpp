@@ -16,9 +16,8 @@ struct pending_bet_service_i;
 struct game_service_i;
 struct account_service_i;
 
-namespace betting {
-
-using scorum::protocol::betting::market_type;
+using scorum::protocol::market_type;
+using scorum::protocol::wincase_type;
 
 struct betting_service_i
 {
@@ -81,6 +80,5 @@ private:
     game_service_i& _game_svc;
     account_service_i& _account_svc;
 };
-}
 }
 }

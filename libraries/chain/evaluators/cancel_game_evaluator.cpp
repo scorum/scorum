@@ -8,8 +8,7 @@
 
 namespace scorum {
 namespace chain {
-cancel_game_evaluator::cancel_game_evaluator(data_service_factory_i& services,
-                                             betting::betting_service_i& betting_service)
+cancel_game_evaluator::cancel_game_evaluator(data_service_factory_i& services, betting_service_i& betting_service)
     : evaluator_impl<data_service_factory_i, cancel_game_evaluator>(services)
     , _account_service(services.account_service())
     , _betting_service(betting_service)

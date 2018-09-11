@@ -800,10 +800,10 @@ struct create_game_operation : public base_operation
     uint32_t auto_resolve_delay_sec;
 
     /// game type (soccer, hockey, etc ...)
-    betting::game_type game;
+    game_type game;
 
     /// list of markets
-    fc::flat_set<betting::market_type> markets;
+    fc::flat_set<market_type> markets;
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;
@@ -851,7 +851,7 @@ struct update_game_markets_operation : public base_operation
     account_name_type moderator;
 
     /// list of markets
-    fc::flat_set<betting::market_type> markets;
+    fc::flat_set<market_type> markets;
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;
@@ -903,7 +903,7 @@ struct post_game_results_operation : public base_operation
     account_name_type moderator;
 
     /// list of wincases
-    fc::flat_set<betting::wincase_type> wincases;
+    fc::flat_set<wincase_type> wincases;
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;
@@ -926,7 +926,7 @@ struct post_bet_operation : public base_operation
     int64_t game_id;
 
     /// wincase
-    betting::wincase_type wincase;
+    wincase_type wincase;
 
     /// odds - rational coefficient that define potential result (p). p = odds * stake
     odds_input odds;

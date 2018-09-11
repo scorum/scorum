@@ -18,7 +18,6 @@
 namespace {
 
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 using namespace scorum::chain;
 using namespace database_fixture;
 

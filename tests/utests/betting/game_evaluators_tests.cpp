@@ -21,8 +21,7 @@
 namespace {
 
 using namespace scorum::chain;
-using namespace scorum::chain::betting;
-using namespace scorum::protocol::betting;
+using namespace scorum::protocol;
 
 using namespace service_wrappers;
 

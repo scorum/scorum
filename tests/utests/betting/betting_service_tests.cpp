@@ -7,9 +7,7 @@
 namespace betting_service_tests {
 
 using namespace scorum::chain;
-using namespace scorum::chain::betting;
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 
 struct betting_service_fixture : public betting_common::betting_service_fixture_impl
 {

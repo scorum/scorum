@@ -9,7 +9,6 @@
 
 namespace scorum {
 namespace chain {
-namespace betting {
 betting_resolver::betting_resolver(betting_service_i& betting_svc,
                                    matched_bet_service_i& matched_bet_svc,
                                    bet_service_i& bet_svc,
@@ -46,7 +45,6 @@ void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
     }
 
     _matched_bet_svc.remove_all(matched_bets);
-}
 }
 }
 }

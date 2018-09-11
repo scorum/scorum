@@ -2,7 +2,6 @@
 
 namespace scorum {
 namespace protocol {
-namespace betting {
 
 template <market_kind kind, typename tag>
 bool operator<(const over_under_market<kind, tag>& lhs, const over_under_market<kind, tag>& rhs)
@@ -23,10 +22,9 @@ bool operator<(const score_yes_no_market<kind, tag>& lhs, const score_yes_no_mar
 }
 }
 }
-}
 
 namespace fc {
-using scorum::protocol::betting::market_type;
+using scorum::protocol::market_type;
 
 template <> inline bool market_type::less_than(const market_type& that) const
 {

@@ -12,7 +12,6 @@
 namespace {
 using namespace scorum;
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 
 struct post_game_results_serialization_test_fixture
 {

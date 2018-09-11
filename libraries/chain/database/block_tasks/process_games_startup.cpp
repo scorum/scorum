@@ -10,7 +10,7 @@ namespace scorum {
 namespace chain {
 namespace database_ns {
 
-process_games_startup::process_games_startup(betting::betting_service_i& betting_service)
+process_games_startup::process_games_startup(betting_service_i& betting_service)
     : _betting_svc(betting_service)
 {
 }

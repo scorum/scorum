@@ -4,7 +4,6 @@
 
 namespace scorum {
 namespace protocol {
-namespace betting {
 
 template <bool site, market_kind kind, typename tag> struct over_under_wincase
 {
@@ -44,6 +43,5 @@ template <bool site, market_kind kind, typename tag> struct yes_no_wincase
         return {};
     }
 };
-}
 }
 }

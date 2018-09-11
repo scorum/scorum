@@ -20,7 +20,6 @@
 
 namespace scorum {
 namespace chain {
-namespace betting {
 
 betting_service::betting_service(data_service_factory_i& db)
     : _dgp_property_service(db.dynamic_global_property_service())
@@ -186,7 +185,6 @@ void betting_service::cancel_pending_bets(const pending_bet_crefs_type& pending_
     }
 
     _pending_bet_svc.remove_all(pending_bets);
-}
 }
 }
 }

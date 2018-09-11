@@ -2,7 +2,6 @@
 
 namespace scorum {
 namespace protocol {
-namespace betting {
 
 struct wincases_builder
 {
@@ -47,7 +46,6 @@ bool match_wincases(const wincase_type& lhs, const wincase_type& rhs)
     auto lhs_opposite = create_opposite(lhs);
 
     return !(lhs_opposite < rhs) && !(rhs < lhs_opposite);
-}
 }
 }
 }

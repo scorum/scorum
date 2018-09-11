@@ -9,7 +9,7 @@
 
 namespace database_fixture {
 
-using namespace scorum::protocol::betting;
+using namespace scorum::protocol;
 
 database_betting_integration_fixture::database_betting_integration_fixture()
     : dgp_service(db.dynamic_global_property_service())
@@ -49,7 +49,7 @@ void database_betting_integration_fixture::empower_moderator(const Actor& modera
 }
 
 create_game_operation database_betting_integration_fixture::create_game(const Actor& moderator,
-                                                                        fc::flat_set<betting::market_type> markets,
+                                                                        fc::flat_set<market_type> markets,
                                                                         uint32_t start_delay,
                                                                         uint32_t auto_resolve_delay_sec)
 {
@@ -70,11 +70,8 @@ create_game_operation database_betting_integration_fixture::create_game(const Ac
     FC_CAPTURE_LOG_AND_RETHROW(())
 }
 
-post_bet_operation database_betting_integration_fixture::create_bet(const Actor& better,
-                                                                    const betting::wincase_type& wincase,
-                                                                    const odds_input& odds_value,
-                                                                    const asset& stake,
-                                                                    bool is_live)
+post_bet_operation database_betting_integration_fixture::create_bet(
+    const Actor& better, const wincase_type& wincase, const odds_input& odds_value, const asset& stake, bool is_live)
 {
     try
     {
@@ -124,8 +121,8 @@ cancel_game_operation database_betting_integration_fixture::cancel_game(const Ac
     FC_CAPTURE_LOG_AND_RETHROW(())
 }
 
-update_game_markets_operation
-database_betting_integration_fixture::update_markets(const Actor& moderator, fc::flat_set<betting::market_type> markets)
+update_game_markets_operation database_betting_integration_fixture::update_markets(const Actor& moderator,
+                                                                                   fc::flat_set<market_type> markets)
 {
     try
     {
@@ -159,8 +156,7 @@ update_game_start_time_operation database_betting_integration_fixture::update_st
 }
 
 post_game_results_operation
-database_betting_integration_fixture::post_results(const Actor& moderator,
-                                                   const fc::flat_set<betting::wincase_type>& winners)
+database_betting_integration_fixture::post_results(const Actor& moderator, const fc::flat_set<wincase_type>& winners)
 {
     try
     {

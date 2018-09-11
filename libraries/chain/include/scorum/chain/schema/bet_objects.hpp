@@ -13,7 +13,7 @@ namespace chain {
 
 using scorum::protocol::asset;
 using scorum::protocol::odds;
-using scorum::protocol::betting::wincase_type;
+using scorum::protocol::wincase_type;
 
 class bet_object : public object<bet_object_type, bet_object>
 {

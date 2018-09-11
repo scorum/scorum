@@ -2,7 +2,6 @@
 
 namespace scorum {
 namespace protocol {
-namespace betting {
 
 template <bool side, market_kind kind, typename tag>
 bool operator<(const over_under_wincase<side, kind, tag>& lhs, const over_under_wincase<side, kind, tag>& rhs)
@@ -23,10 +22,9 @@ bool operator<(const score_yes_no_wincase<side, kind, tag>& lhs, const score_yes
 }
 }
 }
-}
 
 namespace fc {
-using scorum::protocol::betting::wincase_type;
+using scorum::protocol::wincase_type;
 
 template <> inline bool wincase_type::less_than(const wincase_type& that) const
 {

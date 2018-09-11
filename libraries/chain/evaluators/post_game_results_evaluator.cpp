@@ -14,7 +14,7 @@
 namespace scorum {
 namespace chain {
 post_game_results_evaluator::post_game_results_evaluator(data_service_factory_i& services,
-                                                         betting::betting_service_i& betting_service)
+                                                         betting_service_i& betting_service)
     : evaluator_impl<data_service_factory_i, post_game_results_evaluator>(services)
     , _account_service(services.account_service())
     , _betting_service(betting_service)

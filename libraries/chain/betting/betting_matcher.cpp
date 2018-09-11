@@ -12,7 +12,6 @@
 
 namespace scorum {
 namespace chain {
-namespace betting {
 
 betting_matcher::betting_matcher(data_service_factory_i& db, database_virtual_operations_emmiter_i& virt_op_emitter)
     : _dgp_property(db.dynamic_global_property_service())
@@ -87,14 +86,13 @@ void betting_matcher::match(const bet_object& bet1, pending_bet_kind bet_kind)
 bool betting_matcher::is_bets_matched(const bet_object& bet1, const bet_object& bet2) const
 {
     FC_ASSERT(bet1.game == bet2.game);
-    return bet1.better != bet2.better && protocol::betting::match_wincases(bet1.wincase, bet2.wincase)
+    return bet1.better != bet2.better && match_wincases(bet1.wincase, bet2.wincase)
         && bet1.odds_value.inverted() == bet2.odds_value;
 }
 
 bool betting_matcher::is_need_matching(const bet_object& bet) const
 {
     return bet.rest_stake.amount > SCORUM_MIN_BET_STAKE_FOR_MATCHING;
-}
 }
 }
 }

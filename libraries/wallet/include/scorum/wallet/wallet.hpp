@@ -1427,7 +1427,7 @@ public:
      */
     annotated_signed_transaction post_bet(account_name_type better,
                                           int64_t game_id,
-                                          betting::wincase_type wincase,
+                                          wincase_type wincase,
                                           odds_input odds,
                                           asset stake,
                                           const bool broadcast);

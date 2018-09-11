@@ -337,7 +337,7 @@ void create_game_operation::validate() const
     FC_ASSERT(name.size() < SCORUM_MAX_GAME_NAME_LENGTH, "Game name should be less than ${1}",
               ("1", SCORUM_MAX_GAME_NAME_LENGTH));
 
-    betting::validate_game(game, markets);
+    validate_game(game, markets);
 }
 
 void cancel_game_operation::validate() const
@@ -363,14 +363,14 @@ void post_game_results_operation::validate() const
     FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 
-    betting::validate_wincases(wincases);
+    validate_wincases(wincases);
 }
 
 void post_bet_operation::validate() const
 {
     FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(better);
-    betting::validate_wincase(wincase);
+    validate_wincase(wincase);
     FC_ASSERT(is_asset_type(stake, SCORUM_SYMBOL), "Stake must be SCR");
     auto min_stake = asset(SCORUM_MIN_BET_STAKE, SCORUM_SYMBOL);
     FC_ASSERT(stake >= min_stake, "Stake must be greater  or equal then ${s}", ("s", min_stake));
@@ -381,7 +381,7 @@ void post_bet_operation::validate() const
 
 void cancel_pending_bets_operation::validate() const
 {
-    betting::validate_bet_ids(bet_ids);
+    validate_bet_ids(bet_ids);
     validate_account_name(better);
 }
 } // namespace protocol

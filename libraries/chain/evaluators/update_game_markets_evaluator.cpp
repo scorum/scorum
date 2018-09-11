@@ -14,10 +14,9 @@
 
 namespace scorum {
 namespace chain {
-using scorum::protocol::betting::market_type;
 
 update_game_markets_evaluator::update_game_markets_evaluator(data_service_factory_i& services,
-                                                             betting::betting_service_i& betting_service)
+                                                             betting_service_i& betting_service)
     : evaluator_impl<data_service_factory_i, update_game_markets_evaluator>(services)
     , _account_service(services.account_service())
     , _betting_service(betting_service)
@@ -35,7 +34,7 @@ void update_game_markets_evaluator::do_apply(const operation_type& op)
     const auto& game = _game_service.get_game(op.game_id);
     FC_ASSERT(game.status != game_status::finished, "Cannot change the markets when game is finished");
 
-    protocol::betting::validate_game(game.game, op.markets);
+    validate_game(game.game, op.markets);
 
     std::vector<market_type> cancelled_markets;
     boost::set_difference(game.markets, op.markets, std::back_inserter(cancelled_markets));

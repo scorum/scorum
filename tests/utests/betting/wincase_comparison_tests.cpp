@@ -7,7 +7,6 @@
 namespace {
 using namespace scorum;
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 
 BOOST_AUTO_TEST_SUITE(wincase_comparison_tests)
 

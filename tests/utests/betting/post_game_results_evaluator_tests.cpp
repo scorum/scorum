@@ -20,8 +20,7 @@
 namespace {
 
 using namespace scorum::chain;
-using namespace scorum::chain::betting;
-using namespace scorum::protocol::betting;
+using namespace scorum::protocol;
 
 using namespace service_wrappers;
 
@@ -116,7 +115,7 @@ SCORUM_TEST_CASE(post_results_after_bets_resolve_delay_should_throw)
 
 SCORUM_TEST_CASE(wincases_and_markets_mismatch_should_throw)
 {
-    using namespace scorum::protocol::betting;
+    using namespace scorum::protocol;
 
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
@@ -140,7 +139,7 @@ SCORUM_TEST_CASE(wincases_and_markets_mismatch_should_throw)
 
 SCORUM_TEST_CASE(both_wincases_from_pair_were_provided_should_throw)
 {
-    using namespace scorum::protocol::betting;
+    using namespace scorum::protocol;
 
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
@@ -164,7 +163,7 @@ SCORUM_TEST_CASE(both_wincases_from_pair_were_provided_should_throw)
 
 SCORUM_TEST_CASE(not_all_winners_were_posted_should_throw)
 {
-    using namespace scorum::protocol::betting;
+    using namespace scorum::protocol;
 
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
@@ -188,7 +187,7 @@ SCORUM_TEST_CASE(not_all_winners_were_posted_should_throw)
 
 SCORUM_TEST_CASE(wrong_coefficient_should_throw)
 {
-    using namespace scorum::protocol::betting;
+    using namespace scorum::protocol;
 
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
@@ -212,7 +211,7 @@ SCORUM_TEST_CASE(wrong_coefficient_should_throw)
 
 SCORUM_TEST_CASE(winners_with_same_wincase_type_but_diff_coefficients_shouldnt_throw)
 {
-    using namespace scorum::protocol::betting;
+    using namespace scorum::protocol;
 
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
@@ -239,7 +238,7 @@ SCORUM_TEST_CASE(winners_with_same_wincase_type_but_diff_coefficients_shouldnt_t
 
 SCORUM_TEST_CASE(three_state_market_no_posted_result_shouldnt_throw)
 {
-    using namespace scorum::protocol::betting;
+    using namespace scorum::protocol;
 
     post_game_results_evaluator ev(*dbs_services, *betting_service);
 
