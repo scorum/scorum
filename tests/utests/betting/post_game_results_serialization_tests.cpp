@@ -14,7 +14,7 @@ using namespace scorum::protocol;
 
 struct post_game_results_serialization_test_fixture
 {
-    post_game_results_operation create_soccer_post_game_results_operation() const
+    post_game_results_operation create_post_game_results_operation() const
     {
         post_game_results_operation op;
         op.game_id = 42;
@@ -24,7 +24,7 @@ struct post_game_results_serialization_test_fixture
         return op;
     }
 
-    void validate_soccer_post_game_results_operation(const post_game_results_operation& op) const
+    void validate_post_game_results_operation(const post_game_results_operation& op) const
     {
         BOOST_CHECK_EQUAL(op.moderator, "homer");
         BOOST_CHECK_EQUAL(op.game_id, 42);
@@ -117,15 +117,15 @@ BOOST_FIXTURE_TEST_SUITE(post_game_results_serialization_tests, post_game_result
 
 SCORUM_TEST_CASE(post_game_results_json_serialization_test)
 {
-    auto op = create_soccer_post_game_results_operation();
+    auto op = create_post_game_results_operation();
 
     auto json = fc::json::to_string(op);
 
-    auto json_ethalon
+    auto json_expected
         = fc::format_string(post_results_json_tpl, fc::mutable_variant_object()("wincases", wincases_json));
-    json_ethalon = fc::json::to_string(fc::json::from_string(json_ethalon));
+    json_expected = fc::json::to_string(fc::json::from_string(json_expected));
 
-    BOOST_CHECK_EQUAL(json, json_ethalon);
+    BOOST_CHECK_EQUAL(json, json_expected);
 }
 
 SCORUM_TEST_CASE(post_game_results_json_deserialization_test)
@@ -133,12 +133,12 @@ SCORUM_TEST_CASE(post_game_results_json_deserialization_test)
     auto json = fc::format_string(post_results_json_tpl, fc::mutable_variant_object()("wincases", wincases_json));
     auto obj = fc::json::from_string(json).as<post_game_results_operation>();
 
-    validate_soccer_post_game_results_operation(obj);
+    validate_post_game_results_operation(obj);
 }
 
 SCORUM_TEST_CASE(post_game_results_binary_serialization_test)
 {
-    auto op = create_soccer_post_game_results_operation();
+    auto op = create_post_game_results_operation();
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
@@ -154,7 +154,7 @@ SCORUM_TEST_CASE(post_game_results_binary_deserialization_test)
     fc::from_hex(hex, buffer, sizeof(buffer));
     auto obj = fc::raw::unpack<post_game_results_operation>(buffer, sizeof(buffer));
 
-    validate_soccer_post_game_results_operation(obj);
+    validate_post_game_results_operation(obj);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

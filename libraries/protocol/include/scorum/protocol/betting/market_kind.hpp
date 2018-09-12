@@ -3,7 +3,7 @@
 
 namespace scorum {
 namespace protocol {
-enum class market_kind
+enum class market_kind : uint16_t
 {
     result,
     round,

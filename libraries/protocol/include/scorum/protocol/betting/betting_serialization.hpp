@@ -2,7 +2,9 @@
 #include <scorum/protocol/betting/game.hpp>
 
 namespace fc {
-using namespace scorum::protocol;
+using scorum::protocol::game_type;
+using scorum::protocol::market_type;
+using scorum::protocol::wincase_type;
 
 class variant;
 
