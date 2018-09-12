@@ -194,7 +194,8 @@ EXPOSE 8090
 EXPOSE 2001
 
 # the following adds lots of logging info to stdout
-ADD contrib/fullnode.config.ini /etc/scorumd/fullnode.config.ini
+ADD contrib/config.ini.witness /etc/scorumd/config.ini.witness
+ADD contrib/config.ini.rpc /etc/scorumd/config.ini.rpc
 
 # upload archive to azure
 ADD contrib/azure_upload.sh /usr/local/bin/azure_upload.sh

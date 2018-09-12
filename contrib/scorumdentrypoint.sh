@@ -3,7 +3,8 @@
 ulimit -c unlimited
 
 # Additional env variable for binary
-if [[ `echo $NODE | tr [:upper:] [:lower:]` =  "full" ]]; then
+CONF_TYPE=$(echo $NODE | tr [:upper:] [:lower:])
+if [[ $CONF_TYPE = "rpc" ]]; then
     SCORUMD="/usr/local/scorumd-full/bin/scorumd"
 else
     SCORUMD="/usr/local/scorumd-default/bin/scorumd"
@@ -13,7 +14,16 @@ chown -R scorumd:scorumd $HOME
 
 if [ ! -f "${HOME}/config.ini" ]; then
     echo "Config ${HOME}/config.ini file not found. Using default"
-    cp /etc/scorumd/fullnode.config.ini "${HOME}/config.ini"
+    if [[ $CONF_TYPE = "rpc" ]]; then
+        cp /etc/scorumd/config.ini.rpc "${HOME}/config.ini"
+    elif [[ $CONF_TYPE = "seed" ]]; then
+        cp /etc/scorumd/config.ini.witness "${HOME}/config.ini"
+    elif [[ $CONF_TYPE = "witness" ]]; then
+        cp /etc/scorumd/config.ini.witness "${HOME}/config.ini"
+    else
+        # witness is default configuration
+        cp /etc/scorumd/config.ini.witness "${HOME}/config.ini"
+    fi
     chown scorumd:scorumd "${HOME}/config.ini"
 fi
 
