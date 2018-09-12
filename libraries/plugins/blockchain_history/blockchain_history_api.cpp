@@ -70,9 +70,14 @@ public:
                   ("l", limit)("2", get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth));
         FC_ASSERT(from_op >= limit, "From must be greater than limit");
 
+        if (from_op != std::numeric_limits<decltype(from_op)>::max())
+        {
+            --from_op;
+        }
+
         result_type result;
 
-        const auto& idx = _db->get_index<IndexType>().indices().get<by_id>();
+        const auto& idx = _db->get_index<IndexType, by_id>();
         if (idx.empty())
             return result;
 
