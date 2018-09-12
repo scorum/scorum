@@ -11,8 +11,13 @@ fi
 IMAGE_NAME="scorum/$UPLOAD_PATH:$BRANCH_NAME.${GIT_COMMIT:0:7}"
 
 # Preparing configuration files
-cat $WORKSPACE/contrib/seeds.ini.${BRANCH_NAME} >> $WORKSPACE/contrib/config.ini.witness || exit 1
-cat $WORKSPACE/contrib/seeds.ini.${BRANCH_NAME} >> $WORKSPACE/contrib/config.ini.rpc || exit 1
+if [[ "$UPLOAD_PATH" == "testnet" ]]; then
+  CONF_TYPE="testnet"
+else
+  CONF_TYPE="mainnet"
+fi
+cat $WORKSPACE/contrib/seeds.ini.$CONF_TYPE >> $WORKSPACE/contrib/config.ini.witness || exit 1
+cat $WORKSPACE/contrib/seeds.ini.$CONF_TYPE >> $WORKSPACE/contrib/config.ini.rpc || exit 1
 
 # Build container
 sudo docker build \
