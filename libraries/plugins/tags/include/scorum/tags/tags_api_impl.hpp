@@ -180,6 +180,19 @@ public:
         return get_discussions_by_author(*query.start_author, query.start_permlink, query.limit, query.truncate_body);
     }
 
+    std::vector<discussion> get_posts_and_comments(const discussion_query& query) const
+    {
+        // clang-format off
+        FC_ASSERT(query.limit <= get_api_config(TAGS_API_NAME).max_discussions_list_size,
+                  "limit cannot be more than " + std::to_string(get_api_config(TAGS_API_NAME).max_discussions_list_size));
+        FC_ASSERT((query.start_author && query.start_permlink && !query.start_author->empty() && !query.start_permlink->empty()) ||
+                  (!query.start_author && !query.start_permlink),
+                  "start_author and start_permlink should be either both specified and not empty or both not specified");
+        // clang-format on
+
+        return get_posts_and_comments(query.start_author, query.start_permlink, query.limit, query.truncate_body);
+    }
+
     std::vector<api::discussion> get_paid_posts_comments_by_author(const api::discussion_query& query) const
     {
         FC_ASSERT(query.limit <= MAX_DISCUSSIONS_LIST_SIZE,
@@ -581,6 +594,27 @@ private:
             ++it;
         }
 #endif
+        return result;
+    }
+
+    std::vector<discussion> get_posts_and_comments(fc::optional<std::string> start_author,
+                                                   fc::optional<std::string> start_permlink,
+                                                   uint32_t limit,
+                                                   uint32_t truncate_body) const
+    {
+        std::vector<discussion> result;
+        result.reserve(limit);
+
+        const auto& idx = _db.get_index<comment_index, by_permlink>();
+        auto lower_bound = idx.begin();
+        if (start_author && start_permlink)
+            lower_bound = idx.lower_bound(std::make_tuple(start_author.value(), start_permlink.value()));
+
+        for (auto it = lower_bound; it != idx.end() && result.size() < limit; ++it)
+        {
+            result.emplace_back(get_discussion(*it, truncate_body));
+        }
+
         return result;
     }
 
