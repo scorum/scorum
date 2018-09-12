@@ -73,7 +73,7 @@ flush = 100000
 # history-whitelist-ops = transfer_operation transfer_to_vesting_operation withdraw_vesting_operation escrow_transfer_operation escrow_approve_operation escrow_dispute_operation escrow_release_operation author_reward_operation curation_reward_operation fill_vesting_withdraw_operation delegate_vesting_shares_operation return_vesting_delegation_operation comment_benefactor_reward_operation
 
 # Defines a list of operations which will be explicitly ignored.
-# history-blacklist-ops = 
+history-blacklist-ops = active_sp_holders_reward_operation active_sp_holders_reward_legacy_operation
 
 # Track account statistics by grouping orders into buckets of equal size measured in seconds specified as a JSON array of numbers
 account-stats-bucket-size = [60,3600,21600,86400,604800,2592000]
