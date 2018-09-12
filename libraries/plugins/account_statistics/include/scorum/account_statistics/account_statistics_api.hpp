@@ -52,10 +52,10 @@ public:
     /**
      * @brief Aggregates statistics over a time interval.
      * @param start The beginning time of the window.
-     * @param stop The end time of the window. stop must take place after start.
+     * @param stop The end time of the window. end must take place after start.
      * @returns Aggregated statistics over the interval.
      */
-    statistics get_stats_for_interval(const fc::time_point_sec& start, const fc::time_point_sec& end) const;
+    statistics get_stats_for_interval(const fc::time_point_sec& start, const fc::time_point_sec& stop) const;
 
     /**
      * @brief Returns lifetime statistics.
