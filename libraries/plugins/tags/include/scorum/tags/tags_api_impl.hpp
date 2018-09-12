@@ -642,10 +642,8 @@ private:
             if (!comment.rewarded)
                 break;
 
-            if (it->parent_author.size() == 0)
-            {
-                result.push_back(get_discussion(*it, truncate_body));
-            }
+            result.push_back(get_discussion(*it, truncate_body));
+
             ++it;
         }
 #endif
