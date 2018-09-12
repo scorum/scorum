@@ -118,9 +118,9 @@ asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& c
         const auto& reward = comment_rewards[comment_key{ comment.author, get_permlink(comment.permlink) }];
 
         asset fund_reward = asset(reward.fund, reward_symbol);
-        asset commenting_reward = asset(reward.commenting, reward_symbol);
+        asset parent_payout_value = asset(reward.commenting, reward_symbol);
 
-        comment_payout_result payout_result = pay_for_comment(comment, fund_reward, commenting_reward);
+        comment_payout_result payout_result = pay_for_comment(comment, fund_reward, parent_payout_value);
 
         total_reward += payout_result.total_claimed_reward;
 
@@ -133,13 +133,13 @@ asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& c
 }
 
 process_comments_cashout_impl::comment_payout_result process_comments_cashout_impl::pay_for_comment(
-    const comment_object& comment, const asset& fund_reward, const asset& children_comments_reward)
+    const comment_object& comment, const asset& fund_reward, const asset& payout_from_children)
 {
     try
     {
         auto reward_symbol = fund_reward.symbol();
         comment_payout_result payout_result{ asset(0, reward_symbol), asset(0, reward_symbol) };
-        if (fund_reward.amount < 1 && children_comments_reward.amount < 1)
+        if (fund_reward.amount < 1 && payout_from_children.amount < 1)
             return payout_result;
 
         asset author_reward(0, reward_symbol);
@@ -153,25 +153,25 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
             author_reward = fund_reward - curators_reward;
 
             author_reward
-                += pay_curators(comment, curators_reward); // curation_tokens can be changed inside pay_curators()
+                += pay_curators(comment, curators_reward); // curation_payout can be changed inside pay_curators()
         }
 
-        auto parent_author_reward = asset(0, reward_symbol);
+        auto payout_to_parent = asset(0, reward_symbol);
         if (comment.depth != 0)
         {
-            fc::uint128_t parent_author_reward_l = author_reward.amount.value;
-            parent_author_reward_l += children_comments_reward.amount.value;
-            parent_author_reward_l *= SCORUM_PARENT_COMMENT_REWARD_PERCENT;
-            parent_author_reward_l /= SCORUM_100_PERCENT;
-            parent_author_reward = asset(parent_author_reward_l.to_uint64(), reward_symbol);
+            fc::uint128_t payout_to_parent_l = author_reward.amount.value;
+            payout_to_parent_l += payout_from_children.amount.value;
+            payout_to_parent_l *= SCORUM_PARENT_COMMENT_REWARD_PERCENT;
+            payout_to_parent_l /= SCORUM_100_PERCENT;
+            payout_to_parent = asset(payout_to_parent_l.to_uint64(), reward_symbol);
         }
 
-        author_reward = (author_reward + children_comments_reward) - parent_author_reward;
+        author_reward = (author_reward + payout_from_children) - payout_to_parent;
 
         payout_result.total_claimed_reward = author_reward + curators_reward;
-        payout_result.parent_comment_reward = parent_author_reward;
+        payout_result.parent_comment_reward = payout_to_parent;
 
-        auto total_beneficiary = asset(0, reward_symbol);
+        auto beneficiary_payout = asset(0, reward_symbol);
         for (auto& b : comment.beneficiaries)
         {
             fc::uint128_t benefactor_tokens_l = author_reward.amount.value;
@@ -181,10 +181,10 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
             pay_account(account_service.get_account(b.account), benefactor_tokens);
             _ctx.push_virtual_operation(comment_benefactor_reward_operation(
                 b.account, comment.author, fc::to_string(comment.permlink), benefactor_tokens));
-            total_beneficiary += benefactor_tokens;
+            beneficiary_payout += benefactor_tokens;
         }
 
-        author_reward -= total_beneficiary;
+        author_reward -= beneficiary_payout;
 
         const auto& author = account_service.get_account(comment.author);
         pay_account(author, author_reward);
@@ -194,12 +194,35 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         _ctx.push_virtual_operation(
             author_reward_operation(comment.author, fc::to_string(comment.permlink), author_reward));
 
-        _ctx.push_virtual_operation(comment_reward_operation(
-            comment.author, fc::to_string(comment.permlink), payout_result.total_claimed_reward, author_reward,
-            curators_reward, total_beneficiary, fund_reward, children_comments_reward));
+        author_reward -= payout_from_children;
 
-        accumulate_statistic(comment, author, author_reward, curators_reward, total_beneficiary, fund_reward,
-                             children_comments_reward, reward_symbol);
+        if (author_reward.amount > 0 || payout_from_children.amount > 0)
+        {
+            comment_service.set_rewarded_flag(comment);
+        }
+
+        // clang-format off
+        _ctx.push_virtual_operation(comment_reward_operation(
+                             comment.author,
+                             fc::to_string(comment.permlink),
+                             fund_reward,
+                             payout_result.total_claimed_reward,
+                             author_reward,
+                             curators_reward,
+                             payout_from_children,
+                             payout_to_parent,
+                             beneficiary_payout));
+
+        accumulate_statistic(comment,
+                             author,
+                             fund_reward,
+                             author_reward,
+                             curators_reward,
+                             payout_from_children,
+                             payout_to_parent,
+                             beneficiary_payout,
+                             reward_symbol);
+        // clang-format on
 
         return payout_result;
     }
@@ -283,45 +306,62 @@ std::vector<asset> process_comments_cashout_impl::calculate_comments_payout(cons
 
 void process_comments_cashout_impl::accumulate_statistic(const comment_object& comment,
                                                          const account_object& author,
-                                                         const asset& author_tokens,
-                                                         const asset& curation_tokens,
-                                                         const asset& total_beneficiary,
-                                                         const asset& publication_tokens,
-                                                         const asset& children_comments_tokens,
+                                                         const asset& fund_reward,
+                                                         const asset& author_payout_without_children,
+                                                         const asset& curation_payout,
+                                                         const asset& payout_from_children,
+                                                         const asset& payout_to_parent,
+                                                         const asset& beneficiary_payout,
                                                          asset_symbol_type reward_symbol)
 {
-    FC_ASSERT(author_tokens.symbol() == reward_symbol);
-    FC_ASSERT(curation_tokens.symbol() == reward_symbol);
-    FC_ASSERT(total_beneficiary.symbol() == reward_symbol);
+    FC_ASSERT(author_payout_without_children.symbol() == reward_symbol);
+    FC_ASSERT(curation_payout.symbol() == reward_symbol);
+    FC_ASSERT(beneficiary_payout.symbol() == reward_symbol);
 
-    asset total_payout = author_tokens;
-    total_payout += curation_tokens;
-    total_payout += total_beneficiary;
+    asset total_payout = author_payout_without_children;
+    total_payout += curation_payout;
+    total_payout += payout_from_children;
+    total_payout += beneficiary_payout;
 
+    // clang-format off
     if (SCORUM_SYMBOL == reward_symbol)
     {
-        accumulate_comment_statistic(comment_statistic_scr_service, comment, total_payout, author_tokens,
-                                     curation_tokens, total_beneficiary, publication_tokens, children_comments_tokens);
+        accumulate_comment_statistic(comment_statistic_scr_service, comment,
+                                     fund_reward,
+                                     total_payout,
+                                     author_payout_without_children,
+                                     curation_payout,
+                                     payout_from_children,
+                                     payout_to_parent,
+                                     beneficiary_payout);
     }
     else if (SP_SYMBOL == reward_symbol)
     {
-        accumulate_comment_statistic(comment_statistic_sp_service, comment, total_payout, author_tokens,
-                                     curation_tokens, total_beneficiary, publication_tokens, children_comments_tokens);
+        accumulate_comment_statistic(comment_statistic_sp_service, comment,
+                                     fund_reward,
+                                     total_payout,
+                                     author_payout_without_children,
+                                     curation_payout,
+                                     payout_from_children,
+                                     payout_to_parent,
+                                     beneficiary_payout);
     }
+// clang-format on
 
 #ifndef IS_LOW_MEM
     {
         const auto& author_stat = account_blogging_statistic_service.obtain(author.id);
-        account_blogging_statistic_service.increase_posting_rewards(author_stat, author_tokens);
+        account_blogging_statistic_service.increase_posting_rewards(
+            author_stat, author_payout_without_children + payout_from_children);
     }
 #endif
 }
 
-void process_comments_cashout_impl::accumulate_statistic(const account_object& voter, const asset& curation_tokens)
+void process_comments_cashout_impl::accumulate_statistic(const account_object& voter, const asset& curation_payout)
 {
 #ifndef IS_LOW_MEM
     const auto& voter_stat = account_blogging_statistic_service.obtain(voter.id);
-    account_blogging_statistic_service.increase_curation_rewards(voter_stat, curation_tokens);
+    account_blogging_statistic_service.increase_curation_rewards(voter_stat, curation_payout);
 #endif
 }
 

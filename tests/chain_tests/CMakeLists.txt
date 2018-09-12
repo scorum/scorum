@@ -21,6 +21,8 @@ set( SOURCES
     rewards/comment_cashout_from_scr_fund_tests.cpp
     rewards/comment_hierarchy_reward_tests.cpp
     rewards/witness_reward_in_sp_migration_tests.cpp
+    rewards/statistic_tests.cpp
+    rewards/legacy_virtual_op_tests.cpp
     registration/registration_check_common.cpp
     registration/committee_service_tests.cpp
     registration/committee_operations_tests.cpp
@@ -43,6 +45,9 @@ set( SOURCES
     plugins/tags/get_tags_by_category_tests.cpp
     plugins/tags/get_discussions_by_author_tests.cpp
     plugins/tags/get_discussions_by_discussion_query_tests.cpp
+    plugins/tags/get_contents_tests.cpp
+    plugins/tags/get_posts_comments_by_author_tests.cpp
+    plugins/tags/get_parents_tests.cpp
     plugins/blockchain_history_tests.cpp
     plugins/blockinfo_tests.cpp
     plugins/database_api/account_api_tests.cpp

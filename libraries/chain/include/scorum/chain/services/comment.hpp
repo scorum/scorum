@@ -23,6 +23,8 @@ struct comment_service_i : public base_service_i<comment_object>
 
     virtual comment_refs_type get_children(const account_name_type& parent_author,
                                            const std::string& parent_permlink) const = 0;
+
+    virtual void set_rewarded_flag(const comment_object& comment) = 0;
 };
 
 class dbs_comment : public dbs_service_base<comment_service_i>
@@ -44,6 +46,8 @@ public:
 
     comment_refs_type get_children(const account_name_type& parent_author,
                                    const std::string& parent_permlink) const override;
+
+    void set_rewarded_flag(const comment_object& comment) override;
 };
 } // namespace chain
 } // namespace scorum
