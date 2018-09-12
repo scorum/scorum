@@ -108,7 +108,7 @@ RUN \
         -DCMAKE_BUILD_TYPE=Release \
         -DLOW_MEMORY_NODE=OFF \
         -DCLEAR_VOTES=OFF \
-        -DSKIP_BY_TX_ID=ON \
+        -DSKIP_BY_TX_ID=OFF \
         .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \

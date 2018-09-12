@@ -208,6 +208,7 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
 
         if (total_sp.amount > 0)
         {
+            active_sp_holders_reward_legacy_operation::rewarded_type rewarded;
             for (const account_object& account : active_sp_holders_array)
             {
                 // It is used SP balance amount of account to calculate reward either in SP or SCR tokens
@@ -227,8 +228,13 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
 
                 if (!hardfork_service.has_hardfork(SCORUM_HARDFORK_0_2) && account_reward.amount > 0)
                 {
-                    ctx.push_virtual_operation(active_sp_holders_reward_operation(account.name, account_reward));
+                    rewarded[account.name] = account_reward;
                 }
+            }
+
+            if (!hardfork_service.has_hardfork(SCORUM_HARDFORK_0_2) && !rewarded.empty())
+            {
+                ctx.push_virtual_operation(active_sp_holders_reward_legacy_operation{ std::move(rewarded) });
             }
         }
     }

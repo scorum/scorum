@@ -92,6 +92,15 @@ discussion tags_api::get_content(const std::string& author, const std::string& p
     FC_CAPTURE_AND_RETHROW((author)(permlink))
 }
 
+std::vector<api::discussion> tags_api::get_contents(const std::vector<api::content_query>& queries) const
+{
+    try
+    {
+        return guard().with_read_lock([&]() { return _impl->get_contents(queries); });
+    }
+    FC_CAPTURE_AND_RETHROW((queries))
+}
+
 std::vector<discussion>
 tags_api::get_comments(const std::string& parent_author, const std::string& parent_permlink, uint32_t depth) const
 {
@@ -100,6 +109,15 @@ tags_api::get_comments(const std::string& parent_author, const std::string& pare
         return guard().with_read_lock([&]() { return _impl->get_comments(parent_author, parent_permlink, depth); });
     }
     FC_CAPTURE_AND_RETHROW((parent_author)(parent_permlink)(depth))
+}
+
+std::vector<discussion> tags_api::get_parents(const api::content_query& query) const
+{
+    try
+    {
+        return guard().with_read_lock([&]() { return _impl->get_parents(query); });
+    }
+    FC_CAPTURE_AND_RETHROW((query))
 }
 
 std::vector<discussion> tags_api::get_discussions_by_author(const api::discussion_query& query) const
@@ -111,11 +129,11 @@ std::vector<discussion> tags_api::get_discussions_by_author(const api::discussio
     FC_CAPTURE_AND_RETHROW((query))
 }
 
-std::vector<discussion> tags_api::get_posts_and_comments(const api::discussion_query& query) const
+std::vector<api::discussion> tags_api::get_paid_posts_comments_by_author(const api::discussion_query& query) const
 {
     try
     {
-        return guard().with_read_lock([&]() { return _impl->get_posts_and_comments(query); });
+        return guard().with_read_lock([&]() { return _impl->get_paid_posts_comments_by_author(query); });
     }
     FC_CAPTURE_AND_RETHROW((query))
 }
