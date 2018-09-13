@@ -186,7 +186,7 @@ public:
                   "start_author should be specified and cannot be empty");
 
         return get_paid_posts_comments_by_author(*query.start_author, query.start_permlink, query.limit,
-                                            query.truncate_body);
+                                                 query.truncate_body);
     }
 
     discussion get_content(const std::string& author, const std::string& permlink) const
@@ -581,9 +581,9 @@ private:
     }
 
     std::vector<api::discussion> get_paid_posts_comments_by_author(const std::string& author,
-                                                              fc::optional<std::string> start_permlink,
-                                                              uint32_t limit,
-                                                              uint32_t truncate_body) const
+                                                                   fc::optional<std::string> start_permlink,
+                                                                   uint32_t limit,
+                                                                   uint32_t truncate_body) const
     {
         std::vector<api::discussion> result;
 
@@ -604,10 +604,8 @@ private:
             if (!comment.rewarded)
                 break;
 
-            if (it->parent_author.size() == 0)
-            {
-                result.push_back(get_discussion(*it, truncate_body));
-            }
+            result.push_back(get_discussion(*it, truncate_body));
+
             ++it;
         }
 #endif
