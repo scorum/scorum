@@ -24,6 +24,52 @@ struct get_discussions_by_query_fixture : public tags_fixture
         actor(initdelegate).give_sp(sam, 1e9);
         actor(initdelegate).give_sp(dave, 1e9);
     }
+
+    void check_if_discussion_exist(std::vector<discussion>& result, const comment_op& c)
+    {
+        BOOST_CHECK(
+            std::find_if(std::begin(result), std::end(result),
+                         [&](const api::discussion& d) { return d.author == c.author() && d.permlink == c.permlink(); })
+            != result.end());
+    }
+
+    struct test_case_for_tags_excluding
+    {
+        comment_op alice_post;
+        comment_op bob_post;
+        comment_op dave_post;
+        comment_op sam_post;
+    };
+
+    // test case #4:
+    //--------------
+    //  'Alice' create post
+    //  'Bob' create post
+    //  'Dave' create post
+    //  'Sam' create post
+    //  Everyone votes for own post
+    test_case_for_tags_excluding create_test_case_for_tags_excluding()
+    {
+        auto p1 = create_post(alice)
+                      .set_json(
+                          R"({"domains": ["com"], "categories": ["cat"], "tags":["A","B","C","SpAm1"]})")
+                      .in_block();
+        auto p2 = create_post(bob)
+                      .set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["A", "B", "C"]})")
+                      .in_block();
+        auto p3 = create_post(dave)
+                      .set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["spam2", "A", "C"]})")
+                      .in_block();
+        auto p4
+            = create_post(sam).set_json(R"({"domains": ["com"], "categories": ["cat"], "tags":["B", "C"]})").in_block();
+
+        p1.vote(alice).in_block();
+        p2.vote(bob).in_block();
+        p3.vote(dave).in_block();
+        p4.vote(sam).in_block();
+
+        return { p1, p2, p3, p4 };
+    }
 };
 }
 
@@ -301,6 +347,58 @@ SCORUM_TEST_CASE(check_truncate_body)
     BOOST_REQUIRE_EQUAL(discussions[0].body.size(), q.truncate_body);
 }
 
+SCORUM_TEST_CASE(check_asset_if_including_and_excluding_tag_lists_intersect)
+{
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+    q.tags = { "A", "B", "C" };
+    q.exclude_tags = { "B", "spam1", "spam2" }; // fail B
+
+    BOOST_CHECK_THROW(_api.get_discussions_by_trending(q), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(check_if_tags_was_excluded)
+{
+    auto test_case = create_test_case_for_tags_excluding();
+
+    SCORUM_MESSAGE("-- Check for tags_logical_and = true");
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+    q.tags = { "A", "B", "C" };
+    q.exclude_tags = { "spam1", "spam2" };
+    {
+        std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
+
+        wdump((discussions));
+
+        BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
+
+        check_if_discussion_exist(discussions, test_case.bob_post);
+    }
+
+    SCORUM_MESSAGE("-- Check for tags_logical_and = false");
+
+    q.tags_logical_and = false;
+
+    {
+        std::vector<discussion> discussions = _api.get_discussions_by_trending(q);
+
+        wdump((discussions));
+
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
+
+        check_if_discussion_exist(discussions, test_case.bob_post);
+        check_if_discussion_exist(discussions, test_case.sam_post);
+
+        BOOST_CHECK(std::is_sorted(
+            begin(discussions), end(discussions),
+            [](const api::discussion& lhs, const api::discussion& rhs) { return lhs.net_votes > rhs.net_votes; }));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(get_discussions_by_created_tests, database_fixture::get_discussions_by_query_fixture)
@@ -482,6 +580,48 @@ SCORUM_TEST_CASE(check_active_votes_if_comment_was_voted_with_negative_weight)
     BOOST_REQUIRE_EQUAL(discussions[0].active_votes[0].percent, -100 * SCORUM_1_PERCENT);
 }
 
+SCORUM_TEST_CASE(check_if_tags_was_excluded)
+{
+    auto test_case = create_test_case_for_tags_excluding();
+
+    SCORUM_MESSAGE("-- Check for tags_logical_and = true");
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+    q.tags = { "A", "B", "C" };
+    q.exclude_tags = { "spam1", "spam2" };
+    {
+        std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+
+        wdump((discussions));
+
+        BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
+
+        check_if_discussion_exist(discussions, test_case.bob_post);
+    }
+
+    SCORUM_MESSAGE("-- Check for tags_logical_and = false");
+
+    q.tags_logical_and = false;
+
+    {
+        std::vector<discussion> discussions = _api.get_discussions_by_created(q);
+
+        wdump((discussions));
+
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
+
+        check_if_discussion_exist(discussions, test_case.bob_post);
+        check_if_discussion_exist(discussions, test_case.sam_post);
+
+        BOOST_CHECK(std::is_sorted(begin(discussions), end(discussions),
+                                   [](const api::discussion& lhs, const api::discussion& rhs) {
+                                       return std::tie(lhs.created, lhs.id) > std::tie(rhs.created, rhs.id);
+                                   }));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(get_discussions_by_hot_tests, database_fixture::get_discussions_by_query_fixture)
@@ -563,6 +703,48 @@ SCORUM_TEST_CASE(should_return_posts_even_after_cashout)
     q.tags_logical_and = true;
 
     BOOST_REQUIRE_EQUAL(_api.get_discussions_by_hot(q).size(), 1u);
+}
+
+SCORUM_TEST_CASE(check_if_tags_was_excluded)
+{
+    auto test_case = create_test_case_for_tags_excluding();
+
+    SCORUM_MESSAGE("-- Check for tags_logical_and = true");
+
+    discussion_query q;
+    q.limit = 100;
+    q.tags_logical_and = true;
+    q.tags = { "A", "B", "C" };
+    q.exclude_tags = { "spam1", "spam2" };
+    {
+        std::vector<discussion> discussions = _api.get_discussions_by_hot(q);
+
+        wdump((discussions));
+
+        BOOST_REQUIRE_EQUAL(discussions.size(), 1u);
+
+        check_if_discussion_exist(discussions, test_case.bob_post);
+    }
+
+    SCORUM_MESSAGE("-- Check for tags_logical_and = false");
+
+    q.tags_logical_and = false;
+
+    {
+        std::vector<discussion> discussions = _api.get_discussions_by_hot(q);
+
+        wdump((discussions));
+
+        BOOST_REQUIRE_EQUAL(discussions.size(), 2u);
+
+        check_if_discussion_exist(discussions, test_case.bob_post);
+        check_if_discussion_exist(discussions, test_case.sam_post);
+
+        BOOST_CHECK(std::is_sorted(
+            begin(discussions), end(discussions), [](const api::discussion& lhs, const api::discussion& rhs) {
+                return std::tie(lhs.net_votes, lhs.created) > std::tie(rhs.net_votes, rhs.created);
+            }));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

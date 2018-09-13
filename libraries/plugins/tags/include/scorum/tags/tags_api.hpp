@@ -66,22 +66,56 @@ public:
     std::vector<api::discussion> get_discussions_by_created(const api::discussion_query& query) const;
     std::vector<api::discussion> get_discussions_by_hot(const api::discussion_query& query) const;
 
+    /// This is obsolete method, use get_contents
     api::discussion get_content(const std::string& author, const std::string& permlink) const;
 
+    /**
+     * @brief Returns all discussions by author/permlink pairs
+     * @param queries vector of @ref api::content_query struct that includes author/permlink pair
+     */
+    std::vector<api::discussion> get_contents(const std::vector<api::content_query>& queries) const;
+
+    /**
+     * @brief Returns all children for certain comment
+     * @param parent_author
+     * @param parent_permlink
+     * @param depth limit
+     */
     std::vector<api::discussion> get_comments(const std::string& parent_author,
                                               const std::string& parent_permlink,
                                               uint32_t depth = SCORUM_MAX_COMMENT_DEPTH) const;
 
     /**
+     * @brief Returns all parents for certain comment
+     * @param query
+     */
+    std::vector<api::discussion> get_parents(const api::content_query& query) const;
+
+    /**
      * @brief This method is used to fetch all posts by author that occur after start_permlink with up to limit being
      * returned.
+     * @param query
+     * @warning query parameter accepts only following @ref api::discussion_query fields: \n
+     *          \e start_author, \e start_permlink, \e limit
      *
      * If start_permlink is empty then discussions are returned from the beginning. This
      * should allow easy pagination.
      */
     std::vector<api::discussion> get_discussions_by_author(const api::discussion_query& query) const;
 
-     /**
+    /**
+     * @brief Returns an array of posts and comments belonging to the given author that have reached cashout time and it
+     * is reward > 0
+     * @param query
+     * @warning query parameter accepts only following @ref api::discussion_query fields: \n
+     *          \e start_author, \e start_permlink, \e limit, \e truncate_body
+     *
+     * If start_permlink is empty then discussions are returned from the beginning. This
+     * should allow easy pagination.
+     */
+    std::vector<api::discussion> get_paid_posts_comments_by_author(const api::discussion_query& query) const;
+
+    /**
      * @brief This method is used to fetch all posts and comments  with up to limit being returned.
      *
      * If start_permlink and start_author is empty then discussions are returned from the beginning. This
@@ -89,7 +123,7 @@ public:
      */
     std::vector<api::discussion> get_posts_and_comments(const api::discussion_query& query) const;
 
-      /// @}
+    /// @}
 };
 
 } // namespace tags
@@ -107,7 +141,10 @@ FC_API(scorum::tags::tags_api,
 
        // content
        (get_content)
+       (get_contents)
        (get_comments)
-       (get_posts_and_comments)
-       (get_discussions_by_author))
+       (get_parents)
+       (get_discussions_by_author)
+       (get_paid_posts_comments_by_author)
+       (get_posts_and_comments))
 // clang-format on
