@@ -159,11 +159,8 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         auto payout_to_parent = asset(0, reward_symbol);
         if (comment.depth != 0)
         {
-            fc::uint128_t payout_to_parent_l = author_reward.amount.value;
-            payout_to_parent_l += payout_from_children.amount.value;
-            payout_to_parent_l *= SCORUM_PARENT_COMMENT_REWARD_PERCENT;
-            payout_to_parent_l /= SCORUM_100_PERCENT;
-            payout_to_parent = asset(payout_to_parent_l.to_uint64(), reward_symbol);
+            auto fraction = utils::make_fraction(SCORUM_PARENT_COMMENT_REWARD_PERCENT, SCORUM_100_PERCENT);
+            payout_to_parent = (author_reward + payout_from_children) * fraction;
         }
 
         author_reward = (author_reward + payout_from_children) - payout_to_parent;
@@ -174,14 +171,12 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         auto beneficiary_payout = asset(0, reward_symbol);
         for (auto& b : comment.beneficiaries)
         {
-            fc::uint128_t benefactor_tokens_l = author_reward.amount.value;
-            benefactor_tokens_l *= b.weight;
-            benefactor_tokens_l /= SCORUM_100_PERCENT;
-            asset benefactor_tokens = asset(benefactor_tokens_l.to_uint64(), author_reward.symbol());
+            asset benefactor_tokens = author_reward * utils::make_fraction(b.weight, SCORUM_100_PERCENT);
             pay_account(account_service.get_account(b.account), benefactor_tokens);
+            beneficiary_payout += benefactor_tokens;
+
             _ctx.push_virtual_operation(comment_benefactor_reward_operation(
                 b.account, comment.author, fc::to_string(comment.permlink), benefactor_tokens));
-            beneficiary_payout += benefactor_tokens;
         }
 
         author_reward -= beneficiary_payout;

@@ -19,6 +19,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     endif()
 endif()
 
+set(CMAKE_CXX_STANDARD 14)
+
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
@@ -57,7 +59,7 @@ if( FORCE_REBUILD_GENESIS  )
                     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
 
-OPTION( GENESIS_TESTNET "Build embedded genesis for TEST NET (ON OR OFF)" OFF )
+OPTION( GENESIS_TESTNET "Build embedded genesis for TEST NET (ON OR OFF)" ON )
 MESSAGE( STATUS "GENESIS_TESTNET: ${GENESIS_TESTNET}" )
 if( GENESIS_TESTNET  )
   MESSAGE( STATUS "     " )
@@ -89,7 +91,8 @@ if( SKIP_BY_TX_ID )
    SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSKIP_BY_TX_ID" )
 endif()
 
-if( LIVE_TESTNET STREQUAL "testnet")
+OPTION( FORCE_LIVE_TESTNET "Always use live mode for testnet (ON or OFF)" OFF )
+if( GENESIS_TESTNET AND (FORCE_LIVE_TESTNET OR (LIVE_TESTNET STREQUAL "testnet")))
     MESSAGE( STATUS "LIVE TEST NET CONFIGURAION IS APPLIED" )
     SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLIVE_TESTNET" )
     SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLIVE_TESTNET" )
@@ -194,7 +197,7 @@ if( WIN32 )
       SET(TCL_LIBRARY ${TCL_LIBS})
 
    elseif( MINGW )
-      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fpermissive -msse4.2 -Wa,-mbig-obj")
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -msse4.2 -Wa,-mbig-obj")
       SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
       # Optimization flag apparently needed to get rid of "File too big" assembler errors when compiling in Debug mode
       # See: https://stackoverflow.com/questions/14125007/gcc-string-table-overflow-error-during-compilation/14601779#29479701
@@ -215,11 +218,11 @@ else( WIN32 ) # Apple AND Linux
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring Scorum on OS X" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -Wall -Wno-conversion -Wno-deprecated-declarations -Wno-invalid-partial-specialization" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++ -Wall -Wno-conversion -Wno-deprecated-declarations -Wno-invalid-partial-specialization" )
     else( APPLE )
         # Linux Specific Options Here
         message( STATUS "Configuring Scorum on Linux" )
-        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall -Werror" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror" )
         set( rt_library rt )
         set( pthread_library pthread)
 

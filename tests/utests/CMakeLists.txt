@@ -24,6 +24,7 @@ set(SOURCES
     proposal/proposal_create_evaluator_tests.cpp
     proposal/proposal_vote_evaluator_tests.cpp
     proposal/development_committee_transfer_evaluator_tests.cpp
+    proposal/development_committee_top_budgets_evaluator_tests.cpp
     rewards_math/calculate_payout_tests.cpp
     rewards_math/calculate_total_claims_tests.cpp
     rewards_math/calculate_curations_payout_tests.cpp
@@ -34,6 +35,12 @@ set(SOURCES
     utils/string_algorithm_tests.cpp
     tasks_base_tests.cpp
     app_tests.cpp
+    budgets/management_algorithms_tests.cpp
+    budgets/evaluators_tests.cpp
+    budgets/auction_calculation_tests.cpp
+    budgets/advertising_api_tests.cpp
+    fraction_tests.cpp
+    config_api_tests.cpp
     vote_evaluator_tests.cpp
 )
 

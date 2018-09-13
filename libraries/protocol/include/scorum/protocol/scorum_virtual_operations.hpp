@@ -328,6 +328,52 @@ struct proposal_virtual_operation : public virtual_operation
 
     protocol::proposal_operation proposal_op;
 };
+
+struct allocate_cash_from_advertising_budget_operation : public virtual_operation
+{
+    allocate_cash_from_advertising_budget_operation()
+    {
+    }
+    allocate_cash_from_advertising_budget_operation(const budget_type type_,
+                                                    const account_name_type& owner_,
+                                                    const int64_t id_,
+                                                    const asset& cash_)
+        : type(type_)
+        , owner(owner_)
+        , id(id_)
+        , cash(cash_)
+    {
+        FC_ASSERT(cash.symbol() == SCORUM_SYMBOL);
+    }
+
+    budget_type type = budget_type::post;
+    account_name_type owner;
+    int64_t id = -1;
+    asset cash = asset(0, SCORUM_SYMBOL);
+};
+
+struct cash_back_from_advertising_budget_to_owner_operation : public virtual_operation
+{
+    cash_back_from_advertising_budget_to_owner_operation()
+    {
+    }
+    cash_back_from_advertising_budget_to_owner_operation(const budget_type type_,
+                                                         const account_name_type& owner_,
+                                                         const int64_t id_,
+                                                         const asset& cash_)
+        : type(type_)
+        , owner(owner_)
+        , id(id_)
+        , cash(cash_)
+    {
+        FC_ASSERT(cash.symbol() == SCORUM_SYMBOL);
+    }
+
+    budget_type type = budget_type::post;
+    account_name_type owner;
+    int64_t id = -1;
+    asset cash = asset(0, SCORUM_SYMBOL);
+};
 }
 } // scorum::protocol
 
@@ -397,4 +443,14 @@ FC_REFLECT(scorum::protocol::devpool_to_devpool_vesting_withdraw_operation,
            (withdrawn))
 FC_REFLECT(scorum::protocol::proposal_virtual_operation,
            (proposal_op))
+FC_REFLECT(scorum::protocol::allocate_cash_from_advertising_budget_operation,
+           (type)
+           (owner)
+           (id)
+           (cash))
+FC_REFLECT(scorum::protocol::cash_back_from_advertising_budget_to_owner_operation,
+           (type)
+           (owner)
+           (id)
+           (cash))
 // clang-format on

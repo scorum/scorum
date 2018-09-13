@@ -4,7 +4,7 @@
 #include <scorum/app/api_context.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/blockchain_history/schema/operation_objects.hpp>
-#include <scorum/common_api/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 #include <scorum/protocol/operations.hpp>
 
 #include <map>

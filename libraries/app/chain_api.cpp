@@ -1,7 +1,7 @@
 #include <scorum/app/chain_api.hpp>
 #include <scorum/app/api_context.hpp>
 #include <scorum/app/application.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/development_committee.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/hardfork_property.hpp>
@@ -9,7 +9,7 @@
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
@@ -124,7 +124,7 @@ chain_capital_api_obj chain_api::get_chain_capital() const
         capital.total_witness_reward_sp = dpo.total_witness_reward_sp;
 
         capital.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
-        capital.fund_budget_balance = _db.obtain_service<dbs_budget>().get_fund_budget().balance;
+        capital.fund_budget_balance = _db.obtain_service<dbs_fund_budget>().get().balance;
 
         capital.dev_pool_scr_balance = _db.obtain_service<dbs_development_committee>().get().scr_balance;
         capital.dev_pool_sp_balance = _db.obtain_service<dbs_development_committee>().get().sp_balance;

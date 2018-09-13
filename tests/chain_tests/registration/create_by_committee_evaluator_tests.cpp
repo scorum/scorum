@@ -74,7 +74,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_one_block_check)
                     const account_object& account = create_new_by_committee();
                     allocated_bonus = asset(account.scorumpower.amount, SCORUM_SYMBOL);
                 },
-                default_skip);
+                get_skip_flags());
 
             BOOST_REQUIRE_EQUAL(allocated_bonus, predicted_bonus);
         }
@@ -114,7 +114,7 @@ SCORUM_TEST_CASE(allocate_through_all_schedule_stages_per_wave_block_distributio
                     const account_object& account = create_new_by_committee();
                     allocated_bonus = asset(account.scorumpower.amount, SCORUM_SYMBOL);
                 },
-                default_skip);
+                get_skip_flags());
 
             BOOST_CHECK_EQUAL(allocated_bonus, predicted_bonus);
         }
@@ -165,7 +165,7 @@ SCORUM_TEST_CASE(allocate_limits_through_blocks_through_window_check)
                 // std::cout << allocated_bonus << std::endl;
                 allocated_bonus = fn(0);
             },
-            default_skip);
+            get_skip_flags());
         return allocated_bonus;
     };
 
@@ -222,7 +222,7 @@ SCORUM_TEST_CASE(allocate_out_of_schedule_remain_check)
                 const account_object& account = create_new_by_committee();
                 allocated_bonus = asset(account.scorumpower.amount, SCORUM_SYMBOL);
             },
-            default_skip);
+            get_skip_flags());
         return allocated_bonus;
     };
     total_allocated_bonus = predictor.schedule_input_vest_all(fn);
@@ -251,7 +251,7 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
                 const account_object& account = create_new_by_committee();
                 allocated_bonus = asset(account.scorumpower.amount, SCORUM_SYMBOL);
             },
-            default_skip);
+            get_skip_flags());
         return allocated_bonus;
     };
     total_allocated_bonus = predictor.schedule_input_vest_all(fn);
@@ -273,7 +273,7 @@ SCORUM_TEST_CASE(autoclose_pool_with_valid_vesting_rest_check)
         // to prevent reaching limit
         generate_blocks(SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_N_BLOCK);
 
-        db_plugin->debug_update([&](database&) { create_new_by_committee(); }, default_skip);
+        db_plugin->debug_update([&](database&) { create_new_by_committee(); }, get_skip_flags());
     }
 
     BOOST_CHECK_EQUAL(registration_pool_service.get().balance, ASSET_NULL_SCR);

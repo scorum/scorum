@@ -30,8 +30,6 @@ config::config() /// production config
 
     , cashout_window_seconds(7200) // 2 hours
 
-    , reverse_auction_window_seconds(fc::minutes(30))
-
     , upvote_lockout(fc::minutes(30))
 
     , active_sp_holders_reward_period(fc::minutes(1))
@@ -40,14 +38,14 @@ config::config() /// production config
 
     , cashout_window_seconds(DAYS_TO_SECONDS(7))
 
-    , reverse_auction_window_seconds(fc::minutes(30))
-
     , upvote_lockout(fc::hours(12))
 
     , active_sp_holders_reward_period(fc::days(7))
 #endif
-    , vote_regeneration_seconds(fc::days(5))
 
+    , reverse_auction_window_seconds(fc::minutes(30))
+
+    , vote_regeneration_seconds(fc::days(5))
     , owner_auth_recovery_period(fc::days(30))
     , account_recovery_request_expiration_period(fc::days(1))
     , owner_update_limit(fc::minutes(60))
@@ -58,7 +56,7 @@ config::config() /// production config
     , guaranted_reward_supply_period_in_days(30)
     , reward_increase_threshold_in_days(100)
 
-    , budgets_limit_per_owner(1000000)
+    , budgets_limit_per_owner(10000)
 
     , atomicswap_initiator_refund_lock_secs(48 * 3600)
     , atomicswap_participant_refund_lock_secs(24 * 3600)
@@ -106,11 +104,11 @@ config::config(test_mode) /// test config
 
     , cashout_window_seconds(fc::hours(1).to_seconds())
 
-    , reverse_auction_window_seconds(fc::seconds(30))
-
     , upvote_lockout(fc::minutes(5))
 
     , active_sp_holders_reward_period(fc::minutes(15))
+
+    , reverse_auction_window_seconds(fc::seconds(30))
 
     , vote_regeneration_seconds(fc::minutes(10))
 
@@ -124,7 +122,7 @@ config::config(test_mode) /// test config
     , guaranted_reward_supply_period_in_days(2)
     , reward_increase_threshold_in_days(3)
 
-    , budgets_limit_per_owner(5)
+    , budgets_limit_per_owner(8)
 
     , atomicswap_initiator_refund_lock_secs(60 * 20)
     , atomicswap_participant_refund_lock_secs(60 * 10)

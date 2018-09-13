@@ -54,6 +54,9 @@ using operation = fc::static_variant<vote_operation,
                                      atomicswap_redeem_operation,
                                      atomicswap_refund_operation,
 
+                                     close_budget_by_advertising_moderator_operation,
+                                     update_budget_operation,
+
                                      /// virtual operations
                                      author_reward_operation,
                                      comment_benefactor_reward_operation,
@@ -74,6 +77,8 @@ using operation = fc::static_variant<vote_operation,
                                      acc_to_devpool_vesting_withdraw_operation,
                                      devpool_to_devpool_vesting_withdraw_operation,
                                      proposal_virtual_operation,
+                                     allocate_cash_from_advertising_budget_operation,
+                                     cash_back_from_advertising_budget_to_owner_operation,
                                      active_sp_holders_reward_legacy_operation>;
 
 /*void operation_get_required_authorities( const operation& op,

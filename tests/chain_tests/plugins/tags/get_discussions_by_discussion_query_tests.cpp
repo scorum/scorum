@@ -3,7 +3,7 @@
 #include "tags_common.hpp"
 #include <scorum/tags/tags_api_objects.hpp>
 #include <scorum/tags/tags_api.hpp>
-#include <scorum/common_api/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 #include <boost/test/unit_test.hpp>
 
 using namespace scorum;

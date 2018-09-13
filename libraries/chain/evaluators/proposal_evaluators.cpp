@@ -3,6 +3,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/advertising_property.hpp>
 #include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
@@ -54,6 +55,49 @@ void development_committee_withdraw_vesting_evaluator::do_apply(
     withdraw_scorumpower_context ctx(db(), o.vesting_shares);
     create_withdraw.apply(ctx);
 }
+
+development_committee_empower_advertising_moderator_evaluator::
+    development_committee_empower_advertising_moderator_evaluator(data_service_factory_i& r)
+    : proposal_operation_evaluator<development_committee_empower_advertising_moderator_evaluator>(r)
+{
+}
+
+void development_committee_empower_advertising_moderator_evaluator::do_apply(
+    const development_committee_empower_advertising_moderator_evaluator::operation_type& o)
+{
+    auto& adv_property_service = this->db().advertising_property_service();
+
+    adv_property_service.update([&](advertising_property_object& obj) { obj.moderator = o.account; });
+}
+
+template <>
+void development_committee_change_budgets_auction_properties_evaluator<budget_type::post>::do_apply(
+    const development_committee_change_budgets_auction_properties_evaluator::operation_type& o)
+{
+    auto& adv_property = this->db().advertising_property_service();
+
+    adv_property.update([&](advertising_property_object& adv) {
+        adv.auction_post_coefficients.clear();
+        std::copy(std::begin(o.auction_coefficients), std::end(o.auction_coefficients),
+                  std::back_inserter(adv.auction_post_coefficients));
+    });
+}
+
+template <>
+void development_committee_change_budgets_auction_properties_evaluator<budget_type::banner>::do_apply(
+    const development_committee_change_budgets_auction_properties_evaluator::operation_type& o)
+{
+    auto& adv_property = this->db().advertising_property_service();
+
+    adv_property.update([&](advertising_property_object& adv) {
+        adv.auction_banner_coefficients.clear();
+        std::copy(std::begin(o.auction_coefficients), std::end(o.auction_coefficients),
+                  std::back_inserter(adv.auction_banner_coefficients));
+    });
+}
+
+template class development_committee_change_budgets_auction_properties_evaluator<budget_type::post>;
+template class development_committee_change_budgets_auction_properties_evaluator<budget_type::banner>;
 
 } // namespace chain
 } // namespace scorum

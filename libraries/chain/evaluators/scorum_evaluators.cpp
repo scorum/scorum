@@ -7,7 +7,6 @@
 #include <scorum/chain/services/witness_vote.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
-#include <scorum/chain/services/budget.hpp>
 #include <scorum/chain/services/registration_pool.hpp>
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -54,7 +53,6 @@ std::string wstring_to_utf8(const std::wstring& str)
 
 namespace scorum {
 namespace chain {
-using fc::uint128_t;
 
 inline void validate_permlink_0_1(const std::string& permlink)
 {
@@ -356,9 +354,6 @@ void comment_evaluator::do_apply(const comment_operation& o)
                       ("x", parent.depth)("y", SCORUM_MAX_COMMENT_DEPTH));
         }
 
-        if (o.json_metadata.size())
-            FC_ASSERT(fc::is_utf8(o.json_metadata), "JSON Metadata must be UTF-8");
-
         auto now = dprops_service.head_block_time();
 
         if (!comment_service.is_exists(o.author, o.permlink))
@@ -432,10 +427,8 @@ void comment_evaluator::do_apply(const comment_operation& o)
                 {
                     fc::from_string(com.body, o.body);
                 }
-                if (fc::is_utf8(o.json_metadata))
-                    fc::from_string(com.json_metadata, o.json_metadata);
-                else
-                    wlog("Comment ${a}/${p} contains invalid UTF-8 metadata", ("a", o.author)("p", o.permlink));
+
+                fc::from_string(com.json_metadata, o.json_metadata);
 #endif
             });
 
@@ -497,15 +490,12 @@ void comment_evaluator::do_apply(const comment_operation& o)
 #ifndef IS_LOW_MEM
                 if (o.title.size())
                     fc::from_string(com.title, o.title);
-                if (o.json_metadata.size())
+                if (!o.json_metadata.empty())
                 {
-                    if (fc::is_utf8(o.json_metadata))
-                        fc::from_string(com.json_metadata, o.json_metadata);
-                    else
-                        wlog("Comment ${a}/${p} contains invalid UTF-8 metadata", ("a", o.author)("p", o.permlink));
+                    fc::from_string(com.json_metadata, o.json_metadata);
                 }
 
-                if (o.body.size())
+                if (!o.body.empty())
                 {
                     try
                     {
@@ -972,33 +962,6 @@ void delegate_scorumpower_evaluator::do_apply(const delegate_scorumpower_operati
             }
         }
     }
-}
-
-void create_budget_evaluator::do_apply(const create_budget_operation& op)
-{
-    budget_service_i& budget_service = db().budget_service();
-    account_service_i& account_service = db().account_service();
-
-    account_service.check_account_existence(op.owner);
-
-    optional<std::string> content_permlink;
-    if (!op.content_permlink.empty())
-    {
-        content_permlink = op.content_permlink;
-    }
-
-    const auto& owner = account_service.get_account(op.owner);
-
-    budget_service.create_budget(owner, op.balance, op.deadline, content_permlink);
-}
-
-void close_budget_evaluator::do_apply(const close_budget_operation& op)
-{
-    budget_service_i& budget_service = db().budget_service();
-
-    const budget_object& budget = budget_service.get_budget(budget_id_type(op.budget_id));
-
-    budget_service.close_budget(budget);
 }
 
 void atomicswap_initiate_evaluator::do_apply(const atomicswap_initiate_operation& op)

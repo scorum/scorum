@@ -37,7 +37,7 @@ void withdraw_scorumpower_check_fixture::set_dev_pool_balance(const asset& sp_ba
                 props.total_supply += asset(scr_balance.amount, SCORUM_SYMBOL);
             });
         },
-        default_skip);
+        get_skip_flags());
 
     validate_database();
     generate_blocks(2);

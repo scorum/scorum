@@ -2,15 +2,22 @@
 
 #include <scorum/chain/database/block_tasks/block_tasks.hpp>
 
+#include <scorum/protocol/types.hpp>
+
 namespace scorum {
 namespace protocol {
 struct asset;
 }
 namespace chain {
+
 class account_object;
+class dynamic_global_property_service_i;
+class account_service_i;
+
 namespace database_ns {
 
 using scorum::protocol::asset;
+using scorum::protocol::budget_type;
 
 class process_funds : public block_task
 {
@@ -28,6 +35,14 @@ private:
     void pay_activity_reward(block_task_context& ctx, const asset& reward);
     const asset get_activity_reward(block_task_context& ctx, const asset& reward);
     bool apply_mainnet_schedule_crutches(block_task_context&);
+
+    template <typename ServiceIterfaceType, typename CoeffListType>
+    asset allocate_advertising_cash(ServiceIterfaceType& service,
+                                    dynamic_global_property_service_i& dgp_service,
+                                    account_service_i& account_service,
+                                    const CoeffListType& auction_coefficients,
+                                    const budget_type type,
+                                    database_virtual_operations_emmiter_i& ctx);
 };
 }
 }

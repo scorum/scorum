@@ -46,7 +46,7 @@ public:
         asset real_per_block_reward(0, symbol_type);
 
         _service.update([&](typename TFundService::object_type& pool) {
-            asset delta = pool.current_per_block_reward * _adjust_percent / SCORUM_100_PERCENT;
+            asset delta = pool.current_per_block_reward * utils::make_fraction(_adjust_percent, SCORUM_100_PERCENT);
 
             delta = std::max(asset(SCORUM_MIN_PER_BLOCK_REWARD, symbol_type), delta);
 

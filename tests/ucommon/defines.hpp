@@ -176,7 +176,7 @@ template <class T> T make_test_index_object()
 #endif
 
 #define SCORUM_MESSAGE(M)                                                                                              \
-    BOOST_MESSAGE(M);                                                                                                  \
+    BOOST_TEST_MESSAGE(M);                                                                                             \
     ilog(M)
 
 #define SCORUM_TEST_CASE(test_name)                                                                                    \

@@ -1,4 +1,7 @@
 #pragma once
+
+#define API_DATABASE "database_api"
+
 #include <scorum/app/state.hpp>
 
 #include <scorum/chain/database/database.hpp>
@@ -129,9 +132,10 @@ public:
      */
     uint64_t get_account_count() const;
 
-    std::vector<budget_api_obj> get_budgets(const std::set<std::string>& account_names) const;
+    std::vector<budget_api_obj> get_budgets(const budget_type, const std::set<std::string>& account_names) const;
 
-    std::set<std::string> lookup_budget_owners(const std::string& lower_bound_name, uint32_t limit) const;
+    std::set<std::string>
+    lookup_budget_owners(const budget_type, const std::string& lower_bound_name, uint32_t limit) const;
 
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
 
@@ -216,6 +220,11 @@ public:
      * @brief Get registration committee
      */
     registration_committee_api_obj get_registration_committee() const;
+
+    /**
+     * @brief Get advertising property
+     */
+    advertising_property_api_obj get_advertising_property() const;
 
     /**
      * @brief Get the total number of witnesses registered with the blockchain
@@ -342,6 +351,7 @@ FC_API(scorum::app::database_api,
    (lookup_proposals)
    (get_registration_committee)
    (get_development_committee)
+   (get_advertising_property)
 
     // Atomic Swap
    (get_atomicswap_contracts)

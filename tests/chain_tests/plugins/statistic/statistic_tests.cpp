@@ -107,12 +107,12 @@ SCORUM_TEST_CASE(get_missed_blocks_via_api_test)
             db.obtain_service<dbs_witness_schedule>().update(
                 [&](witness_schedule_object& wso) { wso.num_scheduled_witnesses = 3; });
         },
-        default_skip);
+        get_skip_flags());
 
     auto current_block = db.head_block_num();
 
     auto slots_to_miss = 1u;
-    db_plugin->debug_generate_blocks(debug_key, 1, default_skip, slots_to_miss);
+    db_plugin->debug_generate_blocks(debug_key, 1, get_skip_flags(), slots_to_miss);
 
     stat = _api_call.get_lifetime_stats();
 
@@ -179,7 +179,7 @@ SCORUM_TEST_CASE(bandwidth_stat_test)
     tx.operations.push_back(op);
     tx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
     tx.validate();
-    db.push_transaction(tx, default_skip);
+    db.push_transaction(tx, get_skip_flags());
 
     generate_block();
 
@@ -423,7 +423,7 @@ SCORUM_TEST_CASE(check_withdraw_stats_with_route_from_dev_pool_to_acc)
 
             db.notify_post_apply_operation(note);
         },
-        default_skip);
+        get_skip_flags());
 
     // apply 'set_withdraw_scorumpower_route_to_account_operation'
     db_plugin->debug_update(
@@ -432,7 +432,7 @@ SCORUM_TEST_CASE(check_withdraw_stats_with_route_from_dev_pool_to_acc)
             set_withdraw_scorumpower_route_context ctx(db, bob.name, bob_pie_percent * SCORUM_1_PERCENT, false);
             create_withdraw_route.apply(ctx);
         },
-        default_skip);
+        get_skip_flags());
 
     // apply 'set_withdraw_scorumpower_route_to_account_operation'
     db_plugin->debug_update(
@@ -441,7 +441,7 @@ SCORUM_TEST_CASE(check_withdraw_stats_with_route_from_dev_pool_to_acc)
             set_withdraw_scorumpower_route_context ctx(db, alice.name, alice_pie_percent * SCORUM_1_PERCENT, true);
             create_withdraw_route.apply(ctx);
         },
-        default_skip);
+        get_skip_flags());
 
     auto next_withdrawal = db.head_block_time() + SCORUM_VESTING_WITHDRAW_INTERVAL_SECONDS;
 

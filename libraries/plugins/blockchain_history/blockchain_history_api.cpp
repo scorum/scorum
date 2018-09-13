@@ -3,7 +3,7 @@
 #include <scorum/blockchain_history/schema/operation_objects.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/common_api/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 
 #include <fc/static_variant.hpp>
 
@@ -65,8 +65,9 @@ public:
     template <typename IndexType> result_type get_ops_history(uint32_t from_op, uint32_t limit) const
     {
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
-        FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
-                  ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));
+        FC_ASSERT(limit <= get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth,
+                  "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth));
         FC_ASSERT(from_op >= limit, "From must be greater than limit");
 
         result_type result;
@@ -101,11 +102,13 @@ public:
                                         uint32_t limit) const
     {
         FC_ASSERT(from <= to, "'From' is greater than 'to'");
-        FC_ASSERT((to - from).to_seconds() <= MAX_TIMESTAMP_RANGE_IN_S,
-                  "Timestamp range can't be more then ${t} seconds", ("t", MAX_TIMESTAMP_RANGE_IN_S));
+        FC_ASSERT((to - from).to_seconds() <= get_api_config(API_BLOCKCHAIN_HISTORY).max_timestamp_range_in_s,
+                  "Timestamp range can't be more then ${t} seconds",
+                  ("t", get_api_config(API_BLOCKCHAIN_HISTORY).max_timestamp_range_in_s));
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
-        FC_ASSERT(limit <= MAX_BLOCKCHAIN_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
-                  ("l", limit)("2", MAX_BLOCKCHAIN_HISTORY_DEPTH));
+        FC_ASSERT(limit <= get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth,
+                  "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth));
         FC_ASSERT(from_op >= limit, "From must be greater than limit");
 
         result_type result;
@@ -186,8 +189,9 @@ public:
 
     template <typename T> std::map<uint32_t, T> get_blocks_history_by_number(uint32_t block_num, uint32_t limit) const
     {
-        FC_ASSERT(limit <= MAX_BLOCKS_HISTORY_DEPTH, "Limit of ${l} is greater than maxmimum allowed ${2}",
-                  ("l", limit)("2", MAX_BLOCKS_HISTORY_DEPTH));
+        FC_ASSERT(limit <= get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth,
+                  "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth));
         FC_ASSERT(limit > 0, "Limit must be greater than zero");
         FC_ASSERT(block_num >= limit, "block_num must be greater than limit");
 

@@ -16,7 +16,7 @@
 #include <scorum/blockchain_history/devcommittee_history_api.hpp>
 
 #include <scorum/protocol/operations.hpp>
-#include <scorum/common_api/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 
 #include "database_trx_integration.hpp"
 #include "devcommittee_fixture.hpp"

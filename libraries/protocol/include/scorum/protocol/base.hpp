@@ -6,6 +6,7 @@
 
 #include <fc/time.hpp>
 #include <fc/utf8.hpp>
+#include <fc/io/json.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -19,6 +20,15 @@ inline void validate_permlink(const std::string& permlink)
 {
     FC_ASSERT(permlink.size() < SCORUM_MAX_PERMLINK_LENGTH, "permlink is too long");
     FC_ASSERT(fc::is_utf8(permlink), "permlink not formatted in UTF8");
+}
+
+inline void validate_json_metadata(const std::string& json_metadata)
+{
+    if (!json_metadata.empty())
+    {
+        FC_ASSERT(fc::is_utf8(json_metadata), "JSON Metadata not formatted in UTF8");
+        FC_ASSERT(fc::json::is_valid(json_metadata), "JSON Metadata not valid JSON");
+    }
 }
 
 struct base_operation

@@ -165,7 +165,7 @@ void database_trx_integration_fixture::transfer(const std::string& from, const s
         trx.operations.push_back(op);
         trx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         trx.validate();
-        db.push_transaction(trx, default_skip);
+        db.push_transaction(trx, get_skip_flags());
         trx.operations.clear();
     }
     FC_CAPTURE_AND_RETHROW((from)(to)(amount))
@@ -185,7 +185,7 @@ void database_trx_integration_fixture::transfer_to_scorumpower(const std::string
         trx.operations.push_back(op);
         trx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         trx.validate();
-        db.push_transaction(trx, default_skip);
+        db.push_transaction(trx, get_skip_flags());
         trx.operations.clear();
     }
     FC_CAPTURE_AND_RETHROW((from)(to)(amount))
