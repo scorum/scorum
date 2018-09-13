@@ -87,6 +87,9 @@ public:
     bool allow_curation_rewards = true;
 
     fc::shared_vector<beneficiary_route_type> beneficiaries;
+
+    /// this field is 'true' if comment received any reward from child or itself (not only net_votes > 0)
+    bool rewarded = false;
 };
 
 /**
@@ -132,17 +135,23 @@ public:
     /// tracks the total payout this comment has received over time
     asset total_payout_value = asset(0, SymbolType);
 
+    /// the author payout this comment has received over time without from_children_payout_value
     asset author_payout_value = asset(0, SymbolType);
 
+    /// the curator payout this comment has received over time
     asset curator_payout_value = asset(0, SymbolType);
 
+    /// the beneficiary payout this comment has sent over time
     asset beneficiary_payout_value = asset(0, SymbolType);
 
-    /// the payout for the comment/post publication
-    asset comment_publication_reward = asset(0, SymbolType);
+    /// the part that taken from fund by this comment
+    asset fund_reward_value = asset(0, SymbolType);
 
-    /// the payout obtained from children comments' rewards
-    asset children_comments_reward = asset(0, SymbolType);
+    /// reward received from children comments as parent reward
+    asset from_children_payout_value = asset(0, SymbolType);
+
+    /// reward sent to parent  as parent reward
+    asset to_parent_payout_value = asset(0, SymbolType);
 };
 
 using comment_statistic_scr_object = comment_statistic_object<comment_statistic_scr_object_type, SCORUM_SYMBOL>;
@@ -155,6 +164,7 @@ struct by_root;
 struct by_parent;
 struct by_last_update;
 struct by_author_created;
+struct by_author_rewarded;
 
 typedef shared_multi_index_container<comment_object,
                                      indexed_by<
@@ -226,6 +236,24 @@ typedef shared_multi_index_container<comment_object,
                                                                              comment_id_type,
                                                                              &comment_object::id>>,
                                                         composite_key_compare<std::less<account_name_type>,
+                                                                              std::greater<time_point_sec>,
+                                                                              std::less<comment_id_type>>>,
+                                         ordered_unique<tag<by_author_rewarded>,
+                                                        composite_key<comment_object,
+                                                                      member<comment_object,
+                                                                             account_name_type,
+                                                                             &comment_object::author>,
+                                                                      member<comment_object,
+                                                                             bool,
+                                                                             &comment_object::rewarded>,
+                                                                      member<comment_object,
+                                                                             time_point_sec,
+                                                                             &comment_object::last_payout>,
+                                                                      member<comment_object,
+                                                                             comment_id_type,
+                                                                             &comment_object::id>>,
+                                                        composite_key_compare<std::less<account_name_type>,
+                                                                              std::greater<bool>,
                                                                               std::greater<time_point_sec>,
                                                                               std::less<comment_id_type>>>
 #endif
@@ -310,42 +338,73 @@ using comment_statistic_sp_index = comment_statistic_index<comment_statistic_sp_
 // clang-format off
 
 FC_REFLECT( scorum::chain::comment_object,
-             (id)(author)(permlink)
-             (category)(parent_author)(parent_permlink)
-             (title)(body)(json_metadata)(last_update)(created)(active)(last_payout)
-             (depth)(children)
-             (net_rshares)(abs_rshares)(vote_rshares)
-             (children_abs_rshares)(cashout_time)
-             (total_vote_weight)(net_votes)(root_comment)
-             (max_accepted_payout)(allow_replies)(allow_votes)(allow_curation_rewards)
-             (beneficiaries)
+            (id)
+            (author)
+            (permlink)
+            (category)
+            (parent_author)
+            (parent_permlink)
+            (title)
+            (body)
+            (json_metadata)
+            (last_update)
+            (created)
+            (active)
+            (last_payout)
+            (depth)
+            (children)
+            (net_rshares)
+            (abs_rshares)
+            (vote_rshares)
+            (children_abs_rshares)
+            (cashout_time)
+            (total_vote_weight)
+            (net_votes)
+            (root_comment)
+            (max_accepted_payout)
+            (allow_replies)
+            (allow_votes)
+            (allow_curation_rewards)
+            (beneficiaries)
+            (rewarded)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_object, scorum::chain::comment_index )
 
 FC_REFLECT( scorum::chain::comment_vote_object,
-             (id)(voter)(comment)(weight)(rshares)(vote_percent)(last_update)(num_changes)
+            (id)
+            (voter)
+            (comment)
+            (weight)
+            (rshares)
+            (vote_percent)
+            (last_update)
+            (num_changes)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_vote_object, scorum::chain::comment_vote_index )
 
 FC_REFLECT( scorum::chain::comment_statistic_scr_object,
-             (id)(comment)
+            (id)
+            (comment)
             (total_payout_value)
             (author_payout_value)
             (curator_payout_value)
             (beneficiary_payout_value)
-            (comment_publication_reward)
-            (children_comments_reward)
+            (fund_reward_value)
+            (from_children_payout_value)
+            (to_parent_payout_value)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_statistic_scr_object, scorum::chain::comment_statistic_scr_index )
 
 FC_REFLECT( scorum::chain::comment_statistic_sp_object,
-             (id)(comment)
+            (id)
+            (comment)
             (total_payout_value)
             (author_payout_value)
             (curator_payout_value)
             (beneficiary_payout_value)
-            (comment_publication_reward)
-            (children_comments_reward)
+            (fund_reward_value)
+            (from_children_payout_value)
+            (to_parent_payout_value)
           )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::comment_statistic_sp_object, scorum::chain::comment_statistic_sp_index )
 
