@@ -43,6 +43,7 @@ struct get_post_comments_by_author_fixture : public database_fixture::tags_fixtu
     struct test_case_1
     {
         comment_op alice_post;
+        comment_op sam_post;
         comment_op sam_comment;
         comment_op dave_comment;
         comment_op bob_post;
@@ -51,17 +52,20 @@ struct get_post_comments_by_author_fixture : public database_fixture::tags_fixtu
     // test case #1:
     //--------------
     //  'Alice' create post
+    //  'Sam' create post
     //  'Sam' create comment for 'Alice' post
     //  'Dave' create comment for 'Sam' comment
     //  'Sam' and 'Dave' vote for 'Sam' comment
+    //  'Alice' vote for 'Sam' post
     //  'Bob' create post
     //  'Alice' vote for 'Bob' post
     //  -conclusion-
-    //      rewarded 'Alice' post, 'Sam' comment, 'Bob' post.
+    //      rewarded 'Alice' post, 'Sam' post&comment, 'Bob' post.
     //      'Dave' comment is not rewarded
     test_case_1 create_test_case_1()
     {
         auto p_1 = create_post(alice).set_json(default_metadata).in_block();
+        auto p_2 = create_post(sam).set_json(default_metadata).in_block(SCORUM_MIN_ROOT_COMMENT_INTERVAL);
 
         auto c_level1 = p_1.create_comment(sam).in_block();
         auto c_level2 = c_level1.create_comment(dave).in_block();
@@ -70,11 +74,12 @@ struct get_post_comments_by_author_fixture : public database_fixture::tags_fixtu
 
         c_level1.vote(sam).in_block(SCORUM_MIN_VOTE_INTERVAL_SEC);
         c_level1.vote(dave).in_block(SCORUM_MIN_VOTE_INTERVAL_SEC);
-
-        auto p_2 = create_post(bob).set_json(default_metadata).in_block();
         p_2.vote(alice).in_block(SCORUM_MIN_VOTE_INTERVAL_SEC);
 
-        return { p_1, c_level1, c_level2, p_2 };
+        auto p_3 = create_post(bob).set_json(default_metadata).in_block();
+        p_3.vote(alice).in_block(SCORUM_MIN_VOTE_INTERVAL_SEC);
+
+        return { p_1, p_2, c_level1, c_level2, p_3 };
     }
 
     std::string default_metadata
@@ -127,17 +132,13 @@ SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_cashout_reached_check)
 
     generate_blocks(start + SCORUM_CASHOUT_WINDOW_SECONDS);
 
-    const auto& bob_stat_step1
-        = statistic.get(comments.get(test_case_step1.bob_post.author(), test_case_step1.bob_post.permlink()).id);
-    const auto& bob_stat_step2
-        = statistic.get(comments.get(test_case_step2.bob_post.author(), test_case_step2.bob_post.permlink()).id);
+    const auto& bob_post_1 = comments.get(test_case_step1.bob_post.author(), test_case_step1.bob_post.permlink());
+    const auto& bob_post_2 = comments.get(test_case_step2.bob_post.author(), test_case_step2.bob_post.permlink());
+    const auto& bob_stat_step1 = statistic.get(bob_post_1.id);
+    const auto& bob_stat_step2 = statistic.get(bob_post_2.id);
 
-    BOOST_REQUIRE_EQUAL(comments.get(test_case_step1.bob_post.author(), test_case_step1.bob_post.permlink())
-                            .cashout_time.to_iso_string(),
-                        fc::time_point_sec::maximum().to_iso_string());
-    BOOST_REQUIRE_NE(comments.get(test_case_step2.bob_post.author(), test_case_step2.bob_post.permlink())
-                         .cashout_time.to_iso_string(),
-                     fc::time_point_sec::maximum().to_iso_string());
+    BOOST_REQUIRE_EQUAL(bob_post_1.cashout_time.to_iso_string(), fc::time_point_sec::maximum().to_iso_string());
+    BOOST_REQUIRE_NE(bob_post_2.cashout_time.to_iso_string(), fc::time_point_sec::maximum().to_iso_string());
 
     BOOST_REQUIRE_GT(bob_stat_step1.total_payout_value, ASSET_NULL_SP);
     BOOST_REQUIRE_GT(bob_stat_step1.author_payout_value, ASSET_NULL_SP);
@@ -148,113 +149,113 @@ SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_cashout_reached_check)
     result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "bob" });
 
     BOOST_REQUIRE_EQUAL(result.size(), 1u);
-
-    BOOST_CHECK(std::find_if(std::begin(result), std::end(result),
-                             [&](const api::discussion& d) {
-                                 return d.author == test_case_step1.bob_post.author()
-                                     && d.permlink == test_case_step1.bob_post.permlink();
-                             })
-                != result.end());
+    BOOST_CHECK_EQUAL(result[0].author, test_case_step1.bob_post.author());
+    BOOST_CHECK_EQUAL(result[0].permlink, test_case_step1.bob_post.permlink());
 
     SCORUM_MESSAGE("-- Check second post of 'Bob' cashout");
 
     generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
-    BOOST_REQUIRE_EQUAL(comments.get(test_case_step2.bob_post.author(), test_case_step2.bob_post.permlink())
-                            .cashout_time.to_iso_string(),
-                        fc::time_point_sec::maximum().to_iso_string());
+    BOOST_REQUIRE_EQUAL(bob_post_2.cashout_time.to_iso_string(), fc::time_point_sec::maximum().to_iso_string());
 
     result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "bob" });
 
     BOOST_REQUIRE_EQUAL(result.size(), 2u);
-
-    BOOST_CHECK(std::find_if(std::begin(result), std::end(result),
-                             [&](const api::discussion& d) {
-                                 return d.author == test_case_step1.bob_post.author()
-                                     && d.permlink == test_case_step1.bob_post.permlink();
-                             })
-                != result.end());
-    BOOST_CHECK(std::find_if(std::begin(result), std::end(result),
-                             [&](const api::discussion& d) {
-                                 return d.author == test_case_step2.bob_post.author()
-                                     && d.permlink == test_case_step2.bob_post.permlink();
-                             })
-                != result.end());
+    BOOST_CHECK_EQUAL(result[0].author, test_case_step2.bob_post.author());
+    BOOST_CHECK_EQUAL(result[0].permlink, test_case_step2.bob_post.permlink());
+    BOOST_CHECK_EQUAL(result[1].author, test_case_step1.bob_post.author());
+    BOOST_CHECK_EQUAL(result[1].permlink, test_case_step1.bob_post.permlink());
 
     SCORUM_MESSAGE("-- Check 'Bob's discussions are sorted");
 
     BOOST_CHECK(std::is_sorted(begin(result), end(result), [](const api::discussion& lhs, const api::discussion& rhs) {
-        return lhs.created > rhs.created;
+        return lhs.last_payout > rhs.last_payout;
     }));
 }
 
-SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_rewarded_check)
+SCORUM_TEST_CASE(get_post_comments_by_author_should_return_rewarded_post)
 {
     auto test_case = create_test_case_1();
 
-    auto result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "dave" });
+    auto result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "bob" });
 
     BOOST_REQUIRE(result.empty());
 
     generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
-    const auto& dave_stat
-        = statistic.get(comments.get(test_case.dave_comment.author(), test_case.dave_comment.permlink()).id);
-    const auto& bob_stat = statistic.get(comments.get(test_case.bob_post.author(), test_case.bob_post.permlink()).id);
+    const auto& bob_post = comments.get(test_case.bob_post.author(), test_case.bob_post.permlink());
+    const auto& bob_stat = statistic.get(bob_post.id);
 
-    BOOST_REQUIRE_EQUAL(
-        comments.get(test_case.dave_comment.author(), test_case.dave_comment.permlink()).cashout_time.to_iso_string(),
-        fc::time_point_sec::maximum().to_iso_string());
-    BOOST_REQUIRE_EQUAL(
-        comments.get(test_case.bob_post.author(), test_case.bob_post.permlink()).cashout_time.to_iso_string(),
-        fc::time_point_sec::maximum().to_iso_string());
+    BOOST_REQUIRE_EQUAL(bob_post.cashout_time.to_iso_string(), fc::time_point_sec::maximum().to_iso_string());
 
-    BOOST_REQUIRE_EQUAL(dave_stat.total_payout_value, ASSET_NULL_SP);
     BOOST_REQUIRE_GT(bob_stat.total_payout_value, ASSET_NULL_SP);
     BOOST_REQUIRE_GT(bob_stat.author_payout_value, ASSET_NULL_SP);
-
-    result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "dave" });
-
-    BOOST_REQUIRE(result.empty());
 
     result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "bob" });
 
     BOOST_REQUIRE_EQUAL(result.size(), 1u);
-
-    BOOST_CHECK(std::find_if(std::begin(result), std::end(result),
-                             [&](const api::discussion& d) {
-                                 return d.author == test_case.bob_post.author()
-                                     && d.permlink == test_case.bob_post.permlink();
-                             })
-                != result.end());
+    BOOST_CHECK_EQUAL(result[0].author, test_case.bob_post.author());
+    BOOST_CHECK_EQUAL(result[0].permlink, test_case.bob_post.permlink());
 }
 
-SCORUM_TEST_CASE(get_post_comments_by_author_not_empty_if_rewarded_by_children_check)
+SCORUM_TEST_CASE(get_post_comments_by_author_should_return_rewarded_post_and_comment)
 {
     auto test_case = create_test_case_1();
 
-    auto result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "alice" });
+    auto result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "sam" });
 
     BOOST_REQUIRE(result.empty());
 
     generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
-    const auto& alice_stat
-        = statistic.get(comments.get(test_case.alice_post.author(), test_case.alice_post.permlink()).id);
+    const auto& sam_comment = comments.get(test_case.sam_comment.author(), test_case.sam_comment.permlink());
+    const auto& sam_post = comments.get(test_case.sam_post.author(), test_case.sam_post.permlink());
+    const auto& sam_comment_stat = statistic.get(sam_comment.id);
+    const auto& sam_post_stat = statistic.get(sam_post.id);
 
-    BOOST_REQUIRE_GT(alice_stat.total_payout_value, ASSET_NULL_SP);
-    BOOST_REQUIRE_EQUAL(alice_stat.author_payout_value, ASSET_NULL_SP);
+    BOOST_REQUIRE_EQUAL(sam_comment.cashout_time.to_iso_string(), fc::time_point_sec::maximum().to_iso_string());
+    BOOST_REQUIRE_EQUAL(sam_post.cashout_time.to_iso_string(), fc::time_point_sec::maximum().to_iso_string());
+
+    BOOST_REQUIRE_GT(sam_comment_stat.total_payout_value, ASSET_NULL_SP);
+    BOOST_REQUIRE_GT(sam_post_stat.total_payout_value, ASSET_NULL_SP);
+
+    result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "sam" });
+
+    BOOST_REQUIRE_EQUAL(result.size(), 2);
+    BOOST_CHECK_EQUAL(result[0].author, test_case.sam_post.author());
+    BOOST_CHECK_EQUAL(result[0].permlink, test_case.sam_post.permlink());
+    BOOST_CHECK_EQUAL(result[1].author, test_case.sam_comment.author());
+    BOOST_CHECK_EQUAL(result[1].permlink, test_case.sam_comment.permlink());
+}
+
+SCORUM_TEST_CASE(check_ordering_by_last_payout)
+{
+    auto p_1 = create_post(alice).set_json(default_metadata).in_block(SCORUM_MIN_ROOT_COMMENT_INTERVAL);
+    generate_block();
+    auto p_2 = create_post(alice).set_json(default_metadata).in_block(SCORUM_MIN_ROOT_COMMENT_INTERVAL);
+
+    p_1.vote(dave).in_block(SCORUM_MIN_VOTE_INTERVAL_SEC);
+    generate_block();
+    p_2.vote(dave).in_block(SCORUM_MIN_VOTE_INTERVAL_SEC);
+
+    // p_1 & p_2 cashout
+    generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
+
+    auto result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "alice" });
+    BOOST_REQUIRE_EQUAL(result.size(), 2);
+    BOOST_CHECK_EQUAL(result[0].permlink, p_1.permlink());
+    BOOST_CHECK_EQUAL(result[1].permlink, p_2.permlink());
+
+    auto c_1 = p_2.create_comment(dave).in_block();
+    c_1.vote(dave).in_block(SCORUM_MIN_VOTE_INTERVAL_SEC);
+
+    // c_1 cashout (p_2 will also rewarded)
+    generate_blocks(db.head_block_time() + SCORUM_CASHOUT_WINDOW_SECONDS);
 
     result = _api.get_paid_posts_comments_by_author(discussion_query_wrapper{ "alice" });
-
-    BOOST_REQUIRE_EQUAL(result.size(), 1u);
-
-    BOOST_CHECK(std::find_if(std::begin(result), std::end(result),
-                             [&](const api::discussion& d) {
-                                 return d.author == test_case.alice_post.author()
-                                     && d.permlink == test_case.alice_post.permlink();
-                             })
-                != result.end());
+    BOOST_REQUIRE_EQUAL(result.size(), 2);
+    BOOST_CHECK_EQUAL(result[0].permlink, p_2.permlink());
+    BOOST_CHECK_EQUAL(result[1].permlink, p_1.permlink());
 }
 
 SCORUM_TEST_CASE(get_post_comments_by_author_pagination_for_rewarded_check)
@@ -280,7 +281,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_pagination_for_rewarded_check)
 
     BOOST_CHECK(std::is_sorted(
         begin(result_page1), end(result_page1),
-        [](const api::discussion& lhs, const api::discussion& rhs) { return lhs.created > rhs.created; }));
+        [](const api::discussion& lhs, const api::discussion& rhs) { return lhs.last_payout > rhs.last_payout; }));
 
     auto result_page2 = _api.get_paid_posts_comments_by_author(
         discussion_query_wrapper{ "bob", result_page1.rbegin()->permlink, page_size + 1 });
@@ -293,7 +294,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_pagination_for_rewarded_check)
 
     BOOST_CHECK(std::is_sorted(
         begin(result_page2), end(result_page2),
-        [](const api::discussion& lhs, const api::discussion& rhs) { return lhs.created > rhs.created; }));
+        [](const api::discussion& lhs, const api::discussion& rhs) { return lhs.last_payout > rhs.last_payout; }));
 
     decltype(result_page1) result;
 
@@ -305,7 +306,7 @@ SCORUM_TEST_CASE(get_post_comments_by_author_pagination_for_rewarded_check)
     BOOST_REQUIRE_EQUAL(result.size(), page_size * 2);
 
     BOOST_CHECK(std::is_sorted(begin(result), end(result), [](const api::discussion& lhs, const api::discussion& rhs) {
-        return lhs.created > rhs.created;
+        return lhs.last_payout > rhs.last_payout;
     }));
 }
 #endif //! IS_LOW_MEM
