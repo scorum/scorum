@@ -8,8 +8,7 @@
 
 namespace scorum {
 namespace chain {
-create_game_evaluator::create_game_evaluator(data_service_factory_i& services,
-                                             betting::betting_service_i& betting_service)
+create_game_evaluator::create_game_evaluator(data_service_factory_i& services, betting_service_i& betting_service)
     : evaluator_impl<data_service_factory_i, create_game_evaluator>(services)
     , _account_service(services.account_service())
     , _dprops_service(services.dynamic_global_property_service())

@@ -7,9 +7,7 @@
 namespace betting_service_tests {
 
 using namespace scorum::chain;
-using namespace scorum::chain::betting;
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 
 struct betting_service_fixture : public betting_common::betting_service_fixture_impl
 {
@@ -48,13 +46,13 @@ SCORUM_TEST_CASE(create_bet_positive_check)
 SCORUM_TEST_CASE(create_bet_negative_check)
 {
     BOOST_CHECK_THROW(
-        service.create_bet("alice", test_bet_game, goal_home_yes(), odds::from_string("10/1"), ASSET_SP(1e+9)),
+        service.create_bet("alice", test_bet_game, goal_home::yes(), odds::from_string("10/1"), ASSET_SP(1e+9)),
         fc::exception);
     BOOST_CHECK_THROW(
-        service.create_bet("alice", test_bet_game, goal_home_yes(), odds::from_string("10/1"), ASSET_NULL_SCR),
+        service.create_bet("alice", test_bet_game, goal_home::yes(), odds::from_string("10/1"), ASSET_NULL_SCR),
         fc::exception);
     BOOST_CHECK_THROW(
-        service.create_bet("alice", test_bet_game, goal_home_yes(), odds::from_string("10/1"), ASSET_NULL_SP),
+        service.create_bet("alice", test_bet_game, goal_home::yes(), odds::from_string("10/1"), ASSET_NULL_SP),
         fc::exception);
 }
 

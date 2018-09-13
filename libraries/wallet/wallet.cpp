@@ -3104,12 +3104,8 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
     return result;
 }
 
-annotated_signed_transaction wallet_api::post_bet(account_name_type better,
-                                                  int64_t game_id,
-                                                  betting::wincase_type wincase,
-                                                  odds_input odds,
-                                                  asset stake,
-                                                  const bool broadcast)
+annotated_signed_transaction wallet_api::post_bet(
+    account_name_type better, int64_t game_id, wincase_type wincase, odds_input odds, asset stake, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 

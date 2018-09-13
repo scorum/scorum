@@ -1,213 +1,183 @@
 #pragma once
+#include <fc/static_variant.hpp>
 #include <scorum/protocol/betting/wincase.hpp>
-#include <scorum/protocol/betting/wincase_comparison.hpp>
-
-#include <boost/fusion/container.hpp>
-#include <boost/fusion/algorithm/iteration/for_each.hpp>
-#include <boost/fusion/include/for_each.hpp>
-#include <boost/container/flat_set.hpp>
-
-#include <scorum/utils/static_variant_serialization.hpp>
+#include <scorum/protocol/betting/market_kind.hpp>
+#include <scorum/protocol/config.hpp>
 
 namespace scorum {
 namespace protocol {
-namespace betting {
 
-/// This check if strict_wincase_pair_type has valid market kind
-template <typename WincasePair> constexpr bool check_market_kind(market_kind kind, const WincasePair&)
+template <market_kind kind, typename tag = void> struct over_under_market
 {
-    // Only one check for left_wincase is necessary because strict_wincase_pair_type type
-    // guarantees that left_wincase and right_wincase have the same market kind
-    return kind == WincasePair::left_wincase::kind_v;
-}
+    int16_t threshold;
 
-template <typename WincasePair, typename... WincasePairs>
-constexpr bool check_market_kind(market_kind kind, const WincasePair& first, const WincasePairs&... ws)
-{
-    return check_market_kind(kind, first) && check_market_kind(kind, ws...);
-}
+    template <bool site> using wincase = over_under_wincase<site, kind, tag>;
+    using over = wincase<true>;
+    using under = wincase<false>;
+    static constexpr market_kind kind_v = kind;
 
-using wincase_pairs_type = fc::flat_set<wincase_pair>;
-
-template <class Implementation, market_kind Kind, typename... Wincases> struct base_market_type
-{
-    static_assert(check_market_kind(Kind, Wincases{}...), "All wincases should have same market kind");
-
-    static constexpr market_kind kind = Kind;
-
-    wincase_pairs_type create_wincase_pairs() const
+    bool has_trd_state() const
     {
-        wincase_pairs_type result;
-        boost::fusion::set<Wincases...> wincase_ps;
-        boost::fusion::for_each(wincase_ps, [&](auto wp) {
-            auto wl = static_cast<const Implementation*>(this)->create_wincase(decltype(wp){});
-            result.emplace(wincase_type(wl), wincase_type(wl.create_opposite()));
-        });
-        return result;
+        return threshold % SCORUM_BETTING_THRESHOLD_FACTOR == 0;
     }
-
-protected:
-    base_market_type() = default;
 };
 
-template <market_kind Kind, typename... Wincases>
-struct base_market_without_parameters_type
-    : public base_market_type<base_market_without_parameters_type<Kind, Wincases...>, Kind, Wincases...>
+template <market_kind kind, typename tag = void> struct score_yes_no_market
 {
-    base_market_without_parameters_type() = default;
+    uint16_t home;
+    uint16_t away;
 
-    template <typename WincasePair> auto create_wincase(WincasePair&&) const
-    {
-        typename WincasePair::left_wincase result{};
-        return result;
-    }
+    template <bool site> using wincase = score_yes_no_wincase<site, kind, tag>;
+    using yes = wincase<true>;
+    using no = wincase<false>;
+    static constexpr market_kind kind_v = kind;
 
-    bool less(const base_market_without_parameters_type<Kind, Wincases...>&) const
+    bool has_trd_state() const
     {
         return false;
     }
 };
 
-template <market_kind Kind, typename... Wincases>
-struct base_market_with_threshold_type
-    : public base_market_type<base_market_with_threshold_type<Kind, Wincases...>, Kind, Wincases...>
+template <market_kind kind, typename tag = void> struct yes_no_market
 {
-    threshold_type::value_type threshold = 0;
+    template <bool site> using wincase = yes_no_wincase<site, kind, tag>;
+    using yes = wincase<true>;
+    using no = wincase<false>;
+    static constexpr market_kind kind_v = kind;
 
-    base_market_with_threshold_type() = default;
-
-    base_market_with_threshold_type(const threshold_type::value_type threshold_)
-        : threshold(threshold_)
+    bool has_trd_state() const
     {
-    }
-
-    template <typename WincasePair> auto create_wincase(WincasePair&&) const
-    {
-        typename WincasePair::left_wincase result{ threshold };
-        return result;
-    }
-
-    bool less(const base_market_with_threshold_type<Kind, Wincases...>& other) const
-    {
-        return threshold < other.threshold;
+        return false;
     }
 };
 
-template <market_kind Kind, typename... Wincases>
-struct base_market_with_score_type
-    : public base_market_type<base_market_with_score_type<Kind, Wincases...>, Kind, Wincases...>
-{
-    uint16_t home = 0;
-    uint16_t away = 0;
+struct home_tag;
+struct away_tag;
+struct draw_tag;
+struct both_tag;
 
-    base_market_with_score_type() = default;
+using result_home = yes_no_market<market_kind::result, home_tag>;
+using result_draw = yes_no_market<market_kind::result, draw_tag>;
+using result_away = yes_no_market<market_kind::result, away_tag>;
 
-    base_market_with_score_type(const int16_t home_, const int16_t away_)
-        : home(home_)
-        , away(away_)
-    {
-    }
+using round_home = yes_no_market<market_kind::round>;
 
-    template <typename WincasePair> auto create_wincase(WincasePair&&) const
-    {
-        typename WincasePair::left_wincase result{ home, away };
-        return result;
-    }
+using handicap = over_under_market<market_kind::handicap>;
 
-    bool less(const base_market_with_score_type<Kind, Wincases...>& other) const
-    {
-        return std::tie(home, away) < std::tie(other.home, other.away);
-    }
-};
+using correct_score_home = yes_no_market<market_kind::correct_score, home_tag>;
+using correct_score_draw = yes_no_market<market_kind::correct_score, draw_tag>;
+using correct_score_away = yes_no_market<market_kind::correct_score, away_tag>;
+using correct_score = score_yes_no_market<market_kind::correct_score>;
 
-// it can be set separately
-using result_home_market
-    = base_market_without_parameters_type<market_kind::result, WINCASE(result_home, result_draw_away)>;
+using goal_home = yes_no_market<market_kind::goal, home_tag>;
+using goal_both = yes_no_market<market_kind::goal, both_tag>;
+using goal_away = yes_no_market<market_kind::goal, away_tag>;
 
-using result_draw_market
-    = base_market_without_parameters_type<market_kind::result, WINCASE(result_draw, result_home_away)>;
+using total = over_under_market<market_kind::total>;
 
-using result_away_market
-    = base_market_without_parameters_type<market_kind::result, WINCASE(result_away, result_home_draw)>;
+using total_goals_home = over_under_market<market_kind::total_goals, home_tag>;
+using total_goals_away = over_under_market<market_kind::total_goals, away_tag>;
 
-using round_market = base_market_without_parameters_type<market_kind::round, WINCASE(round_home, round_away)>;
+using market_type = fc::static_variant<result_home,
+                                       result_draw,
+                                       result_away,
+                                       round_home,
+                                       handicap,
+                                       correct_score_home,
+                                       correct_score_draw,
+                                       correct_score_away,
+                                       correct_score,
+                                       goal_home,
+                                       goal_both,
+                                       goal_away,
+                                       total,
+                                       total_goals_home,
+                                       total_goals_away>;
 
-using handicap_market
-    = base_market_with_threshold_type<market_kind::handicap, WINCASE(handicap_home_over, handicap_home_under)>;
+using wincase_type = fc::static_variant<result_home::yes,
+                                        result_home::no,
+                                        result_draw::yes,
+                                        result_draw::no,
+                                        result_away::yes,
+                                        result_away::no,
+                                        round_home::yes,
+                                        round_home::no,
+                                        handicap::over,
+                                        handicap::under,
+                                        correct_score_home::yes,
+                                        correct_score_home::no,
+                                        correct_score_draw::yes,
+                                        correct_score_draw::no,
+                                        correct_score_away::yes,
+                                        correct_score_away::no,
+                                        correct_score::yes,
+                                        correct_score::no,
+                                        goal_home::yes,
+                                        goal_home::no,
+                                        goal_both::yes,
+                                        goal_both::no,
+                                        goal_away::yes,
+                                        goal_away::no,
+                                        total::over,
+                                        total::under,
+                                        total_goals_home::over,
+                                        total_goals_home::under,
+                                        total_goals_away::over,
+                                        total_goals_away::under>;
 
-// or grouped together
-using correct_score_market
-    = base_market_without_parameters_type<market_kind::correct_score,
-                                          WINCASE(correct_score_home_yes, correct_score_home_no),
-                                          WINCASE(correct_score_draw_yes, correct_score_draw_no),
-                                          WINCASE(correct_score_away_yes, correct_score_away_no)>;
-
-using correct_score_parametrized_market
-    = base_market_with_score_type<market_kind::correct_score, WINCASE(correct_score_yes, correct_score_no)>;
-
-using goal_market = base_market_without_parameters_type<market_kind::goal,
-                                                        WINCASE(goal_home_yes, goal_home_no),
-                                                        WINCASE(goal_both_yes, goal_both_no),
-                                                        WINCASE(goal_away_yes, goal_away_no)>;
-
-using total_market = base_market_with_threshold_type<market_kind::total, WINCASE(total_over, total_under)>;
-
-using total_goals_market = base_market_with_threshold_type<market_kind::total_goals,
-                                                           WINCASE(total_goals_home_over, total_goals_home_under),
-                                                           WINCASE(total_goals_away_over, total_goals_away_under)>;
-
-using market_type = fc::static_variant<result_home_market,
-                                       result_draw_market,
-                                       result_away_market,
-                                       round_market,
-                                       handicap_market,
-                                       correct_score_market,
-                                       correct_score_parametrized_market,
-                                       goal_market,
-                                       total_market,
-                                       total_goals_market>;
-}
-}
-}
-
-namespace fc {
-inline void to_variant(const scorum::protocol::betting::market_type& market, fc::variant& var)
-{
-    scorum::utils::to_variant(market, var);
-}
-inline void from_variant(const fc::variant& var, scorum::protocol::betting::market_type& market)
-{
-    scorum::utils::from_variant(var, market);
+std::pair<wincase_type, wincase_type> create_wincases(const market_type& market);
+wincase_type create_opposite(const wincase_type& wincase);
+bool has_trd_state(const market_type& market);
+bool match_wincases(const wincase_type& lhs, const wincase_type& rhs);
 }
 }
 
-namespace std {
-using namespace scorum::protocol::betting;
-template <> struct less<market_type>
-{
-    bool operator()(const market_type& lhs, const market_type& rhs) const
-    {
-        auto tagl = lhs.which();
-        auto tagr = rhs.which();
+#include <scorum/protocol/betting/wincase_comparison.hpp>
+#include <scorum/protocol/betting/market_comparison.hpp>
 
-        return tagl < tagr || (!(tagr < tagl) && less_equal_types(lhs, rhs));
-    }
+FC_REFLECT_EMPTY(scorum::protocol::result_home)
+FC_REFLECT_EMPTY(scorum::protocol::result_draw)
+FC_REFLECT_EMPTY(scorum::protocol::result_away)
+FC_REFLECT_EMPTY(scorum::protocol::round_home)
+FC_REFLECT(scorum::protocol::handicap, (threshold))
+FC_REFLECT_EMPTY(scorum::protocol::correct_score_home)
+FC_REFLECT_EMPTY(scorum::protocol::correct_score_draw)
+FC_REFLECT_EMPTY(scorum::protocol::correct_score_away)
+FC_REFLECT(scorum::protocol::correct_score, (home)(away))
+FC_REFLECT_EMPTY(scorum::protocol::goal_home)
+FC_REFLECT_EMPTY(scorum::protocol::goal_both)
+FC_REFLECT_EMPTY(scorum::protocol::goal_away)
+FC_REFLECT(scorum::protocol::total, (threshold))
+FC_REFLECT(scorum::protocol::total_goals_home, (threshold))
+FC_REFLECT(scorum::protocol::total_goals_away, (threshold))
 
-    bool less_equal_types(const market_type& lhs, const market_type& rhs) const
-    {
-        FC_ASSERT(lhs.which() == rhs.which());
-        return lhs.visit([&](const auto& l) -> bool { return l.less(rhs.get<std::decay_t<decltype(l)>>()); });
-    }
-};
-}
-
-FC_REFLECT_EMPTY(scorum::protocol::betting::result_home_market)
-FC_REFLECT_EMPTY(scorum::protocol::betting::result_draw_market)
-FC_REFLECT_EMPTY(scorum::protocol::betting::result_away_market)
-FC_REFLECT_EMPTY(scorum::protocol::betting::round_market)
-FC_REFLECT(scorum::protocol::betting::handicap_market, (threshold))
-FC_REFLECT_EMPTY(scorum::protocol::betting::correct_score_market)
-FC_REFLECT(scorum::protocol::betting::correct_score_parametrized_market, (home)(away))
-FC_REFLECT_EMPTY(scorum::protocol::betting::goal_market)
-FC_REFLECT(scorum::protocol::betting::total_market, (threshold))
-FC_REFLECT(scorum::protocol::betting::total_goals_market, (threshold))
+FC_REFLECT_EMPTY(scorum::protocol::result_home::yes)
+FC_REFLECT_EMPTY(scorum::protocol::result_home::no)
+FC_REFLECT_EMPTY(scorum::protocol::result_draw::yes)
+FC_REFLECT_EMPTY(scorum::protocol::result_draw::no)
+FC_REFLECT_EMPTY(scorum::protocol::result_away::yes)
+FC_REFLECT_EMPTY(scorum::protocol::result_away::no)
+FC_REFLECT_EMPTY(scorum::protocol::round_home::yes)
+FC_REFLECT_EMPTY(scorum::protocol::round_home::no)
+FC_REFLECT(scorum::protocol::handicap::over, (threshold))
+FC_REFLECT(scorum::protocol::handicap::under, (threshold))
+FC_REFLECT_EMPTY(scorum::protocol::correct_score_home::yes)
+FC_REFLECT_EMPTY(scorum::protocol::correct_score_home::no)
+FC_REFLECT_EMPTY(scorum::protocol::correct_score_draw::yes)
+FC_REFLECT_EMPTY(scorum::protocol::correct_score_draw::no)
+FC_REFLECT_EMPTY(scorum::protocol::correct_score_away::yes)
+FC_REFLECT_EMPTY(scorum::protocol::correct_score_away::no)
+FC_REFLECT(scorum::protocol::correct_score::yes, (home)(away))
+FC_REFLECT(scorum::protocol::correct_score::no, (home)(away))
+FC_REFLECT_EMPTY(scorum::protocol::goal_home::yes)
+FC_REFLECT_EMPTY(scorum::protocol::goal_home::no)
+FC_REFLECT_EMPTY(scorum::protocol::goal_both::yes)
+FC_REFLECT_EMPTY(scorum::protocol::goal_both::no)
+FC_REFLECT_EMPTY(scorum::protocol::goal_away::yes)
+FC_REFLECT_EMPTY(scorum::protocol::goal_away::no)
+FC_REFLECT(scorum::protocol::total::over, (threshold))
+FC_REFLECT(scorum::protocol::total::under, (threshold))
+FC_REFLECT(scorum::protocol::total_goals_home::over, (threshold))
+FC_REFLECT(scorum::protocol::total_goals_home::under, (threshold))
+FC_REFLECT(scorum::protocol::total_goals_away::over, (threshold))
+FC_REFLECT(scorum::protocol::total_goals_away::under, (threshold))

@@ -8,9 +8,7 @@
 namespace bet_evaluators_tests {
 
 using namespace scorum::chain;
-using namespace scorum::chain::betting;
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 
 struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fixture_impl
 {
@@ -24,7 +22,7 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
 
         test_op.better = better.name;
         test_op.game_id = game.id._id;
-        test_op.wincase = correct_score_home_yes();
+        test_op.wincase = correct_score_home::yes();
         test_op.odds = { 3, 1 };
         test_op.stake = better.scr_amount;
     }
@@ -113,7 +111,7 @@ SCORUM_TEST_CASE(post_bet_evaluator_negative_check)
     });
 
     op.game_id += 2;
-    op.wincase = handicap_home_over{};
+    op.wincase = handicap::over{};
     BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
 }
 
@@ -149,7 +147,7 @@ struct cancel_pending_bets_evaluator_fixture : public betting_common::betting_ev
         const auto& bet1 = bets.create([&](bet_object& obj) {
             obj.better = better.name;
             obj.game = game.id;
-            obj.wincase = correct_score_home_yes();
+            obj.wincase = correct_score_home::yes();
             obj.odds_value = odds(10, 3);
             obj.stake = bet1_rest_stake;
             obj.rest_stake = bet1_rest_stake;
@@ -157,7 +155,7 @@ struct cancel_pending_bets_evaluator_fixture : public betting_common::betting_ev
         const auto& bet2 = bets.create([&](bet_object& obj) {
             obj.better = better.name;
             obj.game = game.id;
-            obj.wincase = correct_score_draw_yes();
+            obj.wincase = correct_score_draw::yes();
             obj.odds_value = odds(10, 3);
             obj.stake = bet1_rest_stake;
             obj.rest_stake = bet2_rest_stake;

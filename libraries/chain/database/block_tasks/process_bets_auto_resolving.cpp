@@ -12,8 +12,7 @@ namespace scorum {
 namespace chain {
 namespace database_ns {
 
-process_bets_auto_resolving::process_bets_auto_resolving(scorum::chain::betting::betting_service_i& betting_svc,
-                                                         scorum::chain::betting::betting_resolver_i& resolver)
+process_bets_auto_resolving::process_bets_auto_resolving(betting_service_i& betting_svc, betting_resolver_i& resolver)
     : _betting_svc(betting_svc)
     , _resolver(resolver)
 {

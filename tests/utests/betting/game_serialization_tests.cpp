@@ -4,8 +4,7 @@
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/betting/wincase.hpp>
-#include <scorum/protocol/betting/wincase_serialization.hpp>
-#include <scorum/protocol/betting/game_serialization.hpp>
+#include <scorum/protocol/betting/betting_serialization.hpp>
 
 #include <defines.hpp>
 #include <iostream>
@@ -13,7 +12,6 @@
 namespace {
 using namespace scorum;
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 
 struct game_serialization_test_fixture
 {
@@ -40,106 +38,57 @@ struct game_serialization_test_fixture
         return op;
     }
 
-    // clang-format off
-    fc::string markets_json = R"(
-                              "markets": [
-                                [
-                                  "result_home_market",
-                                  {}
-                                ],
-                                [
-                                  "result_draw_market",
-                                  {}
-                                ],
-                                [
-                                  "result_away_market",
-                                  {}
-                                ],
-                                [
-                                  "round_market",
-                                  {}
-                                ],
-                                [
-                                  "handicap_market",
-                                  {
-                                    "threshold": -500
-                                  }
-                                ],
-                                [
-                                  "handicap_market",
-                                  {
-                                    "threshold": 0
-                                  }
-                                ],
-                                [
-                                  "handicap_market",
-                                  {
-                                    "threshold": 1000
-                                  }
-                                ],
-                                [
-                                  "correct_score_market",
-                                  {}
-                                ],
-                                [
-                                  "correct_score_parametrized_market",
-                                  {
-                                    "home": 1,
-                                    "away": 0
-                                  }
-                                ],
-                                [
-                                  "correct_score_parametrized_market",
-                                  {
-                                    "home": 1,
-                                    "away": 1
-                                  }
-                                ],
-                                [
-                                  "goal_market",
-                                  {}
-                                ],
-                                [
-                                  "total_market",
-                                  {
-                                    "threshold": 0
-                                  }
-                                ],
-                                [
-                                  "total_market",
-                                  {
-                                    "threshold": 500
-                                  }
-                                ],
-                                [
-                                  "total_market",
-                                  {
-                                    "threshold": 1000
-                                  }
-                                ]
-                              ]
-                              )";
-    fc::string create_markets_json_tpl = "{\"moderator\":\"moderator_name\",\"name\":\"game_name\",\"start_time\":\"2016-04-25T17:30:00\",\"auto_resolve_delay_sec\":33,\"game\":[\"soccer_game\",{}], ${markets}}";
-    fc::string update_markets_json_tpl = "{\"moderator\":\"moderator_name\", \"game_id\":0,${markets}}";
-    // clang-format on
+    const std::string markets_json = R"([ [ "result_home", {} ],
+                                          [ "result_draw", {} ],
+                                          [ "result_away", {} ],
+                                          [ "round_home", {} ],
+                                          [ "handicap", { "threshold": -500 } ],
+                                          [ "handicap", { "threshold": 0 } ],
+                                          [ "handicap", { "threshold": 1000 } ],
+                                          [ "correct_score_home", {} ],
+                                          [ "correct_score_draw", {} ],
+                                          [ "correct_score_away", {} ],
+                                          [ "correct_score", { "home": 1, "away": 0 } ],
+                                          [ "correct_score", { "home": 1, "away": 1 } ],
+                                          [ "goal_home", {} ],
+                                          [ "goal_both", {} ],
+                                          [ "goal_away", {} ],
+                                          [ "total", { "threshold": 0 } ],
+                                          [ "total", { "threshold": 500 } ],
+                                          [ "total", { "threshold": 1000 } ] ])";
 
-    fc::flat_set<betting::market_type> get_markets() const
+    const std::string create_markets_json_tpl = R"({ "moderator": "moderator_name",
+                                                     "name": "game_name",
+                                                     "start_time": "2016-04-25T17:30:00",
+                                                     "auto_resolve_delay_sec": 33,
+                                                     "game": [ "soccer_game", {} ],
+                                                     "markets": ${markets} })";
+
+    const std::string update_markets_json_tpl = R"({ "moderator": "moderator_name",
+                                                     "game_id": 0,
+                                                     "markets": ${markets} })";
+
+    fc::flat_set<market_type> get_markets() const
     {
         // clang-format off
-        return { result_home_market{},
-                 result_draw_market{},
-                 result_away_market{},
-                 round_market{},
-                 handicap_market{1000},
-                 handicap_market{-500},
-                 handicap_market{0},
-                 correct_score_market{},
-                 correct_score_parametrized_market{1, 1},
-                 correct_score_parametrized_market{1, 0},
-                 goal_market{},
-                 total_market{0},
-                 total_market{500},
-                 total_market{1000} };
+        return { result_home{},
+                 result_draw{},
+                 result_away{},
+                 round_home{},
+                 handicap{1000},
+                 handicap{-500},
+                 handicap{0},
+                 correct_score_home{},
+                 correct_score_draw{},
+                 correct_score_away{},
+                 correct_score{1, 1},
+                 correct_score{1, 0},
+                 goal_home{},
+                 goal_both{},
+                 goal_away{},
+                 total{0},
+                 total{500},
+                 total{1000} };
         // clang-format on
     }
 
@@ -163,74 +112,50 @@ struct game_serialization_test_fixture
     market_kind get_market_kind(const market_type& var) const
     {
         market_kind result;
-        var.visit([&](const auto& market) { result = market.kind; });
+        var.visit([&](const auto& market) { result = market.kind_v; });
         return result;
     }
 
-    wincase_pairs_type create_wincase_pairs(const market_type& var) const
+    void validate_markets(const fc::flat_set<market_type>& markets) const
     {
-        wdump((var));
-        wincase_pairs_type result;
-        var.visit([&](const auto& market) {
-            result = market.create_wincase_pairs();
-            for (const auto& wp : result)
-            {
-                wdump((wp.first));
-                wdump((wp.second));
-            }
-        });
-        return result;
-    }
-
-    void validate_markets(const fc::flat_set<betting::market_type>& markets) const
-    {
-        BOOST_REQUIRE_EQUAL(markets.size(), 14u);
+        BOOST_REQUIRE_EQUAL(markets.size(), 18u);
 
         auto pos = 0u;
 
         BOOST_CHECK(get_market_kind(*markets.nth(pos)) == market_kind::result);
-        auto market_wincases = create_wincase_pairs(*markets.nth(pos));
-        BOOST_CHECK_EQUAL(market_wincases.size(), 1u);
 
         pos += 3u;
 
         BOOST_CHECK(get_market_kind(*markets.nth(pos)) == market_kind::round);
-        market_wincases = create_wincase_pairs(*markets.nth(pos));
-        BOOST_CHECK_EQUAL(market_wincases.size(), 1u);
 
         pos += 1u;
 
         BOOST_CHECK(get_market_kind(*markets.nth(pos)) == market_kind::handicap);
-        market_wincases = create_wincase_pairs(*markets.nth(pos));
-        BOOST_CHECK_EQUAL(market_wincases.size(), 1u);
-        BOOST_CHECK_EQUAL(market_wincases.nth(0)->first.get<handicap_home_over>().threshold, -500);
-        BOOST_CHECK_EQUAL(market_wincases.nth(0)->second.get<handicap_home_under>().threshold, -500);
+        auto market_wincases = create_wincases(*markets.nth(pos));
+        BOOST_CHECK_EQUAL(market_wincases.first.get<handicap::over>().threshold, -500);
+        BOOST_CHECK_EQUAL(market_wincases.second.get<handicap::under>().threshold, -500);
 
         pos += 3u;
 
         BOOST_CHECK(get_market_kind(*markets.nth(pos)) == market_kind::correct_score);
-        market_wincases = create_wincase_pairs(*markets.nth(pos));
-        BOOST_CHECK_EQUAL(market_wincases.size(), 3u);
+        market_wincases = create_wincases(*markets.nth(pos));
 
-        pos += 1u;
+        pos += 3u;
 
         BOOST_CHECK(get_market_kind(*markets.nth(pos)) == market_kind::correct_score);
-        market_wincases = create_wincase_pairs(*markets.nth(pos));
-        BOOST_CHECK_EQUAL(market_wincases.size(), 1u);
-        BOOST_CHECK_EQUAL(market_wincases.nth(0)->first.get<correct_score_yes>().home, 1);
-        BOOST_CHECK_EQUAL(market_wincases.nth(0)->first.get<correct_score_yes>().away, 0);
-        BOOST_CHECK_EQUAL(market_wincases.nth(0)->second.get<correct_score_no>().home, 1);
-        BOOST_CHECK_EQUAL(market_wincases.nth(0)->second.get<correct_score_no>().away, 0);
+        market_wincases = create_wincases(*markets.nth(pos));
+        BOOST_CHECK_EQUAL(market_wincases.first.get<correct_score::yes>().home, 1);
+        BOOST_CHECK_EQUAL(market_wincases.first.get<correct_score::yes>().away, 0);
+        BOOST_CHECK_EQUAL(market_wincases.second.get<correct_score::no>().home, 1);
+        BOOST_CHECK_EQUAL(market_wincases.second.get<correct_score::no>().away, 0);
 
         pos += 2u;
 
         BOOST_CHECK(get_market_kind(*markets.nth(pos)) == market_kind::goal);
-        BOOST_CHECK_EQUAL(market_wincases.size(), 1u);
 
-        pos += 1u;
+        pos += 3u;
 
         BOOST_CHECK(get_market_kind(*markets.nth(pos)) == market_kind::total);
-        BOOST_CHECK_EQUAL(market_wincases.size(), 1u);
     }
 };
 
@@ -243,16 +168,21 @@ template <typename T> std::string to_hex(T t)
 
 SCORUM_TEST_CASE(serialize_markets)
 {
-    BOOST_CHECK_EQUAL(to_hex(result_home_market()), "00");
-    BOOST_CHECK_EQUAL(to_hex(result_draw_market()), "01");
-    BOOST_CHECK_EQUAL(to_hex(result_away_market()), "02");
-    BOOST_CHECK_EQUAL(to_hex(round_market()), "03");
-    BOOST_CHECK_EQUAL(to_hex(handicap_market()), "040000");
-    BOOST_CHECK_EQUAL(to_hex(correct_score_market()), "05");
-    BOOST_CHECK_EQUAL(to_hex(correct_score_parametrized_market()), "0600000000");
-    BOOST_CHECK_EQUAL(to_hex(goal_market()), "07");
-    BOOST_CHECK_EQUAL(to_hex(total_market()), "080000");
-    BOOST_CHECK_EQUAL(to_hex(total_goals_market()), "090000");
+    BOOST_CHECK_EQUAL(to_hex(result_home()), "00");
+    BOOST_CHECK_EQUAL(to_hex(result_draw()), "01");
+    BOOST_CHECK_EQUAL(to_hex(result_away()), "02");
+    BOOST_CHECK_EQUAL(to_hex(round_home()), "03");
+    BOOST_CHECK_EQUAL(to_hex(handicap()), "040000");
+    BOOST_CHECK_EQUAL(to_hex(correct_score_home()), "05");
+    BOOST_CHECK_EQUAL(to_hex(correct_score_draw()), "06");
+    BOOST_CHECK_EQUAL(to_hex(correct_score_away()), "07");
+    BOOST_CHECK_EQUAL(to_hex(correct_score()), "0800000000");
+    BOOST_CHECK_EQUAL(to_hex(goal_home()), "09");
+    BOOST_CHECK_EQUAL(to_hex(goal_both()), "0a");
+    BOOST_CHECK_EQUAL(to_hex(goal_away()), "0b");
+    BOOST_CHECK_EQUAL(to_hex(total()), "0c0000");
+    BOOST_CHECK_EQUAL(to_hex(total_goals_home()), "0d0000");
+    BOOST_CHECK_EQUAL(to_hex(total_goals_away()), "0e0000");
 }
 
 SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
@@ -278,11 +208,11 @@ SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
     op.start_time = time_point_sec::from_iso_string("2018-08-03T10:12:43");
     op.auto_resolve_delay_sec = 33;
     op.game = soccer_game{};
-    op.markets = { total_market{ 1000 } };
+    op.markets = { total{ 1000 } };
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(hex, "0561646d696e0967616d65206e616d659b2a645b21000000000108e803");
+    BOOST_CHECK_EQUAL(hex, "0561646d696e0967616d65206e616d659b2a645b2100000000010ce803");
 }
 
 SCORUM_TEST_CASE(create_game_json_serialization_test)
@@ -309,7 +239,7 @@ SCORUM_TEST_CASE(markets_duplicates_serialization_test)
 {
     create_game_operation op;
     op.game = soccer_game{};
-    op.markets = { correct_score_market{}, correct_score_market{} };
+    op.markets = { correct_score_home{}, correct_score_home{} };
     op.auto_resolve_delay_sec = 33;
 
     auto json = fc::json::to_string(op);
@@ -327,7 +257,7 @@ SCORUM_TEST_CASE(markets_duplicates_serialization_test)
                                               ],
                                               "markets":[
                                                  [
-                                                    "correct_score_market",
+                                                    "correct_score_home",
                                                     {}
                                                  ]
                                               ]
@@ -352,11 +282,11 @@ SCORUM_TEST_CASE(markets_duplicates_deserialization_test)
                                               ],
                                               "markets":[
                                                  [
-                                                    "correct_score_market",
+                                                    "correct_score_home",
                                                     {}
                                                  ],
                                                  [
-                                                    "correct_score_market",
+                                                    "correct_score_home",
                                                     {}
                                                  ]
                                               ]
@@ -373,7 +303,7 @@ SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
 {
     create_game_operation op;
     op.game = soccer_game{};
-    op.markets = { correct_score_parametrized_market{ 1, 1 }, correct_score_market{} };
+    op.markets = { correct_score{ 1, 1 }, correct_score_home{} };
     op.auto_resolve_delay_sec = 33;
 
     auto json = fc::json::to_string(op);
@@ -391,11 +321,11 @@ SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
                                               ],
                                               "markets":[
                                                  [
-                                                    "correct_score_market",
+                                                    "correct_score_home",
                                                     {}
                                                  ],
                                                  [
-                                                    "correct_score_parametrized_market",
+                                                    "correct_score",
                                                     {
                                                        "home":1,
                                                        "away":1
@@ -423,25 +353,25 @@ SCORUM_TEST_CASE(wincases_duplicates_deserialization_test)
                                               ],
                                               "markets":[
                                                   [
-                                                  "correct_score_parametrized_market",
+                                                  "correct_score",
                                                       {
                                                         "home":1,
                                                         "away":1
                                                       }
                                                    ],
                                                    [
-                                                       "correct_score_parametrized_market",
+                                                       "correct_score",
                                                        {
                                                          "home":1,
                                                          "away":1
                                                        }
                                                    ],
                                                    [
-                                                       "correct_score_market",
+                                                       "correct_score_home",
                                                        {}
                                                    ],
                                                    [
-                                                       "correct_score_market",
+                                                       "correct_score_home",
                                                        {}
                                                    ]
                                               ]
@@ -480,14 +410,14 @@ SCORUM_TEST_CASE(create_game_binary_serialization_test)
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e5721000000000e00010203040cfe0400000"
-                           "4e80305060100000006010001000708000008f40108e803");
+    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e5721000000001200010203040cfe0400000"
+                           "4e80305060708010000000801000100090a0b0c00000cf4010ce803");
 }
 
 SCORUM_TEST_CASE(create_game_binary_deserialization_test)
 {
-    auto hex = "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e5721000000000e00010203040cfe0400000"
-               "4e80305060100000006010001000708000008f40108e803";
+    auto hex = "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e5721000000001200010203040cfe0400000"
+               "4e80305060708010000000801000100090a0b0c00000cf4010ce803";
 
     char buffer[1000];
     fc::from_hex(hex, buffer, sizeof(buffer));
@@ -502,14 +432,14 @@ SCORUM_TEST_CASE(update_game_markets_binary_serialization_test)
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d6500000000000000000e000102030"
-                           "40cfe04000004e80305060100000006010001000708000008f40108e803");
+    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d6500000000000000001200010203040cfe04000004e80305060708010000000"
+                           "801000100090a0b0c00000cf4010ce803");
 }
 
 SCORUM_TEST_CASE(update_game_markets_binary_deserialization_test)
 {
-    auto hex = "0e6d6f64657261746f725f6e616d6500000000000000000e000102030"
-               "40cfe04000004e80305060100000006010001000708000008f40108e803";
+    auto hex = "0e6d6f64657261746f725f6e616d6500000000000000001200010203040cfe04000004e80305060708010000000"
+               "801000100090a0b0c00000cf4010ce803";
 
     char buffer[1000];
     fc::from_hex(hex, buffer, sizeof(buffer));

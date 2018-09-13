@@ -3,8 +3,6 @@
 #include <fc/shared_containers.hpp>
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
-#include <scorum/protocol/betting/wincase.hpp>
-#include <scorum/protocol/betting/wincase_comparison.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
 
 namespace scorum {
@@ -12,9 +10,9 @@ namespace chain {
 
 using namespace scorum::protocol;
 
-using scorum::protocol::betting::game_type;
-using scorum::protocol::betting::market_type;
-using scorum::protocol::betting::wincase_type;
+using scorum::protocol::game_type;
+using scorum::protocol::market_type;
+using scorum::protocol::wincase_type;
 
 enum class game_status : uint8_t
 {

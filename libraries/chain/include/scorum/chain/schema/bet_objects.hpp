@@ -6,15 +6,14 @@
 
 #include <boost/multi_index/composite_key.hpp>
 
-#include <scorum/protocol/betting/wincase.hpp>
-#include <scorum/protocol/betting/wincase_comparison.hpp>
+#include <scorum/protocol/betting/market.hpp>
 
 namespace scorum {
 namespace chain {
 
 using scorum::protocol::asset;
 using scorum::protocol::odds;
-using scorum::protocol::betting::wincase_type;
+using scorum::protocol::wincase_type;
 
 class bet_object : public object<bet_object_type, bet_object>
 {

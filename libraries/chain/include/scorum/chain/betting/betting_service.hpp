@@ -16,15 +16,12 @@ struct pending_bet_service_i;
 struct game_service_i;
 struct account_service_i;
 
-struct bet_object;
-struct pending_bet_object;
-
-namespace betting {
-
-using scorum::protocol::betting::wincase_pair;
+using scorum::protocol::market_type;
+using scorum::protocol::wincase_type;
 
 struct betting_service_i
 {
+    // TODO: will be removed after db_accessors introduction
     using bet_crefs_type = std::vector<std::reference_wrapper<const bet_object>>;
     using pending_bet_crefs_type = std::vector<std::reference_wrapper<const pending_bet_object>>;
 
@@ -39,7 +36,7 @@ struct betting_service_i
 
     virtual void cancel_game(const game_id_type& game_id) = 0;
     virtual void cancel_bets(const game_id_type& game_id) = 0;
-    virtual void cancel_bets(const game_id_type& game_id, const std::vector<wincase_pair>& wincase_pairs) = 0;
+    virtual void cancel_bets(const game_id_type& game_id, const std::vector<market_type>& cancelled_markets) = 0;
     virtual void cancel_pending_bets(const game_id_type& game_id) = 0;
     virtual void cancel_pending_bets(const game_id_type& game_id, pending_bet_kind kind) = 0;
     virtual void cancel_matched_bets(const game_id_type& game_id) = 0;
@@ -62,7 +59,7 @@ public:
 
     void cancel_game(const game_id_type& game_id) override;
     void cancel_bets(const game_id_type& game_id) override;
-    void cancel_bets(const game_id_type& game_id, const std::vector<wincase_pair>& wincase_pairs) override;
+    void cancel_bets(const game_id_type& game_id, const std::vector<market_type>& cancelled_markets) override;
     void cancel_pending_bets(const game_id_type& game_id) override;
     void cancel_pending_bets(const game_id_type& game_id, pending_bet_kind kind) override;
     void cancel_matched_bets(const game_id_type& game_id) override;
@@ -83,6 +80,5 @@ private:
     game_service_i& _game_svc;
     account_service_i& _account_svc;
 };
-}
 }
 }

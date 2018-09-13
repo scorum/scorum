@@ -12,8 +12,8 @@
 namespace scorum {
 namespace chain {
 post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
-                                       betting::betting_service_i& betting_service,
-                                       betting::betting_matcher_i& betting_matcher)
+                                       betting_service_i& betting_service,
+                                       betting_matcher_i& betting_matcher)
     : evaluator_impl<data_service_factory_i, post_bet_evaluator>(services)
     , _account_service(services.account_service())
     , _game_service(services.game_service())
@@ -28,7 +28,7 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     auto game_obj = _game_service.get_game(op.game_id);
 
-    protocol::betting::validate_if_wincase_in_game(game_obj.game, op.wincase);
+    validate_if_wincase_in_game(game_obj.game, op.wincase);
 
     FC_ASSERT(game_obj.status != game_status::finished, "Cannot post bet for game that is finished");
     FC_ASSERT(game_obj.status == game_status::created || op.live, "Cannot create non-live bet after game was started");

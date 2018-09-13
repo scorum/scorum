@@ -35,6 +35,7 @@ set(SOURCES
     rewards/comment_reward_tests.cpp
     utils/string_algorithm_tests.cpp
     utils/take_n_range_tests.cpp
+    utils/static_variant_comparison_tests.cpp
     fc/static_variant_visitor_tests.cpp
     tasks_base_tests.cpp
     app_tests.cpp
@@ -55,8 +56,10 @@ set(SOURCES
     betting/bet_evaluators_tests.cpp
     betting/betting_api_tests.cpp
     betting/post_game_results_evaluator_tests.cpp
+    betting/post_game_results_serialization_tests.cpp
+    betting/wincase_type_tests.cpp
+    betting/market_type_tests.cpp
     odds_tests.cpp
-    market_type_tests.cpp
 )
 
 add_executable(utests

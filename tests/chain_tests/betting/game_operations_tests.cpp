@@ -18,7 +18,6 @@
 namespace {
 
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 using namespace scorum::chain;
 using namespace database_fixture;
 
@@ -68,10 +67,10 @@ SCORUM_TEST_CASE(post_game_results_positive_test)
 {
     // clang-format off
     create_game(moderator, {
-        result_home_market{},
-        total_market{ 2000 },
-        total_market{ 500 },
-        correct_score_parametrized_market{ 0, 0 } });
+        result_home{},
+        total{ 2000 },
+        total{ 500 },
+        correct_score{ 0, 0 } });
     // clang-format on
 
     auto creation_time = db.head_block_time();
@@ -84,7 +83,7 @@ SCORUM_TEST_CASE(post_game_results_positive_test)
     BOOST_REQUIRE_EQUAL(game.results.size(), 0u);
     BOOST_REQUIRE_EQUAL(game.last_update.to_iso_string(), creation_time.to_iso_string());
 
-    post_results(moderator, { result_draw_away{}, total_over{ 500 }, correct_score_no{ 0, 0 } });
+    post_results(moderator, { result_home::no{}, total::over{ 500 }, correct_score::no{ 0, 0 } });
     auto update_time = db.head_block_time();
 
     generate_block();
@@ -99,10 +98,10 @@ SCORUM_TEST_CASE(post_game_results_twice_positive_test)
 {
     // clang-format off
     create_game(moderator, {
-        result_home_market{},
-        total_market{ 2000 },
-        total_market{ 500 },
-        correct_score_parametrized_market{ 0, 0 } });
+        result_home{},
+        total{ 2000 },
+        total{ 500 },
+        correct_score{ 0, 0 } });
     // clang-format on
 
     generate_block();
@@ -112,7 +111,7 @@ SCORUM_TEST_CASE(post_game_results_twice_positive_test)
     post_game_results_operation op;
     op.moderator = moderator.name;
     op.game_id = 0;
-    op.wincases = { result_draw_away{}, total_over{ 500 }, correct_score_no{ 0, 0 } };
+    op.wincases = { result_home::no{}, total::over{ 500 }, correct_score::no{ 0, 0 } };
 
     auto fst_update_time = db.head_block_time();
 
@@ -126,7 +125,7 @@ SCORUM_TEST_CASE(post_game_results_twice_positive_test)
 
     auto snd_update_time = db.head_block_time();
 
-    op.wincases = { result_draw_away{}, total_under{ 500 }, total_under{ 2000 }, correct_score_no{ 0, 0 } };
+    op.wincases = { result_home::no{}, total::under{ 500 }, total::under{ 2000 }, correct_score::no{ 0, 0 } };
     push_operation(op, moderator.private_key);
 
     BOOST_REQUIRE_EQUAL((int)game.status, (int)game_status::finished);
@@ -144,7 +143,7 @@ SCORUM_TEST_CASE(auto_resolve_time_updating_test)
 {
     auto time = db.head_block_time();
 
-    create_game(moderator, { result_home_market{}, total_market{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
     BOOST_CHECK_EQUAL((game_service.get().start_time - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 2);

@@ -25,20 +25,19 @@ struct database_betting_integration_fixture : public database_trx_integration_fi
 
     void empower_moderator(const Actor& moderator);
     create_game_operation create_game(const Actor& moderator,
-                                      fc::flat_set<betting::market_type> markets,
+                                      fc::flat_set<market_type> markets,
                                       uint32_t start_delay = start_delay_default,
                                       uint32_t auto_resolve_delay_sec = auto_resolve_delay_default);
     post_bet_operation create_bet(const Actor& better,
-                                  const betting::wincase_type& wincase,
+                                  const wincase_type& wincase,
                                   const odds_input& odds_value,
                                   const asset& stake,
                                   bool is_live = true);
     cancel_pending_bets_operation cancel_pending_bet(const Actor& better, const fc::flat_set<int64_t>& bet_ids);
     cancel_game_operation cancel_game(const Actor& moderator);
-    update_game_markets_operation update_markets(const Actor& moderator, fc::flat_set<betting::market_type> markets);
+    update_game_markets_operation update_markets(const Actor& moderator, fc::flat_set<market_type> markets);
     update_game_start_time_operation update_start_time(const Actor& moderator, uint32_t start_delay);
-    post_game_results_operation post_results(const Actor& moderator,
-                                             const fc::flat_set<betting::wincase_type>& winners);
+    post_game_results_operation post_results(const Actor& moderator, const fc::flat_set<wincase_type>& winners);
 
     proposal_id_type get_last_proposal_id();
 

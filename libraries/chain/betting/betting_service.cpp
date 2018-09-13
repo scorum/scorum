@@ -12,7 +12,7 @@
 #include <scorum/chain/services/game.hpp>
 #include <scorum/chain/services/account.hpp>
 
-#include <scorum/protocol/betting/wincase_comparison.hpp>
+#include <scorum/protocol/betting/market.hpp>
 
 #include <scorum/chain/betting/betting_math.hpp>
 
@@ -20,7 +20,6 @@
 
 namespace scorum {
 namespace chain {
-namespace betting {
 
 betting_service::betting_service(data_service_factory_i& db)
     : _dgp_property_service(db.dynamic_global_property_service())
@@ -87,15 +86,16 @@ void betting_service::cancel_bets(const game_id_type& game_id)
     cancel_bets(bets);
 }
 
-void betting_service::cancel_bets(const game_id_type& game_id, const std::vector<wincase_pair>& wincase_pairs)
+void betting_service::cancel_bets(const game_id_type& game_id, const std::vector<market_type>& cancelled_markets)
 {
     auto bets = _bet_svc.get_bets(game_id);
 
     fc::flat_set<wincase_type> wincases;
-    wincases.reserve(wincase_pairs.size() * 2);
+    wincases.reserve(cancelled_markets.size() * 2);
 
-    for (const auto& pair : wincase_pairs)
+    for (const auto& market : cancelled_markets)
     {
+        auto pair = create_wincases(market);
         wincases.emplace(pair.first);
         wincases.emplace(pair.second);
     }
@@ -185,7 +185,6 @@ void betting_service::cancel_pending_bets(const pending_bet_crefs_type& pending_
     }
 
     _pending_bet_svc.remove_all(pending_bets);
-}
 }
 }
 }
