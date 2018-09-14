@@ -84,6 +84,21 @@ BOOST_AUTO_TEST_CASE(serialize_devpool_proposal_create_operation_to_hex)
     BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000600e40b54020000000953500000000000", utils::to_hex(op));
 }
 
+BOOST_AUTO_TEST_CASE(serialize_development_committee_empower_advertising_moderator_operation_to_hex)
+{
+    development_committee_empower_advertising_moderator_operation empower_moderator_op;
+    empower_moderator_op.account = "alice";
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.operation = empower_moderator_op;
+    proposal_create_op.creator = "initdelegate";
+    proposal_create_op.lifetime_sec = 86400;
+
+    scorum::protocol::operation op = proposal_create_op;
+
+    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000805616c696365", utils::to_hex(op));
+}
+
 BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)
 {
     const std::string hex_str = "1d00000000000005616c696365";

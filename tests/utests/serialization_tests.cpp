@@ -27,20 +27,24 @@
 #include <scorum/protocol/version.hpp>
 
 #include <scorum/protocol/transaction.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
 #include <boost/uuid/uuid_generators.hpp>
 #include <fc/io/json.hpp>
 
+#include "utils.hpp"
 #include "detail.hpp"
 #include "defines.hpp"
 
 using scorum::protocol::asset;
 using scorum::protocol::version;
+using scorum::protocol::operation;
 using scorum::protocol::extended_private_key_type;
 using scorum::protocol::extended_public_key_type;
 using scorum::protocol::hardfork_version;
 
 using scorum::protocol::create_budget_operation;
+using scorum::protocol::close_budget_by_advertising_moderator_operation;
 
 BOOST_AUTO_TEST_SUITE(serialization_tests)
 
@@ -225,6 +229,93 @@ SCORUM_TEST_CASE(hardfork_version_test)
 
     ver_str = fc::variant("1.0.0.1");
     SCORUM_REQUIRE_THROW(fc::from_variant(ver_str, ver), fc::exception);
+}
+
+SCORUM_TEST_CASE(serialize_create_budget_operation_to_binary_test)
+{
+    create_budget_operation op;
+    op.type = scorum::protocol::budget_type::post;
+    op.owner = "initdelegate";
+    op.balance = ASSET("10.000000000 SCR");
+    op.start = fc::time_point_sec::from_iso_string("2018-08-03T10:12:43");
+    op.deadline = fc::time_point_sec::from_iso_string("2018-08-03T10:13:13");
+    op.json_metadata = "{}";
+
+    BOOST_CHECK_EQUAL(
+        "00000000000000000c696e697464656c6567617465027b7d00e40b54020000000953435200000000019b2a645bb92a645b",
+        utils::to_hex(op));
+}
+
+SCORUM_TEST_CASE(serialize_close_post_budget_by_moderator_operation_to_binary_test)
+{
+    close_budget_by_advertising_moderator_operation op;
+    op.type = scorum::protocol::budget_type::post;
+    op.moderator = "initdelegate";
+    op.budget_id = 1;
+
+    scorum::protocol::operation ops = op;
+
+    BOOST_CHECK_EQUAL(
+        "21000000000000000001000000000000000c696e697464656c6567617465",
+        utils::to_hex(ops));
+}
+
+BOOST_AUTO_TEST_CASE(deserialize_close_post_budget_by_moderator_operation_to_binary_test)
+{
+    const std::string hex_str = "21000000000000000001000000000000000c696e697464656c6567617465";
+
+    std::vector<char> buffer;
+    buffer.resize(hex_str.size() / 2);
+
+    BOOST_REQUIRE_EQUAL(hex_str.size(), buffer.size() * 2);
+
+    fc::from_hex(hex_str, buffer.data(), buffer.size());
+
+    operation op;
+
+    fc::raw::unpack<scorum::protocol::operation>(buffer, op);
+
+    close_budget_by_advertising_moderator_operation& close_budget_op = op.get<close_budget_by_advertising_moderator_operation>();
+
+    BOOST_CHECK_EQUAL("initdelegate", close_budget_op.moderator);
+    BOOST_CHECK_EQUAL((uint16_t)scorum::protocol::budget_type::post, (uint16_t)close_budget_op.type);
+    BOOST_CHECK_EQUAL(1, close_budget_op.budget_id);
+}
+
+SCORUM_TEST_CASE(serialize_close_banner_budget_by_moderator_operation_to_binary_test)
+{
+    close_budget_by_advertising_moderator_operation op;
+    op.type = scorum::protocol::budget_type::banner;
+    op.moderator = "initdelegate";
+    op.budget_id = 1;
+
+    scorum::protocol::operation ops = op;
+
+    BOOST_CHECK_EQUAL(
+        "21010000000000000001000000000000000c696e697464656c6567617465",
+        utils::to_hex(ops));
+}
+
+BOOST_AUTO_TEST_CASE(deserialize_close_banner_budget_by_moderator_operation_to_binary_test)
+{
+    const std::string hex_str = "21010000000000000001000000000000000c696e697464656c6567617465";
+
+    std::vector<char> buffer;
+    buffer.resize(hex_str.size() / 2);
+
+    BOOST_REQUIRE_EQUAL(hex_str.size(), buffer.size() * 2);
+
+    fc::from_hex(hex_str, buffer.data(), buffer.size());
+
+    operation op;
+
+    fc::raw::unpack<scorum::protocol::operation>(buffer, op);
+
+    close_budget_by_advertising_moderator_operation& close_budget_op = op.get<close_budget_by_advertising_moderator_operation>();
+
+    BOOST_CHECK_EQUAL("initdelegate", close_budget_op.moderator);
+    BOOST_CHECK_EQUAL((uint16_t)scorum::protocol::budget_type::banner, (uint16_t)close_budget_op.type);
+    BOOST_CHECK_EQUAL(1, close_budget_op.budget_id);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
