@@ -26,9 +26,35 @@ struct wincases_builder
     }
 };
 
+struct market_builder
+{
+    template <bool site, market_kind kind, typename tag>
+    market_type operator()(const over_under_wincase<site, kind, tag>& w) const
+    {
+        return over_under_market<kind, tag>{ w.threshold };
+    }
+
+    template <bool site, market_kind kind, typename tag>
+    market_type operator()(const score_yes_no_wincase<site, kind, tag>& w) const
+    {
+        return score_yes_no_market<kind, tag>{ w.home, w.away };
+    }
+
+    template <bool site, market_kind kind, typename tag>
+    market_type operator()(const yes_no_wincase<site, kind, tag>& w) const
+    {
+        return yes_no_market<kind, tag>{};
+    }
+};
+
 std::pair<wincase_type, wincase_type> create_wincases(const market_type& market)
 {
     return market.visit(wincases_builder{});
+}
+
+market_type create_market(const wincase_type& wincase)
+{
+    return wincase.visit(market_builder{});
 }
 
 wincase_type create_opposite(const wincase_type& wincase)

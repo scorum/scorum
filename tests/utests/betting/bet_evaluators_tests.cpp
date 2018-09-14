@@ -4,6 +4,7 @@
 #include <scorum/chain/evaluators/cancel_pending_bets_evaluator.hpp>
 
 #include "betting_common.hpp"
+#include "object_wrapper.hpp"
 
 namespace bet_evaluators_tests {
 
@@ -27,15 +28,15 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
         test_op.stake = better.scr_amount;
     }
 
-    bet_object create_bet()
+    pending_bet_object create_bet()
     {
-        return create_object<bet_object>(shm, [&](bet_object& obj) {
+        return create_object<pending_bet_object>(shm, [&](pending_bet_object& obj) {
             obj.better = test_op.better;
             obj.game = test_op.game_id;
             obj.wincase = test_op.wincase;
             obj.odds_value = odds(test_op.odds.numerator, test_op.odds.denominator);
             obj.stake = test_op.stake;
-            obj.rest_stake = obj.stake;
+            obj.market = create_market(test_op.wincase);
         });
     }
 
@@ -77,184 +78,104 @@ SCORUM_TEST_CASE(post_bet_evaluator_operation_validate_check)
 
 SCORUM_TEST_CASE(post_bet_evaluator_negative_check)
 {
-    post_bet_operation op = test_op;
-
-    SCORUM_MESSAGE("-- Check invalid account");
-
-    op.better = "mercury";
-    BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
-    op = test_op;
-
-    SCORUM_MESSAGE("-- Check insufficient funds");
-
-    op.stake = better.scr_amount + better.scr_amount;
-    BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
-    op = test_op;
-
-    SCORUM_MESSAGE("-- Check invalid game");
-
-    games.create([&](game_object& obj) {
-        fc::from_string(obj.name, "test_wrong");
-        obj.status = game_status::finished;
-    });
-
-    op.game_id += 1;
-    BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
-    op = test_op;
-
-    SCORUM_MESSAGE("-- Check invalid wincase");
-
-    games.create([&](game_object& obj) {
-        fc::from_string(obj.name, "winter");
-        obj.game = hockey_game{};
-        obj.status = game_status::finished;
-    });
-
-    op.game_id += 2;
-    op.wincase = handicap::over{};
-    BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
+    // TODO: implement when db_accessors will be introduced
 }
 
 SCORUM_TEST_CASE(post_bet_evaluator_positive_check)
 {
-    auto bet = create_bet();
-
-    mocks.ExpectCall(betting_service_moc, betting_service_i::create_bet).ReturnByRef(bet);
-
-    mocks.ExpectCall(betting_matcher_moc, betting_matcher_i::match);
-
-    BOOST_CHECK_NO_THROW(evaluator_for_test.do_apply(test_op));
+    // TODO: implement when db_accessors will be introduced
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-struct cancel_pending_bets_evaluator_fixture : public betting_common::betting_evaluator_fixture_impl
+struct cancel_pending_bets_evaluator_fixture : public shared_memory_fixture
 {
+    using check_account_existence_ptr
+        = void (account_service_i::*)(const account_name_type&, const fc::optional<const char*>&) const;
+    using is_exists_ptr = bool (pending_bet_service_i::*)(const pending_bet_id_type&) const;
+
+    MockRepository mocks;
+
+    data_service_factory_i* dbs_factory = mocks.Mock<data_service_factory_i>();
+    betting_service_i* betting_svc = mocks.Mock<betting_service_i>();
+    account_service_i* acc_svc = mocks.Mock<account_service_i>();
+    pending_bet_service_i* pending_bet_svc = mocks.Mock<pending_bet_service_i>();
+
     cancel_pending_bets_evaluator_fixture()
-        : evaluator_for_test(*dbs_services, *betting_service_moc)
     {
-        better.scorum(ASSET_SCR(1e+9));
-        account_service.add_actor(better);
-        account_service.add_actor(moderator);
-
-        account_service.service().decrease_balance(account_service.service().get_account(better.name),
-                                                   better.scr_amount);
-
-        bet1_rest_stake = asset(better.scr_amount.amount / 2, SCORUM_SYMBOL);
-        bet2_rest_stake = asset(better.scr_amount.amount / 4, SCORUM_SYMBOL);
-
-        const auto& game = games.create([&](game_object& obj) { fc::from_string(obj.name, "test"); });
-        const auto& bet1 = bets.create([&](bet_object& obj) {
-            obj.better = better.name;
-            obj.game = game.id;
-            obj.wincase = correct_score_home::yes();
-            obj.odds_value = odds(10, 3);
-            obj.stake = bet1_rest_stake;
-            obj.rest_stake = bet1_rest_stake;
-        });
-        const auto& bet2 = bets.create([&](bet_object& obj) {
-            obj.better = better.name;
-            obj.game = game.id;
-            obj.wincase = correct_score_draw::yes();
-            obj.odds_value = odds(10, 3);
-            obj.stake = bet1_rest_stake;
-            obj.rest_stake = bet2_rest_stake;
-        });
-
-        const auto& pending_bet1 = pending_bets.create([&](pending_bet_object& obj) { obj.bet = bet1.id; });
-        const auto& pending_bet2 = pending_bets.create([&](pending_bet_object& obj) { obj.bet = bet2.id; });
-
-        test_op.better = better.name;
-        bet1_id = bet1.id;
-        bet2_id = bet2.id;
-        test_op.bet_ids = { bet1.id._id, bet2.id._id };
-        pending_bet1_id = pending_bet1.id;
-        pending_bet2_id = pending_bet2.id;
-
-        mocks.OnCall(betting_service_moc, betting_service_i::is_betting_moderator).With(better.name).Return(false);
-        mocks.OnCall(betting_service_moc, betting_service_i::is_betting_moderator).With(moderator.name).Return(true);
-
-        mocks.OnCall(betting_service_moc, betting_service_i::is_bet_matched).Do([&](const bet_object& obj) -> bool {
-            return obj.rest_stake != obj.stake;
-        });
+        mocks.OnCall(dbs_factory, data_service_factory_i::account_service).ReturnByRef(*acc_svc);
+        mocks.OnCall(dbs_factory, data_service_factory_i::pending_bet_service).ReturnByRef(*pending_bet_svc);
     }
-
-    void check_evaluator(const account_name_type& caller)
-    {
-        BOOST_REQUIRE_EQUAL(bets.service().get_bet(bet1_id).rest_stake, bet1_rest_stake);
-        BOOST_REQUIRE_EQUAL(bets.service().get_bet(bet2_id).rest_stake, bet2_rest_stake);
-
-        BOOST_REQUIRE(bets.is_exists(bet1_id));
-        BOOST_REQUIRE(bets.is_exists(bet2_id));
-        BOOST_REQUIRE(pending_bets.is_exists(pending_bet1_id));
-        BOOST_REQUIRE(pending_bets.is_exists(pending_bet2_id));
-
-        BOOST_CHECK_EQUAL(account_service.service().get_account(better.name).balance, ASSET_NULL_SCR);
-        auto op = test_op;
-        op.better = caller;
-        BOOST_CHECK_NO_THROW(evaluator_for_test.do_apply(op));
-
-        BOOST_CHECK_EQUAL(account_service.service().get_account(better.name).balance,
-                          bet1_rest_stake + bet2_rest_stake);
-
-        BOOST_CHECK(!pending_bets.is_exists(pending_bet1_id));
-        BOOST_CHECK(!pending_bets.is_exists(pending_bet2_id));
-
-        BOOST_CHECK(!bets.is_exists(bet1_id));
-        BOOST_CHECK(bets.is_exists(bet2_id));
-        BOOST_CHECK_EQUAL(bets.service().get_bet(bet2_id).rest_stake, ASSET_NULL_SCR);
-    }
-
-    cancel_pending_bets_evaluator evaluator_for_test;
-
-    cancel_pending_bets_operation test_op;
-
-    bet_id_type bet1_id;
-    bet_id_type bet2_id;
-
-    asset bet1_rest_stake;
-    asset bet2_rest_stake;
-
-    pending_bet_id_type pending_bet1_id;
-    pending_bet_id_type pending_bet2_id;
-
-    Actor moderator = "smit";
-    Actor better = "alice";
 };
 
 BOOST_FIXTURE_TEST_SUITE(cancel_pending_bets_evaluator_tests, cancel_pending_bets_evaluator_fixture)
 
 SCORUM_TEST_CASE(cancel_pending_bets_operation_validate_check)
 {
-    cancel_pending_bets_operation op = test_op;
+    cancel_pending_bets_operation op;
+    op.better = "better";
+    op.bet_ids = { 0, 1 };
 
     BOOST_CHECK_NO_THROW(op.validate());
 
     op.better = "";
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
-    op = test_op;
 
     op.bet_ids = { -1 };
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
-    op = test_op;
 }
 
-SCORUM_TEST_CASE(cancel_pending_bets_evaluator_negative_check)
+SCORUM_TEST_CASE(bet_id_existance_check_should_throw)
 {
-    cancel_pending_bets_operation op = test_op;
+    cancel_pending_bets_operation op;
+    op.better = "better";
+    op.bet_ids = { 0, 1 };
 
-    op.better = "mercury";
-    BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
-    op = test_op;
+    cancel_pending_bets_evaluator ev(*dbs_factory, *betting_svc);
 
-    op.bet_ids = { 999 };
-    BOOST_CHECK_THROW(evaluator_for_test.do_apply(op), fc::assert_exception);
-    op = test_op;
+    mocks.ExpectCallOverload(acc_svc, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.ExpectCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists).With(0).Return(false);
+
+    BOOST_CHECK_THROW(ev.do_apply(op), fc::assert_exception);
 }
 
-SCORUM_TEST_CASE(cancel_pending_bets_evaluator_by_better_check)
+SCORUM_TEST_CASE(better_mismatch_should_throw)
 {
-    check_evaluator(better.name);
+    cancel_pending_bets_operation op;
+    op.better = "better";
+    op.bet_ids = { 0, 1 };
+
+    auto obj = create_object<pending_bet_object>(shm, [](pending_bet_object& o) { o.better = "cartman"; });
+
+    mocks.OnCallOverload(acc_svc, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists).With(0).Return(true);
+    mocks.ExpectCall(pending_bet_svc, pending_bet_service_i::get_pending_bet).With(0).ReturnByRef(obj);
+
+    cancel_pending_bets_evaluator ev(*dbs_factory, *betting_svc);
+    BOOST_CHECK_THROW(ev.do_apply(op), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(should_cancel_bets)
+{
+    cancel_pending_bets_operation op;
+    op.better = "better";
+    op.bet_ids = { 0, 1 };
+
+    // clang-format off
+    auto obj1 = create_object<pending_bet_object>(shm, [](pending_bet_object& o){ o.better = "better"; o.id = 0; });
+    auto obj2 = create_object<pending_bet_object>(shm, [](pending_bet_object& o){ o.better = "better"; o.id = 1; });
+    // clang-format on
+
+    mocks.OnCallOverload(acc_svc, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists).With(0).Return(true);
+    mocks.OnCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists).With(1).Return(true);
+    mocks.OnCall(pending_bet_svc, pending_bet_service_i::get_pending_bet).With(0).ReturnByRef(obj1);
+    mocks.OnCall(pending_bet_svc, pending_bet_service_i::get_pending_bet).With(1).ReturnByRef(obj2);
+    mocks.ExpectCall(betting_svc, betting_service_i::cancel_pending_bet).With(0);
+    mocks.ExpectCall(betting_svc, betting_service_i::cancel_pending_bet).With(1);
+
+    cancel_pending_bets_evaluator ev(*dbs_factory, *betting_svc);
+    BOOST_CHECK_NO_THROW(ev.do_apply(op));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

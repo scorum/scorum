@@ -36,8 +36,8 @@ void update_game_markets_evaluator::do_apply(const operation_type& op)
 
     validate_game(game.game, op.markets);
 
-    std::vector<market_type> cancelled_markets;
-    boost::set_difference(game.markets, op.markets, std::back_inserter(cancelled_markets));
+    fc::flat_set<market_type> cancelled_markets;
+    boost::set_difference(game.markets, op.markets, std::inserter(cancelled_markets, cancelled_markets.end()));
 
     FC_ASSERT(game.status == game_status::created || cancelled_markets.empty(),
               "Cannot cancel markets after game was started");

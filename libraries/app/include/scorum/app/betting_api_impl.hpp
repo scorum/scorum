@@ -3,7 +3,6 @@
 #include <chainbase/database_guard.hpp>
 #include <scorum/chain/database/database.hpp>
 
-#include <scorum/chain/services/bet.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/game.hpp>
@@ -29,7 +28,6 @@ class betting_api_impl
 public:
     betting_api_impl(data_service_factory_i& service_factory, uint32_t lookup_limit = LOOKUP_LIMIT)
         : _game_service(service_factory.game_service())
-        , _bet_service(service_factory.bet_service())
         , _pending_bet_service(service_factory.pending_bet_service())
         , _matched_bet_service(service_factory.matched_bet_service())
         , _betting_property_service(service_factory.betting_property_service())
@@ -47,11 +45,6 @@ public:
         // clang-format on
 
         return { rng.begin(), rng.end() };
-    }
-
-    auto get_user_bets(bet_id_type from, uint32_t limit) const
-    {
-        return get_bets<bet_api_object>(_bet_service, from, limit);
     }
 
     auto get_matched_bets(matched_bet_id_type from, uint32_t limit) const
@@ -86,7 +79,6 @@ public:
 
 private:
     chain::game_service_i& _game_service;
-    chain::bet_service_i& _bet_service;
     chain::pending_bet_service_i& _pending_bet_service;
     chain::matched_bet_service_i& _matched_bet_service;
     chain::betting_property_service_i& _betting_property_service;

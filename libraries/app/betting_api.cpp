@@ -19,11 +19,6 @@ std::vector<game_api_object> betting_api::get_games(game_filter filter) const
     return _guard->with_read_lock([&] { return _impl->get_games(filter); });
 }
 
-std::vector<bet_api_object> betting_api::get_user_bets(bet_id_type from, uint32_t limit) const
-{
-    return _guard->with_read_lock([&] { return _impl->get_user_bets(from, limit); });
-}
-
 std::vector<matched_bet_api_object> betting_api::get_matched_bets(matched_bet_id_type from, uint32_t limit) const
 {
     return _guard->with_read_lock([&] { return _impl->get_matched_bets(from, limit); });

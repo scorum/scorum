@@ -5,7 +5,6 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/budgets.hpp>
-#include <scorum/chain/services/bet.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/game.hpp>
@@ -412,35 +411,6 @@ private:
     std::map<account_name_type, account_id_type> _index_by_name;
 };
 
-class bet_service_wrapper : public service_base_wrapper<bet_service_i>
-{
-    using base_class = service_base_wrapper<bet_service_i>;
-
-public:
-    template <typename C>
-    bet_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_, C&& constructor)
-        : base_class(shm_fixture, mocks_, constructor)
-    {
-        init_extension();
-    }
-
-    bet_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)
-        : base_class(shm_fixture, mocks_)
-    {
-        init_extension();
-    }
-
-    void init_extension()
-    {
-        _mocks.OnCall(_service, bet_service_i::get_bet).Do([this](const bet_id_type& obj_id) -> const bet_object& {
-            return this->get(obj_id);
-        });
-
-        _mocks.OnCallOverload(_service, (bool (bet_service_i::*)(const bet_id_type&) const) & bet_service_i::is_exists)
-            .Do([this](const bet_id_type& obj_id) -> bool { return this->is_exists(obj_id); });
-    }
-};
-
 class pending_bet_service_wrapper : public service_base_wrapper<pending_bet_service_i>
 {
     using base_class = service_base_wrapper<pending_bet_service_i>;
@@ -471,18 +441,6 @@ public:
             });
         _mocks.OnCall(_service, pending_bet_service_i::get_pending_bet)
             .Do([this](const pending_bet_id_type& obj_id) -> const pending_bet_object& { return this->get(obj_id); });
-
-        _mocks.OnCall(_service, pending_bet_service_i::get_by_bet)
-            .Do([this](const bet_id_type& obj_id) -> const pending_bet_object& {
-                for (const auto& v : _objects_by_id)
-                {
-                    const pending_bet_object& obj = v.second;
-                    if (obj.bet == obj_id)
-                        return obj;
-                }
-                FC_ASSERT(false);
-                return get();
-            });
     }
 };
 

@@ -136,8 +136,9 @@ database_impl::database_impl(database& self)
     , _evaluator_registry(self)
     , _betting_service(static_cast<data_service_factory_i&>(_self))
     , _betting_matcher(static_cast<data_service_factory_i&>(_self),
-                       static_cast<database_virtual_operations_emmiter_i&>(_self))
-    , _betting_resolver(_betting_service, _self.matched_bet_service(), _self.bet_service(), _self.account_service())
+                       static_cast<database_virtual_operations_emmiter_i&>(_self),
+                       _betting_service)
+    , _betting_resolver(_betting_service, _self.matched_bet_service(), _self.account_service())
 {
 }
 
@@ -1334,7 +1335,6 @@ void database::initialize_indexes()
     add_index<game_index>();
 
     add_index<betting_property_index>();
-    add_index<bet_index>();
     add_index<pending_bet_index>();
     add_index<matched_bet_index>();
 
@@ -2192,14 +2192,14 @@ void database::validate_invariants() const
         const auto& matched_bets = get_index<matched_bet_index, by_id>();
         for (auto itr = matched_bets.begin(); itr != matched_bets.end(); ++itr)
         {
-            total_supply += itr->matched_bet1_stake;
-            total_supply += itr->matched_bet2_stake;
+            total_supply += itr->stake1;
+            total_supply += itr->stake2;
         }
 
-        const auto& bets = get_index<bet_index, by_id>();
-        for (auto itr = bets.begin(); itr != bets.end(); ++itr)
+        const auto& pending_bets = get_index<pending_bet_index, by_id>();
+        for (auto itr = pending_bets.begin(); itr != pending_bets.end(); ++itr)
         {
-            total_supply += itr->rest_stake;
+            total_supply += itr->stake;
         }
 
         FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");

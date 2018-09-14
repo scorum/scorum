@@ -31,9 +31,6 @@ calculate_matched_stake(const asset& bet1_stake, const asset& bet2_stake, const 
     auto p1 = r1 - bet1_stake;
     auto p2 = r2 - bet2_stake;
 
-    FC_ASSERT(p1.amount > 0);
-    FC_ASSERT(p2.amount > 0);
-
     if (r1 > r2)
     {
         result.bet1_matched = p2;
@@ -41,8 +38,8 @@ calculate_matched_stake(const asset& bet1_stake, const asset& bet2_stake, const 
     }
     else if (r1 < r2)
     {
-        result.bet2_matched = p1;
         result.bet1_matched = bet1_stake;
+        result.bet2_matched = p1;
     }
     else
     {

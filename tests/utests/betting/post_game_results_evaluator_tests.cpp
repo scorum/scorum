@@ -5,7 +5,6 @@
 #include <scorum/chain/services/betting_property.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/game.hpp>
-#include <scorum/chain/services/bet.hpp>
 
 #include <scorum/chain/betting/betting_service.hpp>
 

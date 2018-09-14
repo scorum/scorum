@@ -45,14 +45,6 @@ public:
     std::vector<game_api_object> get_games(game_filter filter) const;
 
     /**
-     * @brief Returns user created bets
-     * @param from lower bound bet id
-     * @param limit query limit
-     * @return array of matched_bet_api_object's
-     */
-    std::vector<bet_api_object> get_user_bets(bet_id_type from, uint32_t limit) const;
-
-    /**
      * @brief Returns matched bets
      * @param from lower bound bet id
      * @param limit query limit
@@ -87,7 +79,6 @@ private:
 
 // clang-format off
 FC_API(scorum::app::betting_api, (get_games)
-                                 (get_user_bets)
                                  (get_matched_bets)
                                  (get_pending_bets)
                                  (get_betting_properties))

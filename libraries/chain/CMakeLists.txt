@@ -58,7 +58,6 @@ add_library( scorum_chain
              services/blocks_story.cpp
              services/hardfork_property.cpp
              services/pending_bet.cpp
-             services/bet.cpp
              services/matched_bet.cpp
              services/game.cpp
 

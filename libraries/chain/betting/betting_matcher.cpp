@@ -4,95 +4,83 @@
 
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/betting_property.hpp>
-#include <scorum/chain/services/bet.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/matched_bet.hpp>
+#include <scorum/chain/betting/betting_service.hpp>
 
 #include <scorum/protocol/betting/market.hpp>
 
 namespace scorum {
 namespace chain {
 
-betting_matcher::betting_matcher(data_service_factory_i& db, database_virtual_operations_emmiter_i& virt_op_emitter)
-    : _dgp_property(db.dynamic_global_property_service())
+betting_matcher::betting_matcher(data_service_factory_i& db,
+                                 database_virtual_operations_emmiter_i& virt_op_emitter,
+                                 betting_service_i& betting_svc)
+    : _betting_svc(betting_svc)
+    , _dgp_property(db.dynamic_global_property_service())
     , _betting_property(db.betting_property_service())
-    , _bet_service(db.bet_service())
     , _pending_bet_service(db.pending_bet_service())
     , _matched_bet_service(db.matched_bet_service())
     , _virt_op_emitter(virt_op_emitter)
 {
 }
 
-void betting_matcher::match(const bet_object& bet1, pending_bet_kind bet_kind)
+void betting_matcher::match(const pending_bet_object& bet2)
 {
     try
     {
-        FC_ASSERT(is_need_matching(bet1));
+        betting_service_i::pending_bet_crefs_type pending_bets_to_cancel;
 
-        using pending_bets_type = std::vector<pending_bet_service_i::object_cref_type>;
-
-        pending_bets_type removing_pending_bets;
-
-        _pending_bet_service.foreach_pending_bets(bet1.game, [&](const pending_bet_object& pending_bet) {
-
-            const bet_object& bet2 = _bet_service.get_bet(pending_bet.bet);
+        _pending_bet_service.foreach_pending_bets(bet2.game, [&](const pending_bet_object& bet1) {
 
             if (!is_bets_matched(bet1, bet2))
                 return true;
 
-            auto matched = calculate_matched_stake(bet1.rest_stake, bet2.rest_stake, bet1.odds_value, bet2.odds_value);
+            auto matched = calculate_matched_stake(bet1.stake, bet2.stake, bet1.odds_value, bet2.odds_value);
             if (matched.bet1_matched.amount > 0 && matched.bet2_matched.amount > 0)
             {
-                _bet_service.update(bet1, [&](bet_object& obj) { obj.rest_stake -= matched.bet1_matched; });
-                _bet_service.update(bet2, [&](bet_object& obj) { obj.rest_stake -= matched.bet2_matched; });
-
                 auto matched_bet = _matched_bet_service.create([&](matched_bet_object& obj) {
-                    obj.when_matched = _dgp_property.head_block_time();
-                    obj.bet1 = bet1.id;
-                    obj.bet2 = bet2.id;
-                    obj.matched_bet1_stake = matched.bet1_matched;
-                    obj.matched_bet2_stake = matched.bet2_matched;
+                    obj.wincase1 = bet1.wincase;
+                    obj.wincase2 = bet2.wincase;
+                    obj.better1 = bet1.better;
+                    obj.better2 = bet2.better;
+                    obj.market = create_market(bet1.wincase);
+                    obj.game = bet1.game;
+                    obj.created = _dgp_property.head_block_time();
+                    obj.stake1 = matched.bet1_matched;
+                    obj.stake2 = matched.bet2_matched;
                 });
+
+                _pending_bet_service.update(bet1, [&](pending_bet_object& o) { o.stake -= matched.bet1_matched; });
+                _pending_bet_service.update(bet2, [&](pending_bet_object& o) { o.stake -= matched.bet2_matched; });
 
                 _virt_op_emitter.push_virtual_operation(protocol::bets_matched_operation(
                     bet1.better, bet2.better, matched.bet1_matched, matched.bet2_matched, matched_bet.id._id));
             }
 
-            if (!is_need_matching(bet2))
-            {
-                removing_pending_bets.emplace_back(std::cref(pending_bet));
-            }
+            if (!can_be_matched(bet1.stake, bet1.odds_value))
+                pending_bets_to_cancel.emplace_back(bet1);
+            if (!can_be_matched(bet2.stake, bet2.odds_value))
+                pending_bets_to_cancel.emplace_back(bet2);
 
-            return is_need_matching(bet1);
+            return can_be_matched(bet2.stake, bet2.odds_value);
         });
 
-        if (is_need_matching(bet1))
-        {
-            _pending_bet_service.create([&](pending_bet_object& obj) {
-                obj.game = bet1.game;
-                obj.bet = bet1.id;
-                obj.kind = bet_kind;
-            });
-        }
-
-        for (const pending_bet_object& pending_bet : removing_pending_bets)
-        {
-            _pending_bet_service.remove(pending_bet);
-        }
+        _betting_svc.cancel_pending_bets(pending_bets_to_cancel);
     }
-    FC_CAPTURE_LOG_AND_RETHROW((bet1))
+    FC_CAPTURE_LOG_AND_RETHROW((bet2))
 }
 
-bool betting_matcher::is_bets_matched(const bet_object& bet1, const bet_object& bet2) const
+bool betting_matcher::is_bets_matched(const pending_bet_object& bet1, const pending_bet_object& bet2) const
 {
     FC_ASSERT(bet1.game == bet2.game);
     return bet1.better != bet2.better && match_wincases(bet1.wincase, bet2.wincase)
         && bet1.odds_value.inverted() == bet2.odds_value;
 }
 
-bool betting_matcher::is_need_matching(const bet_object& bet) const
+bool betting_matcher::can_be_matched(const asset& stake, const odds& bet_odds) const
 {
-    return bet.rest_stake.amount > SCORUM_MIN_BET_STAKE_FOR_MATCHING;
+    return stake * bet_odds > stake;
 }
 }
 }

@@ -3177,13 +3177,6 @@ std::vector<game_api_object> wallet_api::get_games(game_filter filter) const
     return api->get_games(filter);
 }
 
-std::vector<bet_api_object> wallet_api::get_user_bets(bet_id_type from, int64_t limit) const
-{
-    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
-
-    return api->get_user_bets(from, limit);
-}
-
 std::vector<matched_bet_api_object> wallet_api::get_matched_bets(matched_bet_id_type from, int64_t limit) const
 {
     auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
