@@ -60,7 +60,7 @@ namespace detail {
         const fc::time_point_sec fifa_world_cup_2018_bounty_cashout_date;
 
         const fc::microseconds expiraton_for_registration_bonus;
-        
+
         const fc::time_point_sec witness_reward_migration_date;
 
         const uint8_t scorum_max_witnesses;
@@ -265,6 +265,31 @@ namespace detail {
 #define SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE (scorum::protocol::detail::get_config().fifa_world_cup_2018_bounty_cashout_date)
 #define SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS        (scorum::protocol::detail::get_config().expiraton_for_registration_bonus)
 #define SCORUM_WITNESS_REWARD_MIGRATION_DATE           (scorum::protocol::detail::get_config().witness_reward_migration_date)
+
+
+#ifdef IS_LOW_MEM
+#define SCORUM_LOW_MEMORY_NODE (true)
+#else
+#define SCORUM_LOW_MEMORY_NODE (false)
+#endif
+
+#ifdef CLEAR_VOTES
+#define SCORUM_CLEAR_VOTES (true)
+#else
+#define SCORUM_CLEAR_VOTES (false)
+#endif
+
+#ifdef SKIP_BY_TX_ID
+#define SCORUM_SKIP_BY_TX_ID (true)
+#else
+#define SCORUM_SKIP_BY_TX_ID (false)
+#endif
+
+#ifdef LIVE_TESTNET
+#define SCORUM_LIVE_TESTNET (true)
+#else
+#define SCORUM_LIVE_TESTNET (false)
+#endif
 
 ///@}
 
