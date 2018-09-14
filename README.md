@@ -48,12 +48,12 @@ Put your config file in `/opt/scorumd/node/config.ini` (otherwise default config
         -d -p 2001:2001 -p 8090:8090 --name scorum-node \
         scorum/release:0.2.0.3c2edb7
 
-full node
+rpc node
 
     docker run \
         -v /opt/scorumd/node:/var/lib/scorumd \
         -d -p 2001:2001 -p 8090:8090 --name scorum-node \
-        -e NODE=full \
+        -e NODE=rpc \
         scorum/release:0.2.0.3c2edb7
 
 To see node logs
@@ -86,3 +86,6 @@ For a full node, you need 10GB of space available. Scorumd uses a memory mapped 
 
 genesis.json hash sum: `db4007d45f04c1403a7e66a5c66b5b1cdfc2dde8b5335d1d2f116d592ca3dbb1`
 
+# Test net chain_id
+
+genesis.testnet.json hash sum: `d3c1f19a4947c296446583f988c43fd1a83818fabaf3454a0020198cb361ebd2`

@@ -26,7 +26,7 @@ set(embed_genesis_args
     -t "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_full.cpp.tmpl---${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp"
 )
 
-MESSAGE(STATUS "egenesis: " ${SCORUM_EGENESIS_JSON})
+message(STATUS "  SCORUM_EGENESIS_JSON:               ${SCORUM_EGENESIS_JSON}")
 
 if(SCORUM_EGENESIS_JSON)
     list(APPEND embed_genesis_args --genesis-json "${SCORUM_EGENESIS_JSON}")
@@ -34,14 +34,13 @@ endif(SCORUM_EGENESIS_JSON)
 
 MESSAGE(STATUS "embed_genesis_args: " ${embed_genesis_args})
 
-SET(REQUIRED_USERS_IN_GENESIS_JSON "" CACHE STRING "Users list that are checked in result genesis (empty by default)")
-OPTION( TEST_GENESIS_JSON "Apply test for generated genesis.json (ON OR OFF)" OFF )
+OPTION( SCORUM_TEST_GENESIS_JSON "Apply test for generated genesis.json (ON OR OFF)" OFF )
 
 set(scorum_input_genesis_root_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../genesis)
 set(scorum_input_genesis_testnet_dir ${scorum_input_genesis_root_dir}/testnet)
 set(scorum_input_genesis_mainnet_dir ${scorum_input_genesis_root_dir}/mainnet)
 
-if (GENESIS_TESTNET)
+if (SCORUM_GENESIS_TESTNET)
     set(scorum_input_genesis_dir ${scorum_input_genesis_testnet_dir})
 else()
     set(scorum_input_genesis_dir ${scorum_input_genesis_mainnet_dir})
@@ -60,12 +59,15 @@ set(create_genesis_args)
 list(APPEND create_genesis_args --input-genesis-json "${scorum_genesis_template_json}")
 list(APPEND create_genesis_args --import-json "${scorum_users_json}")
 list(APPEND create_genesis_args --output-genesis-json "${SCORUM_EGENESIS_JSON}")
-if (TEST_GENESIS_JSON)
+if (SCORUM_TEST_GENESIS_JSON)
     list(APPEND create_genesis_args --test-resut-genesis)
 endif()
-if (NOT REQUIRED_USERS_IN_GENESIS_JSON STREQUAL "")
-    list(APPEND create_genesis_args --check-users "${REQUIRED_USERS_IN_GENESIS_JSON}")
-endif()
+
+#set(SCORUM_REQUIRED_USERS_IN_GENESIS "" CACHE STRING "Users list that are checked in result genesis (empty by default)")
+
+#if (NOT SCORUM_REQUIRED_USERS_IN_GENESIS STREQUAL "")
+#    list(APPEND create_genesis_args --check-users "${SCORUM_REQUIRED_USERS_IN_GENESIS}")
+#endif()
 
 MESSAGE(STATUS "create_genesis_args: " ${create_genesis_args})
 

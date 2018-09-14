@@ -261,14 +261,11 @@ namespace detail {
 
 #define SCORUM_MISSING_MODERATOR_ACCOUNT       (scorum::protocol::account_name_type())
 
-
-#define SCORUM_BLOGGING_START_DATE (scorum::protocol::detail::get_config().blogging_start_date)
-
+#define SCORUM_BLOGGING_START_DATE                     (scorum::protocol::detail::get_config().blogging_start_date)
 #define SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE (scorum::protocol::detail::get_config().fifa_world_cup_2018_bounty_cashout_date)
-
 #define SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS        (scorum::protocol::detail::get_config().expiraton_for_registration_bonus)
+#define SCORUM_WITNESS_REWARD_MIGRATION_DATE           (scorum::protocol::detail::get_config().witness_reward_migration_date)
 
-#define SCORUM_WITNESS_REWARD_MIGRATION_DATE (scorum::protocol::detail::get_config().witness_reward_migration_date)
 ///@}
 
 // clang-format on

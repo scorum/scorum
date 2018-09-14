@@ -146,6 +146,30 @@ fc::variant_object get_config()
 
     result["SCORUM_WITNESS_REWARD_MIGRATION_DATE"] = SCORUM_WITNESS_REWARD_MIGRATION_DATE;
 
+#ifdef SCORUM_LOW_MEMORY_NODE
+    result["SCORUM_LOW_MEMORY_NODE"] = true;
+#else
+    result["SCORUM_LOW_MEMORY_NODE"] = false;
+#endif
+
+#ifdef CLEAR_VOTES
+    result["SCORUM_CLEAR_VOTES"] = true;
+#else
+    result["SCORUM_CLEAR_VOTES"] = false;
+#endif
+
+#ifdef SKIP_BY_TX_ID
+    result["SCORUM_SKIP_BY_TX_ID"] = true;
+#else
+    result["SCORUM_SKIP_BY_TX_ID"] = false;
+#endif
+
+#ifdef LIVE_TESTNET
+    result["SCORUM_LIVE_TESTNET"] = true;
+#else
+    result["SCORUM_LIVE_TESTNET"] = false;
+#endif
+
     return result;
 }
 } // namespace protocol
