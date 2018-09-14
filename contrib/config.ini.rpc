@@ -5,19 +5,19 @@ shared-file-size = 10G
 p2p-endpoint = 0.0.0.0:2001
 
 # Maxmimum number of incoming connections on P2P endpoint
-# p2p-max-connections = 
+# p2p-max-connections =
 
 # P2P nodes to connect to on startup (may specify multiple times)
 # seed-node =
 
 # Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.
-# checkpoint = 
+# checkpoint =
 
 # Directory containing databases, configuration file, etc.
 # data-dir = "witness_node_data_dir"
 
 # Location of the shared memory file. Defaults to data_dir/blockchain
-# shared-file-dir = 
+# shared-file-dir =
 
 rpc-endpoint = 0.0.0.0:8001
 
@@ -34,7 +34,7 @@ rpc-endpoint = 0.0.0.0:8001
 # server-pem-password =
 
 # API user specification, may be specified multiple times
-# api-user = 
+# api-user =
 
 # Set an API to be publicly available, may be specified multiple times
 public-api = database_api login_api network_broadcast_api account_by_key_api blockchain_history_api account_history_api account_statistics_api chain_api tags_api node_monitoring_api blockchain_statistics_api
@@ -50,25 +50,25 @@ flush = 100000
 
 
 # Rebuild object graph by replaying all blocks
-# replay-blockchain = 
+# replay-blockchain =
 
 # Delete all blocks and re-sync with network from scratch
-# resync-blockchain = 
+# resync-blockchain =
 
 # Force validation of all transactions
-# force-validate = 
+# force-validate =
 
 # Node will not connect to p2p network and can only read from the chain state
-# read-only = 
+# read-only =
 
 # Check correctness of chainbase locking
-# check-locks = 
+# check-locks =
 
 # Disable get_block API call
-# disable-get-block = 
+# disable-get-block =
 
 # Defines a range of accounts to track as a json pair ["from","to"] [from,to] Can be specified multiple times
-# track-account-range = 
+# track-account-range =
 
 # Defines a list of operations which will be explicitly logged.
 # history-whitelist-ops = transfer_operation transfer_to_vesting_operation withdraw_vesting_operation escrow_transfer_operation escrow_approve_operation escrow_dispute_operation escrow_release_operation author_reward_operation curation_reward_operation fill_vesting_withdraw_operation delegate_vesting_shares_operation return_vesting_delegation_operation comment_benefactor_reward_operation
@@ -92,7 +92,7 @@ chain-stats-bucket-size = [1800,3600,86400]
 chain-stats-history-per-bucket = 30
 
 # RPC endpoint of a trusted validating node (required)
-# trusted-node = 
+# trusted-node =
 
 # Enable block production, even if the chain is stale.
 enable-stale-production = false

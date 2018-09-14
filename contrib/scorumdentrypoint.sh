@@ -25,6 +25,12 @@ if [ ! -f "${HOME}/config.ini" ]; then
         cp /etc/scorumd/config.ini.witness "${HOME}/config.ini"
     fi
     chown scorumd:scorumd "${HOME}/config.ini"
+
+    if [ $LIVE_TESTNET = ON ]; then
+        cat /etc/scorumd/seeds.ini.testnet >> "${HOME}/config.ini" || exit 1
+    else
+        cat /etc/scorumd/seeds.ini.mainnet >> "${HOME}/config.ini" || exit 1
+    fi
 fi
 
 # without --data-dir it uses cwd as datadir(!)

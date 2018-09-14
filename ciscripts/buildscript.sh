@@ -8,16 +8,13 @@ if [[ -z "${GIT_COMMIT}" ]]; then
   GIT_COMMIT=$(git rev-parse --short HEAD)
 fi
 
-IMAGE_NAME="scorum/$UPLOAD_PATH:$BRANCH_NAME.${GIT_COMMIT:0:7}"
-
-# Preparing configuration files
-if [[ "$UPLOAD_PATH" == "testnet" ]]; then
-  CONF_TYPE="testnet"
+if [[ ${UPLOAD_PATH} = "testnet" ]]; then
+    LIVE_TESTNET=ON
 else
-  CONF_TYPE="mainnet"
+    LIVE_TESTNET=OFF
 fi
-cat $WORKSPACE/contrib/seeds.ini.$CONF_TYPE >> $WORKSPACE/contrib/config.ini.witness || exit 1
-cat $WORKSPACE/contrib/seeds.ini.$CONF_TYPE >> $WORKSPACE/contrib/config.ini.rpc || exit 1
+
+IMAGE_NAME="scorum/$UPLOAD_PATH:$BRANCH_NAME.${GIT_COMMIT:0:7}"
 
 # Build container
 sudo docker build \
@@ -28,5 +25,6 @@ sudo docker build \
 --build-arg AZURE_STORAGE_ACCESS_KEY=$AZURE_STORAGE_ACCESS_KEY \
 --build-arg AZURE_STORAGE_CONNECTION_STRING=$AZURE_STORAGE_CONNECTION_STRING \
 --build-arg UPLOAD_PATH=$UPLOAD_PATH \
+--build-arg LIVE_TESTNET=${LIVE_TESTNET} \
 --build-arg BUILD_VERSION=$BUILD_VERSION \
 --tag=$IMAGE_NAME .
