@@ -149,7 +149,7 @@ def main(args):
         command.append("-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY")
 
     # Add Scorum flags
-    command.append("-DLOW_MEMORY_NODE=" + ("ON" if args.low_mem_node else "OFF"))
+    command.append("-DSCORUM_LOW_MEMORY_NODE=" + ("ON" if args.low_mem_node else "OFF"))
     command.append("-DCMAKE_BUILD_TYPE=" + ("RELEASE" if args.release else "DEBUG"))
 
     # Add source directory, root paths to search within, and any additional flags/options passed to this script

@@ -36,8 +36,8 @@ repository root.)
     cd build
     cmake \
         -DCMAKE_BUILD_TYPE=Debug \
-        -DLOW_MEMORY_NODE=OFF \
-        -DCLEAR_VOTES=ON \
+        -DSCORUM_LOW_MEMORY_NODE=OFF \
+        -DSCORUM_CLEAR_VOTES=ON \
         ..
     make -j$(nproc) chain_test
     ./tests/chain_test

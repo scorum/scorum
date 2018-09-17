@@ -146,6 +146,11 @@ fc::variant_object get_config()
 
     result["SCORUM_WITNESS_REWARD_MIGRATION_DATE"] = SCORUM_WITNESS_REWARD_MIGRATION_DATE;
 
+    result["SCORUM_LOW_MEMORY_NODE"] = SCORUM_LOW_MEMORY_NODE;
+    result["SCORUM_CLEAR_VOTES"] = SCORUM_CLEAR_VOTES;
+    result["SCORUM_SKIP_BY_TX_ID"] = SCORUM_SKIP_BY_TX_ID;
+    result["SCORUM_LIVE_TESTNET"] = SCORUM_LIVE_TESTNET;
+
     return result;
 }
 } // namespace protocol
