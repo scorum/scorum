@@ -203,11 +203,11 @@ public:
                                      const asset& balance,
                                      const time_point_sec& start_date,
                                      const time_point_sec& end_date,
-                                     const std::string& permlink)
+                                     const std::string& json_metadata)
     {
         FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
 
-        const auto& ret = base_class::create_budget(owner, balance, start_date, end_date, permlink);
+        const auto& ret = base_class::create_budget(owner, balance, start_date, end_date, json_metadata);
 
         take_cash_from_owner(owner, balance);
 
