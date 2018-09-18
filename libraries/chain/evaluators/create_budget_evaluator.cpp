@@ -39,21 +39,22 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
                   < (uint32_t)SCORUM_BUDGETS_LIMIT_PER_OWNER,
               "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGETS_LIMIT_PER_OWNER));
 
-    const auto& dprops = _dprops_service.get();
-    time_point_sec start_date = (op.start < dprops.time) ? dprops.time : op.start;
+    auto deadline = fc::time_point_sec(op.deadline.sec_since_epoch() / SCORUM_BLOCK_INTERVAL * SCORUM_BLOCK_INTERVAL);
+    auto start = fc::time_point_sec(op.start.sec_since_epoch() / SCORUM_BLOCK_INTERVAL * SCORUM_BLOCK_INTERVAL);
+    start = std::max(start, _dprops_service.get().time);
 
     switch (op.type)
     {
     case budget_type::post:
     {
         post_budget_management_algorithm(_post_budget_service, _dprops_service, _account_service)
-            .create_budget(owner.name, op.balance, start_date, op.deadline, op.json_metadata);
+            .create_budget(owner.name, op.balance, start, deadline, op.json_metadata);
     }
     break;
     case budget_type::banner:
     {
         banner_budget_management_algorithm(_banner_budget_service, _dprops_service, _account_service)
-            .create_budget(owner.name, op.balance, start_date, op.deadline, op.json_metadata);
+            .create_budget(owner.name, op.balance, start, deadline, op.json_metadata);
     }
     break;
     }
