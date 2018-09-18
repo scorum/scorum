@@ -1125,6 +1125,30 @@ public:
                                                           const bool broadcast);
 
     /**
+     *  This method will update existing budget (for POST type) linked to owner account.
+     *
+     *  @param owner the future owner of creating budget
+     *  @param json_metadata the budget target identity (post or other)
+     *  @param broadcast
+     */
+    annotated_signed_transaction update_budget_for_post(const std::string& owner,
+                                                        const std::string& json_metadata,
+                                                        int64_t budget_id,
+                                                        bool broadcast);
+
+    /**
+     *  This method will update existing budget (for BANNER type) linked to owner account.
+     *
+     *  @param owner the future owner of creating budget
+     *  @param json_metadata the budget target identity (post or other)
+     *  @param broadcast
+     */
+    annotated_signed_transaction update_budget_for_banner(const std::string& owner,
+                                                          const std::string& json_metadata,
+                                                          int64_t budget_id,
+                                                          bool broadcast);
+
+    /**
      *  Closing the budget (for POST type). The budget rest is returned to the owner's account
      */
     annotated_signed_transaction
@@ -1533,6 +1557,8 @@ FC_API( scorum::wallet::wallet_api,
         (decline_voting_rights)
         (create_budget_for_post)
         (create_budget_for_banner)
+        (update_budget_for_post)
+        (update_budget_for_banner)
         (close_budget_for_post)
         (close_budget_for_banner)
         (close_budget_for_post_by_moderator)

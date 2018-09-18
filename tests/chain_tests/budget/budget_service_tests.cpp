@@ -47,6 +47,17 @@ SCORUM_TEST_CASE(get_budget_check)
     BOOST_REQUIRE_EQUAL(banner_budget_service.get(banner_budget_object::id_type(0)).owner, bob.name);
 }
 
+SCORUM_TEST_CASE(get_budgets_json_isnt_empty_check)
+{
+    create_budget(alice, budget_type::post);
+    create_budget(bob, budget_type::banner);
+
+    BOOST_REQUIRE_EQUAL(post_budget_service.get_budgets().size(), 1u);
+    BOOST_CHECK(!post_budget_service.get_budgets()[0].get().json_metadata.empty());
+    BOOST_REQUIRE_EQUAL(banner_budget_service.get_budgets().size(), 1u);
+    BOOST_CHECK(!banner_budget_service.get_budgets()[0].get().json_metadata.empty());
+}
+
 SCORUM_TEST_CASE(get_all_budgets_check)
 {
     create_budget(alice, budget_type::post);
