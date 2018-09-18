@@ -72,12 +72,12 @@ protected:
                                          const asset& stake)
     {
         return pending_bets.create([&](pending_bet_object& obj) {
-            obj.created = dgp_service.service().head_block_time();
-            obj.better = better;
+            obj.data.created = dgp_service.service().head_block_time();
+            obj.data.better = better;
             obj.game = game;
-            obj.wincase = wincase;
-            obj.odds_value = odds::from_string(odds_value);
-            obj.stake = stake;
+            obj.data.wincase = wincase;
+            obj.data.bet_odds = odds::from_string(odds_value);
+            obj.data.stake = stake;
             obj.market = create_market(wincase);
         });
     }

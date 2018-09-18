@@ -1,6 +1,7 @@
 #include <scorum/chain/betting/betting_service.hpp>
 
 #include <boost/range/algorithm/set_algorithm.hpp>
+#include <boost/range/algorithm/find_if.hpp>
 
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/betting_property.hpp>
@@ -54,6 +55,22 @@ void betting_service::cancel_bets(const game_id_type& game_id)
     cancel_matched_bets(game_id);
 }
 
+void betting_service::cancel_bets(const game_id_type& game_id, fc::time_point_sec created_from)
+{
+    auto matched_bets = _matched_bet_svc.get_bets(game_id, created_from);
+    auto pending_bets = _pending_bet_svc.get_bets(game_id, created_from);
+
+    cancel_pending_bets(pending_bets);
+
+    for (const matched_bet_object& matched_bet : matched_bets)
+    {
+        return_or_restore_bet(matched_bet.bet1_data, matched_bet.game, created_from);
+        return_or_restore_bet(matched_bet.bet2_data, matched_bet.game, created_from);
+    }
+
+    _matched_bet_svc.remove_all(matched_bets);
+}
+
 void betting_service::cancel_bets(const game_id_type& game_id, const fc::flat_set<market_type>& cancelled_markets)
 {
     // clang-format off
@@ -84,7 +101,7 @@ void betting_service::cancel_bets(const game_id_type& game_id, const fc::flat_se
 void betting_service::cancel_pending_bet(pending_bet_id_type id)
 {
     const auto& pending_bet = _pending_bet_svc.get_pending_bet(id);
-    _account_svc.increase_balance(pending_bet.better, pending_bet.stake);
+    _account_svc.increase_balance(pending_bet.data.better, pending_bet.data.stake);
 
     _pending_bet_svc.remove(pending_bet);
 }
@@ -105,7 +122,7 @@ void betting_service::cancel_pending_bets(const pending_bet_crefs_type& pending_
 {
     for (const pending_bet_object& pending_bet : pending_bets)
     {
-        _account_svc.increase_balance(pending_bet.better, pending_bet.stake);
+        _account_svc.increase_balance(pending_bet.data.better, pending_bet.data.stake);
     }
 
     _pending_bet_svc.remove_all(pending_bets);
@@ -121,11 +138,45 @@ void betting_service::cancel_matched_bets(const matched_bet_crefs_type& matched_
 {
     for (const matched_bet_object& matched_bet : matched_bets)
     {
-        _account_svc.increase_balance(matched_bet.better1, matched_bet.stake1);
-        _account_svc.increase_balance(matched_bet.better2, matched_bet.stake2);
+        _account_svc.increase_balance(matched_bet.bet1_data.better, matched_bet.bet1_data.stake);
+        _account_svc.increase_balance(matched_bet.bet2_data.better, matched_bet.bet2_data.stake);
     }
 
     _matched_bet_svc.remove_all(matched_bets);
+}
+
+void betting_service::return_or_restore_bet(const bet_data& bet, game_id_type game_id, fc::time_point_sec threshold)
+{
+    if (bet.created >= threshold)
+    {
+        _account_svc.increase_balance(bet.better, bet.stake);
+    }
+    else
+    {
+        auto bets = _pending_bet_svc.get_bets(game_id, bet.better);
+        // clang-format off
+        auto found_it = boost::find_if(bets, [&](const pending_bet_object& o) {
+            return o.data.created == bet.created
+                && o.data.bet_odds == bet.bet_odds
+                && o.data.kind == bet.kind
+                && !(o.data.wincase < bet.wincase)
+                && !(bet.wincase < o.data.wincase);
+        });
+        // clang-format on
+
+        if (found_it != bets.end())
+        {
+            _pending_bet_svc.update(*found_it, [&](pending_bet_object& o) { o.data.stake += bet.stake; });
+        }
+        else
+        {
+            _pending_bet_svc.create([&](pending_bet_object& o) {
+                o.game = game_id;
+                o.market = create_market(bet.wincase);
+                o.data = bet;
+            });
+        }
+    }
 }
 }
 }

@@ -22,6 +22,18 @@ enum class pending_bet_kind : uint8_t
     non_live = 0b10
 };
 
+struct bet_data
+{
+    fc::time_point_sec created;
+
+    account_name_type better;
+    wincase_type wincase;
+    asset stake = asset(0, SCORUM_SYMBOL);
+
+    odds bet_odds;
+    pending_bet_kind kind = pending_bet_kind::live;
+};
+
 class pending_bet_object : public object<pending_bet_object_type, pending_bet_object>
 {
 public:
@@ -32,14 +44,14 @@ public:
     id_type id;
     game_id_type game;
     market_type market;
-    fc::time_point_sec created;
 
-    account_name_type better;
-    wincase_type wincase;
-    asset stake = asset(0, SCORUM_SYMBOL);
+    bet_data data;
 
-    odds odds_value;
-    pending_bet_kind kind = pending_bet_kind::live;
+    // clang-format off
+    fc::time_point_sec get_created() const { return data.created; }
+    account_name_type get_better() const { return data.better; }
+    pending_bet_kind get_kind() const { return data.kind; }
+    // clang-format on
 };
 
 class matched_bet_object : public object<matched_bet_object_type, matched_bet_object>
@@ -54,17 +66,14 @@ public:
     market_type market;
     fc::time_point_sec created;
 
-    account_name_type better1;
-    wincase_type wincase1;
-    asset stake1 = asset(0, SCORUM_SYMBOL);
-
-    account_name_type better2;
-    wincase_type wincase2;
-    asset stake2 = asset(0, SCORUM_SYMBOL);
+    bet_data bet1_data;
+    bet_data bet2_data;
 };
 
 struct by_game_id_kind;
 struct by_game_id_market;
+struct by_game_id_better;
+struct by_game_id_created;
 
 typedef shared_multi_index_container<pending_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
@@ -76,9 +85,10 @@ typedef shared_multi_index_container<pending_bet_object,
                                                                                  member<pending_bet_object,
                                                                                         game_id_type,
                                                                                         &pending_bet_object::game>,
-                                                                                 member<pending_bet_object,
-                                                                                        pending_bet_kind,
-                                                                                        &pending_bet_object::kind>>>,
+                                                                                 const_mem_fun<pending_bet_object,
+                                                                                               pending_bet_kind,
+                                                                                               &pending_bet_object::
+                                                                                                   get_kind>>>,
                                                 ordered_non_unique<tag<by_game_id_market>,
                                                                    composite_key<pending_bet_object,
                                                                                  member<pending_bet_object,
@@ -86,7 +96,25 @@ typedef shared_multi_index_container<pending_bet_object,
                                                                                         &pending_bet_object::game>,
                                                                                  member<pending_bet_object,
                                                                                         market_type,
-                                                                                        &pending_bet_object::market>>>>>
+                                                                                        &pending_bet_object::market>>>,
+                                                ordered_non_unique<tag<by_game_id_better>,
+                                                                   composite_key<pending_bet_object,
+                                                                                 member<pending_bet_object,
+                                                                                        game_id_type,
+                                                                                        &pending_bet_object::game>,
+                                                                                 const_mem_fun<pending_bet_object,
+                                                                                               account_name_type,
+                                                                                               &pending_bet_object::
+                                                                                                   get_better>>>,
+                                                ordered_non_unique<tag<by_game_id_created>,
+                                                                   composite_key<pending_bet_object,
+                                                                                 member<pending_bet_object,
+                                                                                        game_id_type,
+                                                                                        &pending_bet_object::game>,
+                                                                                 const_mem_fun<pending_bet_object,
+                                                                                               fc::time_point_sec,
+                                                                                               &pending_bet_object::
+                                                                                                   get_created>>>>>
     pending_bet_index;
 
 typedef shared_multi_index_container<matched_bet_object,
@@ -101,38 +129,50 @@ typedef shared_multi_index_container<matched_bet_object,
                                                                                         &matched_bet_object::game>,
                                                                                  member<matched_bet_object,
                                                                                         market_type,
-                                                                                        &matched_bet_object::market>>>>>
+                                                                                        &matched_bet_object::market>>>,
+                                                ordered_non_unique<tag<by_game_id_created>,
+                                                                   composite_key<matched_bet_object,
+                                                                                 member<matched_bet_object,
+                                                                                        game_id_type,
+                                                                                        &matched_bet_object::game>,
+                                                                                 member<matched_bet_object,
+                                                                                        fc::time_point_sec,
+                                                                                        &matched_bet_object::
+                                                                                            created>>>>>
     matched_bet_index;
 }
 }
 
 // clang-format off
 FC_REFLECT_ENUM(scorum::chain::pending_bet_kind,
-           (live)
-           (non_live))
+                (live)
+                (non_live))
+
+FC_REFLECT(scorum::chain::bet_data,
+           (created)
+           (better)
+           (wincase)
+           (stake)
+           (bet_odds)
+           (kind))
 
 FC_REFLECT(scorum::chain::pending_bet_object,
            (id)
-           (created)
-           (better)
            (game)
-           (wincase)
-           (odds_value)
-           (stake)
-           (kind))
+           (market)
+           (data)
+           )
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pending_bet_index)
 
 FC_REFLECT(scorum::chain::matched_bet_object,
            (id)
-           (created)
            (game)
-           (better1)
-           (better2)
-           (wincase1)
-           (wincase2)
-           (stake1)
-           (stake2))
+           (market)
+           (created)
+           (bet1_data)
+           (bet2_data)
+           )
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::matched_bet_object, scorum::chain::matched_bet_index)
 // clang-format on

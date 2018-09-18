@@ -29,12 +29,14 @@ void update_game_start_time_evaluator::do_apply(const operation_type& op)
     FC_ASSERT(_game_service.is_exists(op.game_id), "Game with id '${g}' doesn't exist", ("g", op.game_id));
     const auto& game = _game_service.get_game(op.game_id);
 
-    FC_ASSERT(game.status == game_status::created, "Cannot change the start time when game is started");
+    FC_ASSERT(game.status != game_status::finished, "Cannot change the start time when game is finished");
 
     auto ordered_pair = std::minmax(game.original_start_time, op.start_time);
     FC_ASSERT(ordered_pair.second - ordered_pair.first <= SCORUM_BETTING_START_TIME_DIFF_MAX,
               "Cannot change start time more than ${1} seconds",
               ("1", SCORUM_BETTING_START_TIME_DIFF_MAX.to_seconds()));
+
+    _betting_service.cancel_bets(op.game_id, game.start_time);
 
     _game_service.update(game, [&](game_object& g) {
         auto delta = op.start_time - g.start_time;

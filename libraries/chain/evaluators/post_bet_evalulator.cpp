@@ -48,14 +48,14 @@ void post_bet_evaluator::do_apply(const operation_type& op)
         : pending_bet_kind::non_live;
 
     const auto& pending_bet = _pending_bet_svc.create([&](pending_bet_object& o) {
-        o.stake = op.stake;
-        o.odds_value = odds(op.odds.numerator, op.odds.denominator);
         o.game = op.game_id;
-        o.created = _dynprops_svc.head_block_time();
-        o.better = op.better;
-        o.kind = kind;
-        o.wincase = op.wincase;
         o.market = create_market(op.wincase);
+        o.data.stake = op.stake;
+        o.data.bet_odds = odds(op.odds.numerator, op.odds.denominator);
+        o.data.created = _dynprops_svc.head_block_time();
+        o.data.better = op.better;
+        o.data.kind = kind;
+        o.data.wincase = op.wincase;
     });
 
     _account_service.decrease_balance(better, op.stake);

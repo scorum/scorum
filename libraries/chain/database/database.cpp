@@ -2192,14 +2192,14 @@ void database::validate_invariants() const
         const auto& matched_bets = get_index<matched_bet_index, by_id>();
         for (auto itr = matched_bets.begin(); itr != matched_bets.end(); ++itr)
         {
-            total_supply += itr->stake1;
-            total_supply += itr->stake2;
+            total_supply += itr->bet1_data.stake;
+            total_supply += itr->bet2_data.stake;
         }
 
         const auto& pending_bets = get_index<pending_bet_index, by_id>();
         for (auto itr = pending_bets.begin(); itr != pending_bets.end(); ++itr)
         {
-            total_supply += itr->stake;
+            total_supply += itr->data.stake;
         }
 
         FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");

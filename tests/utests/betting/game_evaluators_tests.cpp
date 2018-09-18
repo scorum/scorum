@@ -358,7 +358,7 @@ SCORUM_TEST_CASE(cannot_find_game_throw)
     BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
 }
 
-SCORUM_TEST_CASE(after_game_started_throw)
+SCORUM_TEST_CASE(after_game_started_shouldnt_throw)
 {
     update_game_start_time_evaluator ev(*dbs_services, *betting_service);
 
@@ -372,8 +372,14 @@ SCORUM_TEST_CASE(after_game_started_throw)
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
+    mocks.ExpectCallOverload(betting_service,
+                             (void (betting_service_i::*)(const game_id_type&, fc::time_point_sec))
+                                 & betting_service_i::cancel_bets);
+    mocks.ExpectCallOverload(game_service,
+                             (void (game_service_i::*)(const game_object&, const game_service_i::modifier_type&))
+                                 & game_service_i::update);
 
-    BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
+    BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
 }
 
 SCORUM_TEST_CASE(expected_time_update)
@@ -390,6 +396,9 @@ SCORUM_TEST_CASE(expected_time_update)
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
+    mocks.OnCallOverload(betting_service,
+                         (void (betting_service_i::*)(const game_id_type&, fc::time_point_sec))
+                             & betting_service_i::cancel_bets);
 
     mocks
         .OnCallOverload(game_service,
