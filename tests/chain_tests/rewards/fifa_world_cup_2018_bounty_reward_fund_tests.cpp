@@ -95,7 +95,7 @@ public:
 
     void operator()(const comment_reward_operation& op)
     {
-        _stats[op.author].author_reward += op.author_payout.amount + op.from_children_payout.amount;
+        _stats[op.author].author_reward += op.author_payout.amount;
         _stats[op.author].beneficiaries_reward += op.beneficiaries_payout.amount;
         _stats[op.author].commenting_reward += op.from_children_payout.amount;
     }

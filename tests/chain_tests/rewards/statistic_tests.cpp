@@ -115,10 +115,9 @@ SCORUM_TEST_CASE(comment_object_statistic_check)
 
     BOOST_CHECK_EQUAL(alice_stat.total_payout_value,
                       alice_stat.author_payout_value + alice_stat.curator_payout_value
-                          + alice_stat.from_children_payout_value + alice_stat.beneficiary_payout_value);
+                          + alice_stat.beneficiary_payout_value);
     BOOST_CHECK_EQUAL(sam_stat.total_payout_value,
-                      sam_stat.author_payout_value + sam_stat.curator_payout_value + sam_stat.from_children_payout_value
-                          + sam_stat.beneficiary_payout_value);
+                      sam_stat.author_payout_value + sam_stat.curator_payout_value + sam_stat.beneficiary_payout_value);
 
     SCORUM_MESSAGE("-- Check parents payout");
 
@@ -255,8 +254,8 @@ SCORUM_TEST_CASE(virtual_operation_statistic_check)
 
         wdump((sam_v_stat));
 
-        BOOST_CHECK_EQUAL(alice_v_stat.reward, alice_stat.author_payout_value + alice_stat.from_children_payout_value);
-        BOOST_CHECK_EQUAL(sam_v_stat.reward, sam_stat.author_payout_value + sam_stat.from_children_payout_value);
+        BOOST_CHECK_EQUAL(alice_v_stat.reward, alice_stat.author_payout_value);
+        BOOST_CHECK_EQUAL(sam_v_stat.reward, sam_stat.author_payout_value);
     }
 
     SCORUM_MESSAGE("-- Check curation_reward_operation");
