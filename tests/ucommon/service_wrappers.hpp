@@ -5,6 +5,7 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/budgets.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 
 #include <fc/optional.hpp>
 
@@ -269,6 +270,20 @@ public:
 
     void init_extension()
     {
+        _mocks.OnCall(_service, post_budget_service_i::create_budget)
+            .Do([this](const account_name_type& owner, const asset& balance, fc::time_point_sec start,
+                       fc::time_point_sec end, const std::string& json_metadata) -> decltype(auto) {
+                return this->create([&](post_budget_service_i::object_type& o) {
+                    o.owner = owner;
+                    o.created = fc::time_point_sec(42);
+                    o.cashout_time = o.created + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
+                    o.start = start;
+                    o.deadline = end;
+                    o.balance = balance;
+                    o.per_block = asset(42, SCORUM_SYMBOL);
+                });
+            });
+
         _mocks
             .OnCallOverload(
                 _service,
@@ -304,6 +319,19 @@ public:
 
     void init_extension()
     {
+        _mocks.OnCall(_service, banner_budget_service_i::create_budget)
+            .Do([this](const account_name_type& owner, const asset& balance, fc::time_point_sec start,
+                       fc::time_point_sec end, const std::string& json_metadata) -> decltype(auto) {
+                return this->create([&](banner_budget_service_i::object_type& o) {
+                    o.owner = owner;
+                    o.created = fc::time_point_sec(42);
+                    o.cashout_time = o.created + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
+                    o.start = start;
+                    o.deadline = end;
+                    o.balance = balance;
+                    o.per_block = asset(42, SCORUM_SYMBOL);
+                });
+            });
         _mocks
             .OnCallOverload(
                 _service,

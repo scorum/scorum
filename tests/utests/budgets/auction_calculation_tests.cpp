@@ -1,7 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/database/budget_management_algorithms.hpp>
-
+#include <scorum/chain/advertising/advertising_auction.hpp>
 #include <scorum/protocol/types.hpp>
 #include <scorum/protocol/asset.hpp>
 
@@ -50,32 +49,35 @@ SCORUM_TEST_CASE(invalid_input_check)
 {
     BOOST_TEST_MESSAGE("Check invalid coefficient's list");
 
-    SCORUM_CHECK_THROW(calculate_auction_bets(default_per_block_values, position_weights_type()), fc::assert_exception);
+    SCORUM_CHECK_THROW(advertising_auction::calculate_bets(default_per_block_values, position_weights_type()),
+                       fc::assert_exception);
 
     BOOST_TEST_MESSAGE("Check invalid (negative) coefficient value");
 
     position_weights_type invalid_position_weights = default_position_weights;
     (*invalid_position_weights.rbegin()) *= -1;
-    SCORUM_CHECK_THROW(calculate_auction_bets(per_block_values_type(), invalid_position_weights), fc::assert_exception);
+    SCORUM_CHECK_THROW(advertising_auction::calculate_bets(per_block_values_type(), invalid_position_weights),
+                       fc::assert_exception);
 
     BOOST_TEST_MESSAGE("Check invalid (disrupted sorting) coefficient value");
 
     invalid_position_weights = default_position_weights;
     auto half_position = default_position_weights.size() / 2;
     std::swap(invalid_position_weights[0], invalid_position_weights[half_position]);
-    SCORUM_CHECK_THROW(calculate_auction_bets(per_block_values_type(), invalid_position_weights), fc::assert_exception);
+    SCORUM_CHECK_THROW(advertising_auction::calculate_bets(per_block_values_type(), invalid_position_weights),
+                       fc::assert_exception);
 
     BOOST_TEST_MESSAGE("Check invalid (negative) per-block value");
 
     per_block_values_type invalid_per_block_values = default_per_block_values;
     (*invalid_per_block_values.rbegin()) *= -1;
-    SCORUM_CHECK_THROW(calculate_auction_bets(invalid_per_block_values, default_position_weights),
+    SCORUM_CHECK_THROW(advertising_auction::calculate_bets(invalid_per_block_values, default_position_weights),
                        fc::assert_exception);
 }
 
 SCORUM_TEST_CASE(etalon_calculation_check)
 {
-    auto result = calculate_auction_bets(default_per_block_values, default_position_weights);
+    auto result = advertising_auction::calculate_bets(default_per_block_values, default_position_weights);
     BOOST_REQUIRE_EQUAL(result.size(), 4);
     BOOST_CHECK_EQUAL(result[0], ASSET_SCR(3.85e+9));
     BOOST_CHECK_EQUAL(result[1], ASSET_SCR(2.8e+9));
@@ -87,7 +89,7 @@ SCORUM_TEST_CASE(check_top_less_that_coefficients)
 {
     per_block_values_type per_block_values = { ASSET_SCR(10e+9), ASSET_SCR(7e+9), ASSET_SCR(5e+9) };
 
-    auto result = calculate_auction_bets(per_block_values, default_position_weights);
+    auto result = advertising_auction::calculate_bets(per_block_values, default_position_weights);
     BOOST_REQUIRE_EQUAL(result.size(), 3);
     BOOST_CHECK_EQUAL(result[0], ASSET_SCR(6.55e+9));
     BOOST_CHECK_EQUAL(result[1], ASSET_SCR(5.5e+9));
@@ -98,7 +100,7 @@ SCORUM_TEST_CASE(check_no_budgets)
 {
     per_block_values_type per_block_empty;
 
-    auto result = calculate_auction_bets(per_block_empty, default_position_weights);
+    auto result = advertising_auction::calculate_bets(per_block_empty, default_position_weights);
     BOOST_REQUIRE_EQUAL(result.size(), 0);
 }
 
@@ -108,7 +110,7 @@ SCORUM_TEST_CASE(check_single_budget)
 
     BOOST_REQUIRE_EQUAL(default_position_weights.size(), 4);
 
-    auto result = calculate_auction_bets(per_blocks, default_position_weights);
+    auto result = advertising_auction::calculate_bets(per_blocks, default_position_weights);
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
     BOOST_CHECK_EQUAL(result[0].amount.value, 1000);
@@ -122,8 +124,8 @@ SCORUM_TEST_CASE(extrapolations_check)
     next_position_weights.push_back(next_decreasing_percent(*next_position_weights.rbegin()));
     next_per_block_values.push_back(next_decreasing_per_block(*next_per_block_values.rbegin()));
 
-    BOOST_CHECK_LT((*calculate_auction_bets(next_per_block_values, next_position_weights).rbegin()),
-                   (*calculate_auction_bets(default_per_block_values, default_position_weights).rbegin()));
+    BOOST_CHECK_LT((*advertising_auction::calculate_bets(next_per_block_values, next_position_weights).rbegin()),
+                   (*advertising_auction::calculate_bets(default_per_block_values, default_position_weights).rbegin()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

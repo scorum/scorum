@@ -16,77 +16,23 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/advertising_property_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
-#include <scorum/chain/database/budget_management_algorithms.hpp>
 
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <boost/range/algorithm_ext/copy_n.hpp>
+#include <boost/range/numeric.hpp>
 #include <scorum/utils/range_adaptors.hpp>
 
-#include <vector>
+#include <scorum/chain/advertising/advertising_auction.hpp>
 
 namespace scorum {
 namespace chain {
 namespace database_ns {
 
 using scorum::protocol::producer_reward_operation;
-
-template <typename ServiceIterfaceType, typename CoeffListType>
-asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
-                                               dynamic_global_property_service_i& dgp_service,
-                                               account_service_i& account_service,
-                                               const CoeffListType& auction_coefficients,
-                                               const budget_type type,
-                                               database_virtual_operations_emmiter_i& ctx)
-{
-    namespace br = boost::range;
-
-    asset total_adv_cash(0, ServiceIterfaceType::object_type::symbol_type);
-
-    advertising_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
-
-    auto budgets = service.get_top_budgets(dgp_service.head_block_time());
-    std::vector<asset> per_block_list;
-    br::transform(budgets, std::back_inserter(per_block_list), [](auto b) { return b.get().per_block; });
-
-    auto valuable_per_block_vec = utils::take_n(per_block_list, auction_coefficients.size() + 1);
-    auto auction_bets = calculate_auction_bets(valuable_per_block_vec, auction_coefficients);
-
-    for (size_t i = 0; i < budgets.size(); ++i)
-    {
-        const auto& budget = budgets[i].get();
-        auto budget_owner = budget.owner;
-        auto budget_id = budget.id._id;
-
-        auto per_block = manager.allocate_cash(budget);
-
-        auto adv_cash = asset(0, per_block.symbol());
-        if (i < auction_bets.size())
-            adv_cash = auction_bets[i];
-
-        if (adv_cash.amount > 0)
-        {
-            total_adv_cash += adv_cash;
-
-            ctx.push_virtual_operation(
-                allocate_cash_from_advertising_budget_operation(type, budget_owner, budget_id, adv_cash));
-        }
-
-        auto ret_cash = per_block - adv_cash;
-        FC_ASSERT(ret_cash.amount >= 0, "cash-back amount cannot be less than zero");
-        if (ret_cash.amount > 0)
-        {
-            manager.cash_back(budget_owner, ret_cash);
-
-            ctx.push_virtual_operation(
-                cash_back_from_advertising_budget_to_owner_operation(type, budget_owner, budget_id, ret_cash));
-        }
-    }
-
-    return total_adv_cash;
-}
 
 void process_funds::on_apply(block_task_context& ctx)
 {
@@ -103,7 +49,7 @@ void process_funds::on_apply(block_task_context& ctx)
     post_budget_service_i& post_budget_service = services.post_budget_service();
     banner_budget_service_i& banner_budget_service = services.banner_budget_service();
     account_service_i& account_service = services.account_service();
-    advertising_property_service_i& advertising_property_service = services.advertising_property_service();
+    advertising_property_service_i& adv_property_svc = services.advertising_property_service();
 
     // We don't have inflation.
     // We just get per block reward from original reward fund(4.8M SP)
@@ -113,36 +59,65 @@ void process_funds::on_apply(block_task_context& ctx)
     asset original_fund_reward = asset(0, SP_SYMBOL);
     if (fund_budget_service.is_exists())
     {
-        original_fund_reward += fund_budget_management_algorithm(fund_budget_service, dgp_service)
-                                    .allocate_cash(fund_budget_service.get());
+        original_fund_reward += fund_budget_service.allocate_cash(fund_budget_service.get());
     }
 
     distribute_reward(ctx, original_fund_reward); // distribute SP
 
-    asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
+    advertising_auction auction(dgp_service, adv_property_svc, post_budget_service, banner_budget_service);
+    auction.run_round();
 
-    advertising_budgets_reward += allocate_advertising_cash(
-        post_budget_service, dgp_service, account_service, advertising_property_service.get().auction_post_coefficients,
-        budget_type::post, ctx);
-    advertising_budgets_reward += allocate_advertising_cash(
-        banner_budget_service, dgp_service, account_service,
-        advertising_property_service.get().auction_banner_coefficients, budget_type::banner, ctx);
+    auto adv_budgets_reward = asset(0, SCORUM_SYMBOL);
+    adv_budgets_reward += process_adv_pending_payouts(post_budget_service, account_service, ctx);
+    adv_budgets_reward += process_adv_pending_payouts(banner_budget_service, account_service, ctx);
+
+    post_budget_service.close_empty_budgets();
+    banner_budget_service.close_empty_budgets();
 
     // 50% of the revenue goes to support and develop the product, namely,
     // towards the company's R&D center.
-    asset dev_team_reward = advertising_budgets_reward
-        * utils::make_fraction(SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT, SCORUM_100_PERCENT);
+    asset dev_team_reward
+        = adv_budgets_reward * utils::make_fraction(SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT, SCORUM_100_PERCENT);
     dev_service.update([&](dev_committee_object& dco) { dco.scr_balance += dev_team_reward; });
 
     // 50% of revenue is distributed in SCR among users.
     // pass it through reward balancer
     reward_balance_algorithm<content_reward_scr_service_i> balancer(content_reward_service);
-    balancer.increase_ballance(advertising_budgets_reward - dev_team_reward);
+    balancer.increase_ballance(adv_budgets_reward - dev_team_reward);
     asset users_reward = balancer.take_block_reward();
 
     distribute_reward(ctx, users_reward); // distribute SCR
 
     debug_log(ctx.get_block_info(), "process_funds END");
+}
+
+template <budget_type budget_type_v>
+asset process_funds::process_adv_pending_payouts(adv_budget_service_i<budget_type_v>& budget_svc,
+                                                 account_service_i& account_svc,
+                                                 database_virtual_operations_emmiter_i& virt_op_emitter)
+{
+    auto pending_budgets = budget_svc.get_pending_budgets();
+
+    std::vector<allocate_cash_from_advertising_budget_operation> allocated_cash_ops;
+    std::vector<cash_back_from_advertising_budget_to_owner_operation> returned_cash_ops;
+    for (const adv_budget_object<budget_type_v>& budget : pending_budgets)
+    {
+        if (budget.budget_pending_outgo.amount > 0)
+            allocated_cash_ops.emplace_back(budget_type_v, budget.owner, budget.id._id, budget.budget_pending_outgo);
+
+        if (budget.owner_pending_income.amount > 0)
+            returned_cash_ops.emplace_back(budget_type_v, budget.owner, budget.id._id, budget.owner_pending_income);
+    }
+
+    auto adv_budgets_reward = budget_svc.perform_pending_payouts(pending_budgets);
+
+    for (const auto& op : allocated_cash_ops)
+        virt_op_emitter.push_virtual_operation(op);
+
+    for (const auto& op : returned_cash_ops)
+        virt_op_emitter.push_virtual_operation(op);
+
+    return adv_budgets_reward;
 }
 
 void process_funds::distribute_reward(block_task_context& ctx, const asset& users_reward)

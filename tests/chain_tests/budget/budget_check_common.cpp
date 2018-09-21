@@ -33,11 +33,8 @@ create_budget_operation budget_check_fixture::create_budget(
     op.owner = owner.name;
     op.type = type;
     op.balance = asset(balance, SCORUM_SYMBOL);
-    if (start_in_blocks > 0)
-    {
-        op.start = db.get_slot_time(start_in_blocks);
-    }
-    op.deadline = db.get_slot_time(deadline_in_blocks);
+    op.start = db.head_block_time() + start_in_blocks * SCORUM_BLOCK_INTERVAL;
+    op.deadline = db.head_block_time() + deadline_in_blocks * SCORUM_BLOCK_INTERVAL;
     op.json_metadata = get_unique_permlink();
 
     push_operation_only(op, owner.private_key);

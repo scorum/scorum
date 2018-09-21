@@ -6,8 +6,6 @@
 #include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/advertising_property.hpp>
 
-#include <scorum/chain/database/budget_management_algorithms.hpp>
-
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/budget_objects.hpp>
@@ -21,7 +19,6 @@ close_budget_by_advertising_moderator_evaluator::close_budget_by_advertising_mod
     , _account_service(services.account_service())
     , _post_budget_service(services.post_budget_service())
     , _banner_budget_service(services.banner_budget_service())
-    , _dprops_service(services.dynamic_global_property_service())
     , _adv_property_service(services.advertising_property_service())
 {
 }
@@ -38,18 +35,11 @@ void close_budget_by_advertising_moderator_evaluator::do_apply(
     switch (op.type)
     {
     case budget_type::post:
-    {
-        const auto& budget = _post_budget_service.get(op.budget_id);
-        post_budget_management_algorithm(_post_budget_service, _dprops_service, _account_service).close_budget(budget);
-    }
-    break;
+        _post_budget_service.finish_budget(op.budget_id);
+        break;
     case budget_type::banner:
-    {
-        const auto& budget = _banner_budget_service.get(op.budget_id);
-        banner_budget_management_algorithm(_banner_budget_service, _dprops_service, _account_service)
-            .close_budget(budget);
-    }
-    break;
+        _banner_budget_service.finish_budget(op.budget_id);
+        break;
     }
 }
 }

@@ -8,7 +8,6 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/rewards_math/formulas.hpp>
-#include <scorum/chain/database/budget_management_algorithms.hpp>
 
 #include "database_blog_integration.hpp"
 #include "actor.hpp"
@@ -65,8 +64,8 @@ public:
 
         banner_budget_service_i& custom_budget_service = db.banner_budget_service();
 
-        const auto& ret = banner_budget_management_algorithm(custom_budget_service, dprops_service, account_service)
-                              .create_budget(account.name, advertising_budget, db.head_block_time(), deadline, "{}");
+        const auto& ret = custom_budget_service.create_budget(account.name, advertising_budget, db.head_block_time(),
+                                                              deadline, "{}");
 
         auto& reward_service = db.obtain_service<dbs_content_reward_scr>();
         reward_service.update(
@@ -130,53 +129,6 @@ SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget)
     active_sp_holders_reward *= pass_blocks;
 
     BOOST_REQUIRE_EQUAL(account_service.get_account(bob.name).scorumpower, bob_sp_before + active_sp_holders_reward);
-}
-
-SCORUM_TEST_CASE(per_block_scr_payment_from_budget)
-{
-    auto advertising_budget = create_advertising_budget(100);
-
-    auto post = create_post(alice).push();
-    post.vote(bob).in_block();
-
-    auto initial_blocks = db.head_block_num();
-    generate_blocks(db.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD);
-    auto pass_blocks = db.head_block_num() - initial_blocks;
-
-    auto dev_team_reward_scr = advertising_budget * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    auto user_reward_scr = advertising_budget - dev_team_reward_scr;
-
-    auto active_sp_holders_reward = get_active_voters_reward(user_reward_scr);
-    active_sp_holders_reward *= pass_blocks;
-
-    BOOST_REQUIRE_EQUAL(account_service.get_account(bob.name).balance, active_sp_holders_reward);
-}
-
-SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget_if_no_active_voters_exist)
-{
-    generate_block();
-
-    auto active_sp_holders_reward = get_active_voters_reward(budget_service.get().per_block);
-
-    auto& balancer = voters_reward_sp_service.get();
-
-    BOOST_REQUIRE_EQUAL(balancer.balance, active_sp_holders_reward);
-}
-
-SCORUM_TEST_CASE(per_block_scr_payment_from_budget_if_no_active_voters_exist)
-{
-    auto advertising_budget = create_advertising_budget(1);
-
-    generate_block();
-
-    auto dev_team_reward_scr = advertising_budget * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    auto user_reward_scr = advertising_budget - dev_team_reward_scr;
-
-    auto active_sp_holders_reward = get_active_voters_reward(user_reward_scr);
-
-    auto& balancer = voters_reward_scr_service.get();
-
-    BOOST_REQUIRE_EQUAL(balancer.balance, active_sp_holders_reward);
 }
 
 SCORUM_TEST_CASE(per_block_sp_payment_division_from_fund_budget)

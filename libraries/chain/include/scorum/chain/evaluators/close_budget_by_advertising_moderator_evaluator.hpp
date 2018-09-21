@@ -8,7 +8,6 @@ namespace chain {
 struct account_service_i;
 struct post_budget_service_i;
 struct banner_budget_service_i;
-struct dynamic_global_property_service_i;
 struct advertising_property_service_i;
 
 class close_budget_by_advertising_moderator_evaluator
@@ -25,7 +24,6 @@ private:
     account_service_i& _account_service;
     post_budget_service_i& _post_budget_service;
     banner_budget_service_i& _banner_budget_service;
-    dynamic_global_property_service_i& _dprops_service;
     advertising_property_service_i& _adv_property_service;
 };
 }
