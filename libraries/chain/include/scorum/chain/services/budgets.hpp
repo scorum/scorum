@@ -50,6 +50,7 @@ struct adv_budget_service_i : public base_service_i<adv_budget_object<budget_typ
         = 0;
 
     virtual const adv_budget_object<budget_type_v>& get(const oid<adv_budget_object<budget_type_v>>&) const = 0;
+    virtual bool is_exists(const oid<adv_budget_object<budget_type_v>>& id) const = 0;
     virtual const adv_budget_object<budget_type_v>* find(const oid<adv_budget_object<budget_type_v>>&) const = 0;
 
     virtual budgets_type get_budgets() const = 0;
@@ -59,8 +60,6 @@ struct adv_budget_service_i : public base_service_i<adv_budget_object<budget_typ
     virtual std::set<std::string> lookup_budget_owners(const std::string& lower_bound_owner_name,
                                                        uint32_t limit) const = 0;
     virtual budgets_type get_budgets(const account_name_type& owner) const = 0;
-    virtual const adv_budget_object<budget_type_v>&
-    get_budget(const account_name_type& owner, const oid<adv_budget_object<budget_type_v>>& id) const = 0;
 
     virtual asset allocate_cash(const adv_budget_object<budget_type_v>& budget) = 0;
     virtual void update_pending_payouts(const adv_budget_object<budget_type_v>& budget,
@@ -108,9 +107,8 @@ public:
                                                           const std::string& json_metadata) override;
 
     const adv_budget_object<budget_type_v>& get(const oid<adv_budget_object<budget_type_v>>& id) const override;
+    bool is_exists(const oid<adv_budget_object<budget_type_v>>& id) const override;
     const adv_budget_object<budget_type_v>* find(const oid<adv_budget_object<budget_type_v>>& id) const override;
-    const adv_budget_object<budget_type_v>& get_budget(const account_name_type& owner,
-                                                       const oid<adv_budget_object<budget_type_v>>& id) const override;
 
     budgets_type get_budgets() const override;
     budgets_type get_budgets(const account_name_type& owner) const override;

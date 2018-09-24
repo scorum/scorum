@@ -26,21 +26,29 @@ close_budget_by_advertising_moderator_evaluator::close_budget_by_advertising_mod
 void close_budget_by_advertising_moderator_evaluator::do_apply(
     const close_budget_by_advertising_moderator_evaluator::operation_type& op)
 {
+    switch (op.type)
+    {
+    case budget_type::post:
+        close_budget(_post_budget_service, op);
+        break;
+    case budget_type::banner:
+        close_budget(_banner_budget_service, op);
+        break;
+    }
+}
+
+template <protocol::budget_type budget_type_v>
+void close_budget_by_advertising_moderator_evaluator::close_budget(adv_budget_service_i<budget_type_v>& budget_svc,
+                                                                   const operation_type& op)
+{
     _account_service.check_account_existence(op.moderator);
 
     auto& current_moderator = _adv_property_service.get().moderator;
     FC_ASSERT(current_moderator != SCORUM_MISSING_MODERATOR_ACCOUNT, "Advertising moderator was not set");
     FC_ASSERT(current_moderator == op.moderator, "User ${1} is not the advertising moderator", ("1", op.moderator));
+    FC_ASSERT(budget_svc.is_exists(op.budget_id), "Budget with id ${id} doesn't exist", ("id", op.budget_id));
 
-    switch (op.type)
-    {
-    case budget_type::post:
-        _post_budget_service.finish_budget(op.budget_id);
-        break;
-    case budget_type::banner:
-        _banner_budget_service.finish_budget(op.budget_id);
-        break;
-    }
+    budget_svc.finish_budget(op.budget_id);
 }
 }
 }

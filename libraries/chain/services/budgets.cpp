@@ -124,6 +124,16 @@ dbs_advertising_budget<budget_type_v>::get(const oid<adv_budget_object<budget_ty
 }
 
 template <budget_type budget_type_v>
+bool dbs_advertising_budget<budget_type_v>::is_exists(const oid<adv_budget_object<budget_type_v>>& id) const
+{
+    try
+    {
+        return nullptr != this->find_by(id);
+    }
+    FC_CAPTURE_AND_RETHROW((id))
+}
+
+template <budget_type budget_type_v>
 const adv_budget_object<budget_type_v>*
 dbs_advertising_budget<budget_type_v>::find(const oid<adv_budget_object<budget_type_v>>& id) const
 {
@@ -132,18 +142,6 @@ dbs_advertising_budget<budget_type_v>::find(const oid<adv_budget_object<budget_t
         return this->find_by(id);
     }
     FC_CAPTURE_AND_RETHROW((id))
-}
-
-template <budget_type budget_type_v>
-const adv_budget_object<budget_type_v>&
-dbs_advertising_budget<budget_type_v>::get_budget(const account_name_type& owner,
-                                                  const oid<adv_budget_object<budget_type_v>>& id) const
-{
-    try
-    {
-        return this->template get_by<by_authorized_owner>(std::make_tuple(owner, id));
-    }
-    FC_CAPTURE_AND_RETHROW((owner)(id))
 }
 
 template <budget_type budget_type_v>
@@ -170,10 +168,6 @@ dbs_advertising_budget<budget_type_v>::get_top_budgets(const fc::time_point_sec&
         auto& idx = this->db_impl().template get_index<adv_budget_index<budget_type_v>, by_per_block>();
         auto from = idx.begin();
         auto to = idx.lower_bound(false); // including
-
-        auto rng2 = boost::make_iterator_range(from, idx.end());
-        typename dbs_advertising_budget<budget_type_v>::budgets_type vec(rng2.begin(), rng2.end());
-        boost::ignore_unused_variable_warning(vec);
 
         auto rng = boost::make_iterator_range(from, to)
             | ba::filtered([&](const adv_budget_object<budget_type_v>& obj) { return obj.start <= until; });
@@ -302,7 +296,7 @@ void dbs_advertising_budget<budget_type_v>::finish_budget(const oid<adv_budget_o
 template <budget_type budget_type_v> void dbs_advertising_budget<budget_type_v>::close_empty_budgets()
 {
     auto zero = asset(0, SCORUM_SYMBOL);
-    auto empty_budgets = this->template get_range_by<by_money_rest>(
+    auto empty_budgets = this->template get_range_by<by_balances>(
         boost::multi_index::unbounded, ::boost::lambda::_1 <= std::make_tuple(zero, zero, zero));
 
     for (const adv_budget_object<budget_type_v>& budget : empty_budgets)

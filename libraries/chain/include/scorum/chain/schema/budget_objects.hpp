@@ -79,7 +79,6 @@ public:
 };
 
 struct by_owner_name;
-struct by_authorized_owner;
 struct by_per_block;
 
 template <typename TBudgetObject> using id_t = typename TBudgetObject::id_type;
@@ -103,7 +102,7 @@ using fund_budget_index
                                                                                    std::less<fund_budget_object::id_type>>>>>;
 
 struct by_cashout_time;
-struct by_money_rest;
+struct by_balances;
 
 template <budget_type budget_type_v>
 using adv_budget_index
@@ -116,15 +115,7 @@ using adv_budget_index
                                                                  member<adv_budget_object<budget_type_v>,
                                                                         account_name_type,
                                                                         &adv_budget_object<budget_type_v>::owner>>,
-                                              ordered_unique<tag<by_authorized_owner>,
-                                                             composite_key<adv_budget_object<budget_type_v>,
-                                                                           member<adv_budget_object<budget_type_v>,
-                                                                                  account_name_type,
-                                                                                  &adv_budget_object<budget_type_v>::owner>,
-                                                                           member<adv_budget_object<budget_type_v>,
-                                                                                  id_t<adv_budget_object<budget_type_v>>,
-                                                                                  &adv_budget_object<budget_type_v>::id>>>,
-                                              ordered_non_unique<tag<by_money_rest>,
+                                              ordered_non_unique<tag<by_balances>,
                                                                  composite_key<adv_budget_object<budget_type_v>,
                                                                                member<adv_budget_object<budget_type_v>,
                                                                                       asset,
