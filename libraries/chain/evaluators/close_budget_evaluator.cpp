@@ -13,11 +13,13 @@
 namespace scorum {
 namespace chain {
 
-close_budget_evaluator::close_budget_evaluator(data_service_factory_i& services)
+close_budget_evaluator::close_budget_evaluator(data_service_factory_i& services,
+                                               database_virtual_operations_emmiter_i& virt_op_emmiter)
     : evaluator_impl<data_service_factory_i, close_budget_evaluator>(services)
     , _account_service(services.account_service())
     , _post_budget_service(services.post_budget_service())
     , _banner_budget_service(services.banner_budget_service())
+    , _virt_op_emmiter(virt_op_emmiter)
 {
 }
 
@@ -43,7 +45,12 @@ void close_budget_evaluator::close_budget(adv_budget_service_i<budget_type_v>& b
     const auto& budget = budget_svc.get(op.budget_id);
     FC_ASSERT(budget.owner == op.owner, "These is not [${o}/${id}] budget", ("o", op.owner)("id", op.budget_id));
 
+    auto balance_rest = budget.balance;
+
     budget_svc.finish_budget(op.budget_id);
+
+    _virt_op_emmiter.push_virtual_operation(
+        closing_budget_operation(budget_type_v, budget.owner, op.budget_id, balance_rest));
 }
 }
 }
