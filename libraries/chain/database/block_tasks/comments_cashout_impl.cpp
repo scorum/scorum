@@ -85,8 +85,6 @@ void process_comments_cashout_impl::reward(TFundService& fund_service, const com
 asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& comments,
                                                       const std::vector<asset>& fund_rewards)
 {
-    namespace math = rewards_math;
-
     FC_ASSERT(comments.size() == fund_rewards.size(), "comments count and comments' rewards count should be equal");
     FC_ASSERT(!fund_rewards.empty(), "collection cannot be empty");
 
