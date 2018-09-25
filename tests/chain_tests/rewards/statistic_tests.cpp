@@ -159,7 +159,7 @@ struct curation_reward_operation_stats
     asset reward = ASSET_NULL_SP;
 };
 
-struct comment_benefactor_reward_operation_stats
+struct comment_benefficiary_reward_operation_stats
 {
     asset reward = ASSET_NULL_SP;
 };
@@ -175,8 +175,8 @@ SCORUM_TEST_CASE(virtual_operation_statistic_check)
                      std::map<std::string, author_reward_operation_stats>>,
             bf::pair<curation_reward_operation_stats,
                      std::map<std::string, curation_reward_operation_stats>>,
-            bf::pair<comment_benefactor_reward_operation_stats,
-                     std::map<std::string, comment_benefactor_reward_operation_stats>>
+            bf::pair<comment_benefficiary_reward_operation_stats,
+                     std::map<std::string, comment_benefficiary_reward_operation_stats>>
             > stats;
 
     db.post_apply_operation.connect([&](const operation_notification& note) {
@@ -202,9 +202,9 @@ SCORUM_TEST_CASE(virtual_operation_statistic_check)
                 auto &stat = bf::at_key<curation_reward_operation_stats>(stats)[op.comment_author];
                 stat.reward += op.reward;
             },
-            [&](const comment_benefactor_reward_operation& op)
+            [&](const comment_benefficiary_reward_operation& op)
             {
-                auto &stat = bf::at_key<comment_benefactor_reward_operation_stats>(stats)[op.author];
+                auto &stat = bf::at_key<comment_benefficiary_reward_operation_stats>(stats)[op.author];
                 stat.reward += op.reward;
             });
     });
@@ -272,13 +272,13 @@ SCORUM_TEST_CASE(virtual_operation_statistic_check)
         BOOST_CHECK_EQUAL(sam_v_stat.reward, sam_stat.curator_payout_value);
     }
 
-    SCORUM_MESSAGE("-- Check comment_benefactor_reward_operation");
+    SCORUM_MESSAGE("-- Check comment_benefficiary_reward_operation");
     {
-        const auto& alice_v_stat = bf::at_key<comment_benefactor_reward_operation_stats>(stats)[alice];
+        const auto& alice_v_stat = bf::at_key<comment_benefficiary_reward_operation_stats>(stats)[alice];
 
         wdump((alice_v_stat));
 
-        const auto& sam_v_stat = bf::at_key<comment_benefactor_reward_operation_stats>(stats)[sam];
+        const auto& sam_v_stat = bf::at_key<comment_benefficiary_reward_operation_stats>(stats)[sam];
 
         wdump((sam_v_stat));
 
@@ -346,5 +346,5 @@ FC_REFLECT(rewards_blogging_statistic_tests::rewards_blogging_statistic_tests::a
 FC_REFLECT(rewards_blogging_statistic_tests::rewards_blogging_statistic_tests::curation_reward_operation_stats,
            (reward))
 FC_REFLECT(
-    rewards_blogging_statistic_tests::rewards_blogging_statistic_tests::comment_benefactor_reward_operation_stats,
+    rewards_blogging_statistic_tests::rewards_blogging_statistic_tests::comment_benefficiary_reward_operation_stats,
     (reward))

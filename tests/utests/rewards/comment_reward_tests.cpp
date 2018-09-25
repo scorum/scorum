@@ -154,7 +154,7 @@ struct pay_for_comments_fixture : public shared_memory_fixture
         mocks.OnCall(acc_service, account_service_i::increase_balance).Do(increase_balance);
 
         process_comments_cashout_impl cashout(*ctx);
-        cashout.pay_for_comments(comment_refs, rewards);
+        cashout.pay_for_comments_legacy(comment_refs, rewards);
 
         return std::make_pair(alice_acc, bob_acc);
     }
