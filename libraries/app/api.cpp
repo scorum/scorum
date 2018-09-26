@@ -273,6 +273,25 @@ public:
     {
         return false;
     }
+    bool operator()(const scorum::protocol::close_budget_by_advertising_moderator_operation&) const
+    {
+        return false;
+    }
+    bool operator()(const scorum::protocol::update_budget_operation&) const
+    {
+        return false;
+    }
+    bool operator()(const scorum::protocol::proposal_create_operation& op) const
+    {
+        using namespace scorum::protocol;
+
+        // clang-format off
+        auto idx = op.operation.which();
+        return idx != proposal_operation::tag<development_committee_empower_advertising_moderator_operation>::value
+            && idx != proposal_operation::tag<development_committee_change_post_budgets_auction_properties_operation>::value
+            && idx != proposal_operation::tag<development_committee_change_banner_budgets_auction_properties_operation>::value;
+        // clang-format on
+    }
 #endif // LOCK_BUDGETS_API
 };
 
