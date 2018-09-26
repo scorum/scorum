@@ -6,8 +6,6 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/budgets.hpp>
 
-#include <scorum/chain/database/budget_management_algorithms.hpp>
-
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/budget_objects.hpp>
@@ -30,8 +28,6 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
 
     const auto& owner = _account_service.get_account(op.owner);
 
-    FC_ASSERT(owner.name != SCORUM_ROOT_POST_PARENT_ACCOUNT, "'${1}' name is not allowed for ordinary budget.",
-              ("1", SCORUM_ROOT_POST_PARENT_ACCOUNT));
     FC_ASSERT(owner.balance >= op.balance, "Insufficient funds.",
               ("owner.balance", owner.balance)("balance", op.balance));
     FC_ASSERT(_post_budget_service.get_budgets(owner.name).size()
@@ -45,17 +41,11 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
     switch (op.type)
     {
     case budget_type::post:
-    {
-        post_budget_management_algorithm(_post_budget_service, _dprops_service, _account_service)
-            .create_budget(owner.name, op.balance, start_date, op.deadline, op.json_metadata);
-    }
-    break;
+        _post_budget_service.create_budget(owner.name, op.balance, start_date, op.deadline, op.json_metadata);
+        break;
     case budget_type::banner:
-    {
-        banner_budget_management_algorithm(_banner_budget_service, _dprops_service, _account_service)
-            .create_budget(owner.name, op.balance, start_date, op.deadline, op.json_metadata);
-    }
-    break;
+        _banner_budget_service.create_budget(owner.name, op.balance, start_date, op.deadline, op.json_metadata);
+        break;
     }
 }
 }

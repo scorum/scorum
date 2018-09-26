@@ -150,6 +150,7 @@ fc::variant_object get_config()
     result["SCORUM_CLEAR_VOTES"] = SCORUM_CLEAR_VOTES;
     result["SCORUM_SKIP_BY_TX_ID"] = SCORUM_SKIP_BY_TX_ID;
     result["SCORUM_LIVE_TESTNET"] = SCORUM_LIVE_TESTNET;
+    result["SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC"] = SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
 
     return result;
 }
