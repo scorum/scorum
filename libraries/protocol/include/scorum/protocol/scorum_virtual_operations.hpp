@@ -78,10 +78,10 @@ struct comment_reward_operation : public virtual_operation
     /// reward accrued from fund
     asset fund_reward;
 
-    /// reward distributed within particular comment across author, parents, beneficiaries and curators
+    /// reward distributed within comment across author, beneficiaries and curators (excluding reward to parent)
     asset total_payout;
 
-    /// reward for comment author only (without from_children_payout)
+    /// reward for comment author (including from_children_payout)
     asset author_payout;
 
     /// reward for curators (voters)

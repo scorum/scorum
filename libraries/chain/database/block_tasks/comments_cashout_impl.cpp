@@ -189,8 +189,6 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         _ctx.push_virtual_operation(
             author_reward_operation(comment.author, fc::to_string(comment.permlink), author_reward));
 
-        author_reward -= payout_from_children;
-
         if (author_reward.amount > 0 || payout_from_children.amount > 0)
         {
             comment_service.set_rewarded_flag(comment);
@@ -302,20 +300,19 @@ std::vector<asset> process_comments_cashout_impl::calculate_comments_payout(cons
 void process_comments_cashout_impl::accumulate_statistic(const comment_object& comment,
                                                          const account_object& author,
                                                          const asset& fund_reward,
-                                                         const asset& author_payout_without_children,
+                                                         const asset& author_payout,
                                                          const asset& curation_payout,
                                                          const asset& payout_from_children,
                                                          const asset& payout_to_parent,
                                                          const asset& beneficiary_payout,
                                                          asset_symbol_type reward_symbol)
 {
-    FC_ASSERT(author_payout_without_children.symbol() == reward_symbol);
+    FC_ASSERT(author_payout.symbol() == reward_symbol);
     FC_ASSERT(curation_payout.symbol() == reward_symbol);
     FC_ASSERT(beneficiary_payout.symbol() == reward_symbol);
 
-    asset total_payout = author_payout_without_children;
+    asset total_payout = author_payout;
     total_payout += curation_payout;
-    total_payout += payout_from_children;
     total_payout += beneficiary_payout;
 
     // clang-format off
@@ -324,7 +321,7 @@ void process_comments_cashout_impl::accumulate_statistic(const comment_object& c
         accumulate_comment_statistic(comment_statistic_scr_service, comment,
                                      fund_reward,
                                      total_payout,
-                                     author_payout_without_children,
+                                     author_payout,
                                      curation_payout,
                                      payout_from_children,
                                      payout_to_parent,
@@ -335,7 +332,7 @@ void process_comments_cashout_impl::accumulate_statistic(const comment_object& c
         accumulate_comment_statistic(comment_statistic_sp_service, comment,
                                      fund_reward,
                                      total_payout,
-                                     author_payout_without_children,
+                                     author_payout,
                                      curation_payout,
                                      payout_from_children,
                                      payout_to_parent,
@@ -346,8 +343,7 @@ void process_comments_cashout_impl::accumulate_statistic(const comment_object& c
 #ifndef IS_LOW_MEM
     {
         const auto& author_stat = account_blogging_statistic_service.obtain(author.id);
-        account_blogging_statistic_service.increase_posting_rewards(
-            author_stat, author_payout_without_children + payout_from_children);
+        account_blogging_statistic_service.increase_posting_rewards(author_stat, author_payout);
     }
 #endif
 }
