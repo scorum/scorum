@@ -113,20 +113,22 @@ FC_REFLECT_ENUM(scorum::chain::pending_bet_kind,
 
 FC_REFLECT(scorum::chain::pending_bet_object,
            (id)
+           (game)
+           (market)
            (created)
            (better)
-           (game)
            (wincase)
-           (odds_value)
            (stake)
+           (odds_value)
            (kind))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pending_bet_index)
 
 FC_REFLECT(scorum::chain::matched_bet_object,
            (id)
-           (created)
            (game)
+           (market)
+           (created)
            (better1)
            (better2)
            (wincase1)
