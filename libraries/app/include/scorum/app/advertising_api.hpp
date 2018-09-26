@@ -6,11 +6,22 @@
 
 namespace scorum {
 namespace app {
+
+/**
+ * @brief Provide api for advertising budgets
+ *
+ * @ingroup api
+ * @addtogroup adv_api Advertising API
+ */
 class advertising_api
 {
 public:
     advertising_api(const api_context& ctx);
     ~advertising_api() = default;
+
+    /// @name Public API
+    /// @addtogroup adv_api
+    /// @{
 
     /**
      * @brief Get Advertising budgets moderator if exists
@@ -31,6 +42,8 @@ public:
      * @brief Get winners for particular budget type
      */
     std::vector<budget_api_obj> get_current_winners(budget_type type) const;
+
+    /// @}
 
     void on_api_startup();
 
