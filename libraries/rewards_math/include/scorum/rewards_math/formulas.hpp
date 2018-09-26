@@ -39,7 +39,7 @@ share_type calculate_payout(const share_type& rshares,
                             const share_type& max_share,
                             const share_type& min_comment_payout_share);
 
-share_type calculate_curations_payout(const share_type& payout, const percent_type scorum_curation_reward_percent);
+share_type calc_curations_payout(const share_type& payout, const percent_type scorum_curation_reward_percent);
 
 share_type
 calculate_curation_payout(const share_type& curations_payout, const uint64_t total_weight, const uint64_t weight);
