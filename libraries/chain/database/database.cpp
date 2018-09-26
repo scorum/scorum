@@ -1506,7 +1506,7 @@ void database::_apply_block(const signed_block& next_block)
                                                  static_cast<database_virtual_operations_emmiter_i&>(*this),
                                                  _current_block_num, ctx);
 
-        database_ns::process_funds().apply(task_ctx);
+        database_ns::process_funds(task_ctx).apply(task_ctx);
         database_ns::process_fifa_world_cup_2018_bounty_initialize().apply(task_ctx);
         database_ns::process_comments_cashout().apply(task_ctx);
         database_ns::process_fifa_world_cup_2018_bounty_cashout().apply(task_ctx);

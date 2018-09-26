@@ -16,8 +16,8 @@ namespace chain {
 
 advertising_auction::advertising_auction(dynamic_global_property_service_i& dprops_svc,
                                          advertising_property_service_i& adv_props_svc,
-                                         post_budget_service_i& post_budget_svc,
-                                         banner_budget_service_i& banner_budget_svc)
+                                         adv_budget_service_i<budget_type::post>& post_budget_svc,
+                                         adv_budget_service_i<budget_type::banner>& banner_budget_svc)
     : _dprops_svc(dprops_svc)
     , _adv_props_svc(adv_props_svc)
     , _post_budget_svc(post_budget_svc)
