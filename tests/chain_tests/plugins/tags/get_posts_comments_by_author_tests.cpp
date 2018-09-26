@@ -17,10 +17,12 @@ struct get_post_comments_by_author_fixture : public database_fixture::tags_fixtu
         : comments(db.comment_service())
         , statistic(db.comment_statistic_sp_service())
     {
-        actor(initdelegate).give_sp(alice, 1e5);
-        actor(initdelegate).give_sp(bob, 1e5);
-        actor(initdelegate).give_sp(sam, 1e5);
-        actor(initdelegate).give_sp(dave, 1e5);
+        actor(initdelegate).give_sp(alice, 1e9);
+        actor(initdelegate).give_sp(bob, 1e9);
+        actor(initdelegate).give_sp(sam, 1e9);
+        actor(initdelegate).give_sp(dave, 1e9);
+
+        generate_block();
     }
 
     struct discussion_query_wrapper : public api::discussion_query
@@ -228,8 +230,10 @@ SCORUM_TEST_CASE(get_post_comments_by_author_should_return_rewarded_post_and_com
     BOOST_CHECK_EQUAL(result[1].permlink, test_case.sam_comment.permlink());
 }
 
-SCORUM_TEST_CASE(check_ordering_by_last_payout)
+SCORUM_TEST_CASE(check_ordering_by_last_payout_legacy_reward_distribution)
 {
+    set_hardfork(SCORUM_HARDFORK_0_2);
+
     auto p_1 = create_post(alice).set_json(default_metadata).in_block(SCORUM_MIN_ROOT_COMMENT_INTERVAL);
     generate_block();
     auto p_2 = create_post(alice).set_json(default_metadata).in_block(SCORUM_MIN_ROOT_COMMENT_INTERVAL);

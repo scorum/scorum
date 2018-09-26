@@ -97,7 +97,7 @@ share_type calculate_payout(const share_type& rshares,
     FC_CAPTURE_AND_RETHROW((rshares)(total_claims)(reward_fund)(author_reward_curve)(max_share))
 }
 
-share_type calculate_curations_payout(const share_type& payout, const percent_type scorum_curation_reward_percent)
+share_type calc_curations_payout(const share_type& payout, const percent_type scorum_curation_reward_percent)
 {
     try
     {

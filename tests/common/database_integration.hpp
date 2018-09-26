@@ -33,6 +33,8 @@ public:
     void open_database(const genesis_state_type& genesis);
     void open_database();
 
+    void set_hardfork(uint32_t hardfork);
+
     void validate_database();
 
     void generate_block(uint32_t skip = 0, const private_key_type& key = initdelegate.private_key, int miss_blocks = 0);

@@ -25,8 +25,8 @@ BOOST_FIXTURE_TEST_SUITE(rewards_math_calculate_curations_payout_tests, rewards_
 
 BOOST_AUTO_TEST_CASE(calculate_curations_payout_check)
 {
-    BOOST_CHECK_GT(calculate_curations_payout(payout, SCORUM_CURATION_REWARD_PERCENT), share_type());
-    BOOST_CHECK_LT(calculate_curations_payout(payout, SCORUM_CURATION_REWARD_PERCENT), payout);
+    BOOST_CHECK_GT(calc_curations_payout(payout, SCORUM_CURATION_REWARD_PERCENT), share_type());
+    BOOST_CHECK_LT(calc_curations_payout(payout, SCORUM_CURATION_REWARD_PERCENT), payout);
 }
 
 BOOST_AUTO_TEST_CASE(calculate_curation_payout_check)
