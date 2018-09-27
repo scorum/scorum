@@ -85,9 +85,9 @@ protected:
                 std::logic_error("Could not modify object, most likely a uniqueness constraint was violated"));
     }
 
-    void remove(const value_type& obj)
+    auto remove(const value_type& obj)
     {
-        _indices.erase(_indices.iterator_to(obj));
+        return _indices.erase(_indices.iterator_to(obj));
     }
 
     allocator_type get_allocator() const noexcept
@@ -174,11 +174,11 @@ public:
         on_modify(unmodified_copy);
     }
 
-    void remove(const value_type& obj)
+    auto remove(const value_type& obj)
     {
         on_remove(obj); // after base_index_type::remove(obj); obj is invalid, so do this call here
 
-        base_index_type::remove(obj);
+        return base_index_type::remove(obj);
     }
 
 private:

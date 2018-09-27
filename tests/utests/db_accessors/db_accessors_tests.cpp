@@ -22,7 +22,7 @@ BOOST_FIXTURE_TEST_SUITE(db_accessors_tests, shared_memory_fixture)
 BOOST_AUTO_TEST_CASE(db_accessors_mock_tests)
 {
     MockRepository mocks;
-    auto obj = create_object<game_object>(shm, [](game_object& o) { o.moderator = "moder"; });
+    auto obj = create_object<game_object>(shm, [](game_object& o) { fc::from_string(o.name, "name"); });
     std::vector<std::reference_wrapper<game_object>> vec = { obj };
 
     bool get_was_mocked = false;
@@ -122,12 +122,12 @@ BOOST_AUTO_TEST_CASE(db_accessors_mock_tests)
     BOOST_CHECK(get_range_by_was_mocked1);
     BOOST_CHECK(get_range_by_was_mocked2);
 
-    BOOST_CHECK_EQUAL(o1.moderator, "moder");
-    BOOST_CHECK_EQUAL(o2.moderator, "moder");
-    BOOST_CHECK_EQUAL(o3.moderator, "moder");
-    BOOST_CHECK_EQUAL(o4->moderator, "moder");
-    BOOST_CHECK_EQUAL(os5.begin()->moderator, "moder");
-    BOOST_CHECK_EQUAL(os6.begin()->moderator, "moder");
+    BOOST_CHECK_EQUAL(o1.name, "name");
+    BOOST_CHECK_EQUAL(o2.name, "name");
+    BOOST_CHECK_EQUAL(o3.name, "name");
+    BOOST_CHECK_EQUAL(o4->name, "name");
+    BOOST_CHECK_EQUAL(os5.begin()->name, "name");
+    BOOST_CHECK_EQUAL(os6.begin()->name, "name");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

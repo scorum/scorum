@@ -3,12 +3,11 @@
 #include <boost/range/algorithm/set_algorithm.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <scorum/protocol/betting/invariants_validation.hpp>
-#include <scorum/protocol/betting/wincase_serialization.hpp>
-#include <scorum/protocol/betting/wincase_comparison.hpp>
+#include <scorum/protocol/betting/betting_serialization.hpp>
+#include <scorum/protocol/betting/market.hpp>
 
 namespace scorum {
 namespace protocol {
-namespace betting {
 
 namespace bf = boost::fusion;
 
@@ -36,7 +35,7 @@ void validate_game(const game_type& game, const fc::flat_set<market_type>& marke
 
     std::set<market_kind> actual_markets;
     boost::transform(markets, std::inserter(actual_markets, actual_markets.begin()), [](const market_type& m) {
-        return m.visit([&](const auto& market_impl) { return market_impl.kind; });
+        return m.visit([&](const auto& market_impl) { return market_impl.kind_v; });
     });
 
     std::vector<market_kind> diff;
@@ -55,19 +54,18 @@ void validate_wincases(const fc::flat_set<wincase_type>& wincases)
 
 void validate_wincase(const wincase_type& wincase)
 {
-    auto check_threshold
-        = [](auto threshold) { return threshold_type(threshold).value % (threshold_type::factor / 2) == 0; };
+    auto check_threshold = [](auto threshold) { return threshold % (SCORUM_BETTING_THRESHOLD_FACTOR / 2) == 0; };
     auto check_positive_threshold = [&](auto threshold) { return check_threshold(threshold) && threshold > 0; };
 
     auto is_valid
-        = wincase.weak_visit([&](const total_over& w) { return check_positive_threshold(w.threshold); },
-                             [&](const total_under& w) { return check_positive_threshold(w.threshold); },
-                             [&](const handicap_home_over& w) { return check_threshold(w.threshold); },
-                             [&](const handicap_home_under& w) { return check_threshold(w.threshold); },
-                             [&](const total_goals_home_over& w) { return check_positive_threshold(w.threshold); },
-                             [&](const total_goals_home_under& w) { return check_positive_threshold(w.threshold); },
-                             [&](const total_goals_away_over& w) { return check_positive_threshold(w.threshold); },
-                             [&](const total_goals_away_under& w) { return check_positive_threshold(w.threshold); });
+        = wincase.weak_visit([&](const total::over& w) { return check_positive_threshold(w.threshold); },
+                             [&](const total::under& w) { return check_positive_threshold(w.threshold); },
+                             [&](const handicap::over& w) { return check_threshold(w.threshold); },
+                             [&](const handicap::under& w) { return check_threshold(w.threshold); },
+                             [&](const total_goals_home::over& w) { return check_positive_threshold(w.threshold); },
+                             [&](const total_goals_home::under& w) { return check_positive_threshold(w.threshold); },
+                             [&](const total_goals_away::over& w) { return check_positive_threshold(w.threshold); },
+                             [&](const total_goals_away::under& w) { return check_positive_threshold(w.threshold); });
 
     FC_ASSERT(is_valid.value_or(true), "Wincase '${w}' is invalid", ("w", wincase));
 }
@@ -77,10 +75,9 @@ void validate_if_wincase_in_game(const game_type& game, const wincase_type& winc
     const auto& expected_markets
         = game.visit([&](const auto& g) { return bf::at_key<std::decay_t<decltype(g)>>(game_markets); });
 
-    auto market_kind = wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });
+    auto kind = wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });
 
-    FC_ASSERT(expected_markets.find(market_kind) != expected_markets.end(), "Wincase '${w}' doesn't belong game '${g}'",
-              ("w", wincase)("g", game));
+    FC_ASSERT(expected_markets.find(kind) != expected_markets.end(), "Invalid wincase '${w}'", ("w", wincase));
 }
 
 void validate_bet_ids(const fc::flat_set<int64_t>& bet_ids)
@@ -90,7 +87,6 @@ void validate_bet_ids(const fc::flat_set<int64_t>& bet_ids)
     {
         FC_ASSERT(id >= 0, "Invalid bet Id");
     }
-}
 }
 }
 }

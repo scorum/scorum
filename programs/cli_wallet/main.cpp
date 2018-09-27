@@ -64,8 +64,11 @@
 #include <csignal>
 #endif
 
-using namespace scorum;
 namespace bpo = boost::program_options;
+
+using namespace scorum;
+using namespace scorum::app;
+using namespace scorum::chain;
 
 int main(int argc, char** argv)
 {

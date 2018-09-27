@@ -38,13 +38,6 @@
 #define SCORUMD_CONFIG_FILE_NAME "config.ini"
 
 /**
- * @mainpage
- *
- * - @subpage api
- * - @subpage plugins
- */
-
-/**
  * @defgroup api APIs
  * @brief List of public APIs
  *

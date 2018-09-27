@@ -11,11 +11,7 @@
 namespace {
 
 using namespace scorum::chain;
-using namespace service_wrappers;
-using namespace scorum::chain::dba;
-using namespace scorum::chain::betting;
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 
 struct betting_service_fixture : public betting_common::betting_service_fixture_impl
 {
@@ -46,12 +42,12 @@ struct betting_service_fixture : public betting_common::betting_service_fixture_
     }
 
 protected:
-    db_accessor_factory dba_factory;
+    dba::db_accessor_factory dba_factory;
 
-    db_accessor<betting_property_object> betting_prop_dba;
+    dba::db_accessor<betting_property_object> betting_prop_dba;
     betting_property_object betting_prop;
 
-    db_accessor<bet_object> bet_dba;
+    dba::db_accessor<bet_object> bet_dba;
     bet_object bet;
 };
 
@@ -83,13 +79,13 @@ SCORUM_TEST_CASE(create_bet_negative_check)
     betting_service service(*dbs_services, dba_factory);
 
     BOOST_CHECK_THROW(
-        service.create_bet("alice", test_bet_game, goal_home_yes(), odds::from_string("10/1"), ASSET_SP(1e+9)),
+        service.create_bet("alice", test_bet_game, goal_home::yes(), odds::from_string("10/1"), ASSET_SP(1e+9)),
         fc::exception);
     BOOST_CHECK_THROW(
-        service.create_bet("alice", test_bet_game, goal_home_yes(), odds::from_string("10/1"), ASSET_NULL_SCR),
+        service.create_bet("alice", test_bet_game, goal_home::yes(), odds::from_string("10/1"), ASSET_NULL_SCR),
         fc::exception);
     BOOST_CHECK_THROW(
-        service.create_bet("alice", test_bet_game, goal_home_yes(), odds::from_string("10/1"), ASSET_NULL_SP),
+        service.create_bet("alice", test_bet_game, goal_home::yes(), odds::from_string("10/1"), ASSET_NULL_SP),
         fc::exception);
 }
 

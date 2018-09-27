@@ -18,9 +18,7 @@
 namespace betting_common {
 
 using namespace scorum::chain;
-using namespace scorum::chain::betting;
 using namespace scorum::protocol;
-using namespace scorum::protocol::betting;
 
 using namespace service_wrappers;
 
@@ -32,6 +30,7 @@ protected:
     MockRepository mocks;
 
     data_service_factory_i* dbs_services = mocks.Mock<data_service_factory_i>();
+    database_virtual_operations_emmiter_i* virt_op_emitter = mocks.Mock<database_virtual_operations_emmiter_i>();
 
     betting_service_fixture_impl()
         : betting_property(*this, mocks, [&](betting_property_object& bp) { bp.moderator = moderator; })
@@ -54,11 +53,12 @@ protected:
         mocks.OnCall(dbs_services, data_service_factory_i::matched_bet_service).ReturnByRef(matched_bets.service());
         mocks.OnCall(dbs_services, data_service_factory_i::dynamic_global_property_service)
             .ReturnByRef(dgp_service.service());
+        mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
     }
 
     const account_name_type test_bet_better = "alice";
     const game_id_type test_bet_game = 15;
-    const wincase_type test_bet_wincase = goal_home_yes();
+    const wincase_type test_bet_wincase = goal_home::yes();
     const std::string test_bet_k = "100/1";
     const asset test_bet_stake = ASSET_SCR(1e+9);
 

@@ -28,6 +28,7 @@ public:
     protocol::percent_type budgets_vcg_properties_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
     protocol::percent_type advertising_moderator_quorum = SCORUM_COMMITTEE_ADVERTISING_MODERATOR_QUORUM_PERCENT;
     protocol::percent_type betting_moderator_quorum = SCORUM_COMMITTEE_BETTING_MODERATOR_QUORUM_PERCENT;
+    protocol::percent_type betting_resolve_delay_quorum = SCORUM_COMMITTEE_BETTING_RESOLVE_DELAY_QUORUM_PERCENT;
 };
 
 class dev_committee_member_object : public object<dev_committee_member_object_type, dev_committee_member_object>
@@ -71,7 +72,10 @@ FC_REFLECT(scorum::chain::dev_committee_object,
            (invite_quorum)
            (dropout_quorum)
            (change_quorum)
-           (budgets_vcg_properties_quorum))
+           (budgets_vcg_properties_quorum)
+           (advertising_moderator_quorum)
+           (betting_moderator_quorum)
+           (betting_resolve_delay_quorum))
 // clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dev_committee_object, scorum::chain::dev_committee_index)

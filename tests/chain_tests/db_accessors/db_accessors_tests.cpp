@@ -23,42 +23,36 @@ BOOST_AUTO_TEST_CASE(db_accessors_tests)
 
     BOOST_CHECK(dba.is_empty());
 
-    const auto& o1 = dba.create([](game_object& o) {
-        o.name = "2";
-        o.moderator = "moder";
-    });
-    BOOST_CHECK_EQUAL(o1.moderator, "moder");
+    const auto& o1 = dba.create([](game_object& o) { o.name = "name1"; });
+    BOOST_CHECK_EQUAL(o1.name, "name1");
 
-    dba.update([](game_object& o) { o.moderator = "cartman"; });
-    BOOST_CHECK_EQUAL(o1.moderator, "cartman");
+    dba.update([](game_object& o) { fc::from_string(o.name, "name2"); });
+    BOOST_CHECK_EQUAL(o1.name, "name2");
 
-    dba.update(o1, [](game_object& o) { o.moderator = "moder"; });
-    BOOST_CHECK_EQUAL(o1.moderator, "moder");
+    dba.update(o1, [](game_object& o) { fc::from_string(o.name, "name1"); });
+    BOOST_CHECK_EQUAL(o1.name, "name1");
 
     BOOST_CHECK(!dba.is_empty());
 
     const auto& o3 = dba.get_by<by_name>(o1.name);
-    BOOST_CHECK_EQUAL(o3.moderator, "moder");
+    BOOST_CHECK_EQUAL(o3.name, "name1");
 
     const auto* o4 = dba.find_by<by_name>(o1.name);
-    BOOST_CHECK_EQUAL(o4->moderator, "moder");
+    BOOST_CHECK_EQUAL(o4->name, "name1");
 
-    const auto* o5 = dba.find_by<by_name>(std::string("cartman"));
+    const auto* o5 = dba.find_by<by_name>(std::string("name2"));
     BOOST_CHECK(o5 == nullptr);
 
-    const auto& o6 = dba.create([](game_object& o) {
-        o.name = "1";
-        o.moderator = "moder";
-    });
+    const auto& o6 = dba.create([](game_object& o) { o.name = "name2"; });
     {
         auto vec = dba.get_range_by<by_name>(dba::unbounded, dba::unbounded);
-        BOOST_CHECK(vec.front().name == "1");
-        BOOST_CHECK(vec.back().name == "2");
+        BOOST_CHECK(vec.front().name == "name1");
+        BOOST_CHECK(vec.back().name == "name2");
     }
     {
         dba.remove();
         auto vec = dba.get_range_by<by_name>(dba::unbounded, dba::unbounded);
-        BOOST_CHECK(vec.front().name == "1");
+        BOOST_CHECK(vec.front().name == "name2");
     }
 
     dba.remove(o6);

@@ -3,6 +3,7 @@
 
 #include <scorum/app/api.hpp>
 #include <scorum/app/chain_api.hpp>
+#include <scorum/app/betting_api.hpp>
 #include <scorum/protocol/base.hpp>
 #include <scorum/wallet/wallet.hpp>
 #include <scorum/wallet/api_documentation.hpp>
@@ -2812,6 +2813,19 @@ annotated_signed_transaction wallet_api::development_committee_change_advertisin
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction wallet_api::development_committee_change_betting_moderator_quorum(
+    const std::string& initiator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast)
+{
+    using operation_type = development_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = betting_moderator_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
 annotated_signed_transaction wallet_api::development_committee_empower_advertising_moderator(
     const std::string& initiator, const std::string& moderator, uint32_t lifetime_sec, bool broadcast)
 {
@@ -2819,6 +2833,30 @@ annotated_signed_transaction wallet_api::development_committee_empower_advertisi
 
     signed_transaction tx
         = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account = moderator; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_empower_betting_moderator(const std::string& initiator,
+                                                                                         const std::string& moderator,
+                                                                                         uint32_t lifetime_sec,
+                                                                                         bool broadcast)
+{
+    using operation_type = development_committee_empower_betting_moderator_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account = moderator; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_change_betting_resolve_delay(
+    const std::string& initiator, uint32_t delay_sec, uint32_t lifetime_sec, bool broadcast)
+{
+    using operation_type = development_committee_change_betting_resolve_delay_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.delay_sec = delay_sec; });
 
     return my->sign_transaction(tx, broadcast);
 }
@@ -3066,12 +3104,8 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
     return result;
 }
 
-annotated_signed_transaction wallet_api::post_bet(account_name_type better,
-                                                  int64_t game_id,
-                                                  betting::wincase_type wincase,
-                                                  odds_input odds,
-                                                  asset stake,
-                                                  const bool broadcast)
+annotated_signed_transaction wallet_api::post_bet(
+    account_name_type better, int64_t game_id, wincase_type wincase, odds_input odds, asset stake, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -3134,6 +3168,34 @@ void wallet_api::exit()
 chain_capital_api_obj wallet_api::get_chain_capital() const
 {
     return my->_chain_api->get_chain_capital();
+}
+
+std::vector<game_api_object> wallet_api::get_games(game_filter filter) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_games(filter);
+}
+
+std::vector<bet_api_object> wallet_api::get_user_bets(bet_id_type from, int64_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_user_bets(from, limit);
+}
+
+std::vector<matched_bet_api_object> wallet_api::get_matched_bets(matched_bet_id_type from, int64_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_matched_bets(from, limit);
+}
+
+std::vector<pending_bet_api_object> wallet_api::get_pending_bets(pending_bet_id_type from, int64_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_pending_bets(from, limit);
 }
 
 } // namespace wallet

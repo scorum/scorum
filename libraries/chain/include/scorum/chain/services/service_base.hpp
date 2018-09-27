@@ -6,6 +6,14 @@
 
 #include <limits>
 
+#include <boost/range/any_range.hpp>
+
+namespace scorum {
+namespace utils {
+template <typename TObject> using forward_range = boost::any_range<TObject, boost::forward_traversal_tag>;
+}
+}
+
 namespace scorum {
 namespace chain {
 
@@ -15,6 +23,8 @@ template <class T> struct base_service_i
     using modifier_type = std::function<void(object_type&)>;
     using call_type = std::function<void(const object_type&)>;
     using object_cref_type = std::reference_wrapper<const object_type>;
+
+    using view_type = scorum::utils::forward_range<object_type>;
 
     virtual ~base_service_i()
     {
@@ -29,6 +39,8 @@ template <class T> struct base_service_i
     virtual void remove() = 0;
 
     virtual void remove(const object_type& o) = 0;
+
+    virtual void remove_all(const std::vector<object_cref_type>& os) = 0;
 
     virtual bool is_exists() const = 0;
 
@@ -75,6 +87,18 @@ public:
     virtual void remove(const object_type& o) override
     {
         db_impl().remove(o);
+    }
+
+    virtual void remove_all(const std::vector<object_cref_type>& os) override
+    {
+        try
+        {
+            for (const auto& o : os)
+            {
+                remove(o);
+            }
+        }
+        FC_CAPTURE_AND_RETHROW()
     }
 
     virtual bool is_exists() const override

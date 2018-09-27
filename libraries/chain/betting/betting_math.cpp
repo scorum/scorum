@@ -2,7 +2,6 @@
 
 namespace scorum {
 namespace chain {
-namespace betting {
 
 using scorum::protocol::odds_fraction_type;
 
@@ -52,7 +51,6 @@ calculate_matched_stake(const asset& bet1_stake, const asset& bet2_stake, const 
     }
 
     return result;
-}
 }
 }
 }

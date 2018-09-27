@@ -11,7 +11,6 @@ namespace betting_math_tests {
 
 using namespace scorum::protocol;
 using namespace scorum::chain;
-using namespace scorum::chain::betting;
 
 BOOST_AUTO_TEST_SUITE(betting_math_tests)
 

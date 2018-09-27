@@ -68,6 +68,9 @@
 #include <scorum/chain/database/block_tasks/process_contracts_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
+#include <scorum/chain/database/block_tasks/process_games_startup.hpp>
+#include <scorum/chain/database/block_tasks/process_bets_resolving.hpp>
+#include <scorum/chain/database/block_tasks/process_bets_auto_resolving.hpp>
 #include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
@@ -93,6 +96,7 @@
 
 #include <scorum/chain/betting/betting_service.hpp>
 #include <scorum/chain/betting/betting_matcher.hpp>
+#include <scorum/chain/betting/betting_resolver.hpp>
 
 namespace scorum {
 namespace chain {
@@ -106,26 +110,34 @@ public:
     evaluator_registry<operation> _evaluator_registry;
     genesis_persistent_state_type _genesis_persistent_state;
 
-    betting::betting_service_i& betting_service()
+    betting_service_i& get_betting_service()
     {
         return _betting_service;
     }
 
-    betting::betting_matcher_i& betting_matcher()
+    betting_matcher_i& get_betting_matcher()
     {
         return _betting_matcher;
     }
 
+    betting_resolver_i& get_betting_resolver()
+    {
+        return _betting_resolver;
+    }
+
 private:
-    betting::betting_service _betting_service;
-    betting::betting_matcher _betting_matcher;
+    betting_service _betting_service;
+    betting_matcher _betting_matcher;
+    betting_resolver _betting_resolver;
 };
 
 database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
     , _betting_service(static_cast<data_service_factory_i&>(_self), static_cast<dba::db_accessor_factory&>(_self))
-    , _betting_matcher(static_cast<data_service_factory_i&>(_self))
+    , _betting_matcher(static_cast<data_service_factory_i&>(_self),
+                       static_cast<database_virtual_operations_emmiter_i&>(_self))
+    , _betting_resolver(_betting_service, _self.matched_bet_service(), _self.bet_service(), _self.account_service())
 {
 }
 
@@ -1261,14 +1273,15 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator(new create_game_evaluator(*this, _my->betting_service()));
-    _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->betting_service()));
-    _my->_evaluator_registry.register_evaluator(new update_game_markets_evaluator(*this, _my->betting_service()));
-    _my->_evaluator_registry.register_evaluator(new update_game_start_time_evaluator(*this, _my->betting_service()));
-    _my->_evaluator_registry.register_evaluator(new post_game_results_evaluator(*this, _my->betting_service()));
+    _my->_evaluator_registry.register_evaluator(new create_game_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(new update_game_markets_evaluator(*this, _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(
-        new post_bet_evaluator(*this, _my->betting_service(), _my->betting_matcher()));
-    _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->betting_service()));
+        new update_game_start_time_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(new post_game_results_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(
+        new post_bet_evaluator(*this, _my->get_betting_service(), _my->get_betting_matcher()));
+    _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->get_betting_service()));
 }
 
 void database::initialize_indexes()
@@ -1555,6 +1568,10 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_contracts_expiration().apply(task_ctx);
         database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
+        database_ns::process_games_startup(_my->get_betting_service()).apply(task_ctx);
+        database_ns::process_bets_resolving(_my->get_betting_service(), _my->get_betting_resolver()).apply(task_ctx);
+        database_ns::process_bets_auto_resolving(_my->get_betting_service(), _my->get_betting_resolver())
+            .apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();

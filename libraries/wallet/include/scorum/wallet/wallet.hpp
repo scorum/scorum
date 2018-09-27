@@ -3,6 +3,7 @@
 #include <scorum/app/api.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
 #include <scorum/app/chain_api.hpp>
+#include <scorum/app/betting_api_objects.hpp>
 
 #include <scorum/wallet/utils.hpp>
 
@@ -14,11 +15,11 @@
 #include <scorum/blockchain_history/schema/applied_operation.hpp>
 #include <scorum/blockchain_history/api_objects.hpp>
 
-using namespace scorum::app;
-using namespace scorum::chain;
-
 namespace scorum {
 namespace wallet {
+
+using namespace scorum::app;
+using namespace scorum::chain;
 
 using scorum::blockchain_history::applied_operation;
 using scorum::blockchain_history::applied_operation_type;
@@ -84,6 +85,9 @@ class wallet_api_impl;
 }
 
 /**
+ * @defgroup wallet Wallet
+ * @brief Wallet api
+ *
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
  */
@@ -1237,6 +1241,13 @@ public:
                                                                                            uint64_t quorum_percent,
                                                                                            uint32_t lifetime_sec,
                                                                                            bool broadcast);
+    /**
+     * Change development committee for changing betting moderator quorum
+     */
+    annotated_signed_transaction development_committee_change_betting_moderator_quorum(const std::string& creator,
+                                                                                       uint64_t quorum_percent,
+                                                                                       uint32_t lifetime_sec,
+                                                                                       bool broadcast);
 
     /**
      * Create proposal for set up the advertising moderator.
@@ -1245,6 +1256,22 @@ public:
                                                                                      const std::string& moderator,
                                                                                      uint32_t lifetime_sec,
                                                                                      bool broadcast);
+
+    /**
+    * Create proposal for set up the betting moderator.
+    */
+    annotated_signed_transaction development_committee_empower_betting_moderator(const std::string& initiator,
+                                                                                 const std::string& moderator,
+                                                                                 uint32_t lifetime_sec,
+                                                                                 bool broadcast);
+
+    /**
+    * Create proposal for changing delay after game was finished before bets will be resolved.
+    */
+    annotated_signed_transaction development_committee_change_betting_resolve_delay(const std::string& initiator,
+                                                                                    uint32_t delay_sec,
+                                                                                    uint32_t lifetime_sec,
+                                                                                    bool broadcast);
 
     /**
      * Create proposal for transfering SCR from development pool to account
@@ -1373,40 +1400,79 @@ public:
      */
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
 
-    /** Create bet.
-     *
-     *  @param better owner for new bet
-     *  @param game_id game id for bet creating
-     *  @param wincase wincase for bet
-     *  @param odds rational coefficient that define potential result (p). p = odds * stake
-     *  @param stake amount in SCR to bet
-     *  @param broadcast
+    /**
+     * Gets all money circulating between funds and users.
      */
-    annotated_signed_transaction post_bet(account_name_type better,
-                                          int64_t game_id,
-                                          betting::wincase_type wincase,
-                                          odds_input odds,
-                                          asset stake,
-                                          const bool broadcast);
-
-    /** Cancel pending bets list.
-     *
-     *  @param better owner
-     *  @param bet_ids bets list that is being canceling
-     *  @param broadcast
-     */
-    annotated_signed_transaction
-    cancel_pending_bets(account_name_type better, fc::flat_set<int64_t> bet_ids, const bool broadcast);
-
-    /** Gets all money circulating between funds and users.
-    *
-    */
     chain_capital_api_obj get_chain_capital() const;
 
     /**
      * Close wallet application
      */
     void exit();
+
+    /**
+     * @name Betting API
+     * @addtogroup wallet
+     * @{
+     */
+
+    /**
+     * @brief Create bet.
+     * @param better owner for new bet
+     * @param game_id game id for bet creating
+     * @param wincase wincase for bet
+     * @param odds rational coefficient that define potential result (p). p = odds * stake
+     * @param stake amount in SCR to bet
+     * @param broadcast
+     */
+    annotated_signed_transaction post_bet(account_name_type better,
+                                          int64_t game_id,
+                                          wincase_type wincase,
+                                          odds_input odds,
+                                          asset stake,
+                                          const bool broadcast);
+
+    /**
+     * @brief Cancel pending bets list.
+     * @param better owner
+     * @param bet_ids bets list that is being canceling
+     * @param broadcast
+     */
+    annotated_signed_transaction
+    cancel_pending_bets(account_name_type better, fc::flat_set<int64_t> bet_ids, const bool broadcast);
+
+    /**
+     * @brief Returns games
+     * @param filter [created, started, finished]
+     * @return array of game_api_object's
+     */
+    std::vector<game_api_object> get_games(game_filter filter) const;
+
+    /**
+     * @brief Returns user created bets
+     * @param from lower bound bet id
+     * @param limit query limit
+     * @return array of matched_bet_api_object's
+     */
+    std::vector<bet_api_object> get_user_bets(bet_id_type from, int64_t limit) const;
+
+    /**
+     * @brief Returns matched bets
+     * @param from lower bound bet id
+     * @param limit query limit
+     * @return array of matched_bet_api_object's
+     */
+    std::vector<matched_bet_api_object> get_matched_bets(matched_bet_id_type from, int64_t limit) const;
+
+    /**
+     * @brief Return pending bets
+     * @param from lower bound bet id
+     * @param limit query limit
+     * @return array of pending_bet_api_object's
+     */
+    std::vector<pending_bet_api_object> get_pending_bets(pending_bet_id_type from, int64_t limit) const;
+
+    /** @}*/
 
 public:
     fc::signal<void(bool)> lock_changed;
@@ -1544,7 +1610,10 @@ FC_API( scorum::wallet::wallet_api,
         (development_committee_change_transfer_quorum)
         (development_committee_change_budget_vcg_properties_quorum)
         (development_committee_change_advertising_moderator_quorum)
+        (development_committee_change_betting_moderator_quorum)
         (development_committee_empower_advertising_moderator)
+        (development_committee_empower_betting_moderator)
+        (development_committee_change_betting_resolve_delay)
         (get_development_committee)
         (development_pool_transfer)
         (development_pool_withdraw_vesting)
@@ -1576,6 +1645,12 @@ FC_API( scorum::wallet::wallet_api,
         (get_transaction)
 
         (exit)
+
+        // Beting api
+        (get_games)
+        (get_user_bets)
+        (get_matched_bets)
+        (get_pending_bets)
       )
 
 FC_REFLECT( scorum::wallet::memo_data, (from)(to)(nonce)(check)(encrypted) )

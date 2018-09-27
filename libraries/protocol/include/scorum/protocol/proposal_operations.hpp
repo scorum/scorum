@@ -19,7 +19,8 @@ enum quorum_type
     transfer_quorum,
     advertising_moderator_quorum,
     betting_moderator_quorum,
-    budgets_vcg_properties_quorum
+    budgets_vcg_properties_quorum,
+    betting_resolve_delay_quorum
 };
 
 inline void validate_quorum(quorum_type t, protocol::percent_type quorum)
@@ -55,11 +56,13 @@ struct development_committee_i : public committee_i
     virtual void change_transfer_quorum(const protocol::percent_type) = 0;
     virtual void change_advertising_moderator_quorum(const protocol::percent_type) = 0;
     virtual void change_betting_moderator_quorum(const protocol::percent_type) = 0;
+    virtual void change_betting_resolve_delay_quorum(const protocol::percent_type) = 0;
     virtual void change_budgets_vcg_properties_quorum(const protocol::percent_type) = 0;
 
     virtual protocol::percent_type get_transfer_quorum() = 0;
     virtual protocol::percent_type get_advertising_moderator_quorum() = 0;
     virtual protocol::percent_type get_betting_moderator_quorum() = 0;
+    virtual protocol::percent_type get_betting_resolve_delay_quorum() = 0;
     virtual protocol::percent_type get_budgets_vcg_properties_quorum() = 0;
 };
 
@@ -216,6 +219,17 @@ using development_committee_change_post_budgets_vcg_properties_operation
 using development_committee_change_banner_budgets_vcg_properties_operation
     = development_committee_change_budgets_vcg_properties_operation<budget_type::banner>;
 
+struct development_committee_change_betting_resolve_delay_operation
+    : public proposal_base_operation<development_committee_change_betting_resolve_delay_operation,
+                                     development_committee_i>
+{
+    uint32_t delay_sec = 0;
+
+    void validate() const;
+
+    protocol::percent_type get_required_quorum(committee_type& committee_service) const;
+};
+
 using proposal_operation = fc::static_variant<registration_committee_add_member_operation,
                                               registration_committee_exclude_member_operation,
                                               registration_committee_change_quorum_operation,
@@ -227,7 +241,8 @@ using proposal_operation = fc::static_variant<registration_committee_add_member_
                                               development_committee_empower_advertising_moderator_operation,
                                               development_committee_empower_betting_moderator_operation,
                                               development_committee_change_post_budgets_vcg_properties_operation,
-                                              development_committee_change_banner_budgets_vcg_properties_operation>;
+                                              development_committee_change_banner_budgets_vcg_properties_operation,
+                                              development_committee_change_betting_resolve_delay_operation>;
 
 void operation_validate(const proposal_operation& op);
 protocol::percent_type operation_get_required_quorum(committee& committee_service, const proposal_operation& op);
@@ -244,7 +259,9 @@ FC_REFLECT_ENUM(scorum::protocol::quorum_type,
                 (transfer_quorum)
                 (advertising_moderator_quorum)
                 (betting_moderator_quorum)
-                (budgets_vcg_properties_quorum))
+                (budgets_vcg_properties_quorum)
+                (betting_resolve_delay_quorum)
+                )
 // clang-format on
 
 FC_REFLECT(scorum::protocol::registration_committee_add_member_operation, (account_name))
@@ -259,6 +276,7 @@ FC_REFLECT(scorum::protocol::development_committee_withdraw_vesting_operation, (
 FC_REFLECT(scorum::protocol::development_committee_transfer_operation, (amount)(to_account))
 FC_REFLECT(scorum::protocol::development_committee_empower_advertising_moderator_operation, (account))
 FC_REFLECT(scorum::protocol::development_committee_empower_betting_moderator_operation, (account))
+FC_REFLECT(scorum::protocol::development_committee_change_betting_resolve_delay_operation, (delay_sec))
 
 FC_REFLECT(scorum::protocol::base_development_committee_change_budgets_vcg_properties_operation, (vcg_coefficients))
 FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_post_budgets_vcg_properties_operation,
