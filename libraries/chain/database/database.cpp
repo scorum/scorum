@@ -1207,7 +1207,6 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<atomicswap_redeem_evaluator>();
     _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
     _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
@@ -1232,8 +1231,10 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<withdraw_scorumpower_evaluator>();
     _my->_evaluator_registry.register_evaluator<registration_pool_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
+    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>(
+        static_cast<database_virtual_operations_emmiter_i&>(_my->_self));
+    _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>(
+        static_cast<database_virtual_operations_emmiter_i&>(_my->_self));
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
 }
 

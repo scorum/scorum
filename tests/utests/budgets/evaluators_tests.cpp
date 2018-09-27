@@ -13,9 +13,11 @@ using namespace common_fixtures;
 struct services_for_budget_fixture : public account_budget_fixture
 {
     data_service_factory_i* services = mocks.Mock<data_service_factory_i>();
+    database_virtual_operations_emmiter_i* virt_op_emmiter = mocks.Mock<database_virtual_operations_emmiter_i>();
 
     services_for_budget_fixture()
     {
+        mocks.OnCall(virt_op_emmiter, database_virtual_operations_emmiter_i::push_virtual_operation);
         mocks.OnCall(services, data_service_factory_i::account_service).ReturnByRef(account_service_fixture.service());
         mocks.OnCall(services, data_service_factory_i::post_budget_service)
             .ReturnByRef(post_budget_service_fixture.service());
@@ -42,7 +44,7 @@ struct evaluators_for_budget_fixture : public services_for_budget_fixture
         : services_for_budget_fixture()
         , bob("bob")
         , create_evaluator(*services)
-        , close_evaluator(*services)
+        , close_evaluator(*services, *virt_op_emmiter)
         , update_evaluator(*services)
     {
         alice_create_budget_operation.owner = alice.name;

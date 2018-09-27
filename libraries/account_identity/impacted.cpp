@@ -288,6 +288,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
+    void operator()(const closing_budget_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
 private:
     fc::flat_set<account_name_type>& _impacted;
 };
