@@ -45,6 +45,22 @@ SCORUM_TEST_CASE(auto_close_budget_by_balance)
     BOOST_REQUIRE(post_budget_service.get_budgets(alice.name).empty());
 }
 
+SCORUM_TEST_CASE(auto_close_budget_by_deadline_start_and_deadline_arent_aligned_by_block_interval_shouldnt_throw)
+{
+    create_budget_operation op;
+    op.start = db.head_block_time() + 1;
+    op.deadline = db.head_block_time() + SCORUM_BLOCK_INTERVAL * 2 + 2;
+    op.balance = ASSET_SCR(15);
+    op.owner = initdelegate.name;
+    op.type = budget_type::banner;
+
+    push_operation(op);
+
+    BOOST_REQUIRE_NO_THROW(generate_block());
+    BOOST_REQUIRE(post_budget_service.get_budgets(alice.name).empty());
+    BOOST_REQUIRE_NO_THROW(generate_block());
+}
+
 SCORUM_TEST_CASE(auto_close_budget_by_deadline)
 {
     int balance = 13;
