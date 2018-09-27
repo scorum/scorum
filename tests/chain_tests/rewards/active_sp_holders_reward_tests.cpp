@@ -131,6 +131,17 @@ SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget)
     BOOST_REQUIRE_EQUAL(account_service.get_account(bob.name).scorumpower, bob_sp_before + active_sp_holders_reward);
 }
 
+SCORUM_TEST_CASE(per_block_sp_payment_from_fund_budget_if_no_active_voters_exist)
+{
+    generate_block();
+
+    auto active_sp_holders_reward = get_active_voters_reward(budget_service.get().per_block);
+
+    auto& balancer = voters_reward_sp_service.get();
+
+    BOOST_REQUIRE_EQUAL(balancer.balance, active_sp_holders_reward);
+}
+
 SCORUM_TEST_CASE(per_block_sp_payment_division_from_fund_budget)
 {
     asset alice_sp_before = account_service.get_account(alice.name).scorumpower;

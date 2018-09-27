@@ -1,4 +1,5 @@
 #include <scorum/chain/database/block_tasks/comments_cashout_impl.hpp>
+#include <boost/range/combine.hpp>
 
 namespace scorum {
 namespace chain {
@@ -70,7 +71,9 @@ void process_comments_cashout_impl::reward(TFundService& fund_service, const com
     auto fund_rewards
         = calculate_comments_payout(comments, fund.activity_reward_balance, total_claims, fund.author_reward_curve);
 
-    auto total_reward = pay_for_comments(comments, fund_rewards);
+    auto total_reward = hardfork_service.has_hardfork(SCORUM_HARDFORK_0_3)
+        ? pay_for_comments(comments, fund_rewards)
+        : pay_for_comments_legacy(comments, fund_rewards);
 
     fund_service.update([&](typename TFundService::object_type& rfo) {
         rfo.recent_claims = total_claims;
@@ -81,6 +84,66 @@ void process_comments_cashout_impl::reward(TFundService& fund_service, const com
 
 asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& comments,
                                                       const std::vector<asset>& fund_rewards)
+{
+    FC_ASSERT(comments.size() == fund_rewards.size(), "comments count and comments' rewards count should be equal");
+    FC_ASSERT(!fund_rewards.empty(), "collection cannot be empty");
+
+    auto reward_symbol = fund_rewards[0].symbol();
+    auto total_claimed_reward = asset(0, reward_symbol);
+
+    for (const auto& item : boost::combine(comments, fund_rewards))
+    {
+        const auto& comment = item.get<0>().get();
+        const auto& fund_reward = item.get<1>();
+
+        auto rewards = pay_curators(comment, fund_reward);
+        auto beneficiaries_reward = pay_beneficiaries(comment, rewards.author_reward);
+
+        auto curators_reward = rewards.curators_reward;
+        auto author_reward = rewards.author_reward - beneficiaries_reward;
+
+        const auto& author = account_service.get_account(comment.author);
+        pay_account(author, author_reward);
+
+        auto claimed_reward = curators_reward + author_reward + beneficiaries_reward;
+        total_claimed_reward += claimed_reward;
+
+        comment_service.update(comment, [&](comment_object& c) { c.last_payout = dgp_service.head_block_time(); });
+        if (author_reward.amount > 0)
+            comment_service.set_rewarded_flag(comment);
+
+        _ctx.push_virtual_operation(
+            author_reward_operation(comment.author, fc::to_string(comment.permlink), author_reward));
+
+        // clang-format off
+        _ctx.push_virtual_operation(comment_reward_operation(
+                comment.author,
+                fc::to_string(comment.permlink),
+                fund_reward,
+                claimed_reward,
+                author_reward,
+                curators_reward,
+                asset(0, reward_symbol),
+                asset(0, reward_symbol),
+                beneficiaries_reward));
+
+        accumulate_statistic(comment,
+                             author,
+                             fund_reward,
+                             author_reward,
+                             curators_reward,
+                             asset(0, reward_symbol),
+                             asset(0, reward_symbol),
+                             beneficiaries_reward,
+                             reward_symbol);
+        // clang-format on
+    }
+
+    return total_claimed_reward;
+}
+
+asset process_comments_cashout_impl::pay_for_comments_legacy(const comment_refs_type& comments,
+                                                             const std::vector<asset>& fund_rewards)
 {
     FC_ASSERT(comments.size() == fund_rewards.size(), "comments count and comments' rewards count should be equal");
     FC_ASSERT(fund_rewards.size() > 0, "collection cannot be empty");
@@ -120,7 +183,7 @@ asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& c
         asset fund_reward = asset(reward.fund, reward_symbol);
         asset parent_payout_value = asset(reward.commenting, reward_symbol);
 
-        comment_payout_result payout_result = pay_for_comment(comment, fund_reward, parent_payout_value);
+        comment_payout_result payout_result = pay_for_comment_legacy(comment, fund_reward, parent_payout_value);
 
         total_reward += payout_result.total_claimed_reward;
 
@@ -132,7 +195,7 @@ asset process_comments_cashout_impl::pay_for_comments(const comment_refs_type& c
     return total_reward;
 }
 
-process_comments_cashout_impl::comment_payout_result process_comments_cashout_impl::pay_for_comment(
+process_comments_cashout_impl::comment_payout_result process_comments_cashout_impl::pay_for_comment_legacy(
     const comment_object& comment, const asset& fund_reward, const asset& payout_from_children)
 {
     try
@@ -142,19 +205,9 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
         if (fund_reward.amount < 1 && payout_from_children.amount < 1)
             return payout_result;
 
-        asset author_reward(0, reward_symbol);
-        asset curators_reward(0, reward_symbol);
-
-        if (fund_reward.amount > 0)
-        {
-            curators_reward
-                = asset(rewards_math::calculate_curations_payout(fund_reward.amount, SCORUM_CURATION_REWARD_PERCENT),
-                        reward_symbol);
-            author_reward = fund_reward - curators_reward;
-
-            author_reward
-                += pay_curators(comment, curators_reward); // curation_payout can be changed inside pay_curators()
-        }
+        auto rewards = pay_curators(comment, fund_reward);
+        auto author_reward = rewards.author_reward;
+        auto curators_reward = rewards.curators_reward;
 
         auto payout_to_parent = asset(0, reward_symbol);
         if (comment.depth != 0)
@@ -165,34 +218,21 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
 
         author_reward = (author_reward + payout_from_children) - payout_to_parent;
 
-        payout_result.total_claimed_reward = author_reward + curators_reward;
-        payout_result.parent_comment_reward = payout_to_parent;
-
-        auto beneficiary_payout = asset(0, reward_symbol);
-        for (auto& b : comment.beneficiaries)
-        {
-            asset benefactor_tokens = author_reward * utils::make_fraction(b.weight, SCORUM_100_PERCENT);
-            pay_account(account_service.get_account(b.account), benefactor_tokens);
-            beneficiary_payout += benefactor_tokens;
-
-            _ctx.push_virtual_operation(comment_benefactor_reward_operation(
-                b.account, comment.author, fc::to_string(comment.permlink), benefactor_tokens));
-        }
-
-        author_reward -= beneficiary_payout;
+        auto beneficiaries_reward = pay_beneficiaries(comment, author_reward);
+        author_reward -= beneficiaries_reward;
 
         const auto& author = account_service.get_account(comment.author);
         pay_account(author, author_reward);
 
+        payout_result.total_claimed_reward = curators_reward + author_reward + beneficiaries_reward;
+        payout_result.parent_comment_reward = payout_to_parent;
+
         comment_service.update(comment, [&](comment_object& c) { c.last_payout = dgp_service.head_block_time(); });
+        if (author_reward.amount > 0 || payout_from_children.amount > 0)
+            comment_service.set_rewarded_flag(comment);
 
         _ctx.push_virtual_operation(
             author_reward_operation(comment.author, fc::to_string(comment.permlink), author_reward));
-
-        if (author_reward.amount > 0 || payout_from_children.amount > 0)
-        {
-            comment_service.set_rewarded_flag(comment);
-        }
 
         // clang-format off
         _ctx.push_virtual_operation(comment_reward_operation(
@@ -204,7 +244,7 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
                              curators_reward,
                              payout_from_children,
                              payout_to_parent,
-                             beneficiary_payout));
+                             beneficiaries_reward));
 
         accumulate_statistic(comment,
                              author,
@@ -213,7 +253,7 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
                              curators_reward,
                              payout_from_children,
                              payout_to_parent,
-                             beneficiary_payout,
+                             beneficiaries_reward,
                              reward_symbol);
         // clang-format on
 
@@ -222,47 +262,59 @@ process_comments_cashout_impl::comment_payout_result process_comments_cashout_im
     FC_CAPTURE_AND_RETHROW((comment))
 }
 
-asset process_comments_cashout_impl::pay_curators(const comment_object& comment, asset& max_rewards)
+process_comments_cashout_impl::curators_author_rewards
+process_comments_cashout_impl::pay_curators(const comment_object& comment, const asset& fund_reward)
 {
     try
     {
-        auto reward_symbol = max_rewards.symbol();
-        asset unclaimed_rewards = max_rewards;
+        auto reward_symbol = fund_reward.symbol();
+        auto potential_reward = fund_reward * utils::make_fraction(SCORUM_CURATION_REWARD_PERCENT, SCORUM_100_PERCENT);
 
         if (!comment.allow_curation_rewards)
+            return { asset(0, reward_symbol), fund_reward - potential_reward };
+        else if (comment.total_vote_weight <= 0)
+            return { asset(0, reward_symbol), fund_reward };
+
+        auto rewarded = asset(0, reward_symbol);
+        auto comment_votes = comment_vote_service.get_by_comment_weight_voter(comment.id);
+        for (const comment_vote_object& vote : comment_votes)
         {
-            // TODO: if allow_curation_rewards == false we loose money, it brings us to break invariants - need to
-            // rework
-            unclaimed_rewards = asset(0, reward_symbol);
-            max_rewards = asset(0, reward_symbol);
-        }
-        else if (comment.total_vote_weight > 0)
-        {
-            auto comment_votes = comment_vote_service.get_by_comment_weight_voter(comment.id);
-            for (const comment_vote_object& vote : comment_votes)
+            auto claim = potential_reward * utils::make_fraction(vote.weight, comment.total_vote_weight);
+            if (claim.amount > 0)
             {
-                auto claim = asset(
-                    rewards_math::calculate_curation_payout(max_rewards.amount, comment.total_vote_weight, vote.weight),
-                    reward_symbol);
-                if (claim.amount > 0)
-                {
-                    unclaimed_rewards -= claim;
+                rewarded += claim;
 
-                    const auto& voter = account_service.get(vote.voter);
-                    pay_account(voter, claim);
+                const auto& voter = account_service.get(vote.voter);
+                pay_account(voter, claim);
 
-                    _ctx.push_virtual_operation(
-                        curation_reward_operation(voter.name, claim, comment.author, fc::to_string(comment.permlink)));
+                _ctx.push_virtual_operation(
+                    curation_reward_operation(voter.name, claim, comment.author, fc::to_string(comment.permlink)));
 
-                    accumulate_statistic(voter, claim);
-                }
+                accumulate_statistic(voter, claim);
             }
         }
-        max_rewards -= unclaimed_rewards;
 
-        return unclaimed_rewards;
+        return { rewarded, fund_reward - rewarded };
     }
-    FC_CAPTURE_AND_RETHROW()
+    FC_CAPTURE_AND_RETHROW((comment.author)(comment.permlink)(fund_reward))
+}
+
+asset process_comments_cashout_impl::pay_beneficiaries(const comment_object& comment, const asset& author_reward)
+{
+    auto reward_symbol = author_reward.symbol();
+
+    auto beneficiaries_reward = asset(0, reward_symbol);
+    for (auto& beneficiary : comment.beneficiaries)
+    {
+        auto beneficiary_reward = author_reward * utils::make_fraction(beneficiary.weight, SCORUM_100_PERCENT);
+        pay_account(account_service.get_account(beneficiary.account), beneficiary_reward);
+        beneficiaries_reward += beneficiary_reward;
+
+        _ctx.push_virtual_operation(comment_benefficiary_reward_operation(
+            beneficiary.account, comment.author, fc::to_string(comment.permlink), beneficiary_reward));
+    }
+
+    return beneficiaries_reward;
 }
 
 void process_comments_cashout_impl::pay_account(const account_object& recipient, const asset& reward)

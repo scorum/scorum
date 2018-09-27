@@ -24,6 +24,8 @@ struct base_fifa_world_cup_2018_bounty_reward_fund_fixture : public database_blo
     {
         open_database();
 
+        set_hardfork(SCORUM_HARDFORK_0_2);
+
         const auto& fund_budget = budget_service.get();
         asset initial_per_block_reward = fund_budget.per_block;
 

@@ -89,17 +89,7 @@ using fund_budget_index
                                    indexed_by<ordered_unique<tag<by_id>,
                                                              member<fund_budget_object,
                                                                     fund_budget_object::id_type,
-                                                                    &fund_budget_object::id>>,
-                                              ordered_unique<tag<by_per_block>,
-                                                             composite_key<fund_budget_object,
-                                                                           member<fund_budget_object,
-                                                                                  asset,
-                                                                                  &fund_budget_object::per_block>,
-                                                                           member<fund_budget_object,
-                                                                                  fund_budget_object::id_type,
-                                                                                  &fund_budget_object::id>>,
-                                                             composite_key_compare<std::greater<asset>,
-                                                                                   std::less<fund_budget_object::id_type>>>>>;
+                                                                    &fund_budget_object::id>>>>;
 
 struct by_cashout_time;
 struct by_balances;

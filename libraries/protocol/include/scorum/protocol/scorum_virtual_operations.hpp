@@ -236,15 +236,15 @@ struct return_scorumpower_delegation_operation : public virtual_operation
     asset scorumpower = asset(0, SP_SYMBOL);
 };
 
-struct comment_benefactor_reward_operation : public virtual_operation
+struct comment_benefficiary_reward_operation : public virtual_operation
 {
-    comment_benefactor_reward_operation()
+    comment_benefficiary_reward_operation()
     {
     }
-    comment_benefactor_reward_operation(const account_name_type& b,
-                                        const account_name_type& a,
-                                        const std::string& p,
-                                        const asset& r)
+    comment_benefficiary_reward_operation(const account_name_type& b,
+                                          const account_name_type& a,
+                                          const std::string& p,
+                                          const asset& r)
         : benefactor(b)
         , author(a)
         , permlink(p)
@@ -433,7 +433,7 @@ FC_REFLECT(scorum::protocol::comment_payout_update_operation,
 FC_REFLECT(scorum::protocol::return_scorumpower_delegation_operation,
            (account)
            (scorumpower))
-FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation,
+FC_REFLECT(scorum::protocol::comment_benefficiary_reward_operation,
            (benefactor)
            (author)
            (permlink)

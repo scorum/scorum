@@ -11,8 +11,6 @@ using protocol::percent_type;
 using protocol::asset;
 struct dynamic_global_property_service_i;
 struct advertising_property_service_i;
-struct post_budget_service_i;
-struct banner_budget_service_i;
 template <budget_type> class adv_budget_service_i;
 
 class advertising_auction
@@ -20,8 +18,8 @@ class advertising_auction
 public:
     advertising_auction(dynamic_global_property_service_i& dprops_svc,
                         advertising_property_service_i& adv_props_svc,
-                        post_budget_service_i& post_budget_svc,
-                        banner_budget_service_i& banner_budget_svc);
+                        adv_budget_service_i<budget_type::post>& post_budget_svc,
+                        adv_budget_service_i<budget_type::banner>& banner_budget_svc);
 
     void run_round();
 
@@ -35,8 +33,8 @@ private:
 private:
     dynamic_global_property_service_i& _dprops_svc;
     advertising_property_service_i& _adv_props_svc;
-    post_budget_service_i& _post_budget_svc;
-    banner_budget_service_i& _banner_budget_svc;
+    adv_budget_service_i<budget_type::post>& _post_budget_svc;
+    adv_budget_service_i<budget_type::banner>& _banner_budget_svc;
 };
 }
 }

@@ -59,7 +59,7 @@ using operation = fc::static_variant<vote_operation,
 
                                      /// virtual operations
                                      author_reward_operation,
-                                     comment_benefactor_reward_operation,
+                                     comment_benefficiary_reward_operation,
                                      comment_payout_update_operation,
                                      comment_reward_operation,
                                      curation_reward_operation,

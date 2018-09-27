@@ -251,7 +251,7 @@ struct get_impacted_account_visitor
         _impacted.insert(op.account);
     }
 
-    void operator()(const comment_benefactor_reward_operation& op)
+    void operator()(const comment_benefficiary_reward_operation& op)
     {
         _impacted.insert(op.benefactor);
         _impacted.insert(op.author);
