@@ -75,7 +75,7 @@ will build out of the box without further effort:
 
 ## Building on Other Platforms
 
-- Windows and MacOS build instructions do not yet exist.
+- Windows and MacOS build instructions do not exist yet.
 
 - The developers normally compile with gcc 5.4.0.
 
