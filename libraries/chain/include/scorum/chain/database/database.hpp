@@ -12,6 +12,7 @@
 
 #include <scorum/protocol/protocol.hpp>
 
+#include <scorum/chain/dba/db_accessor_factory.hpp>
 #include <scorum/chain/services/dbservice_dbs_factory.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 
@@ -45,6 +46,7 @@ struct genesis_persistent_state_type;
 class database : public chainbase::database,
                  public dbservice_dbs_factory,
                  public data_service_factory,
+                 public dba::db_accessor_factory,
                  public database_virtual_operations_emmiter_i
 {
 

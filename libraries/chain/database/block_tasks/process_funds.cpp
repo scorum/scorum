@@ -22,7 +22,8 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <boost/range/algorithm_ext/copy_n.hpp>
-#include <scorum/utils/range_adaptors.hpp>
+#include <scorum/utils/take_n_range.hpp>
+#include <scorum/utils/collect_range_adaptor.hpp>
 
 #include <vector>
 
@@ -50,7 +51,9 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
     std::vector<share_type> per_block_list;
     br::transform(budgets, std::back_inserter(per_block_list), [](auto b) { return b.get().per_block.amount; });
 
-    auto valuable_per_block_vec = utils::take_n(per_block_list, vcg_coefficients.size() + 1);
+    auto valuable_per_block_vec = boost::make_iterator_range(per_block_list)
+        | utils::adaptors::take_n(vcg_coefficients.size() + 1) //
+        | utils::adaptors::collect<std::vector<share_type>>();
     auto vcg_bets = calculate_vcg_bets(valuable_per_block_vec, vcg_coefficients);
 
     for (size_t i = 0; i < budgets.size(); ++i)

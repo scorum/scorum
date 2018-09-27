@@ -19,6 +19,14 @@ struct account_service_i;
 using scorum::protocol::market_type;
 using scorum::protocol::wincase_type;
 
+class bet_object;
+class betting_property_object;
+
+namespace dba {
+template <typename> struct db_accessor;
+struct db_accessor_factory;
+}
+
 struct betting_service_i
 {
     // TODO: will be removed after db_accessors introduction
@@ -47,7 +55,7 @@ struct betting_service_i
 class betting_service : public betting_service_i
 {
 public:
-    betting_service(data_service_factory_i&);
+    betting_service(data_service_factory_i&, dba::db_accessor_factory&);
 
     bool is_betting_moderator(const account_name_type& account_name) const override;
 
@@ -79,6 +87,8 @@ private:
     bet_service_i& _bet_svc;
     game_service_i& _game_svc;
     account_service_i& _account_svc;
+    dba::db_accessor<betting_property_object>& _betting_property_dba;
+    dba::db_accessor<bet_object>& _bet_dba;
 };
 }
 }

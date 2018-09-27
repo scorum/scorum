@@ -38,6 +38,7 @@ set( SOURCES
     budget/api/advertising_api_tests.cpp
     budget/budget_security_tests.cpp
     budget/budget_winners_tests.cpp
+    db_accessors/db_accessors_tests.cpp
     proposal/proposal_tests.cpp
     plugins/statistic/node_monitoring_tests.cpp
     plugins/statistic/statistic_tests.cpp
