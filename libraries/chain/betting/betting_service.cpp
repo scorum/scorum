@@ -9,6 +9,9 @@
 #include <scorum/chain/services/game.hpp>
 #include <scorum/chain/services/account.hpp>
 
+#include <scorum/chain/dba/db_accessor_factory.hpp>
+#include <scorum/chain/dba/db_accessor.hpp>
+
 #include <scorum/protocol/betting/market.hpp>
 #include <scorum/chain/betting/betting_math.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
@@ -16,13 +19,14 @@
 namespace scorum {
 namespace chain {
 
-betting_service::betting_service(data_service_factory_i& db)
+betting_service::betting_service(data_service_factory_i& db, dba::db_accessor_factory& dba_factory)
     : _dgp_property_service(db.dynamic_global_property_service())
     , _betting_property_service(db.betting_property_service())
     , _matched_bet_svc(db.matched_bet_service())
     , _pending_bet_svc(db.pending_bet_service())
     , _game_svc(db.game_service())
     , _account_svc(db.account_service())
+    , _betting_property_dba(dba_factory.get_dba<betting_property_object>())
 {
 }
 
@@ -30,7 +34,7 @@ bool betting_service::is_betting_moderator(const account_name_type& account_name
 {
     try
     {
-        return _betting_property_service.get().moderator == account_name;
+        return _betting_property_dba.get().moderator == account_name;
     }
     FC_CAPTURE_LOG_AND_RETHROW((account_name))
 }
