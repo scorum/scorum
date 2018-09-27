@@ -3505,7 +3505,7 @@ BOOST_AUTO_TEST_CASE(account_create_with_delegation_apply)
                     dgpo.median_chain_props.account_creation_fee = new_account_creation_fee;
                 });
             },
-            default_skip);
+            get_skip_flags());
 
         generate_block();
 
@@ -3707,7 +3707,7 @@ BOOST_AUTO_TEST_CASE(delegate_scorumpower_apply)
                     dgpo.median_chain_props.account_creation_fee = ASSET_SCR(1e+3);
                 });
             },
-            default_skip);
+            get_skip_flags());
 
         generate_block();
 
@@ -3905,7 +3905,7 @@ BOOST_AUTO_TEST_CASE(issue_971_vesting_removal)
                     dgpo.median_chain_props.account_creation_fee = ASSET_SCR(1e+3);
                 });
             },
-            default_skip);
+            get_skip_flags());
 
         generate_block();
 

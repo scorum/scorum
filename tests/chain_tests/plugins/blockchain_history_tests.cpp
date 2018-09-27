@@ -16,7 +16,7 @@
 #include <scorum/blockchain_history/devcommittee_history_api.hpp>
 
 #include <scorum/protocol/operations.hpp>
-#include <scorum/common_api/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 
 #include "database_trx_integration.hpp"
 #include "devcommittee_fixture.hpp"
@@ -910,112 +910,6 @@ SCORUM_TEST_CASE(check_get_ops_in_block)
     BOOST_REQUIRE_EQUAL(ret.size(), 3u);
 }
 
-SCORUM_TEST_CASE(check_get_ops_history)
-{
-    opetations_type input_ops;
-
-    generate_block();
-
-    {
-        transfer_to_scorumpower_operation op;
-        op.from = alice.name;
-        op.to = bob.name;
-        op.amount = ASSET_SCR(feed_amount / 10);
-        push_operation(op, alice.private_key);
-        input_ops.push_back(op);
-    }
-
-    {
-        transfer_operation op;
-        op.from = bob.name;
-        op.to = alice.name;
-        op.amount = ASSET_SCR(feed_amount / 20);
-        op.memo = "test";
-        push_operation(op, bob.private_key);
-        input_ops.push_back(op);
-    }
-
-    {
-        auto signing_key = private_key_type::regenerate(fc::sha256::hash("witness")).get_public_key();
-        witness_update_operation op;
-        op.owner = alice;
-        op.url = "witness creation";
-        op.block_signing_key = signing_key;
-        push_operation(op, alice.private_key);
-    }
-
-    {
-        transfer_to_scorumpower_operation op;
-        op.from = alice.name;
-        op.to = sam.name;
-        op.amount = ASSET_SCR(feed_amount / 30);
-        push_operation(op, alice.private_key);
-        input_ops.push_back(op);
-    }
-
-    saved_operation_vector_type saved_ops;
-
-    SCORUM_REQUIRE_THROW(
-        blockchain_history_api_call.get_ops_history(-1, 0, blockchain_history::applied_operation_type::market),
-        fc::exception);
-
-    SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history(
-                             -1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1, blockchain_history::applied_operation_type::market),
-                         fc::exception);
-
-    operation_map_type ret1
-        = blockchain_history_api_call.get_ops_history(-1, 1, blockchain_history::applied_operation_type::market);
-    BOOST_REQUIRE_EQUAL(ret1.size(), 1u);
-
-    auto next_page_id = ret1.begin()->first;
-    next_page_id--;
-    operation_map_type ret2 = blockchain_history_api_call.get_ops_history(
-        next_page_id, 2, blockchain_history::applied_operation_type::market);
-    BOOST_REQUIRE_EQUAL(ret2.size(), 2u);
-
-    for (const auto& val : ret2) // oldest history
-    {
-        saved_ops.push_back(val);
-    }
-
-    for (const auto& val : ret1)
-    {
-        saved_ops.push_back(val);
-    }
-
-    BOOST_REQUIRE_EQUAL(input_ops.size(), saved_ops.size());
-
-    auto it = input_ops.begin();
-    for (const auto& op_val : saved_ops)
-    {
-        const auto& saved_op = op_val.second.op;
-        saved_op.visit(check_opetation_visitor(*it));
-
-        ++it;
-    }
-
-    // emit producer_reward_operation
-    generate_block();
-
-    ret2 = blockchain_history_api_call.get_ops_history(-1, 1, blockchain_history::applied_operation_type::virt);
-    BOOST_REQUIRE_EQUAL(ret2.size(), 1u);
-
-    {
-        const auto& saved_op = ret2.begin()->second.op;
-
-        BOOST_REQUIRE(is_virtual_operation(saved_op));
-    }
-
-    ret2 = blockchain_history_api_call.get_ops_history(-1, 1, blockchain_history::applied_operation_type::all);
-    BOOST_REQUIRE_EQUAL(ret2.size(), 1u);
-
-    {
-        const auto& saved_op = ret2.begin()->second.op;
-
-        BOOST_REQUIRE(is_virtual_operation(saved_op));
-    }
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(blockchain_history_by_time_tests, blokchain_history_fixture)
@@ -1355,4 +1249,331 @@ SCORUM_TEST_CASE(zero_withdraw_after_previous_withdraw_finished_should_throw_tes
 
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(get_ops_history_tests)
+
+using namespace blockchain_history;
+
+struct chain_type : public database_fixture::database_integration_fixture
+{
+    void init_blockchain_history_plugin()
+    {
+        this->init_plugin<scorum::blockchain_history::blockchain_history_plugin>();
+    }
+
+    virtual ~chain_type() override
+    {
+    }
+};
+
+struct fixture
+{
+    Actor alice = Actor("alice");
+    Actor bob = Actor("bob");
+
+    chain_type _chain;
+    blockchain_history_api api;
+
+    fixture()
+        : api(api_context(_chain.app, API_BLOCKCHAIN_HISTORY, std::make_shared<api_session_data>()))
+    {
+        _chain.init_blockchain_history_plugin();
+        _chain.open_database(create_genesis());
+        BOOST_REQUIRE_EQUAL(0u, _chain.db.head_block_num());
+    }
+
+private:
+    genesis_state_type create_genesis()
+    {
+        alice.scorum(ASSET_SCR(100));
+        alice.scorumpower(ASSET_SP(100));
+
+        Actor witness(TEST_INIT_DELEGATE_NAME);
+        witness.scorum(ASSET_SCR(100));
+        witness.scorumpower(ASSET_SP(100));
+
+        const auto accounts_initial_supply = alice.scr_amount + witness.scr_amount;
+
+        static const asset registration_bonus = ASSET_SCR(100);
+        registration_stage single_stage{ 1u, 1u, 100u };
+
+        return Genesis::create()
+            .accounts_supply(accounts_initial_supply)
+            .rewards_supply(TEST_REWARD_INITIAL_SUPPLY)
+            .witnesses(witness)
+            .accounts(alice, bob)
+            .registration_supply(registration_bonus * 100)
+            .registration_bonus(registration_bonus)
+            .registration_schedule(single_stage)
+            .committee(alice)
+            .dev_committee(alice)
+            .generate();
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(get_all_operations, fixture)
+{
+    {
+        BOOST_REQUIRE_EQUAL(0u, _chain.db.head_block_num());
+
+        BOOST_CHECK_EQUAL(0u,
+                          api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::virt).size());
+
+        BOOST_CHECK_EQUAL(0u,
+                          api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::market).size());
+
+        BOOST_CHECK_EQUAL(0u,
+                          api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::all).size());
+
+        BOOST_CHECK_EQUAL(
+            0u, api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::not_virt).size());
+    }
+
+    {
+        // generate producer reward operation
+        _chain.generate_block();
+
+        BOOST_CHECK_EQUAL(1u, _chain.db.head_block_num());
+
+        BOOST_CHECK_EQUAL(1u,
+                          api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::virt).size());
+
+        BOOST_CHECK_EQUAL(0u,
+                          api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::market).size());
+
+        BOOST_CHECK_EQUAL(1u,
+                          api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::all).size());
+
+        BOOST_CHECK_EQUAL(
+            0u, api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::not_virt).size());
+    }
+
+    {
+        scorum::protocol::transfer_operation op;
+        op.from = alice.name;
+        op.to = bob.name;
+        op.amount = ASSET_SCR(1);
+
+        _chain.push_operation(op, alice.private_key);
+
+        BOOST_CHECK_EQUAL(2u, _chain.db.head_block_num());
+
+        BOOST_CHECK_EQUAL(2u,
+                          api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::virt).size());
+
+        BOOST_CHECK_EQUAL(1u,
+                          api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::market).size());
+
+        BOOST_CHECK_EQUAL(3u,
+                          api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::all).size());
+
+        BOOST_CHECK_EQUAL(
+            1u, api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::not_virt).size());
+    }
+
+    {
+        scorum::protocol::comment_operation op;
+        op.author = alice.name;
+        op.permlink = "permlink";
+        op.body = "body";
+        op.title = "title";
+        op.parent_permlink = "parent-permlink";
+
+        try
+        {
+            _chain.push_operation(op, alice.private_key);
+        }
+        FC_LOG_AND_RETHROW()
+
+        // clang-format off
+        auto all = api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::all);
+        auto virt_operations = api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::virt);
+        auto market_operations = api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::market);
+        auto not_virt_operations = api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::not_virt);
+        // clang-format on
+
+        BOOST_REQUIRE_EQUAL(3u, _chain.db.head_block_num());
+
+        BOOST_REQUIRE_EQUAL(_chain.db.head_block_num(), virt_operations.size());
+
+        BOOST_REQUIRE_EQUAL(1u, market_operations.size());
+
+        BOOST_REQUIRE_EQUAL(2u, not_virt_operations.size());
+
+        BOOST_REQUIRE_EQUAL(all.size(), virt_operations.size() + not_virt_operations.size());
+    }
+
+    {
+        auto history = api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH, applied_operation_type::all);
+
+        BOOST_CHECK_EQUAL(R"(["producer_reward",{"producer":"initdelegate","reward":"0.000000010 SP"}])",
+                          fc::json::to_string(history[0].op));
+
+        BOOST_CHECK_EQUAL(R"(["transfer",{"from":"alice","to":"bob","amount":"0.000000001 SCR","memo":""}])",
+                          fc::json::to_string(history[1].op));
+
+        BOOST_CHECK_EQUAL(R"(["producer_reward",{"producer":"initdelegate","reward":"0.000000010 SP"}])",
+                          fc::json::to_string(history[2].op));
+
+        BOOST_CHECK_EQUAL(
+            R"(["comment",{"parent_author":"","parent_permlink":"parent-permlink","author":"alice","permlink":"permlink","title":"title","body":"body","json_metadata":""}])",
+            fc::json::to_string(history[3].op));
+
+        BOOST_CHECK_EQUAL(R"(["producer_reward",{"producer":"initdelegate","reward":"0.000000010 SP"}])",
+                          fc::json::to_string(history[4].op));
+    }
+}
+
+struct single_operation_fixture : fixture
+{
+    single_operation_fixture()
+    {
+        scorum::protocol::transfer_operation op;
+        op.from = alice.name;
+        op.to = bob.name;
+        op.amount = ASSET_SCR(1);
+
+        _chain.push_operation(op);
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(get_one_operation_when_history_was_empty, single_operation_fixture)
+{
+    try
+    {
+        BOOST_REQUIRE_EQUAL(1u, _chain.db.head_block_num());
+
+        auto check = [&](const std::map<uint32_t, applied_operation>& hist) {
+            BOOST_REQUIRE_EQUAL(1u, hist.size());
+
+            auto value = *hist.begin();
+
+            BOOST_CHECK_EQUAL(0u, value.first);
+            BOOST_CHECK_EQUAL(1u, value.second.block);
+            BOOST_CHECK_EQUAL(R"(["transfer",{"from":"alice","to":"bob","amount":"0.000000001 SCR","memo":""}])",
+                              fc::json::to_string(value.second.op));
+        };
+
+        {
+            auto hist = api.get_ops_history(1, 1, applied_operation_type::not_virt);
+            check(hist);
+        }
+
+        {
+            auto hist = api.get_ops_history(static_cast<uint32_t>(-1), 1, applied_operation_type::not_virt);
+            check(hist);
+        }
+
+        {
+            auto hist = api.get_ops_history(100, 100, applied_operation_type::not_virt);
+            check(hist);
+        }
+
+        {
+            auto hist = api.get_ops_history(2, 1, applied_operation_type::not_virt);
+            check(hist);
+        }
+    }
+    FC_LOG_AND_RETHROW()
+}
+
+struct two_operations_fixture : fixture
+{
+    two_operations_fixture()
+    {
+        {
+            scorum::protocol::transfer_operation op;
+            op.from = alice.name;
+            op.to = bob.name;
+            op.amount = ASSET_SCR(1);
+            _chain.push_operation(op);
+        }
+
+        {
+            scorum::protocol::transfer_operation op;
+            op.from = bob.name;
+            op.to = alice.name;
+            op.amount = ASSET_SCR(1);
+            _chain.push_operation(op);
+        }
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(get_first_and_last_operation, two_operations_fixture)
+{
+    try
+    {
+        BOOST_REQUIRE_EQUAL(2u, _chain.db.head_block_num());
+
+        auto get_first_operation_test = [&]() {
+            auto hist = api.get_ops_history(1, 1, applied_operation_type::not_virt);
+            BOOST_REQUIRE_EQUAL(1u, hist.size());
+
+            auto value = *hist.begin();
+
+            // operation id
+            BOOST_CHECK_EQUAL(0u, value.first);
+
+            // block number
+            BOOST_CHECK_EQUAL(1u, value.second.block);
+
+            // validate operation
+            BOOST_CHECK_EQUAL(R"(["transfer",{"from":"alice","to":"bob","amount":"0.000000001 SCR","memo":""}])",
+                              fc::json::to_string(value.second.op));
+        };
+
+        auto get_last_operation_test = [&]() {
+            auto hist = api.get_ops_history(static_cast<uint32_t>(-1), 1, applied_operation_type::not_virt);
+            BOOST_REQUIRE_EQUAL(1u, hist.size());
+
+            auto value = *hist.begin();
+
+            // operation id
+            BOOST_CHECK_EQUAL(1u, value.first);
+
+            // block number
+            BOOST_CHECK_EQUAL(2u, value.second.block);
+
+            // validate operation
+            BOOST_CHECK_EQUAL(
+                R"(["transfer",{"from":"bob","to":"alice","amount":"0.000000001 SCR","memo":""}])",
+                fc::json::to_string(value.second.op));
+        };
+
+        auto get_all_two_opeations_test = [&]() {
+            auto hist = api.get_ops_history(2, 2, applied_operation_type::not_virt);
+            BOOST_REQUIRE_EQUAL(2u, hist.size());
+
+            auto first_operation = *hist.begin();
+            auto second_operation = *(++hist.begin());
+
+            // operation id
+            BOOST_CHECK_EQUAL(0u, first_operation.first);
+            BOOST_CHECK_EQUAL(1u, second_operation.first);
+
+            // block number
+            BOOST_CHECK_EQUAL(1u, first_operation.second.block);
+            BOOST_CHECK_EQUAL(2u, second_operation.second.block);
+
+            // validate operation
+            BOOST_CHECK_EQUAL(
+                R"(["transfer",{"from":"alice","to":"bob","amount":"0.000000001 SCR","memo":""}])",
+                fc::json::to_string(first_operation.second.op));
+
+            BOOST_CHECK_EQUAL(
+                R"(["transfer",{"from":"bob","to":"alice","amount":"0.000000001 SCR","memo":""}])",
+                fc::json::to_string(second_operation.second.op));
+        };
+
+        get_first_operation_test();
+        get_last_operation_test();
+        get_all_two_opeations_test();
+
+        SCORUM_REQUIRE_THROW(api.get_ops_history(-1, 0, applied_operation_type::market), fc::assert_exception);
+        SCORUM_REQUIRE_THROW(api.get_ops_history(-1, MAX_BLOCKCHAIN_HISTORY_DEPTH + 1, applied_operation_type::market),
+                             fc::assert_exception);
+    }
+    FC_LOG_AND_RETHROW()
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 } // namespace blockchain_history_tests

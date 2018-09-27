@@ -5,7 +5,7 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/comment.hpp>
 #include <scorum/chain/services/comment_statistic.hpp>
 #include <scorum/chain/services/comment_vote.hpp>
@@ -32,6 +32,7 @@
 #include <scorum/chain/services/account_registration_bonus.hpp>
 #include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/services/blocks_story.hpp>
+#include <scorum/chain/services/advertising_property.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
@@ -39,7 +40,9 @@ DATA_SERVICE_FACTORY_IMPL(
         (account_blogging_statistic)
         (account_registration_bonus)
         (atomicswap)
-        (budget)
+        (fund_budget)
+        (post_budget)
+        (banner_budget)
         (comment)
         (comment_statistic_scr)
         (comment_statistic_sp)
@@ -70,5 +73,6 @@ DATA_SERVICE_FACTORY_IMPL(
         (genesis_state)
         (witness_reward_in_sp_migration)
         (blocks_story)
+        (advertising_property)
         )
 // clang-format on

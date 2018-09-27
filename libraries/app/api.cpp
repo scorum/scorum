@@ -251,14 +251,9 @@ void network_broadcast_api::broadcast_block(const signed_block& b)
 
 class check_banned_operations_visitor
 {
-    bool allow_blogging_api = true;
-
 public:
     explicit check_banned_operations_visitor(const fc::time_point_sec& now)
     {
-#ifndef FORCE_UNLOCK_BLOGGING_API
-        allow_blogging_api = (now >= SCORUM_BLOGGING_START_DATE);
-#endif
     }
 
     using result_type = bool;
@@ -269,23 +264,6 @@ public:
         return true;
     }
 
-    bool operator()(const scorum::protocol::comment_operation&) const
-    {
-        return allow_blogging_api;
-    }
-    bool operator()(const scorum::protocol::comment_options_operation&) const
-    {
-        return allow_blogging_api;
-    }
-    bool operator()(const scorum::protocol::delete_comment_operation&) const
-    {
-        return allow_blogging_api;
-    }
-    bool operator()(const scorum::protocol::vote_operation&) const
-    {
-        return allow_blogging_api;
-    }
-
 #ifdef LOCK_BUDGETS_API
     bool operator()(const scorum::protocol::create_budget_operation&) const
     {
@@ -294,6 +272,25 @@ public:
     bool operator()(const scorum::protocol::close_budget_operation&) const
     {
         return false;
+    }
+    bool operator()(const scorum::protocol::close_budget_by_advertising_moderator_operation&) const
+    {
+        return false;
+    }
+    bool operator()(const scorum::protocol::update_budget_operation&) const
+    {
+        return false;
+    }
+    bool operator()(const scorum::protocol::proposal_create_operation& op) const
+    {
+        using namespace scorum::protocol;
+
+        // clang-format off
+        auto idx = op.operation.which();
+        return idx != proposal_operation::tag<development_committee_empower_advertising_moderator_operation>::value
+            && idx != proposal_operation::tag<development_committee_change_post_budgets_auction_properties_operation>::value
+            && idx != proposal_operation::tag<development_committee_change_banner_budgets_auction_properties_operation>::value;
+        // clang-format on
     }
 #endif // LOCK_BUDGETS_API
 };

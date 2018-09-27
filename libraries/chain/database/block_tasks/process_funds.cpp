@@ -2,26 +2,91 @@
 #include <scorum/chain/database/block_tasks/reward_balance_algorithm.hpp>
 
 #include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/witness.hpp>
+#include <scorum/chain/services/advertising_property.hpp>
 #include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
+#include <scorum/chain/schema/advertising_property_object.hpp>
 
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
+#include <scorum/chain/database/budget_management_algorithms.hpp>
+
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/transform.hpp>
+#include <boost/range/algorithm_ext/copy_n.hpp>
+#include <scorum/utils/range_adaptors.hpp>
+
+#include <vector>
 
 namespace scorum {
 namespace chain {
 namespace database_ns {
 
 using scorum::protocol::producer_reward_operation;
+
+template <typename ServiceIterfaceType, typename CoeffListType>
+asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
+                                               dynamic_global_property_service_i& dgp_service,
+                                               account_service_i& account_service,
+                                               const CoeffListType& auction_coefficients,
+                                               const budget_type type,
+                                               database_virtual_operations_emmiter_i& ctx)
+{
+    namespace br = boost::range;
+
+    asset total_adv_cash(0, ServiceIterfaceType::object_type::symbol_type);
+
+    advertising_budget_management_algorithm<ServiceIterfaceType> manager(service, dgp_service, account_service);
+
+    auto budgets = service.get_top_budgets(dgp_service.head_block_time());
+    std::vector<asset> per_block_list;
+    br::transform(budgets, std::back_inserter(per_block_list), [](auto b) { return b.get().per_block; });
+
+    auto valuable_per_block_vec = utils::take_n(per_block_list, auction_coefficients.size() + 1);
+    auto auction_bets = calculate_auction_bets(valuable_per_block_vec, auction_coefficients);
+
+    for (size_t i = 0; i < budgets.size(); ++i)
+    {
+        const auto& budget = budgets[i].get();
+        auto budget_owner = budget.owner;
+        auto budget_id = budget.id._id;
+
+        auto per_block = manager.allocate_cash(budget);
+
+        auto adv_cash = asset(0, per_block.symbol());
+        if (i < auction_bets.size())
+            adv_cash = auction_bets[i];
+
+        if (adv_cash.amount > 0)
+        {
+            total_adv_cash += adv_cash;
+
+            ctx.push_virtual_operation(
+                allocate_cash_from_advertising_budget_operation(type, budget_owner, budget_id, adv_cash));
+        }
+
+        auto ret_cash = per_block - adv_cash;
+        FC_ASSERT(ret_cash.amount >= 0, "cash-back amount cannot be less than zero");
+        if (ret_cash.amount > 0)
+        {
+            manager.cash_back(budget_owner, ret_cash);
+
+            ctx.push_virtual_operation(
+                cash_back_from_advertising_budget_to_owner_operation(type, budget_owner, budget_id, ret_cash));
+        }
+    }
+
+    return total_adv_cash;
+}
 
 void process_funds::on_apply(block_task_context& ctx)
 {
@@ -32,8 +97,13 @@ void process_funds::on_apply(block_task_context& ctx)
 
     data_service_factory_i& services = ctx.services();
     content_reward_scr_service_i& content_reward_service = services.content_reward_scr_service();
-    budget_service_i& budget_service = services.budget_service();
     dev_pool_service_i& dev_service = services.dev_pool_service();
+    dynamic_global_property_service_i& dgp_service = services.dynamic_global_property_service();
+    fund_budget_service_i& fund_budget_service = services.fund_budget_service();
+    post_budget_service_i& post_budget_service = services.post_budget_service();
+    banner_budget_service_i& banner_budget_service = services.banner_budget_service();
+    account_service_i& account_service = services.account_service();
+    advertising_property_service_i& advertising_property_service = services.advertising_property_service();
 
     // We don't have inflation.
     // We just get per block reward from original reward fund(4.8M SP)
@@ -41,23 +111,27 @@ void process_funds::on_apply(block_task_context& ctx)
     // users(through the purchase of advertising). Advertising budgets are in SCR.
 
     asset original_fund_reward = asset(0, SP_SYMBOL);
-    if (budget_service.is_fund_budget_exists())
+    if (fund_budget_service.is_exists())
     {
-        const budget_object& budget = budget_service.get_fund_budget();
-        original_fund_reward += budget_service.allocate_cash(budget);
+        original_fund_reward += fund_budget_management_algorithm(fund_budget_service, dgp_service)
+                                    .allocate_cash(fund_budget_service.get());
     }
 
     distribute_reward(ctx, original_fund_reward); // distribute SP
 
     asset advertising_budgets_reward = asset(0, SCORUM_SYMBOL);
-    for (const budget_object& budget : budget_service.get_budgets())
-    {
-        advertising_budgets_reward += budget_service.allocate_cash(budget);
-    }
+
+    advertising_budgets_reward += allocate_advertising_cash(
+        post_budget_service, dgp_service, account_service, advertising_property_service.get().auction_post_coefficients,
+        budget_type::post, ctx);
+    advertising_budgets_reward += allocate_advertising_cash(
+        banner_budget_service, dgp_service, account_service,
+        advertising_property_service.get().auction_banner_coefficients, budget_type::banner, ctx);
 
     // 50% of the revenue goes to support and develop the product, namely,
     // towards the company's R&D center.
-    asset dev_team_reward = advertising_budgets_reward * SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    asset dev_team_reward = advertising_budgets_reward
+        * utils::make_fraction(SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT, SCORUM_100_PERCENT);
     dev_service.update([&](dev_committee_object& dco) { dco.scr_balance += dev_team_reward; });
 
     // 50% of revenue is distributed in SCR among users.
@@ -75,8 +149,8 @@ void process_funds::distribute_reward(block_task_context& ctx, const asset& user
 {
     // clang-format off
     /// 5% of total per block reward(equal to 10% of users only reward) to witness and active sp holder pay
-    asset witness_reward = users_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
-    asset active_sp_holder_reward = users_reward * SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
+    asset witness_reward = users_reward * utils::make_fraction(SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT, SCORUM_100_PERCENT);
+    asset active_sp_holder_reward = users_reward  * utils::make_fraction(SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT ,SCORUM_100_PERCENT);
     asset content_reward = users_reward - witness_reward - active_sp_holder_reward;
     // clang-format on
 
@@ -137,11 +211,9 @@ void process_funds::distribute_active_sp_holders_reward(block_task_context& ctx,
             active_sp_holders_reward_legacy_operation::rewarded_type rewarded;
             for (const account_object& account : active_sp_holders_array)
             {
-                fc::uint128_t account_reward_value = total_reward.amount.value;
-                account_reward_value *= account.vote_reward_competitive_sp.amount.value;
-                account_reward_value /= total_sp.amount.value;
-
-                asset account_reward = asset(account_reward_value.to_uint64(), total_reward.symbol());
+                // It is used SP balance amount of account to calculate reward either in SP or SCR tokens
+                asset account_reward
+                    = total_reward * utils::make_fraction(account.vote_reward_competitive_sp.amount, total_sp.amount);
 
                 if (hardfork_service.has_hardfork(SCORUM_HARDFORK_0_2))
                 {

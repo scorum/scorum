@@ -9,7 +9,6 @@ using namespace scorum::rewards_math;
 using namespace scorum::protocol;
 
 using scorum::protocol::curve_id;
-using fc::uint128_t;
 
 namespace database_fixture {
 struct rewards_math_abs_reward_shares_fixture

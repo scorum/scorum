@@ -31,10 +31,10 @@ void proposal_vote_evaluator::do_apply(const proposal_vote_evaluator::operation_
 
     const proposal_object& proposal = _proposal_service.get(op.proposal_id);
 
-    committee_i& committee_service = proposal.operation.visit(get_operation_committee_visitor(db()));
+    auto committee = proposal.operation.visit(get_operation_committee_visitor(db()));
 
-    FC_ASSERT(committee_service.is_exists(op.voting_account), "Account \"${account_name}\" is not in committee.",
-              ("account_name", op.voting_account));
+    FC_ASSERT(committee.as_committee_i().is_exists(op.voting_account),
+              "Account \"${account_name}\" is not in committee.", ("account_name", op.voting_account));
 
     _account_service.check_account_existence(op.voting_account);
 

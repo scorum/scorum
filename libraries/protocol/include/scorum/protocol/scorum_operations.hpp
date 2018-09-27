@@ -8,7 +8,6 @@
 
 #include <scorum/protocol/proposal_operations.hpp>
 
-#include <fc/utf8.hpp>
 #include <fc/crypto/ripemd160.hpp>
 
 namespace scorum {
@@ -626,11 +625,29 @@ struct delegate_scorumpower_operation : public base_operation
 
 struct create_budget_operation : public base_operation
 {
+    budget_type type = budget_type::post;
+
     account_name_type owner;
-    std::string content_permlink;
+    std::string json_metadata;
 
     asset balance = asset(0, SCORUM_SYMBOL);
+    time_point_sec start;
     time_point_sec deadline;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
+};
+
+struct update_budget_operation : public base_operation
+{
+    budget_type type = budget_type::post;
+
+    int64_t budget_id;
+    account_name_type owner;
+    std::string json_metadata;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -641,6 +658,8 @@ struct create_budget_operation : public base_operation
 
 struct close_budget_operation : public base_operation
 {
+    budget_type type = budget_type::post;
+
     int64_t budget_id;
     account_name_type owner;
 
@@ -732,6 +751,20 @@ struct atomicswap_refund_operation : public base_operation
     }
 };
 
+struct close_budget_by_advertising_moderator_operation : public base_operation
+{
+    budget_type type = budget_type::post;
+
+    int64_t budget_id;
+    account_name_type moderator;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+};
+
 } // namespace protocol
 } // namespace scorum
 
@@ -801,13 +834,15 @@ FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_rec
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
 FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
 
-FC_REFLECT( scorum::protocol::create_budget_operation, (owner)(content_permlink)(balance)(deadline) )
-FC_REFLECT( scorum::protocol::close_budget_operation, (budget_id)(owner) )
+FC_REFLECT( scorum::protocol::create_budget_operation, (type)(owner)(json_metadata)(balance)(start)(deadline) )
+FC_REFLECT( scorum::protocol::update_budget_operation, (type)(budget_id)(owner)(json_metadata) )
+FC_REFLECT( scorum::protocol::close_budget_operation, (type)(budget_id)(owner) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
 FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,(by_initiator)(by_participant))
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
+FC_REFLECT( scorum::protocol::close_budget_by_advertising_moderator_operation, (type)(budget_id)(moderator) )
 
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)

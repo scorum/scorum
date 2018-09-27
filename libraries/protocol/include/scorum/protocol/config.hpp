@@ -23,11 +23,11 @@ namespace detail {
 
         const uint32_t cashout_window_seconds;
 
-        const fc::microseconds reverse_auction_window_seconds;
-
         const fc::microseconds upvote_lockout;
 
         const fc::microseconds active_sp_holders_reward_period;
+
+        const fc::microseconds reverse_auction_window_seconds;
 
         const fc::microseconds vote_regeneration_seconds;
 
@@ -60,7 +60,7 @@ namespace detail {
         const fc::time_point_sec fifa_world_cup_2018_bounty_cashout_date;
 
         const fc::microseconds expiraton_for_registration_bonus;
-        
+
         const fc::time_point_sec witness_reward_migration_date;
 
         const uint8_t scorum_max_witnesses;
@@ -84,13 +84,15 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 2, 0) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 2, 2) )
 
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
 #define SCORUM_ADDRESS_PREFIX                  "SCR"
 
 #define SCORUM_CURRENCY_PRECISION  9
+
+#define SCORUM_DEFAULT_BUDGETS_AUCTION_SET  {100, 85, 75, 65}
 
 // Scorum Coin = SCR with 9 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))
@@ -237,6 +239,7 @@ namespace detail {
 
 #define SCORUM_COMMITTEE_QUORUM_PERCENT         (60u)
 
+#define SCORUM_COMMITTEE_ADVERTISING_MODERATOR_QUORUM_PERCENT       (50u)
 #define SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT            (50u)
 #define SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT         (60u)
 
@@ -252,18 +255,42 @@ namespace detail {
  *  Reserved Account IDs with special meaning
  */
 /// Represents the canonical account for specifying you will vote for directly (as opposed to a proxy)
-#define SCORUM_PROXY_TO_SELF_ACCOUNT           (account_name_type())
+#define SCORUM_PROXY_TO_SELF_ACCOUNT           (scorum::protocol::account_name_type())
 /// Represents the canonical root post parent account
-#define SCORUM_ROOT_POST_PARENT_ACCOUNT        (account_name_type())
+#define SCORUM_ROOT_POST_PARENT_ACCOUNT        (scorum::protocol::account_name_type())
 
+#define SCORUM_MISSING_MODERATOR_ACCOUNT       (scorum::protocol::account_name_type())
 
-#define SCORUM_BLOGGING_START_DATE (scorum::protocol::detail::get_config().blogging_start_date)
-
+#define SCORUM_BLOGGING_START_DATE                     (scorum::protocol::detail::get_config().blogging_start_date)
 #define SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE (scorum::protocol::detail::get_config().fifa_world_cup_2018_bounty_cashout_date)
-
 #define SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS        (scorum::protocol::detail::get_config().expiraton_for_registration_bonus)
+#define SCORUM_WITNESS_REWARD_MIGRATION_DATE           (scorum::protocol::detail::get_config().witness_reward_migration_date)
 
-#define SCORUM_WITNESS_REWARD_MIGRATION_DATE (scorum::protocol::detail::get_config().witness_reward_migration_date)
+
+#ifdef IS_LOW_MEM
+#define SCORUM_LOW_MEMORY_NODE (true)
+#else
+#define SCORUM_LOW_MEMORY_NODE (false)
+#endif
+
+#ifdef CLEAR_VOTES
+#define SCORUM_CLEAR_VOTES (true)
+#else
+#define SCORUM_CLEAR_VOTES (false)
+#endif
+
+#ifdef SKIP_BY_TX_ID
+#define SCORUM_SKIP_BY_TX_ID (true)
+#else
+#define SCORUM_SKIP_BY_TX_ID (false)
+#endif
+
+#ifdef LIVE_TESTNET
+#define SCORUM_LIVE_TESTNET (true)
+#else
+#define SCORUM_LIVE_TESTNET (false)
+#endif
+
 ///@}
 
 // clang-format on

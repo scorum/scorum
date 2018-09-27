@@ -180,7 +180,7 @@ public:
         trx.set_expiration(db.head_block_time() + SCORUM_MAX_TIME_UNTIL_EXPIRATION);
         trx.sign(witness.private_key, db.get_chain_id());
         trx.validate();
-        db.push_transaction(trx, default_skip);
+        db.push_transaction(trx, 0);
 
         return trx;
     }

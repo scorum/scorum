@@ -8,7 +8,9 @@ DATA_SERVICE_FACTORY_DECLARE(
         (account_blogging_statistic)
         (account_registration_bonus)
         (atomicswap)
-        (budget)
+        (fund_budget)
+        (post_budget)
+        (banner_budget)
         (comment)
         (comment_statistic_scr)
         (comment_statistic_sp)
@@ -39,5 +41,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (genesis_state)
         (witness_reward_in_sp_migration)
         (blocks_story)
+        (advertising_property)
         )
 // clang-format on

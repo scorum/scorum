@@ -5,13 +5,14 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/schema/atomicswap_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
+#include <scorum/chain/schema/advertising_property_object.hpp>
 
 #include <scorum/protocol/transaction.hpp>
 #include <scorum/protocol/scorum_operations.hpp>
@@ -26,6 +27,21 @@ namespace scorum {
 namespace app {
 
 using namespace scorum::chain;
+
+struct advertising_property_api_obj
+{
+    advertising_property_api_obj(const chain::advertising_property_object& obj);
+
+    advertising_property_api_obj()
+    {
+    }
+
+    account_name_type moderator;
+
+    std::vector<percent_type> auction_post_coefficients;
+
+    std::vector<percent_type> auction_banner_coefficients;
+};
 
 typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
 typedef api_obj<scorum::chain::block_summary_object> block_summary_api_obj;
@@ -262,17 +278,32 @@ struct witness_api_obj
     time_point_sec hardfork_time_vote;
 };
 
-struct budget_api_obj
+class budget_api_obj
 {
-    budget_api_obj(const chain::budget_object& b)
+public:
+    budget_api_obj(const chain::post_budget_object& b)
         : id(b.id._id)
+        , type(budget_type::post)
         , owner(b.owner)
-        , content_permlink(fc::to_string(b.content_permlink))
+        , json_metadata(fc::to_string(b.json_metadata))
         , created(b.created)
+        , start(b.start)
         , deadline(b.deadline)
         , balance(b.balance)
         , per_block(b.per_block)
-        , last_cashout_block(b.last_cashout_block)
+    {
+    }
+
+    budget_api_obj(const chain::banner_budget_object& b)
+        : id(b.id._id)
+        , type(budget_type::banner)
+        , owner(b.owner)
+        , json_metadata(fc::to_string(b.json_metadata))
+        , created(b.created)
+        , start(b.start)
+        , deadline(b.deadline)
+        , balance(b.balance)
+        , per_block(b.per_block)
     {
     }
 
@@ -283,16 +314,17 @@ struct budget_api_obj
 
     int64_t id;
 
+    budget_type type;
+
     account_name_type owner;
-    std::string content_permlink;
+    std::string json_metadata;
 
     time_point_sec created;
+    time_point_sec start;
     time_point_sec deadline;
 
     asset balance = asset(0, SCORUM_SYMBOL);
     asset per_block;
-
-    uint32_t last_cashout_block = 0;
 };
 
 struct atomicswap_contract_api_obj
@@ -409,6 +441,11 @@ struct registration_committee_api_obj
 
 // clang-format off
 
+FC_REFLECT(scorum::app::advertising_property_api_obj,
+           (moderator)
+           (auction_post_coefficients)
+           (auction_banner_coefficients))
+
 FC_REFLECT_DERIVED(scorum::app::account_bandwidth_api_obj, (scorum::witness::account_bandwidth_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::block_summary_api_obj, (scorum::chain::block_summary_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::change_recovery_account_request_api_obj, (scorum::chain::change_recovery_account_request_object), BOOST_PP_SEQ_NIL)
@@ -492,13 +529,14 @@ FC_REFLECT( scorum::app::proposal_api_obj,
 
 FC_REFLECT( scorum::app::budget_api_obj,
             (id)
+            (type)
             (owner)
-            (content_permlink)
+            (json_metadata)
             (created)
+            (start)
             (deadline)
             (balance)
             (per_block)
-            (last_cashout_block)
           )
 
 FC_REFLECT( scorum::app::atomicswap_contract_api_obj,

@@ -8,8 +8,11 @@ ARG AZURE_STORAGE_ACCESS_KEY
 ARG AZURE_STORAGE_CONNECTION_STRING
 ARG UPLOAD_PATH
 ARG BUILD_VERSION
+ARG LIVE_TESTNET
 
 ENV LANG=en_US.UTF-8
+
+ENV LIVE_TESTNET=${LIVE_TESTNET:-OFF}
 
 RUN \
         apt-get update && \
@@ -55,12 +58,12 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
-        -DLIVE_TESTNET=${UPLOAD_PATH} \
         -DCMAKE_BUILD_TYPE=Debug \
+        -DSCORUM_LIVE_TESTNET=${LIVE_TESTNET} \
+        -DSCORUM_LOW_MEMORY_NODE=OFF \
+        -DSCORUM_CLEAR_VOTES=ON \
+        -DSCORUM_SKIP_BY_TX_ID=ON \
         -DENABLE_COVERAGE_TESTING=ON \
-        -DLOW_MEMORY_NODE=OFF \
-        -DCLEAR_VOTES=ON \
-        -DSKIP_BY_TX_ID=ON \
         .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
@@ -82,12 +85,12 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
-        -DLIVE_TESTNET=${UPLOAD_PATH} \
-        -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
         -DCMAKE_BUILD_TYPE=Release \
-        -DLOW_MEMORY_NODE=ON \
-        -DCLEAR_VOTES=ON \
-        -DSKIP_BY_TX_ID=ON \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
+        -DSCORUM_LIVE_TESTNET=${LIVE_TESTNET} \
+        -DSCORUM_LOW_MEMORY_NODE=ON \
+        -DSCORUM_CLEAR_VOTES=ON \
+        -DSCORUM_SKIP_BY_TX_ID=ON \
         .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
@@ -103,12 +106,12 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
-        -DLIVE_TESTNET=${UPLOAD_PATH} \
-        -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
         -DCMAKE_BUILD_TYPE=Release \
-        -DLOW_MEMORY_NODE=OFF \
-        -DCLEAR_VOTES=OFF \
-        -DSKIP_BY_TX_ID=OFF \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
+        -DSCORUM_LIVE_TESTNET=${LIVE_TESTNET} \
+        -DSCORUM_LOW_MEMORY_NODE=OFF \
+        -DSCORUM_CLEAR_VOTES=OFF \
+        -DSCORUM_SKIP_BY_TX_ID=OFF \
         .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
@@ -189,12 +192,15 @@ RUN chown scorumd:scorumd -R /var/lib/scorumd
 VOLUME ["/var/lib/scorumd"]
 
 # rpc service:
-EXPOSE 8090
+EXPOSE 8001
 # p2p service:
 EXPOSE 2001
 
 # the following adds lots of logging info to stdout
-ADD contrib/fullnode.config.ini /etc/scorumd/fullnode.config.ini
+ADD contrib/config.ini.witness /etc/scorumd/config.ini.witness
+ADD contrib/config.ini.rpc /etc/scorumd/config.ini.rpc
+ADD contrib/seeds.ini.mainnet /etc/scorumd/seeds.ini.mainnet
+ADD contrib/seeds.ini.testnet /etc/scorumd/seeds.ini.testnet
 
 # upload archive to azure
 ADD contrib/azure_upload.sh /usr/local/bin/azure_upload.sh

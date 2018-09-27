@@ -2,7 +2,7 @@
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
@@ -10,10 +10,12 @@
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
+
+#include <scorum/chain/database/budget_management_algorithms.hpp>
 
 #include "database_default_integration.hpp"
 
@@ -27,28 +29,30 @@ class dbs_reward_fixture : public database_integration_fixture
 {
 public:
     dbs_reward_fixture()
-        : content_reward_scr_service(db.obtain_service<dbs_content_reward_scr>())
-        , budget_service(db.obtain_service<dbs_budget>())
-        , dev_service(db.obtain_service<dbs_dev_pool>())
-        , content_reward_fund_scr_service(db.obtain_service<dbs_content_reward_fund_scr>())
-        , content_reward_fund_sp_service(db.obtain_service<dbs_content_reward_fund_sp>())
-        , account_service(db.obtain_service<dbs_account>())
-        , dgp_service(db.obtain_service<dbs_dynamic_global_property>())
-        , voters_reward_sp_service(db.obtain_service<dbs_voters_reward_sp>())
-        , voters_reward_scr_service(db.obtain_service<dbs_voters_reward_scr>())
+        : content_reward_scr_service(db.content_reward_scr_service())
+        , fund_budget_service(db.fund_budget_service())
+        , advertising_budget_service(db.post_budget_service())
+        , dev_service(db.dev_pool_service())
+        , content_reward_fund_scr_service(db.content_reward_fund_scr_service())
+        , content_reward_fund_sp_service(db.content_reward_fund_sp_service())
+        , account_service(db.account_service())
+        , dgp_service(db.dynamic_global_property_service())
+        , voters_reward_sp_service(db.voters_reward_sp_service())
+        , voters_reward_scr_service(db.voters_reward_scr_service())
     {
         open_database();
     }
 
-    dbs_content_reward_scr& content_reward_scr_service;
-    dbs_budget& budget_service;
-    dbs_dev_pool& dev_service;
-    dbs_content_reward_fund_scr& content_reward_fund_scr_service;
-    dbs_content_reward_fund_sp& content_reward_fund_sp_service;
-    dbs_account& account_service;
-    dbs_dynamic_global_property& dgp_service;
-    dbs_voters_reward_sp& voters_reward_sp_service;
-    dbs_voters_reward_scr& voters_reward_scr_service;
+    content_reward_scr_service_i& content_reward_scr_service;
+    fund_budget_service_i& fund_budget_service;
+    post_budget_service_i& advertising_budget_service;
+    dev_pool_service_i& dev_service;
+    content_reward_fund_scr_service_i& content_reward_fund_scr_service;
+    content_reward_fund_sp_service_i& content_reward_fund_sp_service;
+    account_service_i& account_service;
+    dynamic_global_property_service_i& dgp_service;
+    voters_reward_sp_service_i& voters_reward_sp_service;
+    voters_reward_scr_service_i& voters_reward_scr_service;
 
     const asset NULL_BALANCE = asset(0, SCORUM_SYMBOL);
 };
@@ -60,7 +64,7 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_fund_budget_only)
 {
     generate_block();
 
-    const auto& fund_budget = budget_service.get_fund_budget();
+    const auto& fund_budget = fund_budget_service.get();
     asset initial_per_block_reward = fund_budget.per_block;
 
     auto witness_reward = initial_per_block_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
@@ -90,7 +94,8 @@ SCORUM_TEST_CASE(check_per_block_reward_distribution_with_advertising_budget)
     content_reward_scr_service.update(
         [&](content_reward_balancer_scr_object& b) { b.current_per_block_reward = advertising_budget; });
 
-    BOOST_CHECK_NO_THROW(budget_service.create_budget(account, advertising_budget, deadline));
+    BOOST_CHECK_NO_THROW(post_budget_management_algorithm(advertising_budget_service, dgp_service, account_service)
+                             .create_budget(account.name, advertising_budget, db.head_block_time(), deadline, ""));
 
     asset balance_before = account.balance;
 

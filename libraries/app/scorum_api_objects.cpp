@@ -8,6 +8,15 @@
 namespace scorum {
 namespace app {
 
+advertising_property_api_obj::advertising_property_api_obj(const chain::advertising_property_object& obj)
+    : moderator(obj.moderator)
+{
+    std::copy(std::begin(obj.auction_post_coefficients), std::end(obj.auction_post_coefficients),
+              std::back_inserter(auction_post_coefficients));
+    std::copy(std::begin(obj.auction_banner_coefficients), std::end(obj.auction_banner_coefficients),
+              std::back_inserter(auction_banner_coefficients));
+}
+
 account_api_obj::account_api_obj(const chain::account_object& a, const chain::database& db)
 {
     set_account(a);

@@ -32,10 +32,14 @@ set( SOURCES
     registration/burning_bonus.cpp
     atomicswap/atomicswap_service_tests.cpp
     atomicswap/atomicswap_operations_tests.cpp
-    budget/budget_service_tests.cpp
-    budget/fund_budget_tests.cpp
-    budget/budget_operations_tests.cpp
     budget/budget_check_common.cpp
+    budget/budget_service_tests.cpp
+    budget/budget_autoclose_tests.cpp
+    budget/budget_starting_tests.cpp
+    budget/adv_moderator_tests.cpp
+    budget/api/advertising_api_tests.cpp
+    budget/budget_security_tests.cpp
+    budget/budget_winners_tests.cpp
     proposal/proposal_tests.cpp
     plugins/statistic/node_monitoring_tests.cpp
     plugins/statistic/statistic_tests.cpp
@@ -79,10 +83,10 @@ target_include_directories(chain_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSRC_DIR=${CMAKE_CURRENT_SOURCE_DIR}" )
 
-OPTION(CHAIN_TESTS_LOG_MESSAGES "Show logs for chain tests (ON or OFF)" OFF)
+OPTION(SCORUM_CHAIN_TESTS_LOG_MESSAGES "Show logs for chain tests (ON or OFF)" OFF)
 
-MESSAGE( STATUS "CHAIN_TESTS_LOG_MESSAGES: ${CHAIN_TESTS_LOG_MESSAGES}" )
-if( CHAIN_TESTS_LOG_MESSAGES )
+MESSAGE( STATUS "  SCORUM_CHAIN_TESTS_LOG_MESSAGES:    ${SCORUM_CHAIN_TESTS_LOG_MESSAGES}" )
+if( SCORUM_CHAIN_TESTS_LOG_MESSAGES )
     SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_MESSAGES" )
     SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOG_MESSAGES" )
 endif()

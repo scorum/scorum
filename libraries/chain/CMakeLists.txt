@@ -34,7 +34,6 @@ add_library( scorum_chain
              services/account.cpp
              services/account_blogging_statistic.cpp
              services/atomicswap.cpp
-             services/budget.cpp
              services/comment.cpp
              services/comment_vote.cpp
              services/dbs_base.cpp
@@ -69,9 +68,14 @@ add_library( scorum_chain
              evaluators/committee_accessor.cpp
              evaluators/proposal_evaluators.cpp
              evaluators/registration_pool_evaluator.cpp
+             evaluators/create_budget_evaluator.cpp
+             evaluators/update_budget_evaluator.cpp
+             evaluators/close_budget_evaluator.cpp
+             evaluators/close_budget_by_advertising_moderator_evaluator.cpp
              evaluators/vote_evaluator.cpp
 
              schema/shared_authority.cpp
+             schema/advertising_property_object.cpp
 
              block_log.cpp
 
@@ -88,6 +92,7 @@ add_library( scorum_chain
              genesis/initializators/steemit_bounty_account_initializator.cpp
              genesis/initializators/dev_pool_initializator.cpp
              genesis/initializators/dev_committee_initialiazator.cpp
+             genesis/initializators/advertising_property_initializator.cpp
 
              database/block_tasks/block_tasks.cpp
              database/block_tasks/process_contracts_expiration.cpp
@@ -117,6 +122,7 @@ target_link_libraries( scorum_chain
                        fc
                        chainbase
                        graphene_schema
+                       scorum_utils
                        ${PATCH_MERGE_LIB}
                        ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories( scorum_chain

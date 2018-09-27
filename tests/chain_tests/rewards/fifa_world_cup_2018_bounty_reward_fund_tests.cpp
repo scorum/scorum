@@ -3,11 +3,11 @@
 #include "database_blog_integration.hpp"
 
 #include <scorum/chain/services/reward_funds.hpp>
-#include <scorum/chain/services/budget.hpp>
+#include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
-#include <scorum/chain/schema/budget_object.hpp>
+#include <scorum/chain/schema/budget_objects.hpp>
 
 namespace fifa_world_cup_2018_bounty_reward_fund_tests {
 using namespace database_fixture;
@@ -18,13 +18,13 @@ struct base_fifa_world_cup_2018_bounty_reward_fund_fixture : public database_blo
     base_fifa_world_cup_2018_bounty_reward_fund_fixture()
         : fifa_world_cup_2018_bounty_reward_fund_service(db.content_fifa_world_cup_2018_bounty_reward_fund_service())
         , reward_fund_sp_service(db.content_reward_fund_sp_service())
-        , budget_service(db.budget_service())
+        , budget_service(db.fund_budget_service())
         , account_service(db.account_service())
         , dgp_service(db.dynamic_global_property_service())
     {
         open_database();
 
-        const auto& fund_budget = budget_service.get_fund_budget();
+        const auto& fund_budget = budget_service.get();
         asset initial_per_block_reward = fund_budget.per_block;
 
         asset witness_reward = initial_per_block_reward * SCORUM_WITNESS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
@@ -35,7 +35,7 @@ struct base_fifa_world_cup_2018_bounty_reward_fund_fixture : public database_blo
 
     content_fifa_world_cup_2018_bounty_reward_fund_service_i& fifa_world_cup_2018_bounty_reward_fund_service;
     content_reward_fund_sp_service_i& reward_fund_sp_service;
-    budget_service_i& budget_service;
+    fund_budget_service_i& budget_service;
     account_service_i& account_service;
     dynamic_global_property_service_i& dgp_service;
 

@@ -29,8 +29,8 @@ struct proposal_add_member_evaluator : public proposal_operation_evaluator<propo
 
     void do_apply(const operation_type& o)
     {
-        committee_i& committee_service = get_committee(this->db(), o);
-        committee_service.add_member(o.account_name);
+        auto committee = get_committee(this->db(), o);
+        committee.as_committee_i().add_member(o.account_name);
     }
 };
 
@@ -48,8 +48,8 @@ struct proposal_exclude_member_evaluator
 
     void do_apply(const operation_type& o)
     {
-        committee_i& committee_service = get_committee(this->db(), o);
-        committee_service.exclude_member(o.account_name);
+        auto committee = get_committee(this->db(), o);
+        committee.as_committee_i().exclude_member(o.account_name);
 
         removed_members.insert(o.account_name);
     }
@@ -71,26 +71,30 @@ struct proposal_change_quorum_evaluator
 
     void do_apply(const operation_type& o)
     {
-        committee_i& committee_service = get_committee(this->db(), o);
+        committee committee = get_committee(this->db(), o);
 
-        if (o.committee_quorum == add_member_quorum)
+        switch (o.committee_quorum)
         {
-            committee_service.change_add_member_quorum(o.quorum);
-        }
-        else if (o.committee_quorum == exclude_member_quorum)
-        {
-            committee_service.change_exclude_member_quorum(o.quorum);
-        }
-        else if (o.committee_quorum == base_quorum)
-        {
-            committee_service.change_base_quorum(o.quorum);
-        }
-        else if (o.committee_quorum == transfer_quorum)
-        {
-            committee_service.change_transfer_quorum(o.quorum);
-        }
-        else
-        {
+        case quorum_type::add_member_quorum:
+            committee.as_committee_i().change_add_member_quorum(o.quorum);
+            break;
+        case quorum_type::exclude_member_quorum:
+            committee.as_committee_i().change_exclude_member_quorum(o.quorum);
+            break;
+        case quorum_type::base_quorum:
+            committee.as_committee_i().change_base_quorum(o.quorum);
+            break;
+        case quorum_type::transfer_quorum:
+            committee.weak_visit([&](development_committee_i& c) { c.change_transfer_quorum(o.quorum); });
+            break;
+        case quorum_type::advertising_moderator_quorum:
+            committee.weak_visit([&](development_committee_i& c) { c.change_advertising_moderator_quorum(o.quorum); });
+            break;
+        case quorum_type::budgets_auction_properties_quorum:
+            committee.weak_visit(
+                [&](development_committee_i& c) { c.change_budgets_auction_properties_quorum(o.quorum); });
+            break;
+        case quorum_type::none_quorum:
             FC_THROW_EXCEPTION(fc::assert_exception, "unknow quorum change operation");
         }
     }
@@ -115,6 +119,38 @@ struct development_committee_transfer_evaluator
 
     void do_apply(const operation_type& o);
 };
+
+struct development_committee_empower_advertising_moderator_evaluator
+    : public proposal_operation_evaluator<development_committee_empower_advertising_moderator_evaluator>
+{
+    typedef development_committee_empower_advertising_moderator_operation operation_type;
+
+    development_committee_empower_advertising_moderator_evaluator(data_service_factory_i& r);
+
+    void do_apply(const operation_type& o);
+};
+
+template <budget_type type>
+struct development_committee_change_budgets_auction_properties_evaluator
+    : public proposal_operation_evaluator<development_committee_change_budgets_auction_properties_evaluator<type>>
+{
+    using operation_type = development_committee_change_budgets_auction_properties_operation<type>;
+    using base_type
+        = proposal_operation_evaluator<development_committee_change_budgets_auction_properties_evaluator<type>>;
+
+    development_committee_change_budgets_auction_properties_evaluator(data_service_factory_i& r)
+        : base_type(r)
+    {
+    }
+
+    void do_apply(const operation_type& o);
+};
+
+using development_committee_change_top_post_budgets_amount_evaluator
+    = development_committee_change_budgets_auction_properties_evaluator<budget_type::post>;
+
+using development_committee_change_top_banner_budgets_amount_evaluator
+    = development_committee_change_budgets_auction_properties_evaluator<budget_type::banner>;
 
 namespace registration_committee {
 

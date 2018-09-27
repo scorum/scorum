@@ -5,8 +5,6 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/tags/tags_api_objects.hpp>
 
-#define TAGS_API_NAME "tags_api"
-
 namespace chainbase {
 class database_guard;
 }
@@ -117,6 +115,14 @@ public:
      */
     std::vector<api::discussion> get_paid_posts_comments_by_author(const api::discussion_query& query) const;
 
+    /**
+     * @brief This method is used to fetch all posts and comments  with up to limit being returned.
+     *
+     * If start_permlink and start_author is empty then discussions are returned from the beginning. This
+     * should allow easy pagination.
+     */
+    std::vector<api::discussion> get_posts_and_comments(const api::discussion_query& query) const;
+
     /// @}
 };
 
@@ -139,5 +145,6 @@ FC_API(scorum::tags::tags_api,
        (get_comments)
        (get_parents)
        (get_discussions_by_author)
-       (get_paid_posts_comments_by_author))
+       (get_paid_posts_comments_by_author)
+       (get_posts_and_comments))
 // clang-format on

@@ -37,6 +37,8 @@ using chainbase::oid;
 #define TAGS_PLUGIN_NAME "tags"
 #define TAG_LENGTH_MAX 24
 
+#define TAGS_API_NAME "tags_api"
+
 typedef fc::fixed_utf8_string_24 tag_name_type;
 
 // Plugins need to define object type IDs such that they do not conflict

@@ -3,6 +3,7 @@
 #include <scorum/tags/tags_objects.hpp>
 
 #include <scorum/protocol/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/hardfork.hpp>
@@ -260,7 +261,7 @@ struct post_operation_visitor
         std::set<std::string> tags_in_lower;
 
         for (const auto& t : rng)
-            if (tags_in_lower.size() == TAGS_TO_ANALIZE_COUNT)
+            if (tags_in_lower.size() == get_api_config(TAGS_API_NAME).tags_to_analize_count)
                 break;
             else
                 tags_in_lower.insert(t);
@@ -601,6 +602,8 @@ std::string tags_plugin::plugin_name() const
 void tags_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
                                              boost::program_options::options_description& cfg)
 {
+    cli.add(get_api_config(TAGS_API_NAME).get_options_descriptions());
+    cfg.add(cli);
 }
 
 void tags_plugin::plugin_initialize(const boost::program_options::variables_map& options)
@@ -617,6 +620,8 @@ void tags_plugin::plugin_initialize(const boost::program_options::variables_map&
         db.add_plugin_index<peer_stats_index>();
         db.add_plugin_index<author_tag_stats_index>();
         db.add_plugin_index<category_stats_index>();
+
+        get_api_config(TAGS_API_NAME).set_options(options);
     }
     FC_LOG_AND_RETHROW()
 

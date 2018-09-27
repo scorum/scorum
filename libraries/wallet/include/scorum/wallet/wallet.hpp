@@ -1067,36 +1067,86 @@ public:
     std::vector<budget_api_obj> list_my_budgets();
 
     /**
-     *  Gets the list of all budget owners (look list_accounts to understand input parameters)
+     *  Gets the list of all budget (for POST type) owners (look list_accounts to understand input parameters)
      */
-    std::set<std::string> list_budget_owners(const std::string& lowerbound, uint32_t limit);
+    std::set<std::string> list_post_budget_owners(const std::string& lowerbound, uint32_t limit);
 
     /**
-     *  Gets the budget information for certain account
+     *  Gets the list of all budget (for BANNER type) owners (look list_accounts to understand input parameters)
      */
-    std::vector<budget_api_obj> get_budgets(const std::string& account_name);
+    std::set<std::string> list_banner_budget_owners(const std::string& lowerbound, uint32_t limit);
 
     /**
-     *  This method will create new budget linked to owner account.
+     *  Gets the budget (for POST type) information for certain account
+     */
+    std::vector<budget_api_obj> get_post_budgets(const std::string& account_name);
+
+    /**
+     *  Gets the budget (for BANNER type) information for certain account
+     */
+    std::vector<budget_api_obj> get_banner_budgets(const std::string& account_name);
+
+    /**
+     *  This method will create new budget (for POST type) linked to owner account.
      *
      *  @warning The owner account must have sufficient balance for budget
      *
-     *  @param budget_owner the future owner of creating budget
-     *  @param content_permlink the budget target identity (post or other)
+     *  @param owner the future owner of creating budget
+     *  @param json_metadata the budget target identity (post or other)
      *  @param balance
+     *  @param start the time to start allocation cash from  budget
      *  @param deadline the deadline time to close budget (even if there is rest of balance)
      *  @param broadcast
      */
-    annotated_signed_transaction create_budget(const std::string& budget_owner,
-                                               const std::string& content_permlink,
-                                               const asset& balance,
-                                               const time_point_sec deadline,
-                                               const bool broadcast);
+    annotated_signed_transaction create_budget_for_post(const std::string& owner,
+                                                        const std::string& json_metadata,
+                                                        const asset& balance,
+                                                        const time_point_sec& start,
+                                                        const time_point_sec& deadline,
+                                                        const bool broadcast);
 
     /**
-     *  Closing the budget. The budget rest is returned to the owner's account
+     *  This method will create new budget (for BANNER type) linked to owner account.
+     *
+     *  @warning The owner account must have sufficient balance for budget
+     *
+     *  @param owner the future owner of creating budget
+     *  @param json_metadata the budget target identity (post or other)
+     *  @param balance
+     *  @param start the time to start allocation cash from  budget
+     *  @param deadline the deadline time to close budget (even if there is rest of balance)
+     *  @param broadcast
      */
-    annotated_signed_transaction close_budget(const int64_t id, const std::string& budget_owner, const bool broadcast);
+    annotated_signed_transaction create_budget_for_banner(const std::string& owner,
+                                                          const std::string& json_metadata,
+                                                          const asset& balance,
+                                                          const time_point_sec& start,
+                                                          const time_point_sec& deadline,
+                                                          const bool broadcast);
+
+    /**
+     *  Closing the budget (for POST type). The budget rest is returned to the owner's account
+     */
+    annotated_signed_transaction
+    close_budget_for_post(const int64_t id, const std::string& owner, const bool broadcast);
+
+    /**
+     *  Closing the budget (for BANNER type). The budget rest is returned to the owner's account
+     */
+    annotated_signed_transaction
+    close_budget_for_banner(const int64_t id, const std::string& owner, const bool broadcast);
+
+    /**
+     *  Closing the budget (for POST type). The budget rest is returned to the owner's account
+     */
+    annotated_signed_transaction
+    close_budget_for_post_by_moderator(const int64_t id, const std::string& moderator, const bool broadcast);
+
+    /**
+     *  Closing the budget (for BANNER type). The budget rest is returned to the owner's account
+     */
+    annotated_signed_transaction
+    close_budget_for_banner_by_moderator(const int64_t id, const std::string& moderator, const bool broadcast);
 
     /**
      * Vote for committee proposal
@@ -1213,6 +1263,27 @@ public:
                                                                               bool broadcast);
 
     /**
+     * Change development committee for changing top budget amount quorum
+     */
+    annotated_signed_transaction development_committee_change_budget_auction_properties_quorum(
+        const std::string& creator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast);
+    /**
+     * Change development committee for changing advertising moderator quorum
+     */
+    annotated_signed_transaction development_committee_change_advertising_moderator_quorum(const std::string& creator,
+                                                                                           uint64_t quorum_percent,
+                                                                                           uint32_t lifetime_sec,
+                                                                                           bool broadcast);
+
+    /**
+     * Create proposal for set up the advertising moderator.
+     */
+    annotated_signed_transaction development_committee_empower_advertising_moderator(const std::string& initiator,
+                                                                                     const std::string& moderator,
+                                                                                     uint32_t lifetime_sec,
+                                                                                     bool broadcast);
+
+    /**
      * Create proposal for transfering SCR from development pool to account
      */
     annotated_signed_transaction development_pool_transfer(const std::string& initiator,
@@ -1228,6 +1299,22 @@ public:
                                                                    asset amount,
                                                                    uint32_t lifetime_sec,
                                                                    bool broadcast);
+
+    /**
+     * Create proposal for set up a post budgets auction properies.
+     */
+    annotated_signed_transaction development_pool_post_budgets_auction_properties(const std::string& initiator,
+                                                                                  const std::vector<percent_type>&,
+                                                                                  uint32_t lifetime_sec,
+                                                                                  bool broadcast);
+
+    /**
+     * Create proposal for set up a top budgets auction properies.
+     */
+    annotated_signed_transaction development_pool_banner_budgets_auction_properties(const std::string& initiator,
+                                                                                    const std::vector<percent_type>&,
+                                                                                    uint32_t lifetime_sec,
+                                                                                    bool broadcast);
 
     /**
      * Get development committee
@@ -1402,8 +1489,10 @@ FC_API( scorum::wallet::wallet_api,
         (get_devcommittee_sp_to_scr_transfers)
         (get_withdraw_routes)
         (list_my_budgets)
-        (list_budget_owners)
-        (get_budgets)
+        (list_post_budget_owners)
+        (list_banner_budget_owners)
+        (get_post_budgets)
+        (get_banner_budgets)
         (get_chain_capital)
 
         /// transaction api
@@ -1442,8 +1531,12 @@ FC_API( scorum::wallet::wallet_api,
         (get_encrypted_memo)
         (decrypt_memo)
         (decline_voting_rights)
-        (create_budget)
-        (close_budget)
+        (create_budget_for_post)
+        (create_budget_for_banner)
+        (close_budget_for_post)
+        (close_budget_for_banner)
+        (close_budget_for_post_by_moderator)
+        (close_budget_for_banner_by_moderator)
 
         // Registration committee api
         (vote_for_committee_proposal)
@@ -1464,9 +1557,15 @@ FC_API( scorum::wallet::wallet_api,
         (development_committee_change_add_member_quorum)
         (development_committee_change_exclude_member_quorum)
         (development_committee_change_base_quorum)
+        (development_committee_change_transfer_quorum)
+        (development_committee_change_budget_auction_properties_quorum)
+        (development_committee_change_advertising_moderator_quorum)
+        (development_committee_empower_advertising_moderator)
         (get_development_committee)
         (development_pool_transfer)
         (development_pool_withdraw_vesting)
+        (development_pool_post_budgets_auction_properties)
+        (development_pool_banner_budgets_auction_properties)
 
         // Atomic Swap API
         (atomicswap_initiate)

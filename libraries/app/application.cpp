@@ -24,6 +24,7 @@
 #include <scorum/app/api.hpp>
 #include <scorum/app/database_api.hpp>
 #include <scorum/app/chain_api.hpp>
+#include <scorum/app/advertising_api.hpp>
 #include <scorum/app/api_access.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/app/plugin.hpp>
@@ -72,6 +73,8 @@
 #include <fc/log/logger_config.hpp>
 
 #include <boost/range/adaptor/reversed.hpp>
+
+#include <scorum/common_api/config_api.hpp>
 
 namespace scorum {
 namespace app {
@@ -288,8 +291,9 @@ public:
     void register_builtin_apis()
     {
         _self->register_api_factory<login_api>("login_api");
-        _self->register_api_factory<database_api>("database_api");
+        _self->register_api_factory<database_api>(API_DATABASE);
         _self->register_api_factory<chain_api>(API_CHAIN);
+        _self->register_api_factory<advertising_api>(ADVERTISING_API_NAME);
         _self->register_api_factory<network_node_api>("network_node_api");
         _self->register_api_factory<network_broadcast_api>("network_broadcast_api");
     }
@@ -441,8 +445,9 @@ public:
                 wild_access.username = "*";
                 wild_access.password_hash_b64 = "*";
                 wild_access.password_salt_b64 = "*";
-                wild_access.allowed_apis.push_back("database_api");
+                wild_access.allowed_apis.push_back(API_DATABASE);
                 wild_access.allowed_apis.push_back(API_CHAIN);
+                wild_access.allowed_apis.push_back(ADVERTISING_API_NAME);
                 wild_access.allowed_apis.push_back("network_broadcast_api");
                 wild_access.allowed_apis.push_back("tag_api");
                 wild_access.allowed_apis.push_back(API_ACCOUNT_HISTORY);
@@ -1124,9 +1129,10 @@ std::vector<std::string> application::get_default_apis() const
 {
     std::vector<std::string> result;
 
-    result.push_back("database_api");
+    result.push_back(API_DATABASE);
     result.push_back("login_api");
     result.push_back(API_CHAIN);
+    result.push_back(ADVERTISING_API_NAME);
     result.push_back("account_by_key_api");
     result.push_back(API_ACCOUNT_HISTORY);
     result.push_back(API_BLOCKCHAIN_HISTORY);
@@ -1192,6 +1198,12 @@ void application::set_program_options(boost::program_options::options_descriptio
 
     command_line_options.add(_cli_options);
     configuration_file_options.add(_cfg_options);
+
+    boost::program_options::options_description api_description;
+    api_description.add(get_api_config().get_options_descriptions());
+    api_description.add(get_api_config(API_DATABASE).get_options_descriptions());
+    command_line_options.add(api_description);
+    configuration_file_options.add(api_description);
 }
 
 const std::string application::print_config(const boost::program_options::variables_map& vm)
@@ -1306,6 +1318,9 @@ void application::initialize(const boost::program_options::variables_map& option
     ilog("initializing node with config:\n${config}", ("config", print_config(options)));
 
     my->_options = &options;
+
+    get_api_config().set_options(options);
+    get_api_config(API_DATABASE).set_options(options);
 }
 
 void application::startup()

@@ -7,6 +7,7 @@
 #include <scorum/account_identity/impacted.hpp>
 
 #include <scorum/protocol/config.hpp>
+#include <scorum/common_api/config_api.hpp>
 
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/operation_notification.hpp>
@@ -385,6 +386,8 @@ void blockchain_history_plugin::plugin_set_program_options(boost::program_option
                  "Defines a list of operations which will be explicitly logged.")(
         "history-blacklist-ops", boost::program_options::value<std::vector<std::string>>()->composing(),
         "Defines a list of operations which will be explicitly ignored.");
+    cli.add(get_api_config(API_BLOCKCHAIN_HISTORY).get_options_descriptions());
+    cli.add(get_api_config(API_ACCOUNT_HISTORY).get_options_descriptions());
     cfg.add(cli);
 }
 
@@ -392,9 +395,11 @@ void blockchain_history_plugin::plugin_initialize(const boost::program_options::
 {
     try
     {
-
         typedef std::pair<account_name_type, account_name_type> pairstring;
         LOAD_VALUE_SET(options, "track-account-range", _my->_tracked_accounts, pairstring);
+
+        get_api_config(API_BLOCKCHAIN_HISTORY).set_options(options);
+        get_api_config(API_ACCOUNT_HISTORY).set_options(options);
 
         if (options.count("history-whitelist-ops"))
         {

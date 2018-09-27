@@ -10,15 +10,15 @@ namespace detail {
 std::unique_ptr<config> config::instance = boost::make_unique<config>();
 
 #ifndef BLOGGING_START_DATE
-static_assert(false, "Macro BLOGGING_START_DATE required.");
+#define BLOGGING_START_DATE "2018-06-12T09:00:00"
 #endif
 
 #ifndef FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE
-static_assert(false, "Macro FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE required.");
+#define FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE "2018-08-08T12:00:00"
 #endif
 
 #ifndef WITNESS_REWARD_MIGRATION_DATE
-static_assert(false, "Macro WITNESS_REWARD_MIGRATION_DATE required.");
+#define WITNESS_REWARD_MIGRATION_DATE "2018-07-12T00:00:00"
 #endif
 
 config::config() /// production config
@@ -30,8 +30,6 @@ config::config() /// production config
 
     , cashout_window_seconds(7200) // 2 hours
 
-    , reverse_auction_window_seconds(fc::minutes(30))
-
     , upvote_lockout(fc::minutes(30))
 
     , active_sp_holders_reward_period(fc::minutes(1))
@@ -40,14 +38,14 @@ config::config() /// production config
 
     , cashout_window_seconds(DAYS_TO_SECONDS(7))
 
-    , reverse_auction_window_seconds(fc::minutes(30))
-
     , upvote_lockout(fc::hours(12))
 
     , active_sp_holders_reward_period(fc::days(7))
 #endif
-    , vote_regeneration_seconds(fc::days(5))
 
+    , reverse_auction_window_seconds(fc::minutes(30))
+
+    , vote_regeneration_seconds(fc::days(5))
     , owner_auth_recovery_period(fc::days(30))
     , account_recovery_request_expiration_period(fc::days(1))
     , owner_update_limit(fc::minutes(60))
@@ -58,7 +56,7 @@ config::config() /// production config
     , guaranted_reward_supply_period_in_days(30)
     , reward_increase_threshold_in_days(100)
 
-    , budgets_limit_per_owner(1000000)
+    , budgets_limit_per_owner(10000)
 
     , atomicswap_initiator_refund_lock_secs(48 * 3600)
     , atomicswap_participant_refund_lock_secs(24 * 3600)
@@ -72,15 +70,14 @@ config::config() /// production config
 
     , initial_date(fc::time_point_sec::min())
 
-    , blogging_start_date(fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(BLOGGING_START_DATE)))
+    , blogging_start_date(fc::time_point_sec::from_iso_string(BLOGGING_START_DATE))
 
     , fifa_world_cup_2018_bounty_cashout_date(
-          fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE)))
+          fc::time_point_sec::from_iso_string(FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE))
 
     , expiraton_for_registration_bonus(fc::days(182))
 
-    , witness_reward_migration_date(
-          fc::time_point_sec::from_iso_string(BOOST_PP_STRINGIZE(WITNESS_REWARD_MIGRATION_DATE)))
+    , witness_reward_migration_date(fc::time_point_sec::from_iso_string(WITNESS_REWARD_MIGRATION_DATE))
 
     , scorum_max_witnesses(21)
 
@@ -106,11 +103,11 @@ config::config(test_mode) /// test config
 
     , cashout_window_seconds(fc::hours(1).to_seconds())
 
-    , reverse_auction_window_seconds(fc::seconds(30))
-
     , upvote_lockout(fc::minutes(5))
 
     , active_sp_holders_reward_period(fc::minutes(15))
+
+    , reverse_auction_window_seconds(fc::seconds(30))
 
     , vote_regeneration_seconds(fc::minutes(10))
 
@@ -124,7 +121,7 @@ config::config(test_mode) /// test config
     , guaranted_reward_supply_period_in_days(2)
     , reward_increase_threshold_in_days(3)
 
-    , budgets_limit_per_owner(5)
+    , budgets_limit_per_owner(8)
 
     , atomicswap_initiator_refund_lock_secs(60 * 20)
     , atomicswap_participant_refund_lock_secs(60 * 10)
