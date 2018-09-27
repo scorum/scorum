@@ -134,7 +134,7 @@ private:
 database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
-    , _betting_service(static_cast<data_service_factory_i&>(_self))
+    , _betting_service(static_cast<data_service_factory_i&>(_self), static_cast<dba::db_accessor_factory&>(_self))
     , _betting_matcher(static_cast<data_service_factory_i&>(_self),
                        static_cast<database_virtual_operations_emmiter_i&>(_self),
                        _betting_service)
@@ -146,6 +146,7 @@ database::database(uint32_t options)
     : chainbase::database()
     , dbservice_dbs_factory(*this)
     , data_service_factory(*this)
+    , db_accessor_factory(*this)
     , _my(new database_impl(*this))
     , _options(options)
 {

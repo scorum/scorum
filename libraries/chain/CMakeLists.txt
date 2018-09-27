@@ -62,6 +62,7 @@ add_library( scorum_chain
              services/game.cpp
 
              data_service_factory.cpp
+             dba/db_accessor_factory.cpp
 
              evaluators/scorum_evaluators.cpp
              evaluators/proposal_create_evaluator.cpp
