@@ -52,8 +52,8 @@ asset process_funds::allocate_advertising_cash(ServiceIterfaceType& service,
     br::transform(budgets, std::back_inserter(per_block_list), [](auto b) { return b.get().per_block.amount; });
 
     auto valuable_per_block_vec = boost::make_iterator_range(per_block_list)
-        | ua::take_n(vcg_coefficients.size() + 1) //
-        | ua::collect<std::vector<share_type>>();
+        | utils::adaptors::take_n(vcg_coefficients.size() + 1) //
+        | utils::adaptors::collect<std::vector<share_type>>();
     auto vcg_bets = calculate_vcg_bets(valuable_per_block_vec, vcg_coefficients);
 
     for (size_t i = 0; i < budgets.size(); ++i)

@@ -66,5 +66,4 @@ inline auto operator|(TRng&& rng, const adaptors::collect<TTargetContainer>& ada
 }
 }
 }
-namespace ua = scorum::utils::adaptors;
 }
