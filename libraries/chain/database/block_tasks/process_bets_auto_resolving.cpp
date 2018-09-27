@@ -1,7 +1,6 @@
 #include <scorum/chain/database/block_tasks/process_bets_auto_resolving.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/game.hpp>
-#include <scorum/chain/services/bet.hpp>
 #include <scorum/chain/betting/betting_resolver.hpp>
 #include <scorum/chain/betting/betting_service.hpp>
 

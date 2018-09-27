@@ -2,6 +2,8 @@
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/game.hpp>
+#include <scorum/chain/services/pending_bet.hpp>
+#include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
 
 #include <scorum/chain/betting/betting_service.hpp>
@@ -19,6 +21,8 @@ post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
     , _game_service(services.game_service())
     , _betting_service(betting_service)
     , _betting_matcher(betting_matcher)
+    , _pending_bet_svc(services.pending_bet_service())
+    , _dynprops_svc(services.dynamic_global_property_service())
 {
 }
 
@@ -39,15 +43,24 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     FC_ASSERT(better.balance >= op.stake, "Insufficient funds");
 
-    const auto& bet_obj = _betting_service.create_bet(op.better, op.game_id, op.wincase,
-                                                      odds(op.odds.numerator, op.odds.denominator), op.stake);
-
-    _account_service.decrease_balance(better, op.stake);
-
     auto kind = op.live //
         ? pending_bet_kind::live
         : pending_bet_kind::non_live;
-    _betting_matcher.match(bet_obj, kind);
+
+    const auto& pending_bet = _pending_bet_svc.create([&](pending_bet_object& o) {
+        o.stake = op.stake;
+        o.odds_value = odds(op.odds.numerator, op.odds.denominator);
+        o.game = op.game_id;
+        o.created = _dynprops_svc.head_block_time();
+        o.better = op.better;
+        o.kind = kind;
+        o.wincase = op.wincase;
+        o.market = create_market(op.wincase);
+    });
+
+    _account_service.decrease_balance(better, op.stake);
+
+    _betting_matcher.match(pending_bet);
 }
 }
 }

@@ -13,7 +13,6 @@
     (game_object)                                                                                                      \
     (proposal_object)                                                                                                  \
     (betting_property_object)                                                                                          \
-    (bet_object)                                                                                                       \
     (pending_bet_object)                                                                                               \
     (matched_bet_object)                                                                                               \
     (comment_object)

@@ -1,14 +1,11 @@
 #pragma once
-
 #include <scorum/protocol/scorum_operations.hpp>
-
 #include <scorum/chain/evaluators/evaluator.hpp>
 
 namespace scorum {
 namespace chain {
 
 struct account_service_i;
-struct bet_service_i;
 struct pending_bet_service_i;
 struct betting_service_i;
 
@@ -23,9 +20,8 @@ public:
 
 private:
     account_service_i& _account_service;
-    bet_service_i& _bet_service;
-    pending_bet_service_i& _pending_bet_service;
-    betting_service_i& _betting_service;
+    pending_bet_service_i& _pending_bet_svc;
+    betting_service_i& _betting_svc;
 };
 }
 }

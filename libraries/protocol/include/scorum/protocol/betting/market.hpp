@@ -127,6 +127,7 @@ using wincase_type = fc::static_variant<result_home::yes,
 
 std::pair<wincase_type, wincase_type> create_wincases(const market_type& market);
 wincase_type create_opposite(const wincase_type& wincase);
+market_type create_market(const wincase_type& wincase);
 bool has_trd_state(const market_type& market);
 bool match_wincases(const wincase_type& lhs, const wincase_type& rhs);
 }

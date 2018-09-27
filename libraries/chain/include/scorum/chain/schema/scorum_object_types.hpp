@@ -121,7 +121,6 @@ class dev_committee_member_object;
 class witness_reward_in_sp_migration_object;
 class advertising_property_object;
 class betting_property_object;
-class bet_object;
 class pending_bet_object;
 class matched_bet_object;
 class game_object;
@@ -161,7 +160,6 @@ using dev_committee_id_type = oid<dev_committee_object>;
 using dev_committee_member_id_type = oid<dev_committee_member_object>;
 using witness_reward_in_sp_migration_id_type = oid<witness_reward_in_sp_migration_object>;
 using game_id_type = oid<game_object>;
-using bet_id_type = oid<bet_object>;
 using pending_bet_id_type = oid<pending_bet_object>;
 using matched_bet_id_type = oid<matched_bet_object>;
 

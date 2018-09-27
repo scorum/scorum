@@ -43,7 +43,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (blocks_story)
         (advertising_property)
         (betting_property)
-        (bet)
         (matched_bet)
         (pending_bet)
         (game)

@@ -14,31 +14,7 @@ namespace chain {
 using scorum::protocol::asset;
 using scorum::protocol::odds;
 using scorum::protocol::wincase_type;
-
-class bet_object : public object<bet_object_type, bet_object>
-{
-public:
-    /// @cond DO_NOT_DOCUMENT
-    CHAINBASE_DEFAULT_CONSTRUCTOR(bet_object)
-    /// @endcond
-
-    id_type id;
-
-    fc::time_point_sec created;
-
-    account_name_type better;
-
-    game_id_type game;
-
-    wincase_type wincase;
-
-    odds odds_value;
-
-    asset stake = asset(0, SCORUM_SYMBOL);
-
-    /// Not matched part of stake
-    asset rest_stake = asset(0, SCORUM_SYMBOL);
-};
+using scorum::protocol::market_type;
 
 enum class pending_bet_kind : uint8_t
 {
@@ -54,11 +30,15 @@ public:
     /// @endcond
 
     id_type id;
-
     game_id_type game;
+    market_type market;
+    fc::time_point_sec created;
 
-    bet_id_type bet;
+    account_name_type better;
+    wincase_type wincase;
+    asset stake = asset(0, SCORUM_SYMBOL);
 
+    odds odds_value;
     pending_bet_kind kind = pending_bet_kind::live;
 };
 
@@ -70,89 +50,58 @@ public:
     /// @endcond
 
     id_type id;
-
     game_id_type game;
+    market_type market;
+    fc::time_point_sec created;
 
-    fc::time_point_sec when_matched;
+    account_name_type better1;
+    wincase_type wincase1;
+    asset stake1 = asset(0, SCORUM_SYMBOL);
 
-    bet_id_type bet1;
-
-    bet_id_type bet2;
-
-    /// what part of bet1 stake is matched (subtracted from bet.rest_stake)
-    asset matched_bet1_stake = asset(0, SCORUM_SYMBOL);
-
-    /// what part of bet2 stake is matched (subtracted from bet.rest_stake)
-    asset matched_bet2_stake = asset(0, SCORUM_SYMBOL);
+    account_name_type better2;
+    wincase_type wincase2;
+    asset stake2 = asset(0, SCORUM_SYMBOL);
 };
 
-struct by_game_id;
-
-typedef shared_multi_index_container<bet_object,
-                                     indexed_by<ordered_unique<tag<by_id>,
-                                                               member<bet_object, bet_id_type, &bet_object::id>>,
-                                                ordered_non_unique<tag<by_game_id>,
-                                                                   composite_key<bet_object,
-                                                                                 member<bet_object,
-                                                                                        game_id_type,
-                                                                                        &bet_object::game>,
-                                                                                 member<bet_object,
-                                                                                        wincase_type,
-                                                                                        &bet_object::wincase>>>>>
-    bet_index;
-
-struct by_bet_id;
+struct by_game_id_kind;
+struct by_game_id_market;
 
 typedef shared_multi_index_container<pending_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<pending_bet_object,
                                                                       pending_bet_id_type,
                                                                       &pending_bet_object::id>>,
-                                                ordered_unique<tag<by_bet_id>,
-                                                               member<pending_bet_object,
-                                                                      bet_id_type,
-                                                                      &pending_bet_object::bet>>,
-                                                ordered_non_unique<tag<by_game_id>,
+                                                ordered_non_unique<tag<by_game_id_kind>,
                                                                    composite_key<pending_bet_object,
                                                                                  member<pending_bet_object,
                                                                                         game_id_type,
                                                                                         &pending_bet_object::game>,
                                                                                  member<pending_bet_object,
                                                                                         pending_bet_kind,
-                                                                                        &pending_bet_object::kind>>>>>
+                                                                                        &pending_bet_object::kind>>>,
+                                                ordered_non_unique<tag<by_game_id_market>,
+                                                                   composite_key<pending_bet_object,
+                                                                                 member<pending_bet_object,
+                                                                                        game_id_type,
+                                                                                        &pending_bet_object::game>,
+                                                                                 member<pending_bet_object,
+                                                                                        market_type,
+                                                                                        &pending_bet_object::market>>>>>
     pending_bet_index;
-
-struct by_matched_bets_id;
-struct by_matched_bet1_id;
-struct by_matched_bet2_id;
 
 typedef shared_multi_index_container<matched_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<matched_bet_object,
                                                                       matched_bet_id_type,
                                                                       &matched_bet_object::id>>,
-                                                ordered_unique<tag<by_matched_bets_id>,
-                                                               composite_key<matched_bet_object,
-                                                                             member<matched_bet_object,
-                                                                                    bet_id_type,
-                                                                                    &matched_bet_object::bet1>,
-                                                                             member<matched_bet_object,
-                                                                                    bet_id_type,
-                                                                                    &matched_bet_object::bet2>>,
-                                                               composite_key_compare<std::less<bet_id_type>,
-                                                                                     std::less<bet_id_type>>>,
-                                                ordered_non_unique<tag<by_game_id>,
-                                                                   member<matched_bet_object,
-                                                                          game_id_type,
-                                                                          &matched_bet_object::game>>,
-                                                ordered_non_unique<tag<by_matched_bet1_id>,
-                                                                   member<matched_bet_object,
-                                                                          bet_id_type,
-                                                                          &matched_bet_object::bet1>>,
-                                                ordered_non_unique<tag<by_matched_bet2_id>,
-                                                                   member<matched_bet_object,
-                                                                          bet_id_type,
-                                                                          &matched_bet_object::bet2>>>>
+                                                ordered_non_unique<tag<by_game_id_market>,
+                                                                   composite_key<matched_bet_object,
+                                                                                 member<matched_bet_object,
+                                                                                        game_id_type,
+                                                                                        &matched_bet_object::game>,
+                                                                                 member<matched_bet_object,
+                                                                                        market_type,
+                                                                                        &matched_bet_object::market>>>>>
     matched_bet_index;
 }
 }
@@ -162,22 +111,15 @@ FC_REFLECT_ENUM(scorum::chain::pending_bet_kind,
            (live)
            (non_live))
 
-FC_REFLECT(scorum::chain::bet_object,
-           (id)
-           (created)
-           (better)
-           (game)
-           (wincase)
-           (odds_value)
-           (stake)
-           (rest_stake))
-
-CHAINBASE_SET_INDEX_TYPE(scorum::chain::bet_object, scorum::chain::bet_index)
-
 FC_REFLECT(scorum::chain::pending_bet_object,
            (id)
            (game)
-           (bet)
+           (market)
+           (created)
+           (better)
+           (wincase)
+           (stake)
+           (odds_value)
            (kind))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pending_bet_index)
@@ -185,11 +127,14 @@ CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pendi
 FC_REFLECT(scorum::chain::matched_bet_object,
            (id)
            (game)
-           (when_matched)
-           (bet1)
-           (bet2)
-           (matched_bet1_stake)
-           (matched_bet2_stake))
+           (market)
+           (created)
+           (better1)
+           (better2)
+           (wincase1)
+           (wincase2)
+           (stake1)
+           (stake2))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::matched_bet_object, scorum::chain::matched_bet_index)
 // clang-format on
