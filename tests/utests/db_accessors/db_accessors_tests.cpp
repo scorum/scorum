@@ -1,3 +1,5 @@
+#ifdef DEBUG // hippomocks doesn't work properly in release build in this case
+
 #include <boost/test/unit_test.hpp>
 #include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/dba/db_accessor_factory.hpp>
@@ -132,3 +134,5 @@ BOOST_AUTO_TEST_CASE(db_accessors_mock_tests)
 
 BOOST_AUTO_TEST_SUITE_END()
 }
+
+#endif
