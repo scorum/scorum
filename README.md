@@ -37,36 +37,7 @@ dockerized container.
 
 ## Dockerized Node
 
-Create you folder (for example `/opt/scorumd/node`)
-
-    mkdir /opt/scorumd/node
-
-Put your config file in `/opt/scorumd/node/config.ini` (otherwise default config will be used). Run node.
-
-    docker run \
-        -v /opt/scorumd/node:/var/lib/scorumd \
-        -d -p 2001:2001 -p 8090:8090 --name scorum-node \
-        scorum/release:0.2.0.3c2edb7
-
-rpc node
-
-    docker run \
-        -v /opt/scorumd/node:/var/lib/scorumd \
-        -d -p 2001:2001 -p 8090:8090 --name scorum-node \
-        -e NODE=rpc \
-        scorum/release:0.2.0.3c2edb7
-
-To see node logs
-
-    docker logs scorum-node
-
-For detail logs go to `/opt/scorumd/node/logs` (or other folder that set in `config.ini`)
-
-To stop/start/restart node use
-
-    docker stop scorum-node
-    docker start scorum-node
-    docker restart scorum-node
+See [this guide](https://github.com/scorum/scorum/wiki/How-to:-run-node-using-docker-image) for detailed instructions including commands for Ubuntu  16.04 (LTS).
 
 # Seed Nodes
 
@@ -76,7 +47,7 @@ A list of some seed nodes to get you started can be found in
 # Building
 
 See [doc/building.md](doc/building.md) for detailed build instructions, including
-compile-time options, and specific commands for Linux (Ubuntu LTS) or macOS X.
+compile-time options, and specific commands for Ubuntu 16.04 (LTS).
 
 # System Requirements
 
