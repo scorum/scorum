@@ -12,6 +12,8 @@
 #include <scorum/chain/services/betting_property.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/game.hpp>
+#include <scorum/chain/services/matched_bet.hpp>
+#include <scorum/chain/services/pending_bet.hpp>
 
 #include <scorum/protocol/betting/market_kind.hpp>
 
@@ -28,6 +30,8 @@ struct game_operations_fixture : public database_fixture::database_betting_integ
         , betting_property_service(db.betting_property_service())
         , account_service(db.account_service())
         , game_service(db.game_service())
+        , matched_bet_service(db.matched_bet_service())
+        , pending_bet_service(db.pending_bet_service())
     {
         open_database();
 
@@ -59,6 +63,8 @@ struct game_operations_fixture : public database_fixture::database_betting_integ
     betting_property_service_i& betting_property_service;
     account_service_i& account_service;
     game_service_i& game_service;
+    matched_bet_service_i& matched_bet_service;
+    pending_bet_service_i& pending_bet_service;
 };
 
 BOOST_FIXTURE_TEST_SUITE(post_game_results_operation_tests, game_operations_fixture)
@@ -156,6 +162,124 @@ SCORUM_TEST_CASE(auto_resolve_time_updating_test)
     BOOST_CHECK_EQUAL((game_service.get().start_time - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 3);
     BOOST_CHECK_EQUAL((game_service.get().auto_resolve_time - game_service.get().start_time).to_seconds(),
                       auto_resolve_delay_default);
+}
+
+SCORUM_TEST_CASE(update_after_game_started_should_cancel_bets)
+{
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL);
+    generate_block(); // game started
+
+    create_bet(alice, total::under{ 2000 }, { 10, 2 }, asset(1000, SCORUM_SYMBOL)); // 250 matched, 750 pending
+    create_bet(bob, total::over{ 2000 }, { 10, 8 }, asset(1000, SCORUM_SYMBOL)); // 1000 matched
+
+    generate_block();
+
+    {
+        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
+        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        BOOST_REQUIRE_EQUAL(matched_bets.size(), 1u);
+        BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
+    }
+
+    update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
+
+    {
+        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
+        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        BOOST_REQUIRE_EQUAL(matched_bets.size(), 0u);
+        BOOST_REQUIRE_EQUAL(pending_bets.size(), 0u);
+    }
+}
+
+SCORUM_TEST_CASE(update_after_game_started_should_keep_bets)
+{
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    generate_block();
+
+    create_bet(alice, total::under{ 2000 }, { 10, 2 }, asset(1000, SCORUM_SYMBOL)); // 250 matched, 750 pending
+    create_bet(bob, total::over{ 2000 }, { 10, 8 }, asset(1000, SCORUM_SYMBOL)); // 1000 matched
+
+    generate_block(); // game started
+
+    {
+        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
+        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        BOOST_REQUIRE_EQUAL(matched_bets.size(), 1u);
+        BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
+    }
+
+    update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
+
+    {
+        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
+        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        BOOST_REQUIRE_EQUAL(matched_bets.size(), 1u);
+        BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
+    }
+}
+
+SCORUM_TEST_CASE(update_after_game_started_should_increase_existing_pending_bet)
+{
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    generate_block();
+
+    create_bet(alice, total::under{ 2000 }, { 10, 2 }, asset(1000, SCORUM_SYMBOL)); // 250 matched, 750 pending
+
+    generate_block(); // game started
+
+    create_bet(bob, total::over{ 2000 }, { 10, 8 }, asset(1000, SCORUM_SYMBOL)); // 1000 matched
+
+    auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
+    auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+    BOOST_REQUIRE_EQUAL(matched_bets.size(), 1u);
+    BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
+
+    const pending_bet_object* pending_bet_address = std::addressof(pending_bets[0].get());
+
+    update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
+
+    {
+        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
+        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        BOOST_REQUIRE_EQUAL(matched_bets.size(), 0u);
+        BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
+        BOOST_REQUIRE_EQUAL(pending_bets[0].get().data.stake.amount, 1000u);
+        BOOST_REQUIRE_EQUAL(pending_bet_address,
+                            std::addressof(pending_bets[0].get())); // check this is the same object
+    }
+}
+
+SCORUM_TEST_CASE(update_after_game_started_should_restore_missing_pending_bet)
+{
+    create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
+    generate_block();
+
+    auto original_create_time = db.head_block_time();
+
+    create_bet(alice, total::under{ 2000 }, { 10, 2 }, asset(1000, SCORUM_SYMBOL)); // 1000 matched
+
+    generate_block(); // game started
+
+    create_bet(bob, total::over{ 2000 }, { 10, 8 }, asset(4000, SCORUM_SYMBOL)); // 4000 matched
+
+    auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
+    auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+    BOOST_REQUIRE_EQUAL(matched_bets.size(), 1u);
+    BOOST_REQUIRE_EQUAL(pending_bets.size(), 0u);
+
+    update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
+
+    {
+        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
+        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        BOOST_REQUIRE_EQUAL(matched_bets.size(), 0u);
+        BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
+        BOOST_CHECK_EQUAL(pending_bets[0].get().data.better, "alice");
+        BOOST_CHECK_EQUAL(pending_bets[0].get().data.stake.amount, 1000);
+        BOOST_CHECK_EQUAL(pending_bets[0].get().data.created.to_iso_string(), original_create_time.to_iso_string());
+        BOOST_CHECK_EQUAL(pending_bets[0].get().data.bet_odds, (odds{ 10, 2 }));
+        BOOST_CHECK_EQUAL(pending_bets[0].get().data.wincase.get<total::under>().threshold, 2000);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

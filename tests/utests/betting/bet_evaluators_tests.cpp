@@ -31,11 +31,11 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
     pending_bet_object create_bet()
     {
         return create_object<pending_bet_object>(shm, [&](pending_bet_object& obj) {
-            obj.better = test_op.better;
+            obj.data.better = test_op.better;
             obj.game = test_op.game_id;
-            obj.wincase = test_op.wincase;
-            obj.odds_value = odds(test_op.odds.numerator, test_op.odds.denominator);
-            obj.stake = test_op.stake;
+            obj.data.wincase = test_op.wincase;
+            obj.data.bet_odds = odds(test_op.odds.numerator, test_op.odds.denominator);
+            obj.data.stake = test_op.stake;
             obj.market = create_market(test_op.wincase);
         });
     }
@@ -145,7 +145,7 @@ SCORUM_TEST_CASE(better_mismatch_should_throw)
     op.better = "better";
     op.bet_ids = { 0, 1 };
 
-    auto obj = create_object<pending_bet_object>(shm, [](pending_bet_object& o) { o.better = "cartman"; });
+    auto obj = create_object<pending_bet_object>(shm, [](pending_bet_object& o) { o.data.better = "cartman"; });
 
     mocks.OnCallOverload(acc_svc, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists).With(0).Return(true);
@@ -162,8 +162,8 @@ SCORUM_TEST_CASE(should_cancel_bets)
     op.bet_ids = { 0, 1 };
 
     // clang-format off
-    auto obj1 = create_object<pending_bet_object>(shm, [](pending_bet_object& o){ o.better = "better"; o.id = 0; });
-    auto obj2 = create_object<pending_bet_object>(shm, [](pending_bet_object& o){ o.better = "better"; o.id = 1; });
+    auto obj1 = create_object<pending_bet_object>(shm, [](pending_bet_object& o){ o.data.better = "better"; o.id = 0; });
+    auto obj2 = create_object<pending_bet_object>(shm, [](pending_bet_object& o){ o.data.better = "better"; o.id = 1; });
     // clang-format on
 
     mocks.OnCallOverload(acc_svc, (check_account_existence_ptr)&account_service_i::check_account_existence);

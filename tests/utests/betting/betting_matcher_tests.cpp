@@ -50,14 +50,14 @@ SCORUM_TEST_CASE(matched_for_full_stake_check)
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
         .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
             BOOST_REQUIRE_EQUAL(bets.size(), 2u);
-            BOOST_CHECK_EQUAL(bets[0].get().stake.amount, 0u);
-            BOOST_CHECK_EQUAL(bets[1].get().stake.amount, 0u);
+            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0u);
+            BOOST_CHECK_EQUAL(bets[1].get().data.stake.amount, 0u);
         });
 
     matcher.match(bet2);
 
-    BOOST_CHECK_EQUAL(matched_bets.get().stake1.amount, 1e+9);
-    BOOST_CHECK_EQUAL(matched_bets.get().stake2.amount, 9e+9);
+    BOOST_CHECK_EQUAL(matched_bets.get().bet1_data.stake.amount, 1e+9);
+    BOOST_CHECK_EQUAL(matched_bets.get().bet2_data.stake.amount, 9e+9);
 }
 
 SCORUM_TEST_CASE(matched_for_part_stake_check)
@@ -74,18 +74,18 @@ SCORUM_TEST_CASE(matched_for_part_stake_check)
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
         .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
             BOOST_REQUIRE_EQUAL(bets.size(), 1u);
-            BOOST_CHECK_EQUAL(bets[0].get().better, "bob");
-            BOOST_CHECK_EQUAL(bets[0].get().stake.amount, 0);
+            BOOST_CHECK_EQUAL(bets[0].get().data.better, "bob");
+            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0);
         });
 
     matcher.match(bet2);
 
-    BOOST_CHECK_EQUAL(matched_bets.get().better1, "alice");
-    BOOST_CHECK_EQUAL(matched_bets.get().stake1.amount, 888);
-    BOOST_CHECK_EQUAL(matched_bets.get().better2, "bob");
-    BOOST_CHECK_EQUAL(matched_bets.get().stake2.amount, 8000);
-    BOOST_CHECK_EQUAL(pending_bets.get().better, "alice");
-    BOOST_CHECK_EQUAL(pending_bets.get().stake.amount, 112);
+    BOOST_CHECK_EQUAL(matched_bets.get().bet1_data.better, "alice");
+    BOOST_CHECK_EQUAL(matched_bets.get().bet1_data.stake.amount, 888);
+    BOOST_CHECK_EQUAL(matched_bets.get().bet2_data.better, "bob");
+    BOOST_CHECK_EQUAL(matched_bets.get().bet2_data.stake.amount, 8000);
+    BOOST_CHECK_EQUAL(pending_bets.get().data.better, "alice");
+    BOOST_CHECK_EQUAL(pending_bets.get().data.stake.amount, 112);
 }
 
 SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
@@ -101,15 +101,15 @@ SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
         .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
             BOOST_REQUIRE_EQUAL(bets.size(), 1u);
-            BOOST_CHECK_EQUAL(bets[0].get().better, "bob");
-            BOOST_CHECK_EQUAL(bets[0].get().stake.amount, 0);
+            BOOST_CHECK_EQUAL(bets[0].get().data.better, "bob");
+            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0);
         });
 
     matcher.match(bet2);
 
-    BOOST_CHECK_EQUAL(matched_bets.get().stake1.amount, 888);
-    BOOST_CHECK_EQUAL(matched_bets.get().stake2.amount, 8000);
-    BOOST_CHECK_EQUAL(pending_bets.get(1).stake.amount, 112);
+    BOOST_CHECK_EQUAL(matched_bets.get().bet1_data.stake.amount, 888);
+    BOOST_CHECK_EQUAL(matched_bets.get().bet2_data.stake.amount, 8000);
+    BOOST_CHECK_EQUAL(pending_bets.get(1).data.stake.amount, 112);
 
     // in order to cover 112 bet with 10/1 odds we need to bet at least 1008:
     // 112  | 10/1: r1 = 1120
@@ -123,18 +123,18 @@ SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
         .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
             BOOST_REQUIRE_EQUAL(bets.size(), 2u);
-            BOOST_CHECK_EQUAL(bets[0].get().better, "alice");
-            BOOST_CHECK_EQUAL(bets[0].get().stake.amount, 0);
-            BOOST_CHECK_EQUAL(bets[1].get().better, "sam");
-            BOOST_CHECK_EQUAL(bets[1].get().stake.amount, 1);
+            BOOST_CHECK_EQUAL(bets[0].get().data.better, "alice");
+            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0);
+            BOOST_CHECK_EQUAL(bets[1].get().data.better, "sam");
+            BOOST_CHECK_EQUAL(bets[1].get().data.stake.amount, 1);
         });
 
     matcher.match(bet3);
 
-    BOOST_CHECK_EQUAL(matched_bets.get(2).better1, "alice");
-    BOOST_CHECK_EQUAL(matched_bets.get(2).stake1.amount, 112);
-    BOOST_CHECK_EQUAL(matched_bets.get(2).better2, "sam");
-    BOOST_CHECK_EQUAL(matched_bets.get(2).stake2.amount, 1008);
+    BOOST_CHECK_EQUAL(matched_bets.get(2).bet1_data.better, "alice");
+    BOOST_CHECK_EQUAL(matched_bets.get(2).bet1_data.stake.amount, 112);
+    BOOST_CHECK_EQUAL(matched_bets.get(2).bet2_data.better, "sam");
+    BOOST_CHECK_EQUAL(matched_bets.get(2).bet2_data.stake.amount, 1008);
 }
 
 SCORUM_TEST_CASE(matched_from_larger_potential_result_check)
@@ -154,25 +154,25 @@ SCORUM_TEST_CASE(matched_from_larger_potential_result_check)
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
         .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
             BOOST_REQUIRE_EQUAL(bets.size(), 2u);
-            BOOST_CHECK_EQUAL(bets[0].get().better, "bob");
-            BOOST_CHECK_EQUAL(bets[0].get().stake.amount, 0);
-            BOOST_CHECK_EQUAL(bets[1].get().better, "sam");
-            BOOST_CHECK_EQUAL(bets[1].get().stake.amount, 0);
+            BOOST_CHECK_EQUAL(bets[0].get().data.better, "bob");
+            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0);
+            BOOST_CHECK_EQUAL(bets[1].get().data.better, "sam");
+            BOOST_CHECK_EQUAL(bets[1].get().data.stake.amount, 0);
         });
 
     matcher.match(bet3);
 
-    BOOST_CHECK_EQUAL(matched_bets.get(1).better1, "bob");
-    BOOST_CHECK_EQUAL(matched_bets.get(1).stake1.amount, 8000);
-    BOOST_CHECK_EQUAL(matched_bets.get(1).better2, "alice");
-    BOOST_CHECK_EQUAL(matched_bets.get(1).stake2.amount, 888);
-    BOOST_CHECK_EQUAL(matched_bets.get(2).better1, "sam");
-    BOOST_CHECK_EQUAL(matched_bets.get(2).stake1.amount, 1000);
-    BOOST_CHECK_EQUAL(matched_bets.get(2).better2, "alice");
-    BOOST_CHECK_EQUAL(matched_bets.get(2).stake2.amount, 111);
+    BOOST_CHECK_EQUAL(matched_bets.get(1).bet1_data.better, "bob");
+    BOOST_CHECK_EQUAL(matched_bets.get(1).bet1_data.stake.amount, 8000);
+    BOOST_CHECK_EQUAL(matched_bets.get(1).bet2_data.better, "alice");
+    BOOST_CHECK_EQUAL(matched_bets.get(1).bet2_data.stake.amount, 888);
+    BOOST_CHECK_EQUAL(matched_bets.get(2).bet1_data.better, "sam");
+    BOOST_CHECK_EQUAL(matched_bets.get(2).bet1_data.stake.amount, 1000);
+    BOOST_CHECK_EQUAL(matched_bets.get(2).bet2_data.better, "alice");
+    BOOST_CHECK_EQUAL(matched_bets.get(2).bet2_data.stake.amount, 111);
 
     // as we do not remove pending bets in tests, alice's pending bet is at index 3
-    BOOST_CHECK_EQUAL(pending_bets.get(3).stake.amount, 1);
+    BOOST_CHECK_EQUAL(pending_bets.get(3).data.stake.amount, 1);
 }
 
 SCORUM_TEST_CASE(virt_operation_should_be_emitted_check)
@@ -208,14 +208,14 @@ SCORUM_TEST_CASE(extra_large_coefficient_big_gain_mismatch_test)
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
         .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
             BOOST_REQUIRE_EQUAL(bets.size(), 1u);
-            BOOST_CHECK_EQUAL(bets[0].get().better, "bob");
-            BOOST_CHECK_EQUAL(bets[0].get().stake.amount, 0u);
+            BOOST_CHECK_EQUAL(bets[0].get().data.better, "bob");
+            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0u);
         });
 
     matcher.match(bet2);
 
-    BOOST_CHECK_EQUAL(matched_bets.get().stake1.amount, 9000);
-    BOOST_CHECK_EQUAL(matched_bets.get().stake2.amount, 90'000'000);
+    BOOST_CHECK_EQUAL(matched_bets.get().bet1_data.stake.amount, 9000);
+    BOOST_CHECK_EQUAL(matched_bets.get().bet2_data.stake.amount, 90'000'000);
 
     // NOTE:
     // alice potential gain: 90'000'000; gain: 90'009'000 (gain extra 9'000 SCR)
@@ -235,8 +235,8 @@ SCORUM_TEST_CASE(extra_small_bet_which_cannot_be_matched_test)
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
         .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
             BOOST_REQUIRE_EQUAL(bets.size(), 1u);
-            BOOST_CHECK_EQUAL(bets[0].get().better, "alice");
-            BOOST_CHECK_EQUAL(bets[0].get().stake.amount, 2u);
+            BOOST_CHECK_EQUAL(bets[0].get().data.better, "alice");
+            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 2u);
         });
 
     matcher.match(bet2);

@@ -24,17 +24,17 @@ void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
 
     for (const matched_bet_object& bet : matched_bets)
     {
-        auto fst_won = results.find(bet.wincase1) != results.end();
-        auto snd_won = results.find(bet.wincase2) != results.end();
+        auto fst_won = results.find(bet.bet1_data.wincase) != results.end();
+        auto snd_won = results.find(bet.bet2_data.wincase) != results.end();
 
         if (fst_won)
-            _account_svc.increase_balance(bet.better1, bet.stake1 + bet.stake2);
+            _account_svc.increase_balance(bet.bet1_data.better, bet.bet1_data.stake + bet.bet2_data.stake);
         else if (snd_won)
-            _account_svc.increase_balance(bet.better2, bet.stake1 + bet.stake2);
+            _account_svc.increase_balance(bet.bet2_data.better, bet.bet1_data.stake + bet.bet2_data.stake);
         else
         {
-            _account_svc.increase_balance(bet.better1, bet.stake1);
-            _account_svc.increase_balance(bet.better2, bet.stake2);
+            _account_svc.increase_balance(bet.bet1_data.better, bet.bet1_data.stake);
+            _account_svc.increase_balance(bet.bet2_data.better, bet.bet2_data.stake);
         }
     }
 

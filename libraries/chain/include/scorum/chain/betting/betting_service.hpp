@@ -33,9 +33,9 @@ struct betting_service_i
 
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;
 
-
     virtual void cancel_game(const game_id_type& game_id) = 0;
     virtual void cancel_bets(const game_id_type& game_id) = 0;
+    virtual void cancel_bets(const game_id_type& game_id, fc::time_point_sec created_from) = 0;
     virtual void cancel_bets(const game_id_type& game_id, const fc::flat_set<market_type>& cancelled_markets) = 0;
 
     virtual void cancel_pending_bet(pending_bet_id_type id) = 0;
@@ -56,6 +56,7 @@ public:
 
     void cancel_game(const game_id_type& game_id) override;
     void cancel_bets(const game_id_type& game_id) override;
+    void cancel_bets(const game_id_type& game_id, fc::time_point_sec created_from) override;
     void cancel_bets(const game_id_type& game_id, const fc::flat_set<market_type>& cancelled_markets) override;
 
     void cancel_pending_bet(pending_bet_id_type id) override;
@@ -67,6 +68,8 @@ public:
     void cancel_matched_bets(const matched_bet_crefs_type& matched_bets) override;
 
 private:
+    void return_or_restore_bet(const bet_data& bet, game_id_type game_id, fc::time_point_sec threshold);
+
     dynamic_global_property_service_i& _dgp_property_service;
     betting_property_service_i& _betting_property_service;
     matched_bet_service_i& _matched_bet_svc;

@@ -25,7 +25,8 @@ void cancel_pending_bets_evaluator::do_apply(const operation_type& op)
         for (const auto& id : op.bet_ids)
         {
             FC_ASSERT(_pending_bet_svc.is_exists(id), "Bet ${id} doesn't exist", ("id", id));
-            FC_ASSERT(_pending_bet_svc.get_pending_bet(id).better == op.better, "Invalid better. Bet: ${0}", ("0", id));
+            FC_ASSERT(_pending_bet_svc.get_pending_bet(id).data.better == op.better, "Invalid better. Bet: ${0}",
+                      ("0", id));
         }
 
         for (const auto& id : op.bet_ids)
