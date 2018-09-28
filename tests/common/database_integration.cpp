@@ -8,6 +8,7 @@
 #include <scorum/witness/witness_plugin.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -103,6 +104,19 @@ void database_integration_fixture::open_database(const genesis_state_type& genes
 void database_integration_fixture::open_database()
 {
     open_database(genesis_state);
+}
+
+void database_integration_fixture::set_hardfork(uint32_t hardfork)
+{
+    db_plugin->debug_update(
+        [&](database& db) {
+            db.obtain_service<dbs_hardfork_property>().update([](hardfork_property_object& hfo) {
+                hfo.processed_hardforks.erase(hfo.processed_hardforks.begin() + 1, hfo.processed_hardforks.end());
+                hfo.last_hardfork = 0;
+            });
+            db.set_hardfork(hardfork);
+        },
+        get_skip_flags());
 }
 
 void database_integration_fixture::validate_database()

@@ -39,6 +39,12 @@ public:
         asset parent_comment_reward;
     };
 
+    struct curators_author_rewards
+    {
+        asset curators_reward;
+        asset author_reward;
+    };
+
     explicit process_comments_cashout_impl(block_task_context& ctx);
 
     template <typename FundService> void update_decreasing_total_claims(FundService& fund_service)
@@ -62,8 +68,11 @@ public:
 
     asset pay_for_comments(const comment_refs_type& comments, const std::vector<asset>& fund_rewards);
 
-    comment_payout_result
-    pay_for_comment(const comment_object& comment, const asset& publication_reward, const asset& parent_payout_value);
+    /// These two methods distribute comments reward across all parent comments
+    asset pay_for_comments_legacy(const comment_refs_type& comments, const std::vector<asset>& fund_rewards);
+    comment_payout_result pay_for_comment_legacy(const comment_object& comment,
+                                                 const asset& publication_reward,
+                                                 const asset& parent_payout_value);
 
     void close_comment_payout(const comment_object& comment);
 
@@ -76,7 +85,8 @@ private:
     fc::uint128_t
     get_total_claims(const comment_refs_type& comments, curve_id reward_curve, fc::uint128_t recent_claims) const;
 
-    asset pay_curators(const comment_object& comment, asset& max_rewards);
+    curators_author_rewards pay_curators(const comment_object& comment, const asset& fund_reward);
+    asset pay_beneficiaries(const comment_object& comment, const asset& author_reward);
 
     void pay_account(const account_object& recipient, const asset& reward);
 

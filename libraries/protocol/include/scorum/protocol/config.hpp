@@ -69,6 +69,8 @@ namespace detail {
 
         const uint8_t scorum_hardfork_required_witnesses;
 
+        const uint32_t advertising_cashout_period_sec;
+
         enum test_mode { test };
 
         explicit config(test_mode);
@@ -84,7 +86,7 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 2, 2) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 3, 0) )
 
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
@@ -266,6 +268,7 @@ namespace detail {
 #define SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS        (scorum::protocol::detail::get_config().expiraton_for_registration_bonus)
 #define SCORUM_WITNESS_REWARD_MIGRATION_DATE           (scorum::protocol::detail::get_config().witness_reward_migration_date)
 
+#define SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC      (scorum::protocol::detail::get_config().advertising_cashout_period_sec)
 
 #ifdef IS_LOW_MEM
 #define SCORUM_LOW_MEMORY_NODE (true)

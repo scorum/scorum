@@ -58,7 +58,6 @@ option(SCORUM_LOW_MEMORY_NODE "Build source for low memory node (ON OR OFF)" OFF
 option(SCORUM_CLEAR_VOTES "Build source to clear old votes from memory" OFF)
 option(SCORUM_SKIP_BY_TX_ID "Skip ordering operation history by transaction id (ON or OFF)" OFF)
 option(SCORUM_GENESIS_TESTNET "Build embedded genesis for TEST NET (ON OR OFF)" OFF)
-option(SCORUM_LOCK_BUDGETS_API "Lock all budgets (create and close) API (ON or OFF)" ON)
 option(SCORUM_LIVE_TESTNET "Build live testnet" OFF)
 
 if(SCORUM_FORCE_REBUILD_GENESIS)
@@ -84,15 +83,6 @@ if(SCORUM_LIVE_TESTNET)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLIVE_TESTNET")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLIVE_TESTNET")
     set(SCORUM_GENESIS_TESTNET ON)
-endif()
-
-if(SCORUM_GENESIS_TESTNET)
-    set(SCORUM_LOCK_BUDGETS_API OFF)
-endif()
-
-if(SCORUM_LOCK_BUDGETS_API)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOCK_BUDGETS_API")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOCK_BUDGETS_API")
 endif()
 
 IF( WIN32 )
@@ -265,5 +255,4 @@ message(STATUS "  SCORUM_FORCE_REBUILD_GENESIS:       ${SCORUM_FORCE_REBUILD_GEN
 message(STATUS "  SCORUM_LOW_MEMORY_NODE:             ${SCORUM_LOW_MEMORY_NODE}")
 message(STATUS "  SCORUM_SKIP_BY_TX_ID:               ${SCORUM_SKIP_BY_TX_ID}")
 message(STATUS "  SCORUM_CLEAR_VOTES:                 ${SCORUM_CLEAR_VOTES}")
-message(STATUS "  SCORUM_LOCK_BUDGETS_API:            ${SCORUM_LOCK_BUDGETS_API}")
 message(STATUS "")

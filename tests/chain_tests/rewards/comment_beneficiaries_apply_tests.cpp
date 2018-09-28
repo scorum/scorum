@@ -32,7 +32,7 @@ struct comment_benefactor_reward_visitor
     {
     }
 
-    void operator()(const comment_benefactor_reward_operation& op)
+    void operator()(const comment_benefficiary_reward_operation& op)
     {
         reward_map.insert(std::make_pair(op.benefactor, op.reward));
     }

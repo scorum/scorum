@@ -19,10 +19,10 @@ public:
             _op_evaluators.emplace_back();
     }
 
-    template <typename EvaluatorType, typename... Args> void register_evaluator(Args... args)
+    template <typename EvaluatorType, typename... Args> void register_evaluator(Args&&... args)
     {
         _op_evaluators[OperationType::template tag<typename EvaluatorType::operation_type>::value].reset(
-            new EvaluatorType(_db, args...));
+            new EvaluatorType(_db, std::forward<Args>(args)...));
     }
 
     template <typename EvaluatorType> void register_evaluator(EvaluatorType* e)

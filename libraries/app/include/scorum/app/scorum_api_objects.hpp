@@ -278,6 +278,8 @@ struct witness_api_obj
     time_point_sec hardfork_time_vote;
 };
 
+/// @addtogroup adv_api
+/// @{
 class budget_api_obj
 {
 public:
@@ -326,6 +328,8 @@ public:
     asset balance = asset(0, SCORUM_SYMBOL);
     asset per_block;
 };
+
+/// @}
 
 struct atomicswap_contract_api_obj
 {

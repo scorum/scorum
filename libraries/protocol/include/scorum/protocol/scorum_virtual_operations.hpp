@@ -236,15 +236,15 @@ struct return_scorumpower_delegation_operation : public virtual_operation
     asset scorumpower = asset(0, SP_SYMBOL);
 };
 
-struct comment_benefactor_reward_operation : public virtual_operation
+struct comment_benefficiary_reward_operation : public virtual_operation
 {
-    comment_benefactor_reward_operation()
+    comment_benefficiary_reward_operation()
     {
     }
-    comment_benefactor_reward_operation(const account_name_type& b,
-                                        const account_name_type& a,
-                                        const std::string& p,
-                                        const asset& r)
+    comment_benefficiary_reward_operation(const account_name_type& b,
+                                          const account_name_type& a,
+                                          const std::string& p,
+                                          const asset& r)
         : benefactor(b)
         , author(a)
         , permlink(p)
@@ -374,6 +374,29 @@ struct cash_back_from_advertising_budget_to_owner_operation : public virtual_ope
     int64_t id = -1;
     asset cash = asset(0, SCORUM_SYMBOL);
 };
+
+struct closing_budget_operation : public virtual_operation
+{
+    closing_budget_operation()
+    {
+    }
+    closing_budget_operation(const budget_type type,
+                             const account_name_type& owner,
+                             const int64_t id,
+                             const asset& cash)
+        : type(type)
+        , owner(owner)
+        , id(id)
+        , cash(cash)
+    {
+        FC_ASSERT(cash.symbol() == SCORUM_SYMBOL);
+    }
+
+    budget_type type = budget_type::post;
+    account_name_type owner;
+    int64_t id = -1;
+    asset cash = asset(0, SCORUM_SYMBOL);
+};
 }
 } // scorum::protocol
 
@@ -410,7 +433,7 @@ FC_REFLECT(scorum::protocol::comment_payout_update_operation,
 FC_REFLECT(scorum::protocol::return_scorumpower_delegation_operation,
            (account)
            (scorumpower))
-FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation,
+FC_REFLECT(scorum::protocol::comment_benefficiary_reward_operation,
            (benefactor)
            (author)
            (permlink)
@@ -449,6 +472,11 @@ FC_REFLECT(scorum::protocol::allocate_cash_from_advertising_budget_operation,
            (id)
            (cash))
 FC_REFLECT(scorum::protocol::cash_back_from_advertising_budget_to_owner_operation,
+           (type)
+           (owner)
+           (id)
+           (cash))
+FC_REFLECT(scorum::protocol::closing_budget_operation,
            (type)
            (owner)
            (id)
