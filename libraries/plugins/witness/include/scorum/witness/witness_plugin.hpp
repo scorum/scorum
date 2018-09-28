@@ -85,6 +85,8 @@ public:
     virtual void plugin_startup() override;
     virtual void plugin_shutdown() override;
 
+    bool production_loop_disabled = false;
+
 private:
     void schedule_production_loop();
     void block_production_loop();

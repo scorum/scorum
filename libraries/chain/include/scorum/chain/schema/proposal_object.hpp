@@ -7,6 +7,8 @@
 namespace scorum {
 namespace chain {
 
+using voted_accounts_type = fc::shared_flat_set<account_name_type>;
+
 class proposal_object : public object<proposal_object_type, proposal_object>
 {
 public:
@@ -24,7 +26,7 @@ public:
 
     protocol::percent_type quorum_percent = 0;
 
-    fc::shared_flat_set<account_name_type> voted_accounts;
+    voted_accounts_type voted_accounts;
 };
 
 struct by_expiration;
@@ -53,6 +55,8 @@ typedef shared_multi_index_container<proposal_object,
 } // namespace scorum
 
 // clang-format off
+FC_REFLECT( scorum::chain::voted_accounts_type, BOOST_PP_SEQ_NIL)
+
 FC_REFLECT(scorum::chain::proposal_object,
            (id)
            (creator)

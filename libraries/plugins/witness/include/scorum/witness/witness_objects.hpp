@@ -10,12 +10,12 @@ namespace witness {
 using namespace scorum::chain;
 
 #ifndef WITNESS_SPACE_ID
-#define WITNESS_SPACE_ID 12
+#define WITNESS_SPACE_ID 7
 #endif
 
 enum witness_plugin_object_type
 {
-    account_bandwidth_object_type = (WITNESS_SPACE_ID << 8),
+    account_bandwidth_object_type = (WITNESS_SPACE_ID << OBJECT_TYPE_SPACE_ID_OFFSET),
     reserve_ratio_object_type
 };
 

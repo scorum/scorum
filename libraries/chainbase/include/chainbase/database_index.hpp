@@ -6,7 +6,11 @@
 #include <chainbase/database_guard.hpp>
 #include <chainbase/generic_index.hpp>
 
+#include <scorum/typeid/get_object_types.hpp>
+
 namespace chainbase {
+
+using scorum::get_index_type;
 
 /**
 *  This class
@@ -164,6 +168,11 @@ public:
         CHAINBASE_REQUIRE_WRITE_LOCK(ObjectType);
         typedef typename get_index_type<ObjectType>::type index_type;
         return get_mutable_index<index_type>().emplace(std::forward<Constructor>(con));
+    }
+
+    size_t get_indexes_size() const
+    {
+        return _index_map.size();
     }
 
 protected:

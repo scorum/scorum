@@ -27,24 +27,6 @@ public:
     virtual void process_post_operation(const bucket_object& bucket, const operation_notification& o) override;
 };
 
-struct activity_operation_process
-{
-    chain::database& _db;
-    const activity_bucket_object& _bucket;
-
-    activity_operation_process(chain::database& db, const activity_bucket_object& b)
-        : _db(db)
-        , _bucket(b)
-    {
-    }
-
-    typedef void result_type;
-
-    template <typename T> void operator()(const T&) const
-    {
-    }
-};
-
 struct operation_process
 {
     chain::database& _db;

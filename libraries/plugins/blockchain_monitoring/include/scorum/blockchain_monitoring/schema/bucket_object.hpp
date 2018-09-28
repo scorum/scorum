@@ -8,7 +8,7 @@
 #include <fc/shared_containers.hpp>
 
 #ifndef BLOCKCHAIN_STATISTICS_SPACE_ID
-#define BLOCKCHAIN_STATISTICS_SPACE_ID 9
+#define BLOCKCHAIN_STATISTICS_SPACE_ID 5
 #endif
 
 namespace scorum {
@@ -18,7 +18,7 @@ using namespace scorum::chain;
 
 enum blockchain_statistics_object_type
 {
-    bucket_object_type = (BLOCKCHAIN_STATISTICS_SPACE_ID << 8)
+    bucket_object_type = (BLOCKCHAIN_STATISTICS_SPACE_ID << OBJECT_TYPE_SPACE_ID_OFFSET)
 };
 
 struct bucket_object : public common_statistics::base_bucket_object,
@@ -34,7 +34,6 @@ struct bucket_object : public common_statistics::base_bucket_object,
 
 typedef oid<bucket_object> bucket_id_type;
 
-struct by_id;
 typedef shared_multi_index_container<bucket_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<bucket_object,

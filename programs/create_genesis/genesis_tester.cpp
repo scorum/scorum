@@ -24,7 +24,8 @@ void test_database(const genesis_state_type& genesis, unsigned int shared_mem_mb
     try
     {
         fc::temp_directory data_dir = fc::temp_directory(graphene::utilities::temp_directory_path());
-        db.open(data_dir.path(), data_dir.path(), test_shared_mem_size, chainbase::database::read_write, genesis);
+        db.open(data_dir.path(), data_dir.path(), test_shared_mem_size, to_underlying(database::open_flags::read_write),
+                genesis);
 
         ilog("Test completed. Database is opened successfully.");
     }

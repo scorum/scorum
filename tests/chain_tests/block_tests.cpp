@@ -78,7 +78,7 @@ void db_setup_and_open(database& db, const fc::path& path)
 
     genesis = database_integration_fixture::create_default_genesis_state();
 
-    db.open(path, path, TEST_SHARED_MEM_SIZE_10MB, chainbase::database::read_write, genesis);
+    db.open(path, path, TEST_SHARED_MEM_SIZE_10MB, scorum::to_underlying(database::open_flags::read_write), genesis);
 }
 
 BOOST_AUTO_TEST_CASE(generate_empty_blocks)

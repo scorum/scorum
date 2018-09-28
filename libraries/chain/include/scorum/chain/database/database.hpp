@@ -104,7 +104,7 @@ public:
     void open(const fc::path& data_dir,
               const fc::path& shared_mem_dir,
               uint64_t shared_file_size,
-              uint32_t chainbase_flags,
+              underlying(open_flags) chainbase_flags,
               const genesis_state_type& genesis_state);
 
     /**
@@ -117,7 +117,8 @@ public:
                  const fc::path& shared_mem_dir,
                  uint64_t shared_file_size,
                  uint32_t skip_flags,
-                 const genesis_state_type& genesis_state);
+                 const genesis_state_type& genesis_state,
+                 uint32_t apply_from_block_num = 0u);
 
     /**
      * @brief wipe Delete database from disk, and potentially the raw chain as well.
@@ -128,6 +129,24 @@ public:
     void wipe(const fc::path& data_dir, const fc::path& shared_mem_dir, bool include_blocks);
 
     void close();
+
+    const boost::filesystem::path& data_dir() const
+    {
+        return _data_dir;
+    }
+
+    const boost::filesystem::path& shared_mem_dir() const
+    {
+        return chainbase::database::dir();
+    }
+
+    enum class runtime_config_mode
+    {
+        sig1,
+        sig2
+    };
+
+    void notify_runtime_config(const runtime_config_mode&);
 
     time_point_sec get_genesis_time() const;
 
@@ -206,6 +225,8 @@ public:
     fc::signal<void(const operation_notification&)> pre_apply_operation;
     fc::signal<void(const operation_notification&)> post_apply_operation;
     fc::signal<void(const signed_block&)> pre_applied_block;
+
+    fc::signal<void(const database::runtime_config_mode&)> runtime_config;
 
     /**
      *  This signal is emitted after all operations and virtual operation for a
@@ -404,6 +425,8 @@ private:
     uint32_t _last_free_gb_printed = 0;
 
     fc::time_point_sec _const_genesis_time; // should be const
+
+    boost::filesystem::path _data_dir;
 };
 } // namespace chain
 } // namespace scorum

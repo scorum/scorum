@@ -120,7 +120,10 @@ target_link_libraries( scorum_chain
                        ${PATCH_MERGE_LIB}
                        ${PLATFORM_SPECIFIC_LIBS})
 target_include_directories( scorum_chain
-                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
+                            PUBLIC
+                            "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                            "${CMAKE_CURRENT_BINARY_DIR}/include"
+                            )
 
 if(MSVC)
   set_source_files_properties( database.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

@@ -21,6 +21,7 @@ class account_by_key_plugin : public scorum::app::plugin
 {
 public:
     account_by_key_plugin(scorum::app::application* app);
+    ~account_by_key_plugin();
 
     std::string plugin_name() const override
     {

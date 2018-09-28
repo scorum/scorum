@@ -19,7 +19,7 @@
 // time.
 //
 #ifndef ACCOUNT_STATISTICS_SPACE_ID
-#define ACCOUNT_STATISTICS_SPACE_ID 10
+#define ACCOUNT_STATISTICS_SPACE_ID 3
 #endif
 
 namespace scorum {
@@ -27,10 +27,9 @@ namespace account_statistics {
 
 using namespace scorum::chain;
 
-enum account_statistics_plugin_object_types
+enum account_statistics_object_types
 {
-    bucket_object_type = (ACCOUNT_STATISTICS_SPACE_ID << 8),
-    activity_bucket_object_type
+    bucket_object_type = (ACCOUNT_STATISTICS_SPACE_ID << OBJECT_TYPE_SPACE_ID_OFFSET),
 };
 
 struct bucket_object : public common_statistics::base_bucket_object, public object<bucket_object_type, bucket_object>
@@ -43,20 +42,6 @@ struct bucket_object : public common_statistics::base_bucket_object, public obje
 };
 typedef bucket_object::id_type bucket_id_type;
 
-struct activity_bucket_object : public common_statistics::base_bucket_object,
-                                public object<activity_bucket_object_type, activity_bucket_object>
-{
-    CHAINBASE_DEFAULT_CONSTRUCTOR(activity_bucket_object)
-
-    id_type id;
-
-    uint32_t active_market_accounts = 0; ///< Active market accounts in the bucket
-    uint32_t active_forum_accounts = 0; ///< Active forum accounts in the bucket
-    uint32_t active_market_and_forum_accounts = 0; ///< Active accounts in both the market and the forum
-};
-typedef activity_bucket_object::id_type activity_bucket_id_type;
-
-struct by_id;
 typedef shared_multi_index_container<bucket_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<bucket_object,
@@ -83,15 +68,3 @@ FC_REFLECT_DERIVED(scorum::account_statistics::bucket_object,
                    (id))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::account_statistics::bucket_object, scorum::account_statistics::bucket_index)
-
-// clang-format off
-
-FC_REFLECT_DERIVED(
-    scorum::account_statistics::activity_bucket_object, (scorum::common_statistics::base_bucket_object),
-    (id)
-    (active_market_accounts)
-    (active_forum_accounts)
-    (active_market_and_forum_accounts)
-)
-
-// clang-format on

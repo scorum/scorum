@@ -34,6 +34,7 @@
 #include <scorum/blockchain_history/blockchain_history_plugin.hpp>
 #include <scorum/blockchain_monitoring/blockchain_monitoring_plugin.hpp>
 #include <scorum/blockchain_monitoring/blockchain_statistics_api.hpp>
+#include <scorum/snapshot/snapshot_plugin.hpp>
 
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
@@ -388,12 +389,16 @@ public:
                     if (!_options->at("replay-skip-witness-schedule-check").as<bool>())
                         skip_flags &= ~database::skip_witness_schedule_check;
 
-                    _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, skip_flags, genesis_state);
+                    auto apply_from_block_num = 0u;
+                    if (_options->count("replay-from-snapshot-number"))
+                        apply_from_block_num = _options->at("replay-from-snapshot-number").as<uint32_t>();
+                    _chain_db->reindex(block_log_dir, _shared_dir, _shared_file_size, skip_flags, genesis_state,
+                                       apply_from_block_num);
                 }
                 else
                 {
-                    _chain_db->open(block_log_dir, _shared_dir, _shared_file_size, chainbase::database::read_write,
-                                    genesis_state);
+                    _chain_db->open(block_log_dir, _shared_dir, _shared_file_size,
+                                    to_underlying(database::open_flags::read_write), genesis_state);
                 }
 
                 if (_options->count("force-validate"))
@@ -405,8 +410,8 @@ public:
             else
             {
                 ilog("Starting Scorum node in read mode.");
-                _chain_db->open(block_log_dir, _shared_dir, _shared_file_size, chainbase::database::read_only,
-                                genesis_state);
+                _chain_db->open(block_log_dir, _shared_dir, _shared_file_size,
+                                to_underlying(database::open_flags::read_only), genesis_state);
 
                 if (_options->count("read-forward-rpc"))
                 {
@@ -473,6 +478,16 @@ public:
             reset_websocket_tls_server();
         }
         FC_LOG_AND_RETHROW()
+    }
+
+    void sigusr1()
+    {
+        _chain_db->notify_runtime_config(database::runtime_config_mode::sig1);
+    }
+
+    void sigusr2()
+    {
+        _chain_db->notify_runtime_config(database::runtime_config_mode::sig2);
     }
 
     optional<api_access_info> get_api_access_info(const std::string& username) const
@@ -1144,6 +1159,7 @@ std::vector<std::string> application::get_default_plugins() const
     result.push_back("account_by_key");
     result.push_back(ACCOUNT_STATISTICS_PLUGIN_NAME);
     result.push_back(BLOCKCHAIN_MONITORING_PLUGIN_NAME);
+    result.push_back(SNAPSHOT_PLUGIN_NAME);
 
     return result;
 }
@@ -1183,6 +1199,7 @@ void application::set_program_options(boost::program_options::options_descriptio
     ("force-validate", "Force validation of all transactions")
     ("read-only", "Node will not connect to p2p network and can only read from the chain state")
     ("check-locks", "Check correctness of chainbase locking")
+    ("replay-from-snapshot-number", bpo::value<uint32_t>(), "Replay with snapshot at this block number (snapshot plugin and snapshot options required)")
     ("disable-get-block", "Disable get_block API call");
 
     // clang-format on
@@ -1325,6 +1342,16 @@ void application::startup()
         elog("unexpected exception");
         throw;
     }
+}
+
+void application::sigusr1()
+{
+    my->sigusr1();
+}
+
+void application::sigusr2()
+{
+    my->sigusr2();
 }
 
 std::shared_ptr<abstract_plugin> application::get_plugin(const std::string& name) const

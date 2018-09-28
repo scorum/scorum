@@ -56,6 +56,8 @@ set( SOURCES
     withdraw_scorumpower/lock_tests.cpp
     account/account_service_tests.cpp
     hardfork_tests.cpp
+    snapshot/snapshot_tests.cpp
+    snapshot/snapshot_plugins_tests.cpp
 )
 
 add_executable(chain_tests
@@ -69,6 +71,7 @@ target_link_libraries(chain_tests
                       scorum_account_statistics
                       scorum_blockchain_monitoring
                       scorum_blockchain_history
+                      scorum_snapshot
                       )
 target_include_directories(chain_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 

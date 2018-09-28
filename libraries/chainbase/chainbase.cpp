@@ -48,7 +48,10 @@ boost::filesystem::path database::shared_memory_meta_path(const boost::filesyste
 
 void database::open(const boost::filesystem::path& dir, uint32_t flags, uint64_t shared_file_size)
 {
-    bool read_only = !(flags & database::read_write);
+    _dir = dir;
+    _flags = flags;
+
+    bool read_only = !(flags & scorum::to_underlying(open_flags::read_write));
 
     check_dir_existance(dir, read_only);
 

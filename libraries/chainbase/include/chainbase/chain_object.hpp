@@ -54,7 +54,7 @@ namespace chainbase {
     template <uint16_t TypeNumber, typename Derived> struct object
     {
         typedef oid<Derived> id_type;
-        static const uint16_t type_id = TypeNumber;
+        static constexpr uint16_t type_id = TypeNumber;
     };
 
 //Default constructor for object in index
