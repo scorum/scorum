@@ -27,6 +27,9 @@ typedef void (account_service_i::*check_account_existence_signature)(const accou
 
 struct fixture : public shared_memory_fixture
 {
+    using is_exists_ptr = bool (proposal_service_i::*)(proposal_id_type);
+    using get_ptr = const proposal_object& (proposal_service_i::*)(proposal_id_type);
+
     MockRepository mocks;
 
     data_service_factory_i* services = mocks.Mock<data_service_factory_i>();
@@ -57,7 +60,9 @@ BOOST_FIXTURE_TEST_SUITE(proposal_vote_evaluator_tests, fixture)
 
 SCORUM_TEST_CASE(check_proposal_id_and_throw_when_it_return_false)
 {
-    mocks.ExpectCall(proposal_service, proposal_service_i::is_exists).With(operation.proposal_id).Return(false);
+    mocks.ExpectCallOverload(proposal_service, (is_exists_ptr)&proposal_service_i::is_exists)
+        .With(operation.proposal_id)
+        .Return(false);
 
     proposal_vote_evaluator evaluator(*services);
     BOOST_CHECK_THROW(evaluator.do_apply(operation), fc::assert_exception);
@@ -73,8 +78,12 @@ SCORUM_TEST_CASE(get_committee_service_if_proposal_exists_and_fail_on_voting_acc
         p.operation = op;
     });
 
-    mocks.ExpectCall(proposal_service, proposal_service_i::is_exists).With(operation.proposal_id).Return(true);
-    mocks.ExpectCall(proposal_service, proposal_service_i::get).With(operation.proposal_id).ReturnByRef(proposal);
+    mocks.ExpectCallOverload(proposal_service, (is_exists_ptr)&proposal_service_i::is_exists)
+        .With(operation.proposal_id)
+        .Return(true);
+    mocks.ExpectCallOverload(proposal_service, (get_ptr)&proposal_service_i::get)
+        .With(operation.proposal_id)
+        .ReturnByRef(proposal);
     mocks.ExpectCall(services, data_service_factory_i::registration_committee_service).ReturnByRef(*committee_service);
     mocks.ExpectCall(committee_service, committee_i::is_exists).With(operation.voting_account).Return(false);
 
@@ -94,8 +103,12 @@ SCORUM_TEST_CASE(check_voting_account_existence)
         p.voted_accounts.insert(operation.voting_account);
     });
 
-    mocks.OnCall(proposal_service, proposal_service_i::is_exists).With(operation.proposal_id).Return(true);
-    mocks.OnCall(proposal_service, proposal_service_i::get).With(operation.proposal_id).ReturnByRef(proposal);
+    mocks.OnCallOverload(proposal_service, (is_exists_ptr)&proposal_service_i::is_exists)
+        .With(operation.proposal_id)
+        .Return(true);
+    mocks.OnCallOverload(proposal_service, (get_ptr)&proposal_service_i::get)
+        .With(operation.proposal_id)
+        .ReturnByRef(proposal);
     mocks.OnCall(services, data_service_factory_i::registration_committee_service).ReturnByRef(*committee_service);
     mocks.ExpectCall(committee_service, committee_i::is_exists).With(operation.voting_account).Return(true);
 
@@ -119,8 +132,12 @@ SCORUM_TEST_CASE(throw_on_check_voting_account_existence_when_account_is_already
         p.voted_accounts.insert(operation.voting_account);
     });
 
-    mocks.OnCall(proposal_service, proposal_service_i::is_exists).With(operation.proposal_id).Return(true);
-    mocks.OnCall(proposal_service, proposal_service_i::get).With(operation.proposal_id).ReturnByRef(proposal);
+    mocks.OnCallOverload(proposal_service, (is_exists_ptr)&proposal_service_i::is_exists)
+        .With(operation.proposal_id)
+        .Return(true);
+    mocks.OnCallOverload(proposal_service, (get_ptr)&proposal_service_i::get)
+        .With(operation.proposal_id)
+        .ReturnByRef(proposal);
     mocks.OnCall(services, data_service_factory_i::registration_committee_service).ReturnByRef(*committee_service);
     mocks.ExpectCall(committee_service, committee_i::is_exists).With(operation.voting_account).Return(true);
 
@@ -142,8 +159,12 @@ SCORUM_TEST_CASE(throw_when_proposal_expired)
         p.operation = op;
     });
 
-    mocks.OnCall(proposal_service, proposal_service_i::is_exists).With(operation.proposal_id).Return(true);
-    mocks.OnCall(proposal_service, proposal_service_i::get).With(operation.proposal_id).ReturnByRef(proposal);
+    mocks.OnCallOverload(proposal_service, (is_exists_ptr)&proposal_service_i::is_exists)
+        .With(operation.proposal_id)
+        .Return(true);
+    mocks.OnCallOverload(proposal_service, (get_ptr)&proposal_service_i::get)
+        .With(operation.proposal_id)
+        .ReturnByRef(proposal);
     mocks.OnCall(services, data_service_factory_i::registration_committee_service).ReturnByRef(*committee_service);
     mocks.ExpectCall(committee_service, committee_i::is_exists).With(operation.voting_account).Return(true);
 
@@ -167,8 +188,12 @@ SCORUM_TEST_CASE(vote_for_proposal_if_it_is_not_expired_and_execute)
         p.operation = op;
     });
 
-    mocks.OnCall(proposal_service, proposal_service_i::is_exists).With(operation.proposal_id).Return(true);
-    mocks.OnCall(proposal_service, proposal_service_i::get).With(operation.proposal_id).ReturnByRef(proposal);
+    mocks.OnCallOverload(proposal_service, (is_exists_ptr)&proposal_service_i::is_exists)
+        .With(operation.proposal_id)
+        .Return(true);
+    mocks.OnCallOverload(proposal_service, (get_ptr)&proposal_service_i::get)
+        .With(operation.proposal_id)
+        .ReturnByRef(proposal);
     mocks.OnCall(services, data_service_factory_i::registration_committee_service).ReturnByRef(*committee_service);
     mocks.ExpectCall(committee_service, committee_i::is_exists).With(operation.voting_account).Return(true);
 

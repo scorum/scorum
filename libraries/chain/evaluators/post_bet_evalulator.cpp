@@ -14,12 +14,10 @@
 namespace scorum {
 namespace chain {
 post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
-                                       betting_service_i& betting_service,
                                        betting_matcher_i& betting_matcher)
     : evaluator_impl<data_service_factory_i, post_bet_evaluator>(services)
     , _account_service(services.account_service())
     , _game_service(services.game_service())
-    , _betting_service(betting_service)
     , _betting_matcher(betting_matcher)
     , _pending_bet_svc(services.pending_bet_service())
     , _dynprops_svc(services.dynamic_global_property_service())

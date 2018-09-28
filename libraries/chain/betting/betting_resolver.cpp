@@ -1,18 +1,13 @@
 #include <scorum/chain/betting/betting_resolver.hpp>
 
-#include <scorum/chain/betting/betting_service.hpp>
-
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/account.hpp>
 
 namespace scorum {
 namespace chain {
-betting_resolver::betting_resolver(betting_service_i& betting_svc,
-                                   matched_bet_service_i& matched_bet_svc,
-                                   account_service_i& account_svc)
-    : _betting_svc(betting_svc)
-    , _matched_bet_svc(matched_bet_svc)
+betting_resolver::betting_resolver(matched_bet_service_i& matched_bet_svc, account_service_i& account_svc)
+    : _matched_bet_svc(matched_bet_svc)
     , _account_svc(account_svc)
 {
 }

@@ -156,7 +156,7 @@ if(MSVC)
 endif(MSVC)
 
 if(UNIX)
-  set_source_files_properties( evaluators/scorum_evaluators.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -Wno-maybe-uninitialized" )
+  set_source_files_properties( evaluators/scorum_evaluators.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -Wno-maybe-uninitialized -Wno-unknown-warning-option" )
 endif(UNIX)
 
 INSTALL( TARGETS

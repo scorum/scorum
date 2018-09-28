@@ -21,7 +21,7 @@ using scorum::protocol::wincase_type;
 class betting_property_object;
 
 namespace dba {
-template <typename> struct db_accessor;
+template <typename> class db_accessor;
 struct db_accessor_factory;
 }
 

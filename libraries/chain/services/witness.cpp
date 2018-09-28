@@ -102,7 +102,7 @@ void dbs_witness::adjust_witness_votes(const account_object& account, const shar
 
 void dbs_witness::adjust_witness_vote(const witness_object& witness, const share_type& delta)
 {
-    block_info ctx = std::move(db_impl().head_block_context());
+    block_info ctx = db_impl().head_block_context();
 
     const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
 

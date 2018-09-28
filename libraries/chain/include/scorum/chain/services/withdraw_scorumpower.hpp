@@ -8,6 +8,9 @@ namespace chain {
 
 struct withdraw_scorumpower_service_i : public base_service_i<withdraw_scorumpower_object>
 {
+    using base_service_i<withdraw_scorumpower_object>::get;
+    using base_service_i<withdraw_scorumpower_object>::is_exists;
+
     virtual bool is_exists(const account_id_type& from) const = 0;
 
     virtual bool is_exists(const dev_committee_id_type& from) const = 0;
@@ -31,6 +34,9 @@ protected:
     explicit dbs_withdraw_scorumpower(database& db);
 
 public:
+    using base_service_i<withdraw_scorumpower_object>::get;
+    using base_service_i<withdraw_scorumpower_object>::is_exists;
+
     ~dbs_withdraw_scorumpower();
 
     virtual bool is_exists(const account_id_type& from) const override;

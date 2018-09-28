@@ -8,6 +8,9 @@ namespace chain {
 
 struct comment_vote_service_i : public base_service_i<comment_vote_object>
 {
+    using base_service_i<comment_vote_object>::get;
+    using base_service_i<comment_vote_object>::is_exists;
+
     virtual const comment_vote_object& get(const comment_id_type& comment_id,
                                            const account_id_type& voter_id) const = 0;
 
@@ -30,6 +33,9 @@ protected:
     explicit dbs_comment_vote(database& db);
 
 public:
+    using base_service_i<comment_vote_object>::get;
+    using base_service_i<comment_vote_object>::is_exists;
+
     const comment_vote_object& get(const comment_id_type& comment_id, const account_id_type& voter_id) const override;
 
     comment_vote_refs_type get_by_comment(const comment_id_type& comment_id) const override;

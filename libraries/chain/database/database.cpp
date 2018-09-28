@@ -140,7 +140,7 @@ database_impl::database_impl(database& self)
     , _betting_matcher(static_cast<data_service_factory_i&>(_self),
                        static_cast<database_virtual_operations_emmiter_i&>(_self),
                        _betting_service)
-    , _betting_resolver(_betting_service, _self.matched_bet_service(), _self.account_service())
+    , _betting_resolver(_self.matched_bet_service(), _self.account_service())
 {
 }
 
@@ -959,7 +959,7 @@ void database::pop_block()
 
     if (_fork_db.head())
     {
-        ctx = std::move(block_info(_fork_db.head()->data));
+        ctx = block_info(_fork_db.head()->data);
     }
 
     debug_log(ctx, "pop_block");
@@ -1219,12 +1219,11 @@ block_info database::head_block_context() const
     auto b = fetch_block_by_id(head_block_id());
     if (b.valid())
     {
-        ret = std::move(block_info(*b));
+        ret = block_info(*b);
     }
     else
     {
-        ret = std::move(
-            block_info(head_block_time(), obtain_service<dbs_dynamic_global_property>().get().current_witness));
+        ret = block_info(head_block_time(), obtain_service<dbs_dynamic_global_property>().get().current_witness);
     }
     return ret;
 }
@@ -1285,8 +1284,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator(
         new update_game_start_time_evaluator(*this, _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(new post_game_results_evaluator(*this, _my->get_betting_service()));
-    _my->_evaluator_registry.register_evaluator(
-        new post_bet_evaluator(*this, _my->get_betting_service(), _my->get_betting_matcher()));
+    _my->_evaluator_registry.register_evaluator(new post_bet_evaluator(*this, _my->get_betting_matcher()));
     _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->get_betting_service()));
 }
 
@@ -1576,8 +1574,7 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_active_sp_holders_cashout().apply(task_ctx);
         database_ns::process_games_startup(_my->get_betting_service()).apply(task_ctx);
         database_ns::process_bets_resolving(_my->get_betting_service(), _my->get_betting_resolver()).apply(task_ctx);
-        database_ns::process_bets_auto_resolving(_my->get_betting_service(), _my->get_betting_resolver())
-            .apply(task_ctx);
+        database_ns::process_bets_auto_resolving(_my->get_betting_service()).apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();

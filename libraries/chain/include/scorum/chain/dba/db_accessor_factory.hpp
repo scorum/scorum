@@ -7,7 +7,7 @@ namespace chain {
 class database;
 
 namespace dba {
-template <typename TObject> struct db_accessor;
+template <typename TObject> class db_accessor;
 
 struct db_accessor_factory
 {

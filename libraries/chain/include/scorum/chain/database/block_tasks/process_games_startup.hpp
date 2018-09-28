@@ -4,7 +4,7 @@
 
 namespace scorum {
 namespace chain {
-class betting_service_i;
+struct betting_service_i;
 namespace database_ns {
 
 struct process_games_startup : public block_task

@@ -1,19 +1,16 @@
 #include <scorum/chain/database/block_tasks/process_bets_auto_resolving.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/game.hpp>
-#include <scorum/chain/betting/betting_resolver.hpp>
 #include <scorum/chain/betting/betting_service.hpp>
 
-#include <scorum/chain/schema/bet_objects.hpp>
-#include <scorum/chain/database/database.hpp>
+#include <scorum/chain/database/block_tasks/block_tasks.hpp>
 
 namespace scorum {
 namespace chain {
 namespace database_ns {
 
-process_bets_auto_resolving::process_bets_auto_resolving(betting_service_i& betting_svc, betting_resolver_i& resolver)
+process_bets_auto_resolving::process_bets_auto_resolving(betting_service_i& betting_svc)
     : _betting_svc(betting_svc)
-    , _resolver(resolver)
 {
 }
 

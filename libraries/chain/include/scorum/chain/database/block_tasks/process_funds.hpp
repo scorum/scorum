@@ -11,19 +11,19 @@ namespace chain {
 using scorum::protocol::budget_type;
 
 class account_object;
-class dynamic_global_property_service_i;
-class advertising_property_service_i;
-class account_service_i;
-class content_reward_scr_service_i;
-class dev_pool_service_i;
-class fund_budget_service_i;
-class voters_reward_scr_service_i;
-class voters_reward_sp_service_i;
-class content_reward_fund_scr_service_i;
-class content_reward_fund_sp_service_i;
-class hardfork_property_service_i;
-class witness_service_i;
-template <budget_type> class adv_budget_service_i;
+struct dynamic_global_property_service_i;
+struct advertising_property_service_i;
+struct account_service_i;
+struct content_reward_scr_service_i;
+struct dev_pool_service_i;
+struct fund_budget_service_i;
+struct voters_reward_scr_service_i;
+struct voters_reward_sp_service_i;
+struct content_reward_fund_scr_service_i;
+struct content_reward_fund_sp_service_i;
+struct hardfork_property_service_i;
+struct witness_service_i;
+template <budget_type> struct adv_budget_service_i;
 
 namespace database_ns {
 

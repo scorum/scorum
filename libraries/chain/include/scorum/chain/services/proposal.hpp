@@ -8,6 +8,9 @@ namespace chain {
 
 struct proposal_service_i : public base_service_i<proposal_object>
 {
+    using base_service_i<proposal_object>::get;
+    using base_service_i<proposal_object>::is_exists;
+
     virtual const proposal_object& create_proposal(const account_name_type& creator,
                                                    const protocol::proposal_operation& operation,
                                                    const fc::time_point_sec& expiration,
@@ -41,6 +44,9 @@ protected:
     explicit dbs_proposal(database& db);
 
 public:
+    using base_service_i<proposal_object>::get;
+    using base_service_i<proposal_object>::is_exists;
+
     virtual const proposal_object& create_proposal(const account_name_type& creator,
                                                    const protocol::proposal_operation& operation,
                                                    const fc::time_point_sec& expiration,

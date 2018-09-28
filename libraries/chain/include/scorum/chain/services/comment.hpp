@@ -8,6 +8,9 @@ namespace chain {
 
 struct comment_service_i : public base_service_i<comment_object>
 {
+    using base_service_i<comment_object>::get;
+    using base_service_i<comment_object>::is_exists;
+
     virtual const comment_object& get(const comment_id_type& comment_id) const = 0;
     virtual const comment_object& get(const account_name_type& author, const std::string& permlink) const = 0;
 
@@ -35,6 +38,9 @@ protected:
     explicit dbs_comment(database& db);
 
 public:
+    using base_service_i<comment_object>::get;
+    using base_service_i<comment_object>::is_exists;
+
     const comment_object& get(const comment_id_type& comment_id) const override;
     const comment_object& get(const account_name_type& author, const std::string& permlink) const override;
 
