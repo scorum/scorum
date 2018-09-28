@@ -77,7 +77,7 @@ public:
 
     /**
      * @brief This method returns signed transaction by transaction id
-     * @param transaction id
+     * @param trx_id transaction id
      * @return annotated signed transaction
      */
     annotated_signed_transaction get_transaction(transaction_id_type trx_id) const;

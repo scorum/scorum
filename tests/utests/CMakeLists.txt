@@ -1,9 +1,19 @@
-OPTION( BUILD_PRINT_TEST_CLI_OUTPUT "Print output in CLI tests (ON OR OFF)" OFF )
-MESSAGE( STATUS "BUILD_PRINT_TEST_CLI_OUTPUT: ${BUILD_PRINT_TEST_CLI_OUTPUT}" )
-if( BUILD_PRINT_TEST_CLI_OUTPUT  )
-  SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPRINT_TEST_CLI_OUTPUT" )
-  SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPRINT_TEST_CLI_OUTPUT" )
+OPTION(SCORUM_BUILD_PRINT_TEST_CLI_OUTPUT "Print output in CLI tests (ON OR OFF)" OFF )
+OPTION(SCORUM_UTESTS_LOG_MESSAGES "Show logs for u-tests (ON or OFF)" ON)
+
+if(SCORUM_BUILD_PRINT_TEST_CLI_OUTPUT)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPRINT_TEST_CLI_OUTPUT")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPRINT_TEST_CLI_OUTPUT")
 endif()
+
+if(SCORUM_UTESTS_LOG_MESSAGES)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_MESSAGES")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOG_MESSAGES")
+endif()
+
+message(STATUS "")
+message(STATUS "  SCORUM_UTESTS_LOG_MESSAGES:         ${SCORUM_UTESTS_LOG_MESSAGES}")
+message(STATUS "  SCORUM_BUILD_PRINT_TEST_CLI_OUTPUT: ${SCORUM_BUILD_PRINT_TEST_CLI_OUTPUT}")
 
 file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 
@@ -37,6 +47,7 @@ set(SOURCES
     rewards_math/calculate_weight_tests.cpp
     rewards_math/calculate_abs_reward_shares_tests.cpp
     rewards_math/calculate_voting_power_tests.cpp
+    rewards/comment_reward_legacy_tests.cpp
     rewards/comment_reward_tests.cpp
     utils/string_algorithm_tests.cpp
     utils/take_n_range_tests.cpp
@@ -44,12 +55,12 @@ set(SOURCES
     fc/static_variant_visitor_tests.cpp
     tasks_base_tests.cpp
     app_tests.cpp
-    budgets/management_algorithms_tests.cpp
     budgets/evaluators_tests.cpp
-    budgets/vcg_calculation_tests.cpp
+    budgets/auction_calculation_tests.cpp
     budgets/advertising_api_tests.cpp
     fraction_tests.cpp
     config_api_tests.cpp
+    vote_evaluator_tests.cpp
     betting/invariants_validation_tests.cpp
     betting/wincase_comparison_tests.cpp
     betting/threshold_comparison_tests.cpp
@@ -81,12 +92,3 @@ target_link_libraries(utests
 
 target_include_directories(utests PUBLIC
                            "${CMAKE_CURRENT_SOURCE_DIR}")
-
-OPTION(UTESTS_LOG_MESSAGES "Show logs for u-tests (ON or OFF)" ON)
-
-MESSAGE( STATUS "UTESTS_LOG_MESSAGES: ${UTESTS_LOG_MESSAGES}" )
-if( UTESTS_LOG_MESSAGES )
-   SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_MESSAGES" )
-   SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOG_MESSAGES" )
-endif()
-

@@ -25,7 +25,7 @@ public:
     protocol::percent_type invite_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type dropout_quorum = SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT;
     protocol::percent_type change_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
-    protocol::percent_type budgets_vcg_properties_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
+    protocol::percent_type budgets_auction_properties_quorum = SCORUM_COMMITTEE_QUORUM_PERCENT;
     protocol::percent_type advertising_moderator_quorum = SCORUM_COMMITTEE_ADVERTISING_MODERATOR_QUORUM_PERCENT;
     protocol::percent_type betting_moderator_quorum = SCORUM_COMMITTEE_BETTING_MODERATOR_QUORUM_PERCENT;
     protocol::percent_type betting_resolve_delay_quorum = SCORUM_COMMITTEE_BETTING_RESOLVE_DELAY_QUORUM_PERCENT;
@@ -72,7 +72,7 @@ FC_REFLECT(scorum::chain::dev_committee_object,
            (invite_quorum)
            (dropout_quorum)
            (change_quorum)
-           (budgets_vcg_properties_quorum)
+           (budgets_auction_properties_quorum)
            (advertising_moderator_quorum)
            (betting_moderator_quorum)
            (betting_resolve_delay_quorum))

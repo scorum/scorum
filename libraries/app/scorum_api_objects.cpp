@@ -11,10 +11,10 @@ namespace app {
 advertising_property_api_obj::advertising_property_api_obj(const chain::advertising_property_object& obj)
     : moderator(obj.moderator)
 {
-    std::copy(std::begin(obj.vcg_post_coefficients), std::end(obj.vcg_post_coefficients),
-              std::back_inserter(vcg_post_coefficients));
-    std::copy(std::begin(obj.vcg_banner_coefficients), std::end(obj.vcg_banner_coefficients),
-              std::back_inserter(vcg_banner_coefficients));
+    std::copy(std::begin(obj.auction_post_coefficients), std::end(obj.auction_post_coefficients),
+              std::back_inserter(auction_post_coefficients));
+    std::copy(std::begin(obj.auction_banner_coefficients), std::end(obj.auction_banner_coefficients),
+              std::back_inserter(auction_banner_coefficients));
 }
 
 account_api_obj::account_api_obj(const chain::account_object& a, const chain::database& db)
@@ -56,6 +56,9 @@ void account_api_obj::set_account(const chain::account_object& a)
     witnesses_voted_for = a.witnesses_voted_for;
     last_post = a.last_post;
     last_root_post = a.last_root_post;
+    active_sp_holders_cashout_time = a.active_sp_holders_cashout_time;
+    active_sp_holders_pending_scr_reward = a.active_sp_holders_pending_scr_reward;
+    active_sp_holders_pending_sp_reward = a.active_sp_holders_pending_sp_reward;
 }
 
 void account_api_obj::set_account_blogging_statistic(const chain::account_blogging_statistic_object& s)

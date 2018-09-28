@@ -8,17 +8,17 @@ Specifies whether to build with or without optimization and without or with
 the symbol table for debugging. Unless you are specifically debugging or
 running tests, it is recommended to build as release.
 
-### LOW_MEMORY_NODE=[OFF/ON]
+### SCORUM_LOW_MEMORY_NODE=[OFF/ON]
 
 Builds scorumd to be a consensus-only low memory node. Data and fields not
 needed for consensus are not stored in the object database.  This option is
 recommended for witnesses and seed-nodes.
 
-### CLEAR_VOTES=[ON/OFF]
+### SCORUM_CLEAR_VOTES=[ON/OFF]
 
 Clears old votes from memory that are no longer required for consensus.
 
-### SKIP_BY_TX_ID=[OFF/ON]
+### SCORUM_SKIP_BY_TX_ID=[OFF/ON]
 
 By default this is off. Enabling will prevent the account history plugin querying transactions 
 by id, but saving around 65% of CPU time when reindexing. Enabling this option is a

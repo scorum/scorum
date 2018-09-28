@@ -1,6 +1,6 @@
 #include <scorum/blockchain_history/account_history_api.hpp>
 #include <scorum/blockchain_history/blockchain_history_plugin.hpp>
-#include <scorum/blockchain_history/schema/account_history_object.hpp>
+#include <scorum/blockchain_history/schema/history_object.hpp>
 #include <scorum/app/api_context.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/blockchain_history/schema/operation_objects.hpp>
@@ -35,7 +35,7 @@ public:
                   ("l", limit)("2", get_api_config(API_ACCOUNT_HISTORY).max_blockchain_history_depth));
         FC_ASSERT(from >= limit, "From must be greater than limit");
 
-        const auto& idx = db->get_index<history_index<history_object_type>>().indices().get<by_account>();
+        const auto& idx = db->get_index<account_history_index<history_object_type>>().indices().get<by_account>();
         auto itr = idx.lower_bound(boost::make_tuple(account, from));
         if (itr != idx.end())
         {
@@ -86,7 +86,7 @@ account_history_api::get_account_scr_to_scr_transfers(const std::string& account
 {
     const auto db = _impl->_app.chain_database();
     return db->with_read_lock(
-        [&]() { return _impl->get_history<transfers_to_scr_history_object>(account, from, limit); });
+        [&]() { return _impl->get_history<account_transfers_to_scr_history_object>(account, from, limit); });
 }
 
 std::map<uint32_t, applied_operation>
@@ -94,7 +94,7 @@ account_history_api::get_account_scr_to_sp_transfers(const std::string& account,
 {
     const auto db = _impl->_app.chain_database();
     return db->with_read_lock(
-        [&]() { return _impl->get_history<transfers_to_sp_history_object>(account, from, limit); });
+        [&]() { return _impl->get_history<account_transfers_to_sp_history_object>(account, from, limit); });
 }
 
 std::map<uint32_t, applied_operation>
@@ -111,7 +111,7 @@ account_history_api::get_account_sp_to_scr_transfers(const std::string& account,
     return db->with_read_lock([&]() {
         std::map<uint32_t, applied_withdraw_operation> result;
 
-        auto fill_funct = [&](const withdrawals_to_scr_history_object& obj) {
+        auto fill_funct = [&](const account_withdrawals_to_scr_history_object& obj) {
             auto it = result.emplace(obj.sequence, applied_withdraw_operation(db->get(obj.op))).first;
             auto& applied_op = it->second;
 
@@ -164,7 +164,7 @@ account_history_api::get_account_sp_to_scr_transfers(const std::string& account,
                 }
             }
         };
-        _impl->get_history<withdrawals_to_scr_history_object>(account, from, limit, fill_funct);
+        _impl->get_history<account_withdrawals_to_scr_history_object>(account, from, limit, fill_funct);
 
         return result;
     });

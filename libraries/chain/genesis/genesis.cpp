@@ -32,6 +32,11 @@ fc::time_point_sec database::get_genesis_time() const
     return _const_genesis_time;
 }
 
+void database::set_initial_timestamp(const genesis_state_type& genesis_state)
+{
+    _const_genesis_time = genesis_state.initial_timestamp;
+}
+
 void database::init_genesis(const genesis_state_type& genesis_state)
 {
     try
@@ -58,7 +63,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
             uint32_t old_flags;
         } inhibitor(*this);
 
-        _const_genesis_time = genesis_state.initial_timestamp;
         create<chain_property_object>([&](chain_property_object& cp) { cp.chain_id = genesis_state.initial_chain_id; });
 
         BOOST_ATTRIBUTE_UNUSED

@@ -4,6 +4,7 @@
 #include <scorum/chain/services/dev_pool.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/advertising_property.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 #include <scorum/chain/services/betting_property.hpp>
 
 #include <scorum/chain/evaluators/withdraw_scorumpower_evaluator.hpp>
@@ -40,6 +41,17 @@ development_committee_withdraw_vesting_evaluator::development_committee_withdraw
 void development_committee_withdraw_vesting_evaluator::do_apply(
     const development_committee_withdraw_vesting_evaluator::operation_type& o)
 {
+    auto& hardfork_service = this->db().hardfork_property_service();
+
+    if (hardfork_service.has_hardfork(SCORUM_HARDFORK_0_2))
+    {
+        FC_ASSERT(o.vesting_shares >= asset(0, SP_SYMBOL), "Must withdraw a non-negative amount");
+    }
+    else
+    {
+        FC_ASSERT(o.vesting_shares > asset(0, SP_SYMBOL), "Must withdraw a nonzero amount");
+    }
+
     withdraw_scorumpower_dev_pool_task create_withdraw;
     withdraw_scorumpower_context ctx(db(), o.vesting_shares);
     create_withdraw.apply(ctx);
@@ -88,33 +100,33 @@ void development_committee_change_betting_resolve_delay_evaluator::do_apply(
 }
 
 template <>
-void development_committee_change_budgets_vcg_properties_evaluator<budget_type::post>::do_apply(
-    const development_committee_change_budgets_vcg_properties_evaluator::operation_type& o)
+void development_committee_change_budgets_auction_properties_evaluator<budget_type::post>::do_apply(
+    const development_committee_change_budgets_auction_properties_evaluator::operation_type& o)
 {
     auto& adv_property = this->db().advertising_property_service();
 
     adv_property.update([&](advertising_property_object& adv) {
-        adv.vcg_post_coefficients.clear();
-        std::copy(std::begin(o.vcg_coefficients), std::end(o.vcg_coefficients),
-                  std::back_inserter(adv.vcg_post_coefficients));
+        adv.auction_post_coefficients.clear();
+        std::copy(std::begin(o.auction_coefficients), std::end(o.auction_coefficients),
+                  std::back_inserter(adv.auction_post_coefficients));
     });
 }
 
 template <>
-void development_committee_change_budgets_vcg_properties_evaluator<budget_type::banner>::do_apply(
-    const development_committee_change_budgets_vcg_properties_evaluator::operation_type& o)
+void development_committee_change_budgets_auction_properties_evaluator<budget_type::banner>::do_apply(
+    const development_committee_change_budgets_auction_properties_evaluator::operation_type& o)
 {
     auto& adv_property = this->db().advertising_property_service();
 
     adv_property.update([&](advertising_property_object& adv) {
-        adv.vcg_banner_coefficients.clear();
-        std::copy(std::begin(o.vcg_coefficients), std::end(o.vcg_coefficients),
-                  std::back_inserter(adv.vcg_banner_coefficients));
+        adv.auction_banner_coefficients.clear();
+        std::copy(std::begin(o.auction_coefficients), std::end(o.auction_coefficients),
+                  std::back_inserter(adv.auction_banner_coefficients));
     });
 }
 
-template class development_committee_change_budgets_vcg_properties_evaluator<budget_type::post>;
-template class development_committee_change_budgets_vcg_properties_evaluator<budget_type::banner>;
+template class development_committee_change_budgets_auction_properties_evaluator<budget_type::post>;
+template class development_committee_change_budgets_auction_properties_evaluator<budget_type::banner>;
 
 } // namespace chain
 } // namespace scorum

@@ -22,6 +22,7 @@ using namespace scorum::app;
 using namespace scorum::chain;
 
 using scorum::blockchain_history::applied_operation;
+using scorum::blockchain_history::applied_withdraw_operation;
 using scorum::blockchain_history::applied_operation_type;
 using scorum::blockchain_history::signed_block_api_obj;
 using scorum::app::chain_capital_api_obj;
@@ -889,7 +890,7 @@ public:
      * @param voter The account voting
      * @param author The author of the comment to be voted on
      * @param permlink The permlink of the comment to be voted on. (author, permlink) is a unique pair
-     * @param weight The weight [-100,100] of the vote
+     * @param weight The weight [-10000,10000] of the vote
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction vote(const std::string& voter,
@@ -1004,6 +1005,44 @@ public:
      */
     std::map<uint32_t, applied_operation>
     get_account_scr_to_sp_transfers(const std::string& account, uint64_t from, uint32_t limit);
+
+    /**
+     *  Account operations have sequence numbers from 0 to N where N is the most recent operation. This method
+     *  returns operations in the range [from-limit, from]
+     *
+     *  @param account - account whose history will be returned
+     *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
+     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+     */
+    std::map<uint32_t, applied_withdraw_operation>
+    get_account_sp_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit);
+
+    /**
+     *  Devcommittee operations have sequence numbers from 0 to N where N is the most recent operation. This method
+     *  returns operations in the range [from-limit, from]
+     *
+     *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
+     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+     */
+    std::vector<applied_operation> get_devcommittee_history(uint64_t from, uint32_t limit);
+
+    /**
+     *  Devcommittee operations have sequence numbers from 0 to N where N is the most recent operation. This method
+     *  returns operations in the range [from-limit, from]
+     *
+     *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
+     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+     */
+    std::vector<applied_operation> get_devcommittee_scr_to_scr_transfers(uint64_t from, uint32_t limit);
+
+    /**
+     *  Devcommittee operations have sequence numbers from 0 to N where N is the most recent operation. This method
+     *  returns operations in the range [from-limit, from]
+     *
+     *  @param from - the absolute sequence number, -1 means most recent, limit is the number of operations before from.
+     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+     */
+    std::vector<applied_withdraw_operation> get_devcommittee_sp_to_scr_transfers(uint64_t from, uint32_t limit);
 
     std::map<std::string, std::function<std::string(fc::variant, const fc::variants&)>> get_result_formatters() const;
 
@@ -1230,10 +1269,8 @@ public:
     /**
      * Change development committee for changing top budget amount quorum
      */
-    annotated_signed_transaction development_committee_change_budget_vcg_properties_quorum(const std::string& creator,
-                                                                                           uint64_t quorum_percent,
-                                                                                           uint32_t lifetime_sec,
-                                                                                           bool broadcast);
+    annotated_signed_transaction development_committee_change_budget_auction_properties_quorum(
+        const std::string& creator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast);
     /**
      * Change development committee for changing advertising moderator quorum
      */
@@ -1291,20 +1328,20 @@ public:
                                                                    bool broadcast);
 
     /**
-     * Create proposal for set up a post budgets VCG properies.
+     * Create proposal for set up a post budgets auction properies.
      */
-    annotated_signed_transaction development_pool_post_budgets_vcg_properties(const std::string& initiator,
-                                                                              const std::vector<percent_type>&,
-                                                                              uint32_t lifetime_sec,
-                                                                              bool broadcast);
+    annotated_signed_transaction development_pool_post_budgets_auction_properties(const std::string& initiator,
+                                                                                  const std::vector<percent_type>&,
+                                                                                  uint32_t lifetime_sec,
+                                                                                  bool broadcast);
 
     /**
-     * Create proposal for set up a top budgets VCG properies.
+     * Create proposal for set up a top budgets auction properies.
      */
-    annotated_signed_transaction development_pool_banner_budgets_vcg_properties(const std::string& initiator,
-                                                                                const std::vector<percent_type>&,
-                                                                                uint32_t lifetime_sec,
-                                                                                bool broadcast);
+    annotated_signed_transaction development_pool_banner_budgets_auction_properties(const std::string& initiator,
+                                                                                    const std::vector<percent_type>&,
+                                                                                    uint32_t lifetime_sec,
+                                                                                    bool broadcast);
 
     /**
      * Get development committee
@@ -1529,6 +1566,10 @@ FC_API( scorum::wallet::wallet_api,
         (get_account_history)
         (get_account_scr_to_scr_transfers)
         (get_account_scr_to_sp_transfers)
+        (get_account_sp_to_scr_transfers)
+        (get_devcommittee_history)
+        (get_devcommittee_scr_to_scr_transfers)
+        (get_devcommittee_sp_to_scr_transfers)
         (get_withdraw_routes)
         (list_my_budgets)
         (list_post_budget_owners)
@@ -1600,7 +1641,7 @@ FC_API( scorum::wallet::wallet_api,
         (development_committee_change_exclude_member_quorum)
         (development_committee_change_base_quorum)
         (development_committee_change_transfer_quorum)
-        (development_committee_change_budget_vcg_properties_quorum)
+        (development_committee_change_budget_auction_properties_quorum)
         (development_committee_change_advertising_moderator_quorum)
         (development_committee_change_betting_moderator_quorum)
         (development_committee_empower_advertising_moderator)
@@ -1609,8 +1650,8 @@ FC_API( scorum::wallet::wallet_api,
         (get_development_committee)
         (development_pool_transfer)
         (development_pool_withdraw_vesting)
-        (development_pool_post_budgets_vcg_properties)
-        (development_pool_banner_budgets_vcg_properties)
+        (development_pool_post_budgets_auction_properties)
+        (development_pool_banner_budgets_auction_properties)
 
         // Atomic Swap API
         (atomicswap_initiate)

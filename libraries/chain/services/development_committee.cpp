@@ -62,9 +62,9 @@ void dbs_development_committee::change_betting_resolve_delay_quorum(const scorum
     db_impl().modify(get(), [&](dev_committee_object& m) { m.betting_resolve_delay_quorum = quorum; });
 }
 
-void dbs_development_committee::change_budgets_vcg_properties_quorum(const percent_type quorum)
+void dbs_development_committee::change_budgets_auction_properties_quorum(const percent_type quorum)
 {
-    db_impl().modify(get(), [&](dev_committee_object& m) { m.budgets_vcg_properties_quorum = quorum; });
+    db_impl().modify(get(), [&](dev_committee_object& m) { m.budgets_auction_properties_quorum = quorum; });
 }
 
 percent_type dbs_development_committee::get_add_member_quorum()
@@ -102,9 +102,9 @@ percent_type dbs_development_committee::get_betting_resolve_delay_quorum()
     return get().betting_resolve_delay_quorum;
 }
 
-percent_type dbs_development_committee::get_budgets_vcg_properties_quorum()
+percent_type dbs_development_committee::get_budgets_auction_properties_quorum()
 {
-    return get().budgets_vcg_properties_quorum;
+    return get().budgets_auction_properties_quorum;
 }
 
 bool dbs_development_committee::is_exists(const account_name_type& account_name) const

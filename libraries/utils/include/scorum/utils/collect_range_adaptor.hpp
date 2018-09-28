@@ -44,7 +44,7 @@ template <typename T> void reserve(std::enable_if_t<!traits::has_reserve<T>::val
 }
 }
 
-template <typename TContainer> struct collect
+template <template <typename...> class TContainer> struct collect
 {
     collect(size_t n = 0)
         : n(n)
@@ -54,13 +54,14 @@ template <typename TContainer> struct collect
     size_t n;
 };
 
-template <typename TRng, typename TTargetContainer>
+template <typename TRng, template <typename...> class TTargetContainer>
 inline auto operator|(TRng&& rng, const adaptors::collect<TTargetContainer>& adaptor)
 {
-    TTargetContainer container;
-    detail::reserve<TTargetContainer>(container, adaptor.n);
+    using container_type = TTargetContainer<typename TRng::value_type>;
+    container_type container;
+    detail::reserve<container_type>(container, adaptor.n);
 
-    boost::copy(rng, detail::get_inserter<TTargetContainer>(container));
+    boost::copy(rng, detail::get_inserter<container_type>(container));
 
     return container;
 }

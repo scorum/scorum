@@ -58,7 +58,9 @@ void comment_api_obj::set_comment_statistic(const chain::comment_statistic_scr_o
     total_payout_scr_value = stat.total_payout_value;
     author_payout_scr_value = stat.author_payout_value;
     curator_payout_scr_value = stat.curator_payout_value;
+    from_children_payout_scr_value = stat.from_children_payout_value;
     beneficiary_payout_scr_value = stat.beneficiary_payout_value;
+    to_parent_payout_scr_value = stat.to_parent_payout_value;
 }
 
 void comment_api_obj::set_comment_statistic(const chain::comment_statistic_sp_object& stat)
@@ -66,7 +68,9 @@ void comment_api_obj::set_comment_statistic(const chain::comment_statistic_sp_ob
     total_payout_sp_value = stat.total_payout_value;
     author_payout_sp_value = stat.author_payout_value;
     curator_payout_sp_value = stat.curator_payout_value;
+    from_children_payout_sp_value = stat.from_children_payout_value;
     beneficiary_payout_sp_value = stat.beneficiary_payout_value;
+    to_parent_payout_sp_value = stat.to_parent_payout_value;
 }
 
 void comment_api_obj::initialize(const chain::comment_object& o)

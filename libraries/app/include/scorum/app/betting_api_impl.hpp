@@ -18,7 +18,7 @@
 
 #include <scorum/utils/range_adaptors.hpp>
 
-#include <scorum/utils/take_n_range_adaptor.hpp>
+#include <scorum/utils/take_n_range.hpp>
 
 namespace scorum {
 namespace app {

@@ -26,6 +26,8 @@ namespace detail {
 
         const fc::microseconds upvote_lockout;
 
+        const fc::microseconds active_sp_holders_reward_period;
+
         const fc::microseconds reverse_auction_window_seconds;
 
         const fc::microseconds vote_regeneration_seconds;
@@ -59,8 +61,16 @@ namespace detail {
         const fc::time_point_sec fifa_world_cup_2018_bounty_cashout_date;
 
         const fc::microseconds expiraton_for_registration_bonus;
-        
+
         const fc::time_point_sec witness_reward_migration_date;
+
+        const uint8_t scorum_max_witnesses;
+
+        const uint8_t scorum_max_voted_witnesses;
+
+        const uint8_t scorum_hardfork_required_witnesses;
+
+        const uint32_t advertising_cashout_period_sec;
 
         const share_type min_bet_stake;
 
@@ -79,7 +89,7 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 1, 1) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 3, 0) )
 
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
@@ -87,7 +97,7 @@ namespace detail {
 
 #define SCORUM_CURRENCY_PRECISION  9
 
-#define SCORUM_DEFAULT_BUDGETS_VCG_SET  {100, 85, 75, 65}
+#define SCORUM_DEFAULT_BUDGETS_AUCTION_SET  {100, 85, 75, 65}
 
 // Scorum Coin = SCR with 9 digits of precision
 #define SCORUM_SYMBOL  (uint64_t(SCORUM_CURRENCY_PRECISION) | (uint64_t('S') << 8) | (uint64_t('C') << 16) | (uint64_t('R') << 24))
@@ -115,6 +125,8 @@ namespace detail {
 #define SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER 10
 
 #define SCORUM_START_WITHDRAW_COEFFICIENT           10
+
+#define SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD           (scorum::protocol::detail::get_config().active_sp_holders_reward_period)
 
 #define SCORUM_MIN_BET_STAKE_FOR_MATCHING      share_type(1)
 
@@ -167,11 +179,12 @@ namespace detail {
 #define SCORUM_BLOCKS_PER_HOUR                 (60*60/SCORUM_BLOCK_INTERVAL)
 #define SCORUM_START_MINER_VOTING_BLOCK        (SCORUM_BLOCKS_PER_DAY * 30)
 
-#define SCORUM_MAX_VOTED_WITNESSES              20
-#define SCORUM_MAX_RUNNER_WITNESSES             1
-#define SCORUM_MAX_WITNESSES                    (SCORUM_MAX_VOTED_WITNESSES+SCORUM_MAX_RUNNER_WITNESSES)
+#define SCORUM_MAX_VOTED_WITNESSES              (scorum::protocol::detail::get_config().scorum_max_voted_witnesses)
+#define SCORUM_MAX_RUNNER_WITNESSES             (scorum::protocol::detail::get_config().scorum_max_witnesses - scorum::protocol::detail::get_config().scorum_max_voted_witnesses)
+#define SCORUM_MAX_WITNESSES                    (scorum::protocol::detail::get_config().scorum_max_witnesses)
+#define SCORUM_MAX_WITNESSES_LIMIT               21
 #define SCORUM_WITNESS_MISSED_BLOCKS_THRESHOLD  SCORUM_BLOCKS_PER_DAY/2
-#define SCORUM_HARDFORK_REQUIRED_WITNESSES      17 // 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75% participation on all subsequent rounds.
+#define SCORUM_HARDFORK_REQUIRED_WITNESSES      (scorum::protocol::detail::get_config().scorum_hardfork_required_witnesses)
 
 #define SCORUM_MAX_TIME_UNTIL_EXPIRATION       (60*60) // seconds,  aka: 1 hour
 #define SCORUM_MAX_MEMO_SIZE                   2048
@@ -269,14 +282,37 @@ namespace detail {
 
 #define SCORUM_MISSING_MODERATOR_ACCOUNT       (scorum::protocol::account_name_type())
 
-
-#define SCORUM_BLOGGING_START_DATE (scorum::protocol::detail::get_config().blogging_start_date)
-
+#define SCORUM_BLOGGING_START_DATE                     (scorum::protocol::detail::get_config().blogging_start_date)
 #define SCORUM_FIFA_WORLD_CUP_2018_BOUNTY_CASHOUT_DATE (scorum::protocol::detail::get_config().fifa_world_cup_2018_bounty_cashout_date)
-
 #define SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS        (scorum::protocol::detail::get_config().expiraton_for_registration_bonus)
+#define SCORUM_WITNESS_REWARD_MIGRATION_DATE           (scorum::protocol::detail::get_config().witness_reward_migration_date)
 
-#define SCORUM_WITNESS_REWARD_MIGRATION_DATE (scorum::protocol::detail::get_config().witness_reward_migration_date)
+#define SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC      (scorum::protocol::detail::get_config().advertising_cashout_period_sec)
+
+#ifdef IS_LOW_MEM
+#define SCORUM_LOW_MEMORY_NODE (true)
+#else
+#define SCORUM_LOW_MEMORY_NODE (false)
+#endif
+
+#ifdef CLEAR_VOTES
+#define SCORUM_CLEAR_VOTES (true)
+#else
+#define SCORUM_CLEAR_VOTES (false)
+#endif
+
+#ifdef SKIP_BY_TX_ID
+#define SCORUM_SKIP_BY_TX_ID (true)
+#else
+#define SCORUM_SKIP_BY_TX_ID (false)
+#endif
+
+#ifdef LIVE_TESTNET
+#define SCORUM_LIVE_TESTNET (true)
+#else
+#define SCORUM_LIVE_TESTNET (false)
+#endif
+
 ///@}
 
 // clang-format on

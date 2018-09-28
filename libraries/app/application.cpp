@@ -293,6 +293,7 @@ public:
         _self->register_api_factory<login_api>("login_api");
         _self->register_api_factory<database_api>(API_DATABASE);
         _self->register_api_factory<chain_api>(API_CHAIN);
+        _self->register_api_factory<advertising_api>(ADVERTISING_API_NAME);
         _self->register_api_factory<network_node_api>("network_node_api");
         _self->register_api_factory<network_broadcast_api>("network_broadcast_api");
     }

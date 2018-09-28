@@ -18,8 +18,8 @@ enum quorum_type
     base_quorum,
     transfer_quorum,
     advertising_moderator_quorum,
+    budgets_auction_properties_quorum,
     betting_moderator_quorum,
-    budgets_vcg_properties_quorum,
     betting_resolve_delay_quorum
 };
 
@@ -57,13 +57,13 @@ struct development_committee_i : public committee_i
     virtual void change_advertising_moderator_quorum(const protocol::percent_type) = 0;
     virtual void change_betting_moderator_quorum(const protocol::percent_type) = 0;
     virtual void change_betting_resolve_delay_quorum(const protocol::percent_type) = 0;
-    virtual void change_budgets_vcg_properties_quorum(const protocol::percent_type) = 0;
+    virtual void change_budgets_auction_properties_quorum(const protocol::percent_type) = 0;
 
     virtual protocol::percent_type get_transfer_quorum() = 0;
     virtual protocol::percent_type get_advertising_moderator_quorum() = 0;
     virtual protocol::percent_type get_betting_moderator_quorum() = 0;
     virtual protocol::percent_type get_betting_resolve_delay_quorum() = 0;
-    virtual protocol::percent_type get_budgets_vcg_properties_quorum() = 0;
+    virtual protocol::percent_type get_budgets_auction_properties_quorum() = 0;
 };
 
 struct committee : public fc::static_variant<utils::ref<registration_committee_i>, utils::ref<development_committee_i>>
@@ -193,31 +193,31 @@ struct development_committee_empower_betting_moderator_operation
     protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 };
 
-struct base_development_committee_change_budgets_vcg_properties_operation
-    : public proposal_base_operation<base_development_committee_change_budgets_vcg_properties_operation,
+struct base_development_committee_change_budgets_auction_properties_operation
+    : public proposal_base_operation<base_development_committee_change_budgets_auction_properties_operation,
                                      development_committee_i>
 {
-    std::vector<percent_type> vcg_coefficients;
+    std::vector<percent_type> auction_coefficients;
 
     void validate() const;
 
     protocol::percent_type get_required_quorum(committee_type& committee_service) const;
 
 protected:
-    base_development_committee_change_budgets_vcg_properties_operation() = default;
+    base_development_committee_change_budgets_auction_properties_operation() = default;
 };
 
 template <budget_type type>
-struct development_committee_change_budgets_vcg_properties_operation
-    : public base_development_committee_change_budgets_vcg_properties_operation
+struct development_committee_change_budgets_auction_properties_operation
+    : public base_development_committee_change_budgets_auction_properties_operation
 {
 };
 
-using development_committee_change_post_budgets_vcg_properties_operation
-    = development_committee_change_budgets_vcg_properties_operation<budget_type::post>;
+using development_committee_change_post_budgets_auction_properties_operation
+    = development_committee_change_budgets_auction_properties_operation<budget_type::post>;
 
-using development_committee_change_banner_budgets_vcg_properties_operation
-    = development_committee_change_budgets_vcg_properties_operation<budget_type::banner>;
+using development_committee_change_banner_budgets_auction_properties_operation
+    = development_committee_change_budgets_auction_properties_operation<budget_type::banner>;
 
 struct development_committee_change_betting_resolve_delay_operation
     : public proposal_base_operation<development_committee_change_betting_resolve_delay_operation,
@@ -239,9 +239,9 @@ using proposal_operation = fc::static_variant<registration_committee_add_member_
                                               development_committee_withdraw_vesting_operation,
                                               development_committee_transfer_operation,
                                               development_committee_empower_advertising_moderator_operation,
+                                              development_committee_change_post_budgets_auction_properties_operation,
+                                              development_committee_change_banner_budgets_auction_properties_operation,
                                               development_committee_empower_betting_moderator_operation,
-                                              development_committee_change_post_budgets_vcg_properties_operation,
-                                              development_committee_change_banner_budgets_vcg_properties_operation,
                                               development_committee_change_betting_resolve_delay_operation>;
 
 void operation_validate(const proposal_operation& op);
@@ -258,8 +258,8 @@ FC_REFLECT_ENUM(scorum::protocol::quorum_type,
                 (base_quorum)
                 (transfer_quorum)
                 (advertising_moderator_quorum)
+                (budgets_auction_properties_quorum)
                 (betting_moderator_quorum)
-                (budgets_vcg_properties_quorum)
                 (betting_resolve_delay_quorum)
                 )
 // clang-format on
@@ -278,12 +278,13 @@ FC_REFLECT(scorum::protocol::development_committee_empower_advertising_moderator
 FC_REFLECT(scorum::protocol::development_committee_empower_betting_moderator_operation, (account))
 FC_REFLECT(scorum::protocol::development_committee_change_betting_resolve_delay_operation, (delay_sec))
 
-FC_REFLECT(scorum::protocol::base_development_committee_change_budgets_vcg_properties_operation, (vcg_coefficients))
-FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_post_budgets_vcg_properties_operation,
-                   (scorum::protocol::base_development_committee_change_budgets_vcg_properties_operation),
+FC_REFLECT(scorum::protocol::base_development_committee_change_budgets_auction_properties_operation,
+           (auction_coefficients))
+FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_post_budgets_auction_properties_operation,
+                   (scorum::protocol::base_development_committee_change_budgets_auction_properties_operation),
                    BOOST_PP_SEQ_NIL)
-FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_banner_budgets_vcg_properties_operation,
-                   (scorum::protocol::base_development_committee_change_budgets_vcg_properties_operation),
+FC_REFLECT_DERIVED(scorum::protocol::development_committee_change_banner_budgets_auction_properties_operation,
+                   (scorum::protocol::base_development_committee_change_budgets_auction_properties_operation),
                    BOOST_PP_SEQ_NIL)
 
 DECLARE_OPERATION_SERIALIZATOR(scorum::protocol::proposal_operation)
