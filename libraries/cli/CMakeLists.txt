@@ -6,8 +6,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 find_package(Curses)
 find_package(Readline)
 
-MESSAGE(STATUS "Configuring CLI lib")
-
 if (READLINE_FOUND)
     SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_READLINE" )
     SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_READLINE" )

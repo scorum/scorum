@@ -24,6 +24,8 @@ struct base_fifa_world_cup_2018_bounty_reward_fund_fixture : public database_blo
     {
         open_database();
 
+        set_hardfork(SCORUM_HARDFORK_0_2);
+
         const auto& fund_budget = budget_service.get();
         asset initial_per_block_reward = fund_budget.per_block;
 
@@ -95,9 +97,9 @@ public:
 
     void operator()(const comment_reward_operation& op)
     {
-        _stats[op.author].author_reward += op.author_reward.amount;
-        _stats[op.author].beneficiaries_reward += op.beneficiaries_reward.amount;
-        _stats[op.author].commenting_reward += op.commenting_reward.amount;
+        _stats[op.author].author_reward += op.author_payout.amount;
+        _stats[op.author].beneficiaries_reward += op.beneficiaries_payout.amount;
+        _stats[op.author].commenting_reward += op.from_children_payout.amount;
     }
 
     void operator()(const curation_reward_operation& op)

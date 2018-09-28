@@ -84,8 +84,9 @@ public:
     }
 
 private:
-    template <typename TBudgetService>
-    fc::optional<budget_api_obj> get_budget(const TBudgetService& budget_service, int64_t id) const
+    template <budget_type budget_type_v>
+    fc::optional<budget_api_obj> get_budget(const chain::adv_budget_service_i<budget_type_v>& budget_service,
+                                            int64_t id) const
     {
         fc::optional<budget_api_obj> ret;
 
@@ -96,19 +97,19 @@ private:
         return ret;
     }
 
-    template <typename TBudgetService>
-    std::vector<budget_api_obj> get_current_winners(const TBudgetService& budget_service) const
+    template <budget_type budget_type_v>
+    std::vector<budget_api_obj>
+    get_current_winners(const chain::adv_budget_service_i<budget_type_v>& budget_service) const
     {
-        using object_type = typename TBudgetService::object_type;
-        constexpr budget_type budget_type_v = TBudgetService::budget_type_v;
+        using object_type = chain::adv_budget_object<budget_type_v>;
 
         auto head_block_time = _dyn_props_service.get().time;
-        const auto& vcg_coeffs = _adv_service.get().get_vcg_coefficients<budget_type_v>();
+        const auto& auction_coeffs = _adv_service.get().get_auction_coefficients<budget_type_v>();
 
-        auto budgets = budget_service.get_top_budgets(head_block_time, vcg_coeffs.size());
+        auto budgets = budget_service.get_top_budgets(head_block_time, auction_coeffs.size());
 
         std::vector<budget_api_obj> ret;
-        ret.reserve(vcg_coeffs.size());
+        ret.reserve(auction_coeffs.size());
 
         boost::transform(budgets, std::back_inserter(ret), [](const object_type& o) { return budget_api_obj(o); });
 

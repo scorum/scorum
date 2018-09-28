@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-#include <scorum/utils/take_n_range_adaptor.hpp>
+#include <scorum/utils/take_n_range.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 

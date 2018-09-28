@@ -295,6 +295,8 @@ public:
     /// Reset the object graph in-memory
     void initialize_indexes();
 
+    void set_initial_timestamp(const genesis_state_type& genesis_state);
+
     void init_genesis(const genesis_state_type& genesis_state);
 
     /**

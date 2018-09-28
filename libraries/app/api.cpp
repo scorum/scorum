@@ -33,6 +33,7 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/transaction_object.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 #include <fc/time.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
@@ -251,14 +252,10 @@ void network_broadcast_api::broadcast_block(const signed_block& b)
 
 class check_banned_operations_visitor
 {
-    bool allow_blogging_api = true;
-
 public:
-    explicit check_banned_operations_visitor(const fc::time_point_sec& now)
+    explicit check_banned_operations_visitor(hardfork_property_service_i& hardfork_svc)
+        : _hardfork_svc(hardfork_svc)
     {
-#ifndef FORCE_UNLOCK_BLOGGING_API
-        allow_blogging_api = (now >= SCORUM_BLOGGING_START_DATE);
-#endif
     }
 
     // available by default
@@ -267,33 +264,36 @@ public:
         return true;
     }
 
-    bool operator()(const scorum::protocol::comment_operation&) const
-    {
-        return allow_blogging_api;
-    }
-    bool operator()(const scorum::protocol::comment_options_operation&) const
-    {
-        return allow_blogging_api;
-    }
-    bool operator()(const scorum::protocol::delete_comment_operation&) const
-    {
-        return allow_blogging_api;
-    }
-    bool operator()(const scorum::protocol::vote_operation&) const
-    {
-        return allow_blogging_api;
-    }
-
-#ifdef LOCK_BUDGETS_API
     bool operator()(const scorum::protocol::create_budget_operation&) const
     {
-        return false;
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3);
     }
     bool operator()(const scorum::protocol::close_budget_operation&) const
     {
-        return false;
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3);
     }
-#endif // LOCK_BUDGETS_API
+    bool operator()(const scorum::protocol::close_budget_by_advertising_moderator_operation&) const
+    {
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3);
+    }
+    bool operator()(const scorum::protocol::update_budget_operation&) const
+    {
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3);
+    }
+    bool operator()(const scorum::protocol::proposal_create_operation& op) const
+    {
+        using namespace scorum::protocol;
+        // clang-format off
+        auto idx = op.operation.which();
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3)
+            || (idx != proposal_operation::tag<development_committee_empower_advertising_moderator_operation>::value
+            &&  idx != proposal_operation::tag<development_committee_change_post_budgets_auction_properties_operation>::value
+            &&  idx != proposal_operation::tag<development_committee_change_banner_budgets_auction_properties_operation>::value);
+        // clang-format on
+    }
+
+private:
+    hardfork_property_service_i& _hardfork_svc;
 };
 
 void network_broadcast_api::broadcast_transaction_with_callback(confirmation_callback cb, const signed_transaction& trx)
@@ -305,10 +305,11 @@ void network_broadcast_api::broadcast_transaction_with_callback(confirmation_cal
     else
     {
         FC_ASSERT(!check_max_block_age(_max_block_age));
-        auto now = _app.chain_database()->head_block_time();
+        auto& hardfork_svc = _app.chain_database()->hardfork_property_service();
         for (const auto& op : trx.operations)
         {
-            FC_ASSERT(op.visit(check_banned_operations_visitor(now)), "Operation ${op} is locked.", ("op", op));
+            FC_ASSERT(op.visit(check_banned_operations_visitor(hardfork_svc)), "Operation ${op} is locked.",
+                      ("op", op));
         }
         trx.validate();
         _callbacks[trx.id()] = cb;

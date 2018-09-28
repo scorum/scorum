@@ -136,11 +136,13 @@ SCORUM_TEST_CASE(chain_properties_getter_test)
 
 SCORUM_TEST_CASE(chain_properties_getter_after_generate_block_test)
 {
-    generate_block();
+    wdump((db.head_block_num()));
 
     auto props = _api_call.get_chain_properties();
 
     generate_block();
+
+    wdump((db.head_block_num()));
 
     auto props_new = _api_call.get_chain_properties();
 
@@ -167,6 +169,8 @@ SCORUM_TEST_CASE(get_chain_capital_test)
     BOOST_REQUIRE_EQUAL(capital.head_block_id, dpo.head_block_id);
     BOOST_REQUIRE(capital.head_block_time == dpo.time);
     BOOST_REQUIRE_EQUAL(capital.current_witness, dpo.current_witness);
+
+    BOOST_REQUIRE_EQUAL(capital.total_supply.amount, capital.circulating_scr.amount + capital.circulating_sp.amount);
 
     BOOST_REQUIRE_EQUAL(capital.total_supply, dpo.total_supply);
     BOOST_REQUIRE_EQUAL(capital.circulating_capital, dpo.circulating_capital);

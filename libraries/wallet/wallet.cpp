@@ -12,6 +12,7 @@
 #include <scorum/account_by_key/account_by_key_api.hpp>
 #include <scorum/blockchain_history/account_history_api.hpp>
 #include <scorum/blockchain_history/blockchain_history_api.hpp>
+#include <scorum/blockchain_history/devcommittee_history_api.hpp>
 
 #include <scorum/protocol/atomicswap_helper.hpp>
 
@@ -770,7 +771,7 @@ public:
             return p.str();
         };
 
-        auto account_history_formatter = [this](variant result, const fc::variants& a) {
+        auto history_formatter = [this](variant result, const fc::variants& a) {
             const auto& results = result.get_array();
 
             cli::formatter p;
@@ -798,9 +799,14 @@ public:
             return p.str();
         };
 
-        m["get_account_history"] = account_history_formatter;
-        m["get_account_scr_to_scr_transfers"] = account_history_formatter;
-        m["get_account_scr_to_sp_transfers"] = account_history_formatter;
+        m["get_account_history"] = history_formatter;
+        m["get_account_scr_to_scr_transfers"] = history_formatter;
+        m["get_account_scr_to_sp_transfers"] = history_formatter;
+        m["get_account_sp_to_scr_transfers"] = history_formatter;
+
+        m["get_devcommittee_history"] = history_formatter;
+        m["get_devcommittee_scr_to_scr_transfers"] = history_formatter;
+        m["get_devcommittee_sp_to_scr_transfers"] = history_formatter;
 
         m["get_withdraw_routes"] = [this](variant result, const fc::variants& a) {
             auto routes = result.as<std::vector<withdraw_route>>();
@@ -925,6 +931,23 @@ public:
         }
     }
 
+    void use_remote_devcommittee_history_api()
+    {
+        if (_remote_devcommittee_history_api.valid())
+            return;
+
+        try
+        {
+            _remote_devcommittee_history_api = _remote_api->get_api_by_name(API_DEVCOMMITTEE_HISTORY)
+                                                   ->as<blockchain_history::devcommittee_history_api>();
+        }
+        catch (const fc::exception& e)
+        {
+            elog("Couldn't get devcommittee_history_api");
+            throw(e);
+        }
+    }
+
     void use_remote_blockchain_history_api()
     {
         if (_remote_blockchain_history_api.valid())
@@ -990,6 +1013,7 @@ public:
     optional<fc::api<account_by_key::account_by_key_api>> _remote_account_by_key_api;
     optional<fc::api<blockchain_history::account_history_api>> _remote_account_history_api;
     optional<fc::api<blockchain_history::blockchain_history_api>> _remote_blockchain_history_api;
+    optional<fc::api<blockchain_history::devcommittee_history_api>> _remote_devcommittee_history_api;
 
     uint32_t _tx_expiration_seconds = 30;
 
@@ -2306,6 +2330,52 @@ wallet_api::get_account_scr_to_sp_transfers(const std::string& account, uint64_t
     return result;
 }
 
+std::map<uint32_t, applied_withdraw_operation>
+wallet_api::get_account_sp_to_scr_transfers(const std::string& account, uint64_t from, uint32_t limit)
+{
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get account history");
+    my->use_remote_account_history_api();
+
+    auto result = (*my->_remote_account_history_api)->get_account_sp_to_scr_transfers(account, from, limit);
+
+    for (auto& item : result)
+    {
+        item.second.op.weak_visit([&](transfer_operation& top) { top.memo = decrypt_memo(top.memo); });
+    }
+
+    return result;
+}
+
+std::vector<applied_operation> wallet_api::get_devcommittee_history(uint64_t from, uint32_t limit)
+{
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get devcommittee history");
+    my->use_remote_devcommittee_history_api();
+
+    auto result = (*my->_remote_devcommittee_history_api)->get_history(from, limit);
+
+    return result;
+}
+
+std::vector<applied_operation> wallet_api::get_devcommittee_scr_to_scr_transfers(uint64_t from, uint32_t limit)
+{
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get devcommittee history");
+    my->use_remote_devcommittee_history_api();
+
+    auto result = (*my->_remote_devcommittee_history_api)->get_scr_to_scr_transfers(from, limit);
+
+    return result;
+}
+
+std::vector<applied_withdraw_operation> wallet_api::get_devcommittee_sp_to_scr_transfers(uint64_t from, uint32_t limit)
+{
+    FC_ASSERT(!is_locked(), "Wallet must be unlocked to get devcommittee history");
+    my->use_remote_devcommittee_history_api();
+
+    auto result = (*my->_remote_devcommittee_history_api)->get_sp_to_scr_transfers(from, limit);
+
+    return result;
+}
+
 std::vector<withdraw_route> wallet_api::get_withdraw_routes(const std::string& account, withdraw_route_type type) const
 {
     return my->_remote_db->get_withdraw_routes(account, type);
@@ -2341,7 +2411,7 @@ annotated_signed_transaction wallet_api::vote(
     const std::string& voter, const std::string& author, const std::string& permlink, int16_t weight, bool broadcast)
 {
     FC_ASSERT(!is_locked());
-    FC_ASSERT(abs(weight) <= 100, "Weight must be between -100 and 100 and not 0");
+    FC_ASSERT(abs(weight) <= 10000, "Weight must be between -10 000 and 10 000 and not 0");
 
     vote_operation op;
     op.voter = voter;
@@ -2787,14 +2857,14 @@ annotated_signed_transaction wallet_api::development_committee_change_transfer_q
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::development_committee_change_budget_vcg_properties_quorum(
+annotated_signed_transaction wallet_api::development_committee_change_budget_auction_properties_quorum(
     const std::string& initiator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast)
 {
     using operation_type = development_committee_change_quorum_operation;
 
     signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
         o.quorum = quorum_percent;
-        o.committee_quorum = budgets_vcg_properties_quorum;
+        o.committee_quorum = budgets_auction_properties_quorum;
     });
 
     return my->sign_transaction(tx, broadcast);
@@ -2888,29 +2958,29 @@ annotated_signed_transaction wallet_api::development_pool_withdraw_vesting(const
 }
 
 annotated_signed_transaction
-wallet_api::development_pool_post_budgets_vcg_properties(const std::string& initiator,
-                                                         const std::vector<percent_type>& vcg_coefficients,
-                                                         uint32_t lifetime_sec,
-                                                         bool broadcast)
+wallet_api::development_pool_post_budgets_auction_properties(const std::string& initiator,
+                                                             const std::vector<percent_type>& auction_coefficients,
+                                                             uint32_t lifetime_sec,
+                                                             bool broadcast)
 {
-    using operation_type = development_committee_change_post_budgets_vcg_properties_operation;
+    using operation_type = development_committee_change_post_budgets_auction_properties_operation;
 
-    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec,
-                                                     [&](operation_type& o) { o.vcg_coefficients = vcg_coefficients; });
+    signed_transaction tx = proposal<operation_type>(
+        initiator, lifetime_sec, [&](operation_type& o) { o.auction_coefficients = auction_coefficients; });
 
     return my->sign_transaction(tx, broadcast);
 }
 
 annotated_signed_transaction
-wallet_api::development_pool_banner_budgets_vcg_properties(const std::string& initiator,
-                                                           const std::vector<percent_type>& vcg_coefficients,
-                                                           uint32_t lifetime_sec,
-                                                           bool broadcast)
+wallet_api::development_pool_banner_budgets_auction_properties(const std::string& initiator,
+                                                               const std::vector<percent_type>& auction_coefficients,
+                                                               uint32_t lifetime_sec,
+                                                               bool broadcast)
 {
-    using operation_type = development_committee_change_banner_budgets_vcg_properties_operation;
+    using operation_type = development_committee_change_banner_budgets_auction_properties_operation;
 
-    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec,
-                                                     [&](operation_type& o) { o.vcg_coefficients = vcg_coefficients; });
+    signed_transaction tx = proposal<operation_type>(
+        initiator, lifetime_sec, [&](operation_type& o) { o.auction_coefficients = auction_coefficients; });
 
     return my->sign_transaction(tx, broadcast);
 }

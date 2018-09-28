@@ -38,9 +38,9 @@ struct advertising_property_api_obj
 
     account_name_type moderator;
 
-    std::vector<percent_type> vcg_post_coefficients;
+    std::vector<percent_type> auction_post_coefficients;
 
-    std::vector<percent_type> vcg_banner_coefficients;
+    std::vector<percent_type> auction_banner_coefficients;
 };
 
 typedef api_obj<scorum::chain::dev_committee_object> development_committee_api_obj;
@@ -136,6 +136,10 @@ struct account_api_obj
     asset curation_rewards_sp = asset(0, SP_SYMBOL);
     asset posting_rewards_scr = asset(0, SCORUM_SYMBOL);
     asset posting_rewards_sp = asset(0, SP_SYMBOL);
+
+    time_point_sec active_sp_holders_cashout_time = fc::time_point_sec::maximum();
+    asset active_sp_holders_pending_scr_reward = asset(0, SCORUM_SYMBOL);
+    asset active_sp_holders_pending_sp_reward = asset(0, SP_SYMBOL);
 
 private:
     inline void set_account(const chain::account_object&);
@@ -274,6 +278,8 @@ struct witness_api_obj
     time_point_sec hardfork_time_vote;
 };
 
+/// @addtogroup adv_api
+/// @{
 class budget_api_obj
 {
 public:
@@ -322,6 +328,8 @@ public:
     asset balance = asset(0, SCORUM_SYMBOL);
     asset per_block;
 };
+
+/// @}
 
 struct atomicswap_contract_api_obj
 {
@@ -439,8 +447,8 @@ struct registration_committee_api_obj
 
 FC_REFLECT(scorum::app::advertising_property_api_obj,
            (moderator)
-           (vcg_post_coefficients)
-           (vcg_banner_coefficients))
+           (auction_post_coefficients)
+           (auction_banner_coefficients))
 
 FC_REFLECT_DERIVED(scorum::app::account_bandwidth_api_obj, (scorum::witness::account_bandwidth_object), BOOST_PP_SEQ_NIL)
 FC_REFLECT_DERIVED(scorum::app::block_summary_api_obj, (scorum::chain::block_summary_object), BOOST_PP_SEQ_NIL)
@@ -481,6 +489,9 @@ FC_REFLECT( scorum::app::account_api_obj,
              (curation_rewards_sp)
              (posting_rewards_scr)
              (posting_rewards_sp)
+             (active_sp_holders_cashout_time)
+             (active_sp_holders_pending_scr_reward)
+             (active_sp_holders_pending_sp_reward)
           )
 
 FC_REFLECT (scorum::app::account_balance_info_api_obj,

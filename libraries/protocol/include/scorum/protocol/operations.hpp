@@ -68,7 +68,7 @@ using operation = fc::static_variant<vote_operation,
 
                                      /// virtual operations
                                      author_reward_operation,
-                                     comment_benefactor_reward_operation,
+                                     comment_benefficiary_reward_operation,
                                      comment_payout_update_operation,
                                      comment_reward_operation,
                                      curation_reward_operation,
@@ -86,8 +86,10 @@ using operation = fc::static_variant<vote_operation,
                                      acc_to_devpool_vesting_withdraw_operation,
                                      devpool_to_devpool_vesting_withdraw_operation,
                                      proposal_virtual_operation,
+                                     active_sp_holders_reward_legacy_operation,
                                      allocate_cash_from_advertising_budget_operation,
                                      cash_back_from_advertising_budget_to_owner_operation,
+                                     closing_budget_operation,
                                      bets_matched_operation>;
 
 /*void operation_get_required_authorities( const operation& op,

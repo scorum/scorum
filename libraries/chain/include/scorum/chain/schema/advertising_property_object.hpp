@@ -10,16 +10,17 @@ class advertising_property_object : public object<advertising_property_object_ty
 {
 public:
     /// \cond DO_NOT_DOCUMENT
-    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(advertising_property_object, (vcg_post_coefficients)(vcg_banner_coefficients))
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(advertising_property_object,
+                                          (auction_post_coefficients)(auction_banner_coefficients))
 
     id_type id;
 
     account_name_type moderator;
 
-    fc::shared_vector<percent_type> vcg_post_coefficients;
-    fc::shared_vector<percent_type> vcg_banner_coefficients;
+    fc::shared_vector<percent_type> auction_post_coefficients;
+    fc::shared_vector<percent_type> auction_banner_coefficients;
 
-    template <budget_type type> const fc::shared_vector<percent_type>& get_vcg_coefficients() const;
+    template <budget_type type> const fc::shared_vector<percent_type>& get_auction_coefficients() const;
 };
 
 struct by_account;
@@ -43,8 +44,8 @@ typedef shared_multi_index_container<advertising_property_object,
 FC_REFLECT(scorum::chain::advertising_property_object,
            (id)
            (moderator)
-           (vcg_post_coefficients)
-           (vcg_banner_coefficients))
+           (auction_post_coefficients)
+           (auction_banner_coefficients))
 // clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::advertising_property_object, scorum::chain::advertising_property_index)

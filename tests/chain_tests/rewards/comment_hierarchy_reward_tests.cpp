@@ -44,7 +44,7 @@ struct comments_hierarchy_reward_visitor
         conn.disconnect();
     }
 
-    void operator()(const comment_benefactor_reward_operation& op)
+    void operator()(const comment_benefficiary_reward_operation& op)
     {
         stats[op.author].benefactor_reward += op.reward.amount;
     }
@@ -69,7 +69,7 @@ struct comments_hierarchy_reward_visitor
     } /// ignore all other ops
 };
 
-struct comments_hierarchy_reward_fixture : public database_blog_integration_fixture
+struct comments_hierarchy_legacy_reward_fixture : public database_blog_integration_fixture
 {
     comment_statistic_sp_service_i& comment_statistic_sp_service;
     account_service_i& account_service;
@@ -85,11 +85,13 @@ struct comments_hierarchy_reward_fixture : public database_blog_integration_fixt
     Actor voter20;
     Actor voter21;
 
-    comments_hierarchy_reward_fixture()
+    comments_hierarchy_legacy_reward_fixture()
         : comment_statistic_sp_service(db.obtain_service<dbs_comment_statistic_sp>())
         , account_service(db.obtain_service<dbs_account>())
     {
         open_database();
+
+        set_hardfork(SCORUM_HARDFORK_0_2);
 
         user00 = create_actor("user00");
         user10 = create_actor("user10");
@@ -150,7 +152,7 @@ struct comments_hierarchy_reward_fixture : public database_blog_integration_fixt
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(comment_hierarchy_reward_tests, comments_hierarchy_reward_fixture)
+BOOST_FIXTURE_TEST_SUITE(comment_hierarchy_reward_tests, comments_hierarchy_legacy_reward_fixture)
 
 BOOST_AUTO_TEST_CASE(check_all_comments_on_same_block)
 {

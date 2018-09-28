@@ -11,8 +11,6 @@
 #include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
 
-#include <scorum/chain/database/budget_management_algorithms.hpp>
-
 using namespace scorum::chain;
 
 namespace database_fixture {
@@ -44,12 +42,12 @@ struct comment_cashout_from_scr_fund_fixture : public database_blog_integration_
         const int deadline_block_count = 10;
         const auto& owner = account_service.get_account(alice.name);
 
-        BOOST_CHECK_NO_THROW(
-            post_budget_management_algorithm(advertising_budget_service, dprops_service, account_service)
-                .create_budget(owner.name, ASSET_SCR(deadline_block_count), db.head_block_time(),
-                               db.head_block_time() + SCORUM_BLOCK_INTERVAL * deadline_block_count, ""));
+        BOOST_CHECK_NO_THROW(advertising_budget_service.create_budget(
+            owner.name, ASSET_SCR(deadline_block_count), db.head_block_time(),
+            db.head_block_time() + SCORUM_BLOCK_INTERVAL * deadline_block_count, ""));
 
         generate_blocks(deadline_block_count);
+        generate_blocks(2); // wait till SCR reward balancer become empty
 
         BOOST_REQUIRE_EQUAL(advertising_budget_service.get_budgets(alice.name).size(), 0u);
 
@@ -68,7 +66,7 @@ struct comment_cashout_from_scr_fund_fixture : public database_blog_integration_
     account_service_i& account_service;
     dynamic_global_property_service_i& dprops_service;
 
-    asset activity_reward_balance = ASSET_NULL_SP;
+    asset activity_reward_balance = ASSET_NULL_SCR;
     Actor alice;
     Actor sam;
 };
@@ -98,8 +96,8 @@ BOOST_AUTO_TEST_CASE(cashout_check)
     auto alice_balance_delta = alice_balance - alice_old_balance;
     auto sam_balance_delta = sam_balance - sam_old_balance;
 
-    BOOST_REQUIRE_GT(alice_balance_delta, ASSET_NULL_SCR);
-    BOOST_REQUIRE_GT(sam_balance_delta, ASSET_NULL_SCR);
+    BOOST_CHECK_GT(alice_balance_delta, ASSET_NULL_SCR);
+    BOOST_CHECK_GT(sam_balance_delta, ASSET_NULL_SCR);
 
     BOOST_REQUIRE_EQUAL(alice_balance_delta + sam_balance_delta, activity_reward_balance);
 }
@@ -133,8 +131,8 @@ BOOST_AUTO_TEST_CASE(no_double_cashout_check)
     alice_balance = account_service.get_account(alice.name).balance;
     sam_balance = account_service.get_account(sam.name).balance;
 
-    BOOST_REQUIRE_EQUAL(alice_balance - alice_old_balance, ASSET_NULL_SCR);
-    BOOST_REQUIRE_EQUAL(sam_balance - sam_old_balance, ASSET_NULL_SCR);
+    BOOST_CHECK_EQUAL(alice_balance - alice_old_balance, ASSET_NULL_SCR);
+    BOOST_CHECK_EQUAL(sam_balance - sam_old_balance, ASSET_NULL_SCR);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

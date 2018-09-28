@@ -21,6 +21,8 @@ set( SOURCES
     rewards/comment_cashout_from_scr_fund_tests.cpp
     rewards/comment_hierarchy_reward_tests.cpp
     rewards/witness_reward_in_sp_migration_tests.cpp
+    rewards/statistic_tests.cpp
+    rewards/legacy_virtual_op_tests.cpp
     registration/registration_check_common.cpp
     registration/committee_service_tests.cpp
     registration/committee_operations_tests.cpp
@@ -48,7 +50,9 @@ set( SOURCES
     plugins/tags/get_tags_by_category_tests.cpp
     plugins/tags/get_discussions_by_author_tests.cpp
     plugins/tags/get_discussions_by_discussion_query_tests.cpp
-    plugins/tags/get_posts_and_comments_tests.cpp
+    plugins/tags/get_contents_tests.cpp
+    plugins/tags/get_posts_comments_by_author_tests.cpp
+    plugins/tags/get_parents_tests.cpp
     plugins/blockchain_history_tests.cpp
     plugins/blockinfo_tests.cpp
     plugins/database_api/account_api_tests.cpp
@@ -61,6 +65,7 @@ set( SOURCES
     withdraw_scorumpower/route_from_dev_pool_to_dev_pool_tests.cpp
     withdraw_scorumpower/lock_tests.cpp
     account/account_service_tests.cpp
+    hardfork_tests.cpp
     betting/bet_operations_tests.cpp
     betting/bet_resolving_tests.cpp
     betting/game_operations_tests.cpp
@@ -82,10 +87,10 @@ target_include_directories(chain_tests PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSRC_DIR=${CMAKE_CURRENT_SOURCE_DIR}" )
 
-OPTION(CHAIN_TESTS_LOG_MESSAGES "Show logs for chain tests (ON or OFF)" OFF)
+OPTION(SCORUM_CHAIN_TESTS_LOG_MESSAGES "Show logs for chain tests (ON or OFF)" OFF)
 
-MESSAGE( STATUS "CHAIN_TESTS_LOG_MESSAGES: ${CHAIN_TESTS_LOG_MESSAGES}" )
-if( CHAIN_TESTS_LOG_MESSAGES )
+MESSAGE( STATUS "  SCORUM_CHAIN_TESTS_LOG_MESSAGES:    ${SCORUM_CHAIN_TESTS_LOG_MESSAGES}" )
+if( SCORUM_CHAIN_TESTS_LOG_MESSAGES )
     SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLOG_MESSAGES" )
     SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOG_MESSAGES" )
 endif()

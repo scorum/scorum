@@ -34,6 +34,7 @@ add_library( scorum_chain
              services/account.cpp
              services/account_blogging_statistic.cpp
              services/atomicswap.cpp
+             services/budgets.cpp
              services/comment.cpp
              services/comment_vote.cpp
              services/dbs_base.cpp
@@ -83,6 +84,7 @@ add_library( scorum_chain
              evaluators/post_game_results_evaluator.cpp
              evaluators/post_bet_evalulator.cpp
              evaluators/cancel_pending_bets_evaluator.cpp
+             evaluators/vote_evaluator.cpp
 
              schema/shared_authority.cpp
              schema/advertising_property_object.cpp
@@ -116,11 +118,14 @@ add_library( scorum_chain
              database/block_tasks/process_fifa_world_cup_2018_bounty_initialize.cpp
              database/block_tasks/process_account_registration_bonus_expiration.cpp
              database/block_tasks/process_witness_reward_in_sp_migration.cpp
+             database/block_tasks/process_active_sp_holders_cashout.cpp
              database/block_tasks/process_games_startup.cpp
              database/block_tasks/process_bets_resolving.cpp
              database/block_tasks/process_bets_auto_resolving.cpp
 
              database/process_user_activity.cpp
+
+             advertising/advertising_auction.cpp
 
              betting/betting_service.cpp
              betting/betting_math.cpp

@@ -633,7 +633,7 @@ struct create_budget_operation : public base_operation
     std::string json_metadata;
 
     asset balance = asset(0, SCORUM_SYMBOL);
-    time_point_sec start;
+    fc::optional<time_point_sec> start;
     time_point_sec deadline;
 
     void validate() const;

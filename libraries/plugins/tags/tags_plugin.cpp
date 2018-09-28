@@ -516,14 +516,13 @@ struct post_operation_visitor
         for (const std::string& tag : tags)
         {
             _db.modify(get_stats(tag), [&](tag_stats_object& ts) {
-
-                if (op.payout.symbol() == SCORUM_SYMBOL)
+                if (op.total_payout.symbol() == SCORUM_SYMBOL)
                 {
-                    ts.total_payout_scr += op.payout;
+                    ts.total_payout_scr += op.total_payout;
                 }
-                else if (op.payout.symbol() == SP_SYMBOL)
+                else if (op.total_payout.symbol() == SP_SYMBOL)
                 {
-                    ts.total_payout_sp += op.payout;
+                    ts.total_payout_sp += op.total_payout;
                 }
             });
         }

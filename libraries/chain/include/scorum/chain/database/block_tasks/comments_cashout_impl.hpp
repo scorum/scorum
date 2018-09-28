@@ -39,6 +39,12 @@ public:
         asset parent_comment_reward;
     };
 
+    struct curators_author_rewards
+    {
+        asset curators_reward;
+        asset author_reward;
+    };
+
     explicit process_comments_cashout_impl(block_task_context& ctx);
 
     template <typename FundService> void update_decreasing_total_claims(FundService& fund_service)
@@ -62,9 +68,11 @@ public:
 
     asset pay_for_comments(const comment_refs_type& comments, const std::vector<asset>& fund_rewards);
 
-    comment_payout_result pay_for_comment(const comment_object& comment,
-                                          const asset& publication_reward,
-                                          const asset& children_comments_reward);
+    /// These two methods distribute comments reward across all parent comments
+    asset pay_for_comments_legacy(const comment_refs_type& comments, const std::vector<asset>& fund_rewards);
+    comment_payout_result pay_for_comment_legacy(const comment_object& comment,
+                                                 const asset& publication_reward,
+                                                 const asset& parent_payout_value);
 
     void close_comment_payout(const comment_object& comment);
 
@@ -77,43 +85,47 @@ private:
     fc::uint128_t
     get_total_claims(const comment_refs_type& comments, curve_id reward_curve, fc::uint128_t recent_claims) const;
 
-    asset pay_curators(const comment_object& comment, asset& max_rewards);
+    curators_author_rewards pay_curators(const comment_object& comment, const asset& fund_reward);
+    asset pay_beneficiaries(const comment_object& comment, const asset& author_reward);
 
     void pay_account(const account_object& recipient, const asset& reward);
 
     template <class CommentStatisticService>
     void accumulate_comment_statistic(CommentStatisticService& stat_service,
                                       const comment_object& comment,
+                                      const asset& fund_reward,
                                       const asset& total_payout,
-                                      const asset& author_tokens,
-                                      const asset& curation_tokens,
-                                      const asset& total_beneficiary,
-                                      const asset& publication_tokens,
-                                      const asset& children_comments_tokens)
+                                      const asset& author_payout,
+                                      const asset& curation_payout,
+                                      const asset& payout_from_children,
+                                      const asset& payout_to_parent,
+                                      const asset& beneficiary_payout)
     {
         using comment_object_type = typename CommentStatisticService::object_type;
 
         const auto& stat = stat_service.get(comment.id);
         stat_service.update(stat, [&](comment_object_type& c) {
+            c.fund_reward_value += fund_reward;
             c.total_payout_value += total_payout;
-            c.author_payout_value += author_tokens;
-            c.curator_payout_value += curation_tokens;
-            c.beneficiary_payout_value += total_beneficiary;
-            c.comment_publication_reward += publication_tokens;
-            c.children_comments_reward += children_comments_tokens;
+            c.author_payout_value += author_payout;
+            c.curator_payout_value += curation_payout;
+            c.beneficiary_payout_value += beneficiary_payout;
+            c.from_children_payout_value += payout_from_children;
+            c.to_parent_payout_value += payout_to_parent;
         });
     }
 
     void accumulate_statistic(const comment_object& comment,
                               const account_object& author,
-                              const asset& author_tokens,
-                              const asset& curation_tokens,
-                              const asset& total_beneficiary,
-                              const asset& publication_tokens,
-                              const asset& children_comments_tokens,
+                              const asset& fund_reward,
+                              const asset& author_payout,
+                              const asset& curation_payout,
+                              const asset& payout_from_children,
+                              const asset& payout_to_parent,
+                              const asset& beneficiary_payout,
                               asset_symbol_type reward_symbol);
 
-    void accumulate_statistic(const account_object& voter, const asset& curation_tokens);
+    void accumulate_statistic(const account_object& voter, const asset& curation_payout);
 
     comment_refs_type collect_parents(const comment_refs_type& comments);
 

@@ -6,8 +6,6 @@
 #include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/account.hpp>
 
-#include <scorum/chain/database/budget_management_algorithms.hpp>
-
 #include "defines.hpp"
 
 #include "actor.hpp"
