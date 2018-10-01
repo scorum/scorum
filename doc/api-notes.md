@@ -1,18 +1,15 @@
 
-What is an API
---------------
+# What is an API
 
 An API is a set of related methods, accessible over Websocket / HTTP and provided by a single C++ class.  API's exist on a per-connection basis.
 
-Compiling with hello_api plugin
--------------------------------
+# Compiling with hello_api plugin
 
 We will use the `hello_api` example plugin.  To follow along with the examples, you may enable the `hello_api` example plugin by running the following command and recompiling:
 
     ln -s ../example_plugins/hello_api external_plugins/hello_api
 
-Publicly available API's
-------------------------
+# Publicly available API's
 
 Some API's are public API's which are available to clients without login.  These API's may be specified as follows in the configuration file:
 
@@ -28,8 +25,7 @@ For experts:  The reason for recommending `database_api` and `login_api` to be t
 Additionally, the string API identifier feature's FC implementation requires a working `get_api_by_name` method to be available on API ID 1, so effectively
 any client that uses string API identifiers (as recommended) requires `login_api` to be on API ID 1 even if no client uses the login feature.
 
-Numeric API identifiers
------------------------
+# Numeric API identifiers
 
 API's are assigned numeric ID's in the order they are specified as public API's.  So for example you can access `hello_api_api` over HTTP like this:
 
@@ -42,8 +38,7 @@ The `get_api_by_name` method on API 1 (the `login_api`) can be used to query the
 
     curl --data '{"jsonrpc": "2.0", "params": [1, "get_api_by_name", ["hello_api_api"]], "id":1, "method":"call"}' http://127.0.0.1:8790/rpc
 
-String API identifiers
-----------------------
+# String API identifiers
 
 Client code that references API's by their numeric identifiers have to coordinated with server-side configuration.
 This is inconvenient, so the API server supports identifying the API by name as well, like this:
@@ -53,8 +48,7 @@ This is inconvenient, so the API server supports identifying the API by name as 
 It is considered best practice for API clients to use this syntax to reference API's by their string identifiers.  The reason is that the client becomes robust against
 server-side configuration changes which result in renumbering of API's.
 
-API access control methods
---------------------------
+# API access control methods
 
 There are three methods to secure the API:
 
@@ -66,13 +60,12 @@ The Scorum developers recommend using the first of these methods to secure the A
 
     rpc-endpoint = 127.0.0.1:8090
 
-Securing specific API's
------------------------
+# Securing specific API's
 
 The problem with securing API's at the network level is that there are deployment scenarios where a node may want to have some API's public, but other API's private.
 The `scorumd` process includes username/password based authentication to individual API's.
 
-Since the username/password is sent directly over the wire, you should use a TLS connection when authenticating with username and password.  TLS connection can be achieved by one of two methods:
+Since the username/password is sent directly over the wire, you should use a TLS connection when authenticating with username and password. TLS connection can be achieved by one of two methods:
 
 - Configure an `rpc-tls-endpoint`.
 - Configure an `rpc-endpoint` bound to localhost (or a secure LAN), and use an external reverse proxy (for example, `nginx`).  This advanced configuration will not be covered here.
