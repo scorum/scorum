@@ -83,6 +83,22 @@ public:
         FC_THROW("unreachable");
     }
 
+    std::vector<percent_type> get_auction_coefficients(budget_type type) const
+    {
+        switch (type)
+        {
+        case budget_type::post:
+            return std::vector<percent_type>{ _adv_service.get().auction_post_coefficients.begin(),
+                                              _adv_service.get().auction_post_coefficients.end() };
+
+        case budget_type::banner:
+            return std::vector<percent_type>{ _adv_service.get().auction_banner_coefficients.begin(),
+                                              _adv_service.get().auction_banner_coefficients.end() };
+        }
+
+        FC_THROW("unreachable");
+    }
+
 private:
     template <budget_type budget_type_v>
     fc::optional<budget_api_obj> get_budget(const chain::adv_budget_service_i<budget_type_v>& budget_service,

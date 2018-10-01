@@ -43,6 +43,11 @@ public:
      */
     std::vector<budget_api_obj> get_current_winners(budget_type type) const;
 
+    /**
+     * @brief Get winners for particular budget type
+     */
+    std::vector<percent_type> get_auction_coefficients(budget_type type) const;
+
     /// @}
 
     void on_api_startup();
@@ -55,4 +60,5 @@ private:
 }
 }
 
-FC_API(scorum::app::advertising_api, (get_moderator)(get_user_budgets)(get_budget)(get_current_winners))
+FC_API(scorum::app::advertising_api,
+       (get_moderator)(get_user_budgets)(get_budget)(get_current_winners)(get_auction_coefficients))

@@ -30,6 +30,11 @@ std::vector<budget_api_obj> advertising_api::get_current_winners(budget_type typ
     return _impl->_db.with_read_lock([&] { return _impl->get_current_winners(type); });
 }
 
+std::vector<percent_type> advertising_api::get_auction_coefficients(budget_type type) const
+{
+    return _impl->_db.with_read_lock([&] { return _impl->get_auction_coefficients(type); });
+}
+
 void advertising_api::on_api_startup()
 {
     // do nothing
