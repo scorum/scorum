@@ -1,5 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
+#include <boost/range/algorithm/copy.hpp>
+
 #include <scorum/app/api_context.hpp>
 #include <scorum/app/detail/advertising_api.hpp>
 #include <scorum/chain/database/database.hpp>
@@ -165,6 +167,27 @@ SCORUM_TEST_CASE(check_get_user_budgets_empty)
     auto bob_budgets = api->get_user_budgets("alice");
 
     BOOST_REQUIRE_EQUAL(bob_budgets.size(), 0);
+}
+
+SCORUM_TEST_CASE(get_auction_coeffs_test)
+{
+    auto expected_post_coeffs = std::vector<percent_type>{ 100, 90 };
+    auto expected_banner_coeffs = std::vector<percent_type>{ 99, 33 };
+
+    auto adv_prop_obj = create_object<advertising_property_object>(shm, [&](advertising_property_object& o) {
+        boost::copy(expected_post_coeffs, std::back_inserter(o.auction_post_coefficients));
+        boost::copy(expected_banner_coeffs, std::back_inserter(o.auction_banner_coefficients));
+    });
+
+    mocks.OnCall(adv_service, advertising_property_service_i::get).ReturnByRef(adv_prop_obj);
+
+    auto actual_post_coeffs = api->get_auction_coefficients(budget_type::post);
+    auto actual_banner_coeffs = api->get_auction_coefficients(budget_type::banner);
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected_post_coeffs.begin(), expected_post_coeffs.end(), actual_post_coeffs.begin(),
+                                  actual_post_coeffs.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected_banner_coeffs.begin(), expected_banner_coeffs.end(),
+                                  actual_banner_coeffs.begin(), actual_banner_coeffs.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
