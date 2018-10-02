@@ -35,14 +35,26 @@
 #include <scorum/chain/services/advertising_property.hpp>
 
 // clang-format off
+
+
+scorum::chain::post_budget_service_i &scorum::chain::data_service_factory::post_budget_service()
+{
+    return _db.obtain_service<dbs_post_budget>();
+}
+
+scorum::chain::banner_budget_service_i &scorum::chain::data_service_factory::banner_budget_service()
+{
+    return _db.obtain_service<dbs_banner_budget>();
+}
+
 DATA_SERVICE_FACTORY_IMPL(
         (account)
         (account_blogging_statistic)
         (account_registration_bonus)
         (atomicswap)
         (fund_budget)
-        (post_budget)
-        (banner_budget)
+//        (post_budget)
+//        (banner_budget)
         (comment)
         (comment_statistic_scr)
         (comment_statistic_sp)

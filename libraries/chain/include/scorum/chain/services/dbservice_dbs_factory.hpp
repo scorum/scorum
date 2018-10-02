@@ -40,6 +40,20 @@ public:
         return static_cast<ConcreteService&>(*ret);
     }
 
+    template <typename ConcreteService, typename... Args> ConcreteService& obtain_service(Args... args) const
+    {
+        auto it = _dbs.find(boost::typeindex::type_id<ConcreteService>());
+        if (it == _dbs.end())
+        {
+            it = _dbs.insert(std::make_pair(boost::typeindex::type_id<ConcreteService>(),
+                                            BaseServicePtr(new ConcreteService(args...))))
+                     .first;
+        }
+
+        BaseServicePtr& ret = it->second;
+        return static_cast<ConcreteService&>(*ret);
+    }
+
 private:
     mutable boost::container::flat_map<boost::typeindex::type_index, BaseServicePtr> _dbs;
     database& _db_core;

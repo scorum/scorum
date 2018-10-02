@@ -9,8 +9,8 @@ DATA_SERVICE_FACTORY_DECLARE(
         (account_registration_bonus)
         (atomicswap)
         (fund_budget)
-        (post_budget)
-        (banner_budget)
+//        (post_budget)
+//        (banner_budget)
         (comment)
         (comment_statistic_scr)
         (comment_statistic_sp)
@@ -44,3 +44,44 @@ DATA_SERVICE_FACTORY_DECLARE(
         (advertising_property)
         )
 // clang-format on
+
+namespace scorum {
+namespace chain {
+
+class database;
+class post_budget_service_i;
+class banner_budget_service_i;
+
+class data_service_factory_i : virtual public data_service_factory_i_impl
+{
+public:
+    ~data_service_factory_i()
+    {
+    }
+
+    virtual post_budget_service_i& post_budget_service() = 0;
+    virtual banner_budget_service_i& banner_budget_service() = 0;
+};
+
+class data_service_factory : public data_service_factory_i, public data_service_factory_impl
+{
+public:
+    data_service_factory(database& db)
+        : data_service_factory_impl(db)
+        , _db(db)
+    {
+    }
+
+    ~data_service_factory()
+    {
+    }
+
+    post_budget_service_i& post_budget_service() override;
+    banner_budget_service_i& banner_budget_service() override;
+
+private:
+    database& _db;
+};
+
+} // namespace chain
+} // namespace scorum

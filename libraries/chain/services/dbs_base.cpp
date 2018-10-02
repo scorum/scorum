@@ -22,6 +22,7 @@ dbservice_dbs_factory& dbs_base::db()
 fc::time_point_sec dbs_base::head_block_time()
 {
     return db_impl().head_block_time();
+    //    return time_point_sec();
 }
 
 database& dbs_base::db_impl()

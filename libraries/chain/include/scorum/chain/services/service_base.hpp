@@ -4,6 +4,8 @@
 
 #include <scorum/chain/services/dbs_base.hpp>
 
+#include <chainbase/chainbase.hpp>
+
 #include <limits>
 
 namespace scorum {
