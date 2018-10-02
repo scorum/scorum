@@ -107,6 +107,8 @@ dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& ow
 
         _account_svc.decrease_balance(_account_svc.get_account(owner), balance);
 
+        update_totals([&](adv_total_stats::budget_type_stat& statistic) { statistic.volume += balance; });
+
         return budget;
     }
     FC_CAPTURE_AND_RETHROW((owner)(balance)(start)(end)(json_metadata))
@@ -246,6 +248,8 @@ asset dbs_advertising_budget<budget_type_v>::allocate_cash(const adv_budget_obje
 {
     this->update(budget, [&](adv_budget_object<budget_type_v>& b) { b.balance -= budget.per_block; });
 
+    update_totals([&](adv_total_stats::budget_type_stat& statistic) { statistic.volume -= budget.per_block; });
+
     if (budget.deadline <= _dprops_svc.head_block_time())
         finish_budget(budget.id);
 
@@ -261,6 +265,11 @@ void dbs_advertising_budget<budget_type_v>::update_pending_payouts(const adv_bud
         b.owner_pending_income += owner_incoming;
         b.budget_pending_outgo += budget_outgoing;
     });
+
+    update_totals([&](adv_total_stats::budget_type_stat& statistic) {
+        statistic.owner_pending_income += owner_incoming;
+        statistic.budget_pending_outgo += budget_outgoing;
+    });
 }
 
 template <budget_type budget_type_v>
@@ -272,12 +281,18 @@ asset dbs_advertising_budget<budget_type_v>::perform_pending_payouts(const budge
         budgets_outgo += budget.budget_pending_outgo;
         _account_svc.increase_balance(_account_svc.get_account(budget.owner), budget.owner_pending_income);
 
+        update_totals([&](adv_total_stats::budget_type_stat& statistic) {
+            statistic.owner_pending_income -= budget.owner_pending_income;
+            statistic.budget_pending_outgo -= budget.budget_pending_outgo;
+        });
+
         this->update(budget, [&](adv_budget_object<budget_type_v>& b) {
             b.owner_pending_income.amount = 0;
             b.budget_pending_outgo.amount = 0;
             b.cashout_time = _dprops_svc.head_block_time() + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
         });
     }
+
     return budgets_outgo;
 }
 
@@ -285,6 +300,11 @@ template <budget_type budget_type_v>
 void dbs_advertising_budget<budget_type_v>::finish_budget(const oid<adv_budget_object<budget_type_v>>& id)
 {
     const auto& budget = get(id);
+
+    update_totals([&](adv_total_stats::budget_type_stat& statistic) {
+        statistic.owner_pending_income += budget.balance;
+        statistic.volume -= budget.balance;
+    });
 
     this->update(budget, [&](adv_budget_object<budget_type_v>& b) {
         b.cashout_time = _dprops_svc.head_block_time();

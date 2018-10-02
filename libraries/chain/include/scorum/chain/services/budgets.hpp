@@ -1,6 +1,8 @@
 #pragma once
 #include <scorum/chain/services/service_base.hpp>
 
+#include <scorum/chain/services/dynamic_global_property.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -89,15 +91,43 @@ template <> struct budget_service_traits<budget_type::post>
     using service_type = post_budget_service_i;
 };
 
+template <budget_type budget_type_v> struct adv_summary_srvc
+{
+    adv_summary_srvc(dynamic_global_property_service_i& dgp_svc)
+        : _dgp_svc(dgp_svc)
+    {
+    }
+
+    template <typename C> void update(C&& callback)
+    {
+        if (budget_type_v == budget_type::banner)
+        {
+            _dgp_svc.update([&](dynamic_global_property_object& dgp) { callback(dgp.advertising.banner_budgets); });
+        }
+        else if (budget_type_v == budget_type::post)
+        {
+            _dgp_svc.update([&](dynamic_global_property_object& dgp) { callback(dgp.advertising.post_budgets); });
+        }
+        else
+        {
+            FC_THROW("unsuported budget type");
+        }
+    }
+
+private:
+    dynamic_global_property_service_i& _dgp_svc;
+};
+
 template <budget_type budget_type_v>
 class dbs_advertising_budget : public dbs_service_base<typename budget_service_traits<budget_type_v>::service_type>
 {
     friend class dbservice_dbs_factory;
 
-protected:
-    explicit dbs_advertising_budget(database& db);
+    // protected:
 
 public:
+    explicit dbs_advertising_budget(database& db);
+
     using budgets_type = typename adv_budget_service_i<budget_type_v>::budgets_type;
 
     const adv_budget_object<budget_type_v>& create_budget(const account_name_type& owner,
@@ -131,6 +161,22 @@ public:
 
     void finish_budget(const oid<adv_budget_object<budget_type_v>>& id) override;
     void close_empty_budgets() override;
+
+    template <typename C> void update_totals(C&& callback)
+    {
+        if (budget_type_v == budget_type::banner)
+        {
+            _dprops_svc.update([&](dynamic_global_property_object& dgp) { callback(dgp.advertising.banner_budgets); });
+        }
+        else if (budget_type_v == budget_type::post)
+        {
+            _dprops_svc.update([&](dynamic_global_property_object& dgp) { callback(dgp.advertising.post_budgets); });
+        }
+        else
+        {
+            FC_THROW("unsuported budget type");
+        }
+    }
 
 private:
     dynamic_global_property_service_i& _dprops_svc;
