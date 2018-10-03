@@ -44,6 +44,8 @@ using scorum::protocol::extended_public_key_type;
 using scorum::protocol::hardfork_version;
 
 using scorum::protocol::create_budget_operation;
+using scorum::protocol::update_budget_operation;
+using scorum::protocol::close_budget_operation;
 using scorum::protocol::close_budget_by_advertising_moderator_operation;
 
 BOOST_AUTO_TEST_SUITE(serialization_tests)
@@ -244,6 +246,35 @@ SCORUM_TEST_CASE(serialize_create_budget_operation_to_binary_test)
     BOOST_CHECK_EQUAL(
         "00000000000000000c696e697464656c6567617465027b7d00e40b54020000000953435200000000019b2a645bb92a645b",
         utils::to_hex(op));
+}
+
+SCORUM_TEST_CASE(serialize_update_budget_operation_to_binary_test)
+{
+    update_budget_operation op;
+    op.type = scorum::protocol::budget_type::post;
+    op.owner = "initdelegate";
+    op.budget_id = 0;
+    op.json_metadata = "{\"meta\": \"some_meta\"}";
+
+    scorum::protocol::operation ops = op;
+
+    BOOST_CHECK_EQUAL(
+        "22000000000000000000000000000000000c696e697464656c6567617465157b226d657461223a2022736f6d655f6d657461227d",
+        utils::to_hex(ops));
+}
+
+SCORUM_TEST_CASE(serialize_close_budget_operation_to_binary_test)
+{
+    close_budget_operation op;
+    op.type = scorum::protocol::budget_type::post;
+    op.owner = "initdelegate";
+    op.budget_id = 0;
+
+    scorum::protocol::operation ops = op;
+
+    BOOST_CHECK_EQUAL(
+        "1b000000000000000000000000000000000c696e697464656c6567617465",
+        utils::to_hex(ops));
 }
 
 SCORUM_TEST_CASE(serialize_close_post_budget_by_moderator_operation_to_binary_test)
