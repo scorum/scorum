@@ -44,6 +44,7 @@ set(SOURCES
     rewards/comment_reward_legacy_tests.cpp
     rewards/comment_reward_tests.cpp
     utils/string_algorithm_tests.cpp
+    utils/math_tests.cpp
     tasks_base_tests.cpp
     app_tests.cpp
     budgets/evaluators_tests.cpp

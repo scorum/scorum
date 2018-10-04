@@ -23,8 +23,8 @@ public:
 
 private:
     account_service_i& _account_service;
-    post_budget_service_i& _post_budget_service;
-    banner_budget_service_i& _banner_budget_service;
+    post_budget_service_i& _post_budget_svc;
+    banner_budget_service_i& _banner_budget_svc;
     dynamic_global_property_service_i& _dprops_service;
 };
 }

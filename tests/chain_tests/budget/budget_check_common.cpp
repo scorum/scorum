@@ -21,20 +21,20 @@ create_budget_operation budget_check_fixture::create_budget(const Actor& owner, 
 }
 
 create_budget_operation
-budget_check_fixture::create_budget(const Actor& owner, const budget_type type, int balance, int deadline_in_blocks)
+budget_check_fixture::create_budget(const Actor& owner, const budget_type type, int balance, int deadline_blocks_offset)
 {
-    return create_budget(owner, type, balance, 0, deadline_in_blocks);
+    return create_budget(owner, type, balance, 0, deadline_blocks_offset);
 }
 
 create_budget_operation budget_check_fixture::create_budget(
-    const Actor& owner, const budget_type type, int balance, int start_in_blocks, int deadline_in_blocks)
+    const Actor& owner, const budget_type type, int balance, int start_blocks_offset, int deadline_blocks_offset)
 {
     create_budget_operation op;
     op.owner = owner.name;
     op.type = type;
     op.balance = asset(balance, SCORUM_SYMBOL);
-    op.start = db.head_block_time() + start_in_blocks * SCORUM_BLOCK_INTERVAL;
-    op.deadline = db.head_block_time() + deadline_in_blocks * SCORUM_BLOCK_INTERVAL;
+    op.start = db.head_block_time() + start_blocks_offset * SCORUM_BLOCK_INTERVAL;
+    op.deadline = db.head_block_time() + deadline_blocks_offset * SCORUM_BLOCK_INTERVAL;
     op.json_metadata = get_unique_permlink();
 
     push_operation_only(op, owner.private_key);

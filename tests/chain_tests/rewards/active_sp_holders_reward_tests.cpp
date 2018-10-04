@@ -60,12 +60,13 @@ public:
     {
         const auto& account = account_service.get_account(initdelegate.name);
         auto advertising_budget = ASSET_SCR(2e+9);
-        auto deadline = db.get_slot_time(number_of_block);
 
         banner_budget_service_i& custom_budget_service = db.banner_budget_service();
 
-        const auto& ret = custom_budget_service.create_budget(account.name, advertising_budget, db.head_block_time(),
-                                                              deadline, "{}");
+        auto start = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
+        auto deadline = db.head_block_time() + number_of_block * SCORUM_BLOCK_INTERVAL;
+
+        const auto& ret = custom_budget_service.create_budget(account.name, advertising_budget, start, deadline, "{}");
 
         auto& reward_service = db.obtain_service<dbs_content_reward_scr>();
         reward_service.update(
