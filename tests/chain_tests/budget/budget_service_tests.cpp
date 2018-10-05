@@ -31,12 +31,100 @@ struct budget_service_getters_check_fixture : public budget_check_fixture
         actor(initdelegate).give_scr(sam, BUDGET_BALANCE_DEFAULT * 300);
     }
 
+    auto calc_total_owner_pending_income()
+    {
+        auto budgets = post_budget_service.get_budgets();
+
+        asset r;
+
+        for (auto budget : budgets)
+        {
+            r += budget.get().owner_pending_income;
+        }
+
+        return r;
+    }
+
+    auto calc_total_volume()
+    {
+        auto budgets = post_budget_service.get_budgets();
+
+        asset r;
+
+        for (auto budget : budgets)
+        {
+            r += budget.get().balance;
+        }
+
+        return r;
+    }
+
+    auto calc_total_budget_pending_outgo()
+    {
+        auto budgets = post_budget_service.get_budgets();
+
+        asset r;
+
+        for (auto budget : budgets)
+        {
+            r += budget.get().budget_pending_outgo;
+        }
+
+        return r;
+    }
+
     Actor alice;
     Actor bob;
     Actor sam;
 };
 
 BOOST_FIXTURE_TEST_SUITE(budget_service_check, budget_service_getters_check_fixture)
+
+SCORUM_TEST_CASE(check_that_after_budget_closed_all_stat_is_zero)
+{
+    create_budget(alice, budget_type::post);
+
+    this->generate_blocks(BUDGET_BALANCE_DEFAULT / BUDGET_PERBLOCK_DEFAULT);
+
+    auto dgp = this->db.get<dynamic_global_property_object>();
+
+    BOOST_CHECK_EQUAL(ASSET_SCR(0), dgp.advertising.post_budgets.volume);
+    BOOST_CHECK_EQUAL(ASSET_SCR(0), dgp.advertising.post_budgets.budget_pending_outgo);
+    BOOST_CHECK_EQUAL(ASSET_SCR(0), dgp.advertising.post_budgets.owner_pending_income);
+}
+
+SCORUM_TEST_CASE(validate_advertising_total_stats)
+{
+    create_budget(alice, budget_type::post, 50, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(alice, budget_type::post, 40, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(alice, budget_type::post, 30, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(alice, budget_type::post, 20, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(alice, budget_type::post, 10, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+
+    // clang-format off
+    const std::vector<std::vector<asset>> expectation = {
+        { ASSET_SCR(120), ASSET_SCR(9),  ASSET_SCR(21) },
+        { ASSET_SCR(90),  ASSET_SCR(18), ASSET_SCR(42) },
+        { ASSET_SCR(60),  ASSET_SCR(27), ASSET_SCR(63) },
+        { ASSET_SCR(30),  ASSET_SCR(36), ASSET_SCR(84) },
+        { ASSET_SCR(0),   ASSET_SCR(0),  ASSET_SCR(0)  } };
+    // clang-format on
+
+    for (uint32_t i = 0; i < BUDGET_DEADLINE_IN_BLOCKS_DEFAULT; ++i)
+    {
+        this->generate_block();
+
+        auto dgp = this->db.get<dynamic_global_property_object>();
+
+        BOOST_CHECK_EQUAL(calc_total_volume(), dgp.advertising.post_budgets.volume);
+        BOOST_CHECK_EQUAL(calc_total_budget_pending_outgo(), dgp.advertising.post_budgets.budget_pending_outgo);
+        BOOST_CHECK_EQUAL(calc_total_owner_pending_income(), dgp.advertising.post_budgets.owner_pending_income);
+
+        BOOST_CHECK_EQUAL(expectation[i][0], dgp.advertising.post_budgets.volume);
+        BOOST_CHECK_EQUAL(expectation[i][1], dgp.advertising.post_budgets.budget_pending_outgo);
+        BOOST_CHECK_EQUAL(expectation[i][2], dgp.advertising.post_budgets.owner_pending_income);
+    }
+}
 
 SCORUM_TEST_CASE(get_budget_check)
 {
