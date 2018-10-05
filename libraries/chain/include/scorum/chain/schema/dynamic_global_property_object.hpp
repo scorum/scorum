@@ -18,7 +18,7 @@ struct adv_total_stats
 {
     struct budget_type_stat
     {
-        /// sum of all budgets balance's
+        /// sum of all budgets' balance
         asset volume = asset(0, SCORUM_SYMBOL);
 
         /// pending volume which will go to the activity pool

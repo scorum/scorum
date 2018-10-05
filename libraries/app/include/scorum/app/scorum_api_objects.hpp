@@ -280,6 +280,7 @@ struct witness_api_obj
 
 /// @addtogroup adv_api
 /// @{
+
 class budget_api_obj
 {
 public:
@@ -321,12 +322,16 @@ public:
     account_name_type owner;
     std::string json_metadata;
 
-    time_point_sec created;
-    time_point_sec start;
-    time_point_sec deadline;
+    fc::time_point_sec created;
+    fc::time_point_sec start;
+    fc::time_point_sec deadline;
 
     asset balance = asset(0, SCORUM_SYMBOL);
     asset per_block;
+
+    fc::time_point_sec cashout_time;
+    asset owner_pending_income = asset(0, SCORUM_SYMBOL);
+    asset budget_pending_outgo = asset(0, SCORUM_SYMBOL);
 };
 
 /// @}
@@ -541,6 +546,9 @@ FC_REFLECT( scorum::app::budget_api_obj,
             (deadline)
             (balance)
             (per_block)
+            (cashout_time)
+            (budget_pending_outgo)
+            (owner_pending_income)
           )
 
 FC_REFLECT( scorum::app::atomicswap_contract_api_obj,
