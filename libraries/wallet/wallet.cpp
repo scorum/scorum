@@ -2581,6 +2581,40 @@ annotated_signed_transaction wallet_api::create_budget_for_banner(const std::str
     return my->sign_transaction(tx, broadcast);
 }
 
+template <budget_type budget_type_v>
+signed_transaction update_budget(const std::string& owner, int64_t id, const std::string& json_metadata)
+{
+    update_budget_operation op;
+    op.owner = owner;
+    op.budget_id = id;
+    op.json_metadata = json_metadata;
+    op.type = budget_type_v;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return tx;
+}
+
+annotated_signed_transaction wallet_api::update_budget_for_banner(const std::string& owner,
+                                                                  int64_t id,
+                                                                  const std::string& json_metadata,
+                                                                  const bool broadcast)
+{
+    auto tx = update_budget<budget_type::banner>(owner, id, json_metadata);
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::update_budget_for_post(const std::string& owner,
+                                                                int64_t id,
+                                                                const std::string& json_metadata,
+                                                                const bool broadcast)
+{
+    auto tx = update_budget<budget_type::post>(owner, id, json_metadata);
+    return my->sign_transaction(tx, broadcast);
+}
+
 annotated_signed_transaction
 wallet_api::close_budget_for_post(const int64_t id, const std::string& owner, const bool broadcast)
 {
