@@ -153,8 +153,8 @@ template <class T> T make_test_index_object()
 #define ASSET_NULL_SCR asset(0, SCORUM_SYMBOL)
 #define ASSET_NULL_SP asset(0, SP_SYMBOL)
 
-#define ASSET_SCR(s) asset((scorum::protocol::share_value_type)s, SCORUM_SYMBOL)
-#define ASSET_SP(s) asset((scorum::protocol::share_value_type)s, SP_SYMBOL)
+#define ASSET_SCR(s) asset(static_cast<scorum::protocol::share_value_type>(s), SCORUM_SYMBOL)
+#define ASSET_SP(s) asset(static_cast<scorum::protocol::share_value_type>(s), SP_SYMBOL)
 
 #define SUFFICIENT_FEE SCORUM_MIN_ACCOUNT_CREATION_FEE* SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER
 
@@ -182,16 +182,23 @@ template <class T> T make_test_index_object()
 #define SCORUM_TEST_CASE(test_name)                                                                                    \
     struct test_name : public BOOST_AUTO_TEST_CASE_FIXTURE                                                             \
     {                                                                                                                  \
-        void test_method()                                                                                             \
-        {                                                                                                              \
-            try                                                                                                        \
-            {                                                                                                          \
-                test_method_override();                                                                                \
-            }                                                                                                          \
-            FC_LOG_AND_RETHROW()                                                                                       \
-        };                                                                                                             \
+        virtual ~test_name();                                                                                          \
+        void test_method();                                                                                            \
         void test_method_override();                                                                                   \
     };                                                                                                                 \
+                                                                                                                       \
+    test_name::~test_name()                                                                                            \
+    {                                                                                                                  \
+    }                                                                                                                  \
+                                                                                                                       \
+    void test_name::test_method()                                                                                      \
+    {                                                                                                                  \
+        try                                                                                                            \
+        {                                                                                                              \
+            test_method_override();                                                                                    \
+        }                                                                                                              \
+        FC_LOG_AND_RETHROW()                                                                                           \
+    }                                                                                                                  \
                                                                                                                        \
     static void BOOST_AUTO_TC_INVOKER(test_name)()                                                                     \
     {                                                                                                                  \

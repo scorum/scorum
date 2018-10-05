@@ -20,14 +20,16 @@ create_budget_operation budget_check_fixture::create_budget(const Actor& owner, 
     return create_budget(owner, type, BUDGET_BALANCE_DEFAULT, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
 }
 
-create_budget_operation
-budget_check_fixture::create_budget(const Actor& owner, const budget_type type, int balance, int deadline_in_blocks)
+create_budget_operation budget_check_fixture::create_budget(const Actor& owner,
+                                                            const budget_type type,
+                                                            int balance,
+                                                            uint32_t deadline_in_blocks)
 {
     return create_budget(owner, type, balance, 0, deadline_in_blocks);
 }
 
 create_budget_operation budget_check_fixture::create_budget(
-    const Actor& owner, const budget_type type, int balance, int start_in_blocks, int deadline_in_blocks)
+    const Actor& owner, const budget_type type, int balance, uint32_t start_in_blocks, uint32_t deadline_in_blocks)
 {
     create_budget_operation op;
     op.owner = owner.name;

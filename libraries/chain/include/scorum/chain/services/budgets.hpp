@@ -133,7 +133,9 @@ public:
     void close_empty_budgets() override;
 
 private:
-    dynamic_global_property_service_i& _dprops_svc;
+    void update_totals(std::function<void(adv_total_stats::budget_type_stat&)> callback);
+
+    dynamic_global_property_service_i& _dgp_svc;
     account_service_i& _account_svc;
 };
 

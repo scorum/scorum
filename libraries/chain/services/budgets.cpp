@@ -71,7 +71,7 @@ asset dbs_fund_budget::allocate_cash(const fund_budget_object& budget)
 template <budget_type budget_type_v>
 dbs_advertising_budget<budget_type_v>::dbs_advertising_budget(database& db)
     : dbs_service_base<typename budget_service_traits<budget_type_v>::service_type>(db)
-    , _dprops_svc(db.dynamic_global_property_service())
+    , _dgp_svc(db.dynamic_global_property_service())
     , _account_svc(db.account_service())
 {
 }
@@ -97,7 +97,7 @@ dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& ow
 #ifndef IS_LOW_MEM
             fc::from_string(budget.json_metadata, json_metadata);
 #endif
-            budget.created = _dprops_svc.head_block_time();
+            budget.created = _dgp_svc.head_block_time();
             budget.cashout_time = budget.created + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
             budget.start = start;
             budget.deadline = end;
@@ -106,6 +106,8 @@ dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& ow
         });
 
         _account_svc.decrease_balance(_account_svc.get_account(owner), balance);
+
+        update_totals([&](adv_total_stats::budget_type_stat& statistic) { statistic.volume += balance; });
 
         return budget;
     }
@@ -234,7 +236,7 @@ dbs_advertising_budget<budget_type_v>::get_pending_budgets() const
 {
     try
     {
-        auto head_time = _dprops_svc.head_block_time();
+        auto head_time = _dgp_svc.head_block_time();
         return this->template get_range_by<by_cashout_time>(boost::multi_index::unbounded,
                                                             ::boost::lambda::_1 <= head_time);
     }
@@ -246,7 +248,9 @@ asset dbs_advertising_budget<budget_type_v>::allocate_cash(const adv_budget_obje
 {
     this->update(budget, [&](adv_budget_object<budget_type_v>& b) { b.balance -= budget.per_block; });
 
-    if (budget.deadline <= _dprops_svc.head_block_time())
+    update_totals([&](adv_total_stats::budget_type_stat& statistic) { statistic.volume -= budget.per_block; });
+
+    if (budget.deadline <= _dgp_svc.head_block_time())
         finish_budget(budget.id);
 
     return budget.per_block;
@@ -261,6 +265,11 @@ void dbs_advertising_budget<budget_type_v>::update_pending_payouts(const adv_bud
         b.owner_pending_income += owner_incoming;
         b.budget_pending_outgo += budget_outgoing;
     });
+
+    update_totals([&](adv_total_stats::budget_type_stat& statistic) {
+        statistic.owner_pending_income += owner_incoming;
+        statistic.budget_pending_outgo += budget_outgoing;
+    });
 }
 
 template <budget_type budget_type_v>
@@ -272,12 +281,18 @@ asset dbs_advertising_budget<budget_type_v>::perform_pending_payouts(const budge
         budgets_outgo += budget.budget_pending_outgo;
         _account_svc.increase_balance(_account_svc.get_account(budget.owner), budget.owner_pending_income);
 
+        update_totals([&](adv_total_stats::budget_type_stat& statistic) {
+            statistic.owner_pending_income -= budget.owner_pending_income;
+            statistic.budget_pending_outgo -= budget.budget_pending_outgo;
+        });
+
         this->update(budget, [&](adv_budget_object<budget_type_v>& b) {
             b.owner_pending_income.amount = 0;
             b.budget_pending_outgo.amount = 0;
-            b.cashout_time = _dprops_svc.head_block_time() + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
+            b.cashout_time = _dgp_svc.head_block_time() + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
         });
     }
+
     return budgets_outgo;
 }
 
@@ -286,8 +301,13 @@ void dbs_advertising_budget<budget_type_v>::finish_budget(const oid<adv_budget_o
 {
     const auto& budget = get(id);
 
+    update_totals([&](adv_total_stats::budget_type_stat& statistic) {
+        statistic.owner_pending_income += budget.balance;
+        statistic.volume -= budget.balance;
+    });
+
     this->update(budget, [&](adv_budget_object<budget_type_v>& b) {
-        b.cashout_time = _dprops_svc.head_block_time();
+        b.cashout_time = _dgp_svc.head_block_time();
         b.owner_pending_income += b.balance;
         b.balance.amount = 0;
     });
@@ -301,6 +321,24 @@ template <budget_type budget_type_v> void dbs_advertising_budget<budget_type_v>:
 
     for (const adv_budget_object<budget_type_v>& budget : empty_budgets)
         this->remove(budget);
+}
+
+template <budget_type budget_type_v>
+void dbs_advertising_budget<budget_type_v>::update_totals(
+    std::function<void(adv_total_stats::budget_type_stat&)> callback)
+{
+    if (budget_type_v == budget_type::banner)
+    {
+        _dgp_svc.update([&](dynamic_global_property_object& dgp) { callback(dgp.advertising.banner_budgets); });
+    }
+    else if (budget_type_v == budget_type::post)
+    {
+        _dgp_svc.update([&](dynamic_global_property_object& dgp) { callback(dgp.advertising.post_budgets); });
+    }
+    else
+    {
+        FC_THROW("unsuported budget type");
+    }
 }
 
 template class dbs_advertising_budget<budget_type::post>;

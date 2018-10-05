@@ -34,6 +34,7 @@ set( SOURCES
     atomicswap/atomicswap_operations_tests.cpp
     budget/budget_check_common.cpp
     budget/budget_service_tests.cpp
+    budget/budget_service_unit_tests.cpp
     budget/budget_autoclose_tests.cpp
     budget/budget_starting_tests.cpp
     budget/adv_moderator_tests.cpp
