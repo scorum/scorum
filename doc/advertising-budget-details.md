@@ -49,7 +49,10 @@ I.e. per block payment equals:
 per_block = balance / (((deadline - start_time) / block_interval) + 1)
 ~~~~~~~~~~~~~~~ 
 
-Fox example, if budget balance equals 100 SCR, start_time equals 3sec and deadline equals 12 sec, then there will be 4 payments by 25 SCR each in blocks #1,#2,#3,#4. Note payments are also occured in block #1 where budget starts and in block #4 where budgets ends.
+Fox example, if budget balance equals 100 SCR, start_time equals 3sec and deadline equals 12 sec, then there will be 4 payments by 25 SCR each in blocks #1,#2,#3,#4. 
+
+> NOTE:
+> Payments are also occured in block #1 where budget starts and in block #4 where budgets ends.
 
 | | | | | | | |
 | ----------------: | :: | :: | :: | :: | :-: | :-: |
@@ -83,10 +86,10 @@ Let's say we are creating budget in block #2 (+6 sec) with no specified start_ti
 | Payment amount    |    |    | 25 | 25 | 25  |     |
 
 > NOTE:
-> Per block payment is evaluated to 25 SCR (based on start_time and deadline) 
-> Budget balance isn't empty after 3rd payment and 25 SCR should be returned to budget's owner.
+> * Per block payment is evaluated to 25 SCR (based on start_time and deadline) 
+> * Budget balance isn't empty after 3rd payment and 25 SCR should be returned to budget's owner.
 
-If previous block is missed then start_time will be equal 0 sec. In this case per block payment will be equal ```[100 / ((12 - 0) / 3 + 1)]``` i.e. 20 SCR. 40 SCR will be returned to owner after budget will close.
+If previous block is missed then start_time will be equal 0 sec. In this case per block payment will be equal `[100 / ((12 - 0) / 3 + 1)]` i.e. 20 SCR. 40 SCR will be returned to owner after budget will close.
 
 | | | | | | | |
 | ----------------: | :: | :: | :: | :: | :-: | :-: |
@@ -99,9 +102,7 @@ If previous block is missed then start_time will be equal 0 sec. In this case pe
 | Budget balance    |    |    | 80 | 60 | 40  |     |
 | Payment amount    |    |    | 20 | 20 | 20  |     |
 
-> 
 > We can say that start_time means that budget won't start before this time but it could start after this timestamp because of missed blocks.
-> 
 
 <a name="advcashout"></a>
 
@@ -120,7 +121,7 @@ Let's say we are starting budget with such specs:
 * owners balance equals 2000 SCR
 * budgets balance equals 1210 SCR
 * per block payment is equal `[1210 / ((36 - 3) / 3 + 1)]` i.e. 100 SCR
-* let's say that according to auction algorithm 80% goes to dev pool and activity reward pool and 20% return to budget's owner
+* let's say that according to auction algorithm 80% goes to dev pool and activity reward pool and 20% returns to budget's owner
 
 > NOTE:
 > Budget balance do not divide completely on per block counts so the rest (which is equal 10 SCR) will be returned to owner after budget will be closed.
@@ -142,7 +143,7 @@ Let's say we are starting budget with such specs:
 
 <a name="advstartendsameblock"></a>
 
-## What if budget's start_time equal deadline (start and end are within same block)?
+## What if budget's start_time equals deadline (start and end are within same block)?
 
 First of all this is a valid case and budget will be created.
 
