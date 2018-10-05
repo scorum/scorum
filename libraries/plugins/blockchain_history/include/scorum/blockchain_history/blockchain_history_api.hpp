@@ -25,6 +25,19 @@ namespace detail {
 class blockchain_history_api_impl;
 }
 
+struct block_api_object : public signed_block_header
+{
+    block_api_object() = default;
+
+    block_api_object(const signed_block_header& b)
+        : signed_block_header(b)
+    {
+    }
+
+    uint32_t block_num;
+    std::vector<applied_operation> operations;
+};
+
 /**
  * @brief Provide set of getters to retrive information about blocks, transactions and operations
  *
@@ -112,6 +125,7 @@ public:
      */
     std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t block_num, uint32_t limit) const;
 
+    std::vector<block_api_object> get_blocks(uint32_t from, uint32_t limit) const;
     /// @}
 
 private:
@@ -121,7 +135,11 @@ private:
 } // namespace blockchain_history
 } // namespace scorum
 
+FC_REFLECT_DERIVED(scorum::blockchain_history::block_api_object,
+                   (scorum::protocol::signed_block_header),
+                   (block_num)(operations))
+
 FC_API(scorum::blockchain_history::blockchain_history_api,
        (get_ops_history)(get_ops_history_by_time)(get_ops_in_block)
        // Blocks and transactions
-       (get_transaction)(get_block_header)(get_block_headers_history)(get_block)(get_blocks_history))
+       (get_transaction)(get_block_header)(get_block_headers_history)(get_block)(get_blocks_history)(get_blocks))

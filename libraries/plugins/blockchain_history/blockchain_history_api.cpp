@@ -4,6 +4,7 @@
 #include <scorum/app/application.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/common_api/config_api.hpp>
+#include <scorum/protocol/operations.hpp>
 
 #include <fc/static_variant.hpp>
 
@@ -224,6 +225,52 @@ public:
         }
         FC_LOG_AND_RETHROW()
     }
+
+    std::vector<block_api_object> get_blocks(uint32_t block_num, uint32_t limit) const
+    {
+        FC_ASSERT(limit <= get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth,
+                  "Limit of ${l} is greater than maxmimum allowed ${2}",
+                  ("l", limit)("2", get_api_config(API_BLOCKCHAIN_HISTORY).max_blockchain_history_depth));
+        FC_ASSERT(limit > 0, "Limit must be greater than zero");
+        FC_ASSERT(block_num >= limit, "block_num must be greater than limit");
+
+        try
+        {
+            uint32_t head_block_num = get_head_block();
+            if (block_num > head_block_num)
+            {
+                block_num = head_block_num;
+            }
+
+            uint32_t from_block_num = (block_num > limit) ? block_num - limit : 0;
+
+            std::vector<block_api_object> result;
+            optional<signed_block> b;
+            while (from_block_num != block_num)
+            {
+                b = _db->fetch_block_by_number(block_num);
+
+                if (b.valid())
+                {
+                    block_api_object block(static_cast<signed_block_header>(*b));
+                    block.block_num = block_num;
+
+                    auto operations = this->get_ops_in_block(block_num, [&](const operation&) { return true; });
+
+                    for (auto pair : operations)
+                    {
+                        block.operations.push_back(pair.second);
+                    }
+
+                    result.push_back(block);
+                }
+                --block_num;
+            }
+
+            return result;
+        }
+        FC_LOG_AND_RETHROW()
+    }
 };
 
 } // namespace detail
@@ -322,5 +369,11 @@ std::map<uint32_t, signed_block_api_obj> blockchain_history_api::get_blocks_hist
     return _impl->_db->with_read_lock(
         [&]() { return _impl->get_blocks_history_by_number<signed_block_api_obj>(block_num, limit); });
 }
+
+std::vector<block_api_object> blockchain_history_api::get_blocks(uint32_t from, uint32_t limit) const
+{
+    return _impl->_db->with_read_lock([&]() { return _impl->get_blocks(from, limit); });
 }
-}
+
+} // namespace blockchain_history
+} // namespace scorum
