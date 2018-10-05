@@ -623,6 +623,9 @@ struct delegate_scorumpower_operation : public base_operation
     void validate() const;
 };
 
+/**
+ * \details See [advertising details](@ref advdetails) for detailed information about how budgets work.
+ */
 struct create_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
