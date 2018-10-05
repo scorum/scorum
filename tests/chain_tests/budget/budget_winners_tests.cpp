@@ -49,14 +49,14 @@ struct budget_payout_visitor
         return asset(_last_cashback_amount[name], SCORUM_SYMBOL);
     }
 
-    void operator()(const allocate_cash_from_advertising_budget_operation& op)
+    void operator()(const budget_outgo_operation& op)
     {
         BOOST_REQUIRE(op.cash.symbol() == SCORUM_SYMBOL);
         _adv_summ[op.owner] += op.cash.amount;
         _last_adv_amount[op.owner] = op.cash.amount;
     }
 
-    void operator()(const cash_back_from_advertising_budget_to_owner_operation& op)
+    void operator()(const budget_owner_income_operation& op)
     {
         BOOST_REQUIRE(op.cash.symbol() == SCORUM_SYMBOL);
         _cashback_summ[op.owner] += op.cash.amount;

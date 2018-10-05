@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(starting_point_is_greater_than_value)
 {
     BOOST_CHECK_EQUAL(utils::ceil(10, 19, 4), 11); // 19|15|11
     BOOST_CHECK_EQUAL(utils::ceil(10, 11, 3), 11); // 11
-    BOOST_CHECK_EQUAL(utils::ceil(10, 10, 4), 10); // 5|9|13
+    BOOST_CHECK_EQUAL(utils::ceil(10, 10, 4), 10); // 10
     BOOST_CHECK_EQUAL(utils::ceil(10, 17, 2), 11); // 17|15|13|11
 }
 

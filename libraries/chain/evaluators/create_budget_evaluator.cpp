@@ -34,11 +34,11 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
                   < (uint32_t)SCORUM_BUDGETS_LIMIT_PER_OWNER,
               "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGETS_LIMIT_PER_OWNER));
 
-    auto last_block_time = _dprops_service.get().time;
-    auto start = op.start.value_or(last_block_time);
+    auto head_block_time = _dprops_service.get().time;
+    auto start = op.start.value_or(head_block_time);
 
     FC_ASSERT(start <= op.deadline, "Deadline time must be greater or equal then start time");
-    FC_ASSERT(start >= last_block_time, "Start time must be greater or equal then last block time");
+    FC_ASSERT(start >= head_block_time, "Start time must be greater or equal then last block time");
 
     switch (op.type)
     {

@@ -113,11 +113,11 @@ dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& ow
         FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
         FC_ASSERT(balance.amount > 0, "Invalid balance.");
 
-        auto last_block_time = _dgp_svc.head_block_time();
-        auto per_block = detail::adv_calculate_per_block(start, end, last_block_time, balance);
+        auto head_block_time = _dgp_svc.head_block_time();
+        auto per_block = detail::adv_calculate_per_block(start, end, head_block_time, balance);
 
         auto aligned_start_sec
-            = utils::ceil(start.sec_since_epoch(), last_block_time.sec_since_epoch(), SCORUM_BLOCK_INTERVAL);
+            = utils::ceil(start.sec_since_epoch(), head_block_time.sec_since_epoch(), SCORUM_BLOCK_INTERVAL);
         auto cashout_sec = aligned_start_sec + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC - SCORUM_BLOCK_INTERVAL;
 
         const auto& budget = this->create([&](adv_budget_object<budget_type_v>& budget) {
@@ -125,7 +125,7 @@ dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& ow
 #ifndef IS_LOW_MEM
             fc::from_string(budget.json_metadata, json_metadata);
 #endif
-            budget.created = last_block_time;
+            budget.created = head_block_time;
             budget.cashout_time = fc::time_point_sec(cashout_sec);
             budget.start = start;
             budget.deadline = end;

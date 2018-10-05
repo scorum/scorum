@@ -50,7 +50,7 @@ void close_budget_evaluator::close_budget(adv_budget_service_i<budget_type_v>& b
     budget_svc.finish_budget(op.budget_id);
 
     _virt_op_emmiter.push_virtual_operation(
-        closing_budget_operation(budget_type_v, budget.owner, op.budget_id, balance_rest));
+        budget_closing_operation(budget_type_v, budget.owner, op.budget_id, balance_rest));
 }
 }
 }

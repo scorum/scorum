@@ -107,8 +107,8 @@ asset process_funds::process_adv_pending_payouts(adv_budget_service_i<budget_typ
 {
     auto pending_budgets = budget_svc.get_pending_budgets();
 
-    std::vector<allocate_cash_from_advertising_budget_operation> allocated_cash_ops;
-    std::vector<cash_back_from_advertising_budget_to_owner_operation> returned_cash_ops;
+    std::vector<budget_outgo_operation> allocated_cash_ops;
+    std::vector<budget_owner_income_operation> returned_cash_ops;
     for (const adv_budget_object<budget_type_v>& budget : pending_budgets)
     {
         if (budget.budget_pending_outgo.amount > 0)
