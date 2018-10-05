@@ -45,7 +45,7 @@ struct fixture : budget_check_fixture
 
     void create_budget(uint32_t balance = BUDGET_BALANCE_DEFAULT)
     {
-        auto start = db.head_block_time();
+        auto start = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
         auto deadline = db.head_block_time() + BUDGET_DEADLINE_IN_BLOCKS_DEFAULT * SCORUM_BLOCK_INTERVAL;
 
         post_budget_service.create_budget(alice.name, ASSET_SCR(balance), start, deadline, "");

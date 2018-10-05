@@ -95,11 +95,11 @@ SCORUM_TEST_CASE(check_that_after_budget_closed_all_stat_is_zero)
 
 SCORUM_TEST_CASE(validate_advertising_total_stats)
 {
-    create_budget(alice, budget_type::post, 50, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(alice, budget_type::post, 40, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(alice, budget_type::post, 30, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(alice, budget_type::post, 20, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(alice, budget_type::post, 10, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(alice, budget_type::post, 50, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(alice, budget_type::post, 40, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(alice, budget_type::post, 30, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(alice, budget_type::post, 20, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(alice, budget_type::post, 10, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
 
     // clang-format off
     const std::vector<std::vector<asset>> expectation = {

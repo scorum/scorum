@@ -16,8 +16,8 @@ namespace chain {
 create_budget_evaluator::create_budget_evaluator(data_service_factory_i& services)
     : evaluator_impl<data_service_factory_i, create_budget_evaluator>(services)
     , _account_service(services.account_service())
-    , _post_budget_service(services.post_budget_service())
-    , _banner_budget_service(services.banner_budget_service())
+    , _post_budget_svc(services.post_budget_service())
+    , _banner_budget_svc(services.banner_budget_service())
     , _dprops_service(services.dynamic_global_property_service())
 {
 }
@@ -30,24 +30,23 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
 
     FC_ASSERT(owner.balance >= op.balance, "Insufficient funds.",
               ("owner.balance", owner.balance)("balance", op.balance));
-    FC_ASSERT(_post_budget_service.get_budgets(owner.name).size()
-                      + _banner_budget_service.get_budgets(owner.name).size()
+    FC_ASSERT(_post_budget_svc.get_budgets(owner.name).size() + _banner_budget_svc.get_budgets(owner.name).size()
                   < (uint32_t)SCORUM_BUDGETS_LIMIT_PER_OWNER,
               "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGETS_LIMIT_PER_OWNER));
 
-    const auto& dprops = _dprops_service.get();
-    auto start = op.start.value_or(dprops.time);
+    auto head_block_time = _dprops_service.get().time;
+    auto start = op.start.value_or(head_block_time);
 
-    FC_ASSERT(start < op.deadline, "Deadline time must be greater then start time");
-    FC_ASSERT(start >= dprops.time, "Start time must be greater then head block time");
+    FC_ASSERT(start <= op.deadline, "Deadline time must be greater or equal then start time");
+    FC_ASSERT(start >= head_block_time, "Start time must be greater or equal then last block time");
 
     switch (op.type)
     {
     case budget_type::post:
-        _post_budget_service.create_budget(owner.name, op.balance, start, op.deadline, op.json_metadata);
+        _post_budget_svc.create_budget(owner.name, op.balance, start, op.deadline, op.json_metadata);
         break;
     case budget_type::banner:
-        _banner_budget_service.create_budget(owner.name, op.balance, start, op.deadline, op.json_metadata);
+        _banner_budget_svc.create_budget(owner.name, op.balance, start, op.deadline, op.json_metadata);
         break;
     }
 }

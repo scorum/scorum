@@ -99,7 +99,10 @@ SCORUM_TEST_CASE(should_immidiately_return_the_rest_to_owner)
 
     BOOST_REQUIRE_EQUAL(banner_budget_service.get_budgets().size(), 0u);
 
-    create_budget(alice, budget_type::banner, 1000, 5);
+    auto start = 1;
+    auto deadline = 5;
+
+    create_budget(alice, budget_type::banner, 1000, start, deadline);
     auto alice_balance_before = alice_acc.balance;
     auto dev_committee_balance_before = dev_committee.scr_balance;
 

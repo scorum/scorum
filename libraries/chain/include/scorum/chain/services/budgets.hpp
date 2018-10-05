@@ -8,7 +8,11 @@ class fund_budget_object;
 template <budget_type> class adv_budget_object;
 
 namespace detail {
-asset calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, const asset& balance);
+asset fund_calculate_per_block(time_point_sec start, time_point_sec deadline, const asset& balance);
+asset adv_calculate_per_block(time_point_sec start,
+                              time_point_sec deadline,
+                              time_point_sec block_time_sec,
+                              const asset& balance);
 }
 
 struct fund_budget_service_i : public base_service_i<fund_budget_object>

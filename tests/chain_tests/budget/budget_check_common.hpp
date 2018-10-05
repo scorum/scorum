@@ -20,9 +20,12 @@ struct budget_check_fixture : public database_default_integration_fixture
 
     create_budget_operation create_budget(const Actor& owner, const budget_type type);
     create_budget_operation
-    create_budget(const Actor& owner, const budget_type type, int balance, uint32_t deadline_in_blocks);
-    create_budget_operation create_budget(
-        const Actor& owner, const budget_type type, int balance, uint32_t start_in_blocks, uint32_t deadline_in_blocks);
+    create_budget(const Actor& owner, const budget_type type, int balance, uint32_t deadline_blocks_offset);
+    create_budget_operation create_budget(const Actor& owner,
+                                          const budget_type type,
+                                          int balance,
+                                          uint32_t start_blocks_offset,
+                                          uint32_t deadline_blocks_offset);
     create_budget_operation create_budget(const Actor& owner,
                                           const budget_type type,
                                           const asset& balance,

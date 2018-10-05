@@ -42,9 +42,11 @@ struct comment_cashout_from_scr_fund_fixture : public database_blog_integration_
         const int deadline_block_count = 10;
         const auto& owner = account_service.get_account(alice.name);
 
-        BOOST_CHECK_NO_THROW(advertising_budget_service.create_budget(
-            owner.name, ASSET_SCR(deadline_block_count), db.head_block_time(),
-            db.head_block_time() + SCORUM_BLOCK_INTERVAL * deadline_block_count, ""));
+        auto start = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
+        auto deadline = start + SCORUM_BLOCK_INTERVAL * (deadline_block_count - 1);
+
+        BOOST_CHECK_NO_THROW(
+            advertising_budget_service.create_budget(owner.name, ASSET_SCR(deadline_block_count), start, deadline, ""));
 
         generate_blocks(deadline_block_count);
         generate_blocks(2); // wait till SCR reward balancer become empty

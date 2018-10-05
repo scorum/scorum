@@ -10,10 +10,12 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
 
+#include <scorum/utils/math.hpp>
+
 namespace scorum {
 namespace chain {
 namespace detail {
-asset calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, const asset& balance)
+asset fund_calculate_per_block(time_point_sec start_date, time_point_sec end_date, const asset& balance)
 {
     FC_ASSERT(start_date < end_date, "Start time ${1} must be less end time ${2}", ("1", start_date)("2", end_date));
 
@@ -23,6 +25,28 @@ asset calculate_per_block(const time_point_sec& start_date, const time_point_sec
 
     per_block *= SCORUM_BLOCK_INTERVAL;
     per_block /= delta_in_sec;
+
+    // non zero budget must return at least one satoshi
+    per_block.amount = std::max(per_block.amount, share_type(1));
+
+    return per_block;
+}
+
+asset adv_calculate_per_block(time_point_sec start,
+                              time_point_sec deadline,
+                              time_point_sec last_block_time,
+                              const asset& balance)
+{
+    FC_ASSERT(start <= deadline, "Start time ${1} must be less or equal end time ${2}", ("1", start)("2", deadline));
+
+    auto aligned_start_sec
+        = utils::ceil(start.sec_since_epoch(), last_block_time.sec_since_epoch(), SCORUM_BLOCK_INTERVAL);
+
+    auto aligned_deadline_sec
+        = utils::ceil(deadline.sec_since_epoch(), last_block_time.sec_since_epoch(), SCORUM_BLOCK_INTERVAL);
+
+    auto per_blocks_count = 1 + ((aligned_deadline_sec - aligned_start_sec) / SCORUM_BLOCK_INTERVAL);
+    auto per_block = balance / per_blocks_count;
 
     // non zero budget must return at least one satoshi
     per_block.amount = std::max(per_block.amount, share_type(1));
@@ -44,7 +68,7 @@ const fund_budget_object& dbs_fund_budget::create_budget(const asset& balance, t
         FC_ASSERT(balance.symbol() == SP_SYMBOL, "Invalid asset type (symbol).");
         FC_ASSERT(start < end, "Invalid dates.");
 
-        auto per_block = detail::calculate_per_block(start, end, balance);
+        auto per_block = detail::fund_calculate_per_block(start, end, balance);
 
         return create([&](fund_budget_object& budget) {
             budget.created = _dprops_svc.head_block_time();
@@ -88,17 +112,21 @@ dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& ow
     {
         FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
         FC_ASSERT(balance.amount > 0, "Invalid balance.");
-        FC_ASSERT(start < end, "Invalid dates.");
 
-        auto per_block = detail::calculate_per_block(start, end, balance);
+        auto head_block_time = _dgp_svc.head_block_time();
+        auto per_block = detail::adv_calculate_per_block(start, end, head_block_time, balance);
+
+        auto aligned_start_sec
+            = utils::ceil(start.sec_since_epoch(), head_block_time.sec_since_epoch(), SCORUM_BLOCK_INTERVAL);
+        auto cashout_sec = aligned_start_sec + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC - SCORUM_BLOCK_INTERVAL;
 
         const auto& budget = this->create([&](adv_budget_object<budget_type_v>& budget) {
             budget.owner = owner;
 #ifndef IS_LOW_MEM
             fc::from_string(budget.json_metadata, json_metadata);
 #endif
-            budget.created = _dgp_svc.head_block_time();
-            budget.cashout_time = budget.created + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
+            budget.created = head_block_time;
+            budget.cashout_time = fc::time_point_sec(cashout_sec);
             budget.start = start;
             budget.deadline = end;
             budget.balance = balance;
