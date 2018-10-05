@@ -23,7 +23,7 @@ struct budget_security_check_fixture : public budget_check_fixture
         skip_flags() &= ~database::skip_authority_check;
     }
 
-    template <typename Object, typename Service> void test_close_alien_budget(Service& service, const budget_type type)
+    template <typename Object, typename Service> void test_close_alice_budget(Service& service, const budget_type type)
     {
         create_budget(alice, type);
 
@@ -49,7 +49,7 @@ struct budget_security_check_fixture : public budget_check_fixture
         BOOST_REQUIRE_NO_THROW(push_operation_only(op, alice.private_key));
     }
 
-    template <typename Object, typename Service> void test_update_alien_budget(Service& service, const budget_type type)
+    template <typename Object, typename Service> void test_update_alice_budget(Service& service, const budget_type type)
     {
         create_budget(alice, type);
 
@@ -163,14 +163,14 @@ SCORUM_TEST_CASE(miss_close_alien_budget_check)
 
 SCORUM_TEST_CASE(try_close_alien_budget_check)
 {
-    test_close_alien_budget<post_budget_object>(post_budget_service, budget_type::post);
-    test_close_alien_budget<banner_budget_object>(banner_budget_service, budget_type::banner);
+    test_close_alice_budget<post_budget_object>(post_budget_service, budget_type::post);
+    test_close_alice_budget<banner_budget_object>(banner_budget_service, budget_type::banner);
 }
 
 SCORUM_TEST_CASE(try_update_alien_budget_check)
 {
-    test_update_alien_budget<post_budget_object>(post_budget_service, budget_type::post);
-    test_update_alien_budget<banner_budget_object>(banner_budget_service, budget_type::banner);
+    test_update_alice_budget<post_budget_object>(post_budget_service, budget_type::post);
+    test_update_alice_budget<banner_budget_object>(banner_budget_service, budget_type::banner);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

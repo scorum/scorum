@@ -48,6 +48,8 @@ template <> struct budget_traits<budget_type::post>
     static constexpr uint16_t object_type_v = post_budget_object_type;
 };
 
+/// @addtogroup adv_api
+/// @{
 template <budget_type budget_type_v>
 class adv_budget_object : public object<budget_traits<budget_type_v>::object_type_v, adv_budget_object<budget_type_v>>
 {
@@ -77,6 +79,7 @@ public:
         return balance.amount != 0;
     }
 };
+/// @}
 
 struct by_owner_name;
 struct by_per_block;
