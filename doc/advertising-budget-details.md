@@ -1,5 +1,4 @@
-Advertising details {#advdetails}
-===================
+# Advertising details <a name="advdetails"></a>
 
 Here are some details and insights abount how advertising budgets work.
 
