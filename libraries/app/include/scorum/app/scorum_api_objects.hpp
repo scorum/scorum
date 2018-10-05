@@ -294,6 +294,9 @@ public:
         , deadline(b.deadline)
         , balance(b.balance)
         , per_block(b.per_block)
+        , cashout_time(b.cashout_time)
+        , owner_pending_income(b.owner_pending_income)
+        , budget_pending_outgo(b.budget_pending_outgo)
     {
     }
 
@@ -307,6 +310,9 @@ public:
         , deadline(b.deadline)
         , balance(b.balance)
         , per_block(b.per_block)
+        , cashout_time(b.cashout_time)
+        , owner_pending_income(b.owner_pending_income)
+        , budget_pending_outgo(b.budget_pending_outgo)
     {
     }
 
