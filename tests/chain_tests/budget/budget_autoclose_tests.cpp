@@ -328,5 +328,27 @@ SCORUM_TEST_CASE(should_raise_closing_virt_operation_after_deadline)
     BOOST_CHECK(was_raised);
 }
 
+SCORUM_TEST_CASE(one_satoshi_budget_should_be_closed_in_first_block)
+{
+    create_budget(alice, budget_type::post, 1, 1, 10);
+
+    BOOST_REQUIRE(!post_budget_service.get_budgets(alice.name).empty());
+
+    generate_blocks(2);
+
+    BOOST_REQUIRE(post_budget_service.get_budgets(alice.name).empty());
+}
+
+SCORUM_TEST_CASE(not_enough_money_for_each_per_block_should_be_close_when_balance_is_empty)
+{
+    create_budget(alice, budget_type::post, 3, 1, 10); // per_block = 1
+
+    BOOST_REQUIRE(!post_budget_service.get_budgets(alice.name).empty());
+
+    generate_blocks(3);
+
+    BOOST_REQUIRE(post_budget_service.get_budgets(alice.name).empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }
