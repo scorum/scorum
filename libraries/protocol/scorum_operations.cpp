@@ -273,7 +273,7 @@ void create_budget_operation::validate() const
     validate_json_metadata(json_metadata);
     FC_ASSERT(is_asset_type(balance, SCORUM_SYMBOL), "Balance must be SCR");
     FC_ASSERT(balance > asset(0, SCORUM_SYMBOL), "Balance must be positive");
-    FC_ASSERT(!start || start.value() <= deadline, "Deadline time must be greater or equal then start time");
+    FC_ASSERT(start <= deadline, "Deadline time must be greater or equal then start time");
 }
 
 void update_budget_operation::validate() const

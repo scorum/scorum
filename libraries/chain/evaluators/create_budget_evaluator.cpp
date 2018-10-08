@@ -34,19 +34,16 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
                   < (uint32_t)SCORUM_BUDGETS_LIMIT_PER_OWNER,
               "Can't create more then ${1} budgets per owner.", ("1", SCORUM_BUDGETS_LIMIT_PER_OWNER));
 
-    auto head_block_time = _dprops_service.get().time;
-    auto start = op.start.value_or(head_block_time);
-
-    FC_ASSERT(start <= op.deadline, "Deadline time must be greater or equal then start time");
-    FC_ASSERT(start >= head_block_time, "Start time must be greater or equal then last block time");
+    FC_ASSERT(op.start <= op.deadline, "Deadline time must be greater or equal then start time");
+    FC_ASSERT(op.start >= _dprops_service.get().time, "Start time must be greater or equal then head block time");
 
     switch (op.type)
     {
     case budget_type::post:
-        _post_budget_svc.create_budget(owner.name, op.balance, start, op.deadline, op.json_metadata);
+        _post_budget_svc.create_budget(owner.name, op.balance, op.start, op.deadline, op.json_metadata);
         break;
     case budget_type::banner:
-        _banner_budget_svc.create_budget(owner.name, op.balance, start, op.deadline, op.json_metadata);
+        _banner_budget_svc.create_budget(owner.name, op.balance, op.start, op.deadline, op.json_metadata);
         break;
     }
 }
