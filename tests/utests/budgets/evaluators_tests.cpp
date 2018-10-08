@@ -44,7 +44,7 @@ struct evaluators_for_budget_fixture : public services_for_budget_fixture
         : services_for_budget_fixture()
         , bob("bob")
         , create_evaluator(*services)
-        , close_evaluator(*services, *virt_op_emmiter)
+        , close_evaluator(*services)
         , update_evaluator(*services)
     {
         alice_create_budget_operation.owner = alice.name;

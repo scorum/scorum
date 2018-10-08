@@ -73,7 +73,7 @@ struct adv_budget_service_i : public base_service_i<adv_budget_object<budget_typ
 
     virtual asset perform_pending_payouts(const budgets_type& budgets) = 0;
     virtual void finish_budget(const oid<adv_budget_object<budget_type_v>>& id) = 0;
-    virtual void close_empty_budgets() = 0;
+    virtual budgets_type get_empty_budgets() const = 0;
 };
 
 struct banner_budget_service_i : public adv_budget_service_i<budget_type::banner>
@@ -134,7 +134,7 @@ public:
     asset perform_pending_payouts(const budgets_type& budgets) override;
 
     void finish_budget(const oid<adv_budget_object<budget_type_v>>& id) override;
-    void close_empty_budgets() override;
+    budgets_type get_empty_budgets() const override;
 
 private:
     void update_totals(std::function<void(adv_total_stats::budget_type_stat&)> callback);

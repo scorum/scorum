@@ -235,5 +235,30 @@ SCORUM_TEST_CASE(should_throw_active_key_required)
     SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), tx_missing_active_auth);
 }
 
+SCORUM_TEST_CASE(should_raise_closing_virt_op_after_force_closing_by_moder)
+{
+    auto was_raised = false;
+    db.pre_apply_operation.connect([&](const operation_notification& op_notif) {
+        op_notif.op.weak_visit([&](const budget_closing_operation&) { was_raised = true; });
+    });
+
+    create_budget(alice, budget_type::post, 1000, 1, 10);
+
+    generate_blocks(3);
+
+    empower_advertising_moderator(moder);
+
+    BOOST_CHECK(!was_raised);
+
+    close_budget_by_advertising_moderator_operation op;
+    op.moderator = moder.name;
+    op.budget_id = 0;
+    op.type = budget_type::post;
+
+    push_operation(op);
+
+    BOOST_CHECK(was_raised);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }
