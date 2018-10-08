@@ -79,6 +79,9 @@ public:
 
 private:
     const witness_object& create_internal(const account_name_type& owner, const public_key_type& block_signing_key);
+
+    dynamic_global_property_service_i& _dgp_svc;
+    witness_schedule_service_i& _witness_schedule_svc;
 };
 } // namespace chain
 } // namespace scorum

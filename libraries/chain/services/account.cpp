@@ -16,6 +16,8 @@ namespace chain {
 
 dbs_account::dbs_account(database& db)
     : base_service_type(db)
+    , _dgp_svc(db.dynamic_global_property_service())
+    , _witness_svc(db.witness_service())
 {
 }
 
@@ -248,7 +250,7 @@ void dbs_account::increase_balance(const account_object& account, const asset& a
     FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
     update(account, [&](account_object& acnt) { acnt.balance += amount; });
 
-    db_impl().obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& props) {
+    _dgp_svc.update([&](dynamic_global_property_object& props) {
         props.circulating_capital += amount;
     });
     // clang-format on
@@ -270,8 +272,7 @@ void dbs_account::increase_pending_balance(const account_object& account, const 
     FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
     update(account, [&](account_object& acnt) { acnt.active_sp_holders_pending_scr_reward += amount; });
 
-    db_impl().obtain_service<dbs_dynamic_global_property>().update(
-        [&](dynamic_global_property_object& props) { props.total_pending_scr += amount; });
+    _dgp_svc.update([&](dynamic_global_property_object& props) { props.total_pending_scr += amount; });
 }
 
 void dbs_account::decrease_pending_balance(const account_object& account, const asset& amount)
@@ -284,7 +285,7 @@ void dbs_account::increase_scorumpower(const account_object& account, const asse
     FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
     update(account, [&](account_object& a) { a.scorumpower += amount; });
 
-    db_impl().obtain_service<dbs_dynamic_global_property>().update([&](dynamic_global_property_object& props) {
+    _dgp_svc.update([&](dynamic_global_property_object& props) {
         props.circulating_capital += asset(amount.amount, SCORUM_SYMBOL);
         props.total_scorumpower += amount;
     });
@@ -302,8 +303,7 @@ void dbs_account::increase_pending_scorumpower(const account_object& account, co
     FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
     update(account, [&](account_object& acnt) { acnt.active_sp_holders_pending_sp_reward += amount; });
 
-    db_impl().obtain_service<dbs_dynamic_global_property>().update(
-        [&](dynamic_global_property_object& props) { props.total_pending_sp += amount; });
+    _dgp_svc.update([&](dynamic_global_property_object& props) { props.total_pending_sp += amount; });
 }
 
 void dbs_account::decrease_pending_scorumpower(const account_object& account, const asset& amount)
@@ -581,8 +581,6 @@ void dbs_account::clear_witness_votes(const account_object& account)
 void dbs_account::adjust_proxied_witness_votes(
     const account_object& account, const std::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH + 1>& delta, int depth)
 {
-    dbs_witness& witness_service = db().obtain_service<dbs_witness>();
-
     if (account.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
     {
         /// nested proxies are not supported, vote will not propagate
@@ -605,14 +603,13 @@ void dbs_account::adjust_proxied_witness_votes(
         share_type total_delta = 0;
         for (int i = SCORUM_MAX_PROXY_RECURSION_DEPTH - depth; i >= 0; --i)
             total_delta += delta[i];
-        witness_service.adjust_witness_votes(account, total_delta);
+
+        _witness_svc.adjust_witness_votes(account, total_delta);
     }
 }
 
 void dbs_account::adjust_proxied_witness_votes(const account_object& account, const share_type& delta, int depth)
 {
-    dbs_witness& witness_service = db().obtain_service<dbs_witness>();
-
     if (account.proxy != SCORUM_PROXY_TO_SELF_ACCOUNT)
     {
         /// nested proxies are not supported, vote will not propagate
@@ -627,7 +624,7 @@ void dbs_account::adjust_proxied_witness_votes(const account_object& account, co
     }
     else
     {
-        witness_service.adjust_witness_votes(account, delta);
+        _witness_svc.adjust_witness_votes(account, delta);
     }
 }
 
@@ -639,13 +636,11 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
                                                            const authority& active,
                                                            const authority& posting)
 {
-    const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
-
     const auto& new_account = create([&](account_object& acc) {
         acc.name = new_account_name;
         acc.recovery_account = recovery_account;
         acc.memo_key = memo_key;
-        acc.created = props.time;
+        acc.created = _dgp_svc.head_block_time();
 #ifndef IS_LOW_MEM
         fc::from_string(acc.json_metadata, json_metadata);
 #endif
@@ -667,9 +662,7 @@ const account_object& dbs_account::_create_account_objects(const account_name_ty
 
 dbs_account::account_refs_type dbs_account::get_active_sp_holders() const
 {
-    const auto& dprops_service = db_impl().obtain_service<dbs_dynamic_global_property>();
-
-    fc::time_point_sec min_vote_time_for_cashout = dprops_service.head_block_time();
+    fc::time_point_sec min_vote_time_for_cashout = _dgp_svc.head_block_time();
 
     return get_range_by<by_voting_power_restoring_time>(min_vote_time_for_cashout < boost::lambda::_1,
                                                         boost::multi_index::unbounded);
