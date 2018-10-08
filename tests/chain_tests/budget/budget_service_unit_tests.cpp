@@ -226,4 +226,16 @@ SCORUM_TEST_CASE(finish_budget_decrease_volume_by_budget_balance)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(create_budget_tests, fixture)
+
+SCORUM_TEST_CASE(start_and_deadline_same_block_check_per_block_equals_balance)
+{
+    const auto& budget = post_budget_service.create_budget(alice.name, ASSET_SCR(1000), db.head_block_time(),
+                                                           db.head_block_time(), "");
+
+    BOOST_CHECK_EQUAL(budget.per_block.amount, budget.balance.amount);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 }

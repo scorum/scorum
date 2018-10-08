@@ -213,7 +213,7 @@ SCORUM_TEST_CASE(start_and_deadline_same_block)
     op.type = budget_type::post;
 
     BOOST_CHECK(post_budget_service.get_budgets(initdelegate.name).empty());
-    push_operation(op, fc::ecc::private_key(), false);
+    push_operation(op, initdelegate.private_key, false);
     BOOST_CHECK(!post_budget_service.get_budgets(initdelegate.name).empty());
     generate_block();
     BOOST_CHECK(post_budget_service.get_budgets(initdelegate.name).empty());
@@ -222,7 +222,7 @@ SCORUM_TEST_CASE(start_and_deadline_same_block)
 SCORUM_TEST_CASE(starting_budget_immediately_during_creation_test)
 {
     create_budget_operation op;
-    op.start = fc::optional<fc::time_point_sec>{}; // real start_time will be equal last_block_head_time
+    op.start = db.head_block_time();
     op.deadline = db.head_block_time() + 4 * SCORUM_BLOCK_INTERVAL;
     op.balance = ASSET_SCR(20);
     op.owner = initdelegate.name;
