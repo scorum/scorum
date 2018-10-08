@@ -278,7 +278,7 @@ asset dbs_advertising_budget<budget_type_v>::allocate_cash(const adv_budget_obje
 
     update_totals([&](adv_total_stats::budget_type_stat& statistic) { statistic.volume -= budget.per_block; });
 
-    if (budget.deadline <= _dgp_svc.head_block_time())
+    if (budget.deadline <= _dgp_svc.head_block_time() || budget.balance.amount == 0)
         finish_budget(budget.id);
 
     return budget.per_block;
