@@ -44,7 +44,7 @@ struct evaluators_for_budget_fixture : public services_for_budget_fixture
         : services_for_budget_fixture()
         , bob("bob")
         , create_evaluator(*services)
-        , close_evaluator(*services, *virt_op_emmiter)
+        , close_evaluator(*services)
         , update_evaluator(*services)
     {
         alice_create_budget_operation.owner = alice.name;
@@ -107,18 +107,6 @@ BOOST_FIXTURE_TEST_CASE(asserts_in_budget_creation, evaluators_for_budget_fixtur
     op.start = start;
     op.deadline = deadline;
     BOOST_REQUIRE_NO_THROW(create_evaluator.do_apply(op));
-}
-
-BOOST_FIXTURE_TEST_CASE(autoreset_empty_start_to_headblock_time_wile_creation, evaluators_for_budget_fixture)
-{
-    create_budget_evaluator::operation_type op = alice_create_budget_operation;
-    op.start = {};
-
-    BOOST_REQUIRE_NO_THROW(create_evaluator.do_apply(op));
-
-    BOOST_REQUIRE_EQUAL(post_budget_service_fixture.get().start.sec_since_epoch(), head_block_time.sec_since_epoch());
-    BOOST_REQUIRE_EQUAL(post_budget_service_fixture.get().deadline.sec_since_epoch(),
-                        alice_create_budget_operation.deadline.sec_since_epoch());
 }
 
 BOOST_FIXTURE_TEST_CASE(budgets_limit_per_owner, evaluators_for_budget_fixture)

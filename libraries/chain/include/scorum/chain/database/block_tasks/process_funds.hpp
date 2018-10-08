@@ -53,6 +53,9 @@ private:
     asset process_adv_pending_payouts(adv_budget_service_i<budget_type_v>& budget_svc);
 
 private:
+    template <budget_type budget_type_v> void close_empty_budgets(adv_budget_service_i<budget_type_v>& budget_svc);
+
+private:
     content_reward_scr_service_i& _content_reward_service;
     dev_pool_service_i& _dev_pool_service;
     dynamic_global_property_service_i& _dprops_service;

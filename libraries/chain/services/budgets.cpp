@@ -341,14 +341,15 @@ void dbs_advertising_budget<budget_type_v>::finish_budget(const oid<adv_budget_o
     });
 }
 
-template <budget_type budget_type_v> void dbs_advertising_budget<budget_type_v>::close_empty_budgets()
+template <budget_type budget_type_v>
+typename dbs_advertising_budget<budget_type_v>::budgets_type
+dbs_advertising_budget<budget_type_v>::get_empty_budgets() const
 {
     auto zero = asset(0, SCORUM_SYMBOL);
     auto empty_budgets = this->template get_range_by<by_balances>(
         boost::multi_index::unbounded, ::boost::lambda::_1 <= std::make_tuple(zero, zero, zero));
 
-    for (const adv_budget_object<budget_type_v>& budget : empty_budgets)
-        this->remove(budget);
+    return empty_budgets;
 }
 
 template <budget_type budget_type_v>

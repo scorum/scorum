@@ -213,7 +213,7 @@ SCORUM_TEST_CASE(start_and_deadline_same_block)
     op.type = budget_type::post;
 
     BOOST_CHECK(post_budget_service.get_budgets(initdelegate.name).empty());
-    push_operation(op, fc::ecc::private_key(), false);
+    push_operation(op, initdelegate.private_key, false);
     BOOST_CHECK(!post_budget_service.get_budgets(initdelegate.name).empty());
     generate_block();
     BOOST_CHECK(post_budget_service.get_budgets(initdelegate.name).empty());
@@ -222,7 +222,7 @@ SCORUM_TEST_CASE(start_and_deadline_same_block)
 SCORUM_TEST_CASE(starting_budget_immediately_during_creation_test)
 {
     create_budget_operation op;
-    op.start = fc::optional<fc::time_point_sec>{}; // real start_time will be equal last_block_head_time
+    op.start = db.head_block_time();
     op.deadline = db.head_block_time() + 4 * SCORUM_BLOCK_INTERVAL;
     op.balance = ASSET_SCR(20);
     op.owner = initdelegate.name;
@@ -313,6 +313,19 @@ SCORUM_TEST_CASE(return_money_to_account_after_deadline_is_over_and_we_have_miss
 
     BOOST_REQUIRE_EQUAL(account_service.get_account(alice.name).balance,
                         original_balance + ASSET_SCR(deadline_blocks_offset - actually_generated_blocks));
+}
+
+SCORUM_TEST_CASE(should_raise_closing_virt_operation_after_deadline)
+{
+    auto was_raised = false;
+    db.pre_apply_operation.connect([&](const operation_notification& op_notif) {
+        op_notif.op.weak_visit([&](const budget_closing_operation&) { was_raised = true; });
+    });
+
+    create_budget(alice, budget_type::post, 1000, 1, 2);
+    generate_blocks(2);
+
+    BOOST_CHECK(was_raised);
 }
 
 SCORUM_TEST_CASE(one_satoshi_budget_should_be_closed_in_first_block)
