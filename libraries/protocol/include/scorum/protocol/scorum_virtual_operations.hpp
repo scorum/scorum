@@ -380,22 +380,16 @@ struct budget_closing_operation : public virtual_operation
     budget_closing_operation()
     {
     }
-    budget_closing_operation(const budget_type type,
-                             const account_name_type& owner,
-                             const int64_t id,
-                             const asset& cash)
+    budget_closing_operation(const budget_type type, const account_name_type& owner, const int64_t id)
         : type(type)
         , owner(owner)
         , id(id)
-        , cash(cash)
     {
-        FC_ASSERT(cash.symbol() == SCORUM_SYMBOL);
     }
 
     budget_type type = budget_type::post;
     account_name_type owner;
     int64_t id = -1;
-    asset cash = asset(0, SCORUM_SYMBOL);
 };
 }
 } // scorum::protocol
@@ -479,6 +473,5 @@ FC_REFLECT(scorum::protocol::budget_owner_income_operation,
 FC_REFLECT(scorum::protocol::budget_closing_operation,
            (type)
            (owner)
-           (id)
-           (cash))
+           (id))
 // clang-format on

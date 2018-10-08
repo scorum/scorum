@@ -315,5 +315,18 @@ SCORUM_TEST_CASE(return_money_to_account_after_deadline_is_over_and_we_have_miss
                         original_balance + ASSET_SCR(deadline_blocks_offset - actually_generated_blocks));
 }
 
+SCORUM_TEST_CASE(should_raise_closing_virt_operation_after_deadline)
+{
+    auto was_raised = false;
+    db.pre_apply_operation.connect([&](const operation_notification& op_notif) {
+        op_notif.op.weak_visit([&](const budget_closing_operation&) { was_raised = true; });
+    });
+
+    create_budget(alice, budget_type::post, 1000, 1, 2);
+    generate_blocks(2);
+
+    BOOST_CHECK(was_raised);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }
