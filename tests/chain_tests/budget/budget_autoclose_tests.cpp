@@ -228,7 +228,7 @@ SCORUM_TEST_CASE(start_and_deadline_same_block)
 SCORUM_TEST_CASE(starting_budget_immediately_during_creation_test)
 {
     create_budget_operation op;
-    op.start = db.head_block_time();
+    op.start = db.head_block_time() + 1;
     op.deadline = db.head_block_time() + 4 * SCORUM_BLOCK_INTERVAL;
     op.balance = ASSET_SCR(20);
     op.owner = initdelegate.name;
@@ -239,16 +239,12 @@ SCORUM_TEST_CASE(starting_budget_immediately_during_creation_test)
     {
         auto budget = post_budget_service.get_budgets(initdelegate.name)[0].get();
 
-        // Since budget start time is 'in the past' i.e. during block generation signed_block.time > budget.start_time
-        // (budget.start_time is actually equal last_block_head_time), per_blocks_count will be equal 5,
-        // but where will be only 4 withdrawals from budget => the very first per_block won't be withdrawn.
-        // Which means that 1 per_block amount will alway be
-        BOOST_CHECK_EQUAL(budget.per_block.amount, 20 / 5);
+        BOOST_CHECK_EQUAL(budget.per_block.amount, 20 / 4);
         BOOST_CHECK_EQUAL(budget.balance.amount, 20);
     }
     {
         generate_blocks(3);
-        BOOST_CHECK_EQUAL(post_budget_service.get_budgets(initdelegate.name)[0].get().balance.amount, 8);
+        BOOST_CHECK_EQUAL(post_budget_service.get_budgets(initdelegate.name)[0].get().balance.amount, 5);
 
         generate_block(); // deadline reached: 4 satoshi were withdrawn and 4 go to the owner
         BOOST_CHECK(post_budget_service.get_budgets(initdelegate.name).empty());
@@ -285,11 +281,12 @@ SCORUM_TEST_CASE(check_balance_after_deadline)
         acc_balance = account_service.get_account(alice.name).balance;
     }
     {
-        create_budget(uuid_gen("alice"), alice, budget_type::post, budget_balance, 0, 3);
+        auto start = db.head_block_time() + 1; // start_time should be greater than head_block_time
+        auto deadline = db.head_block_time() + 3 * SCORUM_BLOCK_INTERVAL;
+        create_budget(uuid_gen("alice"), alice, budget_type::post, ASSET_SCR(budget_balance), start, deadline);
         generate_blocks(3);
-        auto rest = budget_balance - (budget_balance / 4) * 4; // 3
-        auto very_first_per_block_which_wasnt_withdrawn = budget_balance / 4;
-        BOOST_CHECK_EQUAL(acc_balance.amount - budget_balance + rest + very_first_per_block_which_wasnt_withdrawn,
+        auto rest = budget_balance - (budget_balance / 3) * 3; // 0
+        BOOST_CHECK_EQUAL(acc_balance.amount - budget_balance + rest,
                           account_service.get_account(alice.name).balance.amount);
     }
 }
