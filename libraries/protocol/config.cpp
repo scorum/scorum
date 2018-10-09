@@ -33,6 +33,8 @@ config::config() /// production config
     , upvote_lockout(fc::minutes(30))
 
     , active_sp_holders_reward_period(fc::minutes(1))
+
+    , advertising_cashout_period_sec(60)
 #else
     , vesting_withdraw_interval_seconds(DAYS_TO_SECONDS(7)) // 1 week per interval
 
@@ -41,6 +43,8 @@ config::config() /// production config
     , upvote_lockout(fc::hours(12))
 
     , active_sp_holders_reward_period(fc::days(7))
+
+    , advertising_cashout_period_sec(DAYS_TO_SECONDS(7))
 #endif
 
     , reverse_auction_window_seconds(fc::minutes(30))
@@ -86,8 +90,6 @@ config::config() /// production config
     /// 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75%
     /// participation on all subsequent rounds.
     , scorum_hardfork_required_witnesses(17)
-
-    , advertising_cashout_period_sec(DAYS_TO_SECONDS(7))
 {
     FC_ASSERT(blogging_start_date + cashout_window_seconds < fifa_world_cup_2018_bounty_cashout_date,
               "Required: fifa_world_cup_2018_bounty_cashout_date >= blogging_start_date + cashout_window_seconds.");
@@ -108,6 +110,8 @@ config::config(test_mode) /// test config
     , upvote_lockout(fc::minutes(5))
 
     , active_sp_holders_reward_period(fc::minutes(15))
+
+    , advertising_cashout_period_sec(15)
 
     , reverse_auction_window_seconds(fc::seconds(30))
 
@@ -150,8 +154,6 @@ config::config(test_mode) /// test config
     , scorum_max_voted_witnesses(2)
 
     , scorum_hardfork_required_witnesses(2)
-
-    , advertising_cashout_period_sec(15)
 {
     FC_ASSERT(scorum_max_witnesses <= SCORUM_MAX_WITNESSES_LIMIT);
     FC_ASSERT(scorum_max_witnesses > scorum_max_voted_witnesses, "No place for runner");

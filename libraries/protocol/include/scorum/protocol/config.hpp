@@ -27,6 +27,8 @@ namespace detail {
 
         const fc::microseconds active_sp_holders_reward_period;
 
+        const uint32_t advertising_cashout_period_sec;
+
         const fc::microseconds reverse_auction_window_seconds;
 
         const fc::microseconds vote_regeneration_seconds;
@@ -68,8 +70,6 @@ namespace detail {
         const uint8_t scorum_max_voted_witnesses;
 
         const uint8_t scorum_hardfork_required_witnesses;
-
-        const uint32_t advertising_cashout_period_sec;
 
         enum test_mode { test };
 
