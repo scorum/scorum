@@ -20,9 +20,9 @@ std::vector<budget_api_obj> advertising_api::get_user_budgets(const std::string&
     return _impl->_db.with_read_lock([&] { return _impl->get_user_budgets(user); });
 }
 
-fc::optional<budget_api_obj> advertising_api::get_budget(int64_t id, budget_type type) const
+fc::optional<budget_api_obj> advertising_api::get_budget(uuid_type uuid, budget_type type) const
 {
-    return _impl->_db.with_read_lock([&] { return _impl->get_budget(id, type); });
+    return _impl->_db.with_read_lock([&] { return _impl->get_budget(uuid, type); });
 }
 
 std::vector<budget_api_obj> advertising_api::get_current_winners(budget_type type) const

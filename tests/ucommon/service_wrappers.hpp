@@ -288,6 +288,16 @@ public:
                 (const post_budget_object& (post_budget_service_i::*)(const post_budget_object::id_type&)const)
                     & post_budget_service_i::get)
             .Do([this](const post_budget_object::id_type& id) -> const post_budget_object& { return this->get(id); });
+
+        _mocks
+            .OnCallOverload(_service,
+                            (bool (post_budget_service_i::*)(const scorum::uuid_type&) const)
+                                & post_budget_service_i::is_exists)
+            .Do([this](const scorum::uuid_type& uuid) -> bool {
+                auto found_it = std::find_if(_objects_by_id.begin(), _objects_by_id.end(),
+                                             [&](const auto& pair) { return pair.second.uuid == uuid; });
+                return found_it != _objects_by_id.end();
+            });
     }
 };
 
@@ -334,6 +344,16 @@ public:
                     & banner_budget_service_i::get)
             .Do([this](const banner_budget_object::id_type& id) -> const banner_budget_object& {
                 return this->get(id);
+            });
+
+        _mocks
+            .OnCallOverload(_service,
+                            (bool (banner_budget_service_i::*)(const scorum::uuid_type&) const)
+                                & banner_budget_service_i::is_exists)
+            .Do([this](const scorum::uuid_type& uuid) -> bool {
+                auto found_it = std::find_if(_objects_by_id.begin(), _objects_by_id.end(),
+                                             [&](const auto& pair) { return pair.second.uuid == uuid; });
+                return found_it != _objects_by_id.end();
             });
     }
 };

@@ -78,6 +78,15 @@ BOOST_FIXTURE_TEST_CASE(budget_creation, evaluators_for_budget_fixture)
     BOOST_REQUIRE_NO_THROW(create_evaluator.do_apply(op));
 }
 
+BOOST_FIXTURE_TEST_CASE(budget_creation_same_uuid_should_throw, evaluators_for_budget_fixture)
+{
+    create_budget_evaluator::operation_type op = alice_create_budget_operation;
+    op.type = budget_type::post;
+
+    BOOST_REQUIRE_NO_THROW(create_evaluator.do_apply(op));
+    BOOST_REQUIRE_THROW(create_evaluator.do_apply(op), fc::assert_exception);
+}
+
 BOOST_FIXTURE_TEST_CASE(asserts_in_budget_creation, evaluators_for_budget_fixture)
 {
     create_budget_evaluator::operation_type op = alice_create_budget_operation;
@@ -118,9 +127,12 @@ BOOST_FIXTURE_TEST_CASE(budgets_limit_per_owner, evaluators_for_budget_fixture)
     create_budget_evaluator::operation_type op = alice_create_budget_operation;
     op.type = budget_type::post;
 
+    auto uuid_gen = boost::uuids::random_generator();
+
     auto half = SCORUM_BUDGETS_LIMIT_PER_OWNER / 2;
     for (size_t ci = 0; ci < half; ++ci)
     {
+        op.uuid = uuid_gen();
         BOOST_REQUIRE_NO_THROW(create_evaluator.do_apply(op));
     }
 
@@ -129,6 +141,7 @@ BOOST_FIXTURE_TEST_CASE(budgets_limit_per_owner, evaluators_for_budget_fixture)
     half = SCORUM_BUDGETS_LIMIT_PER_OWNER - half;
     for (size_t ci = 0; ci < half; ++ci)
     {
+        op.uuid = uuid_gen();
         BOOST_REQUIRE_NO_THROW(create_evaluator.do_apply(op));
     }
 
