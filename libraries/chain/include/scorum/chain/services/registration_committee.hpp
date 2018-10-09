@@ -67,6 +67,9 @@ private:
     const registration_committee_member_object& _add_member(const account_object&);
 
     void _exclude_member(const account_object&);
+
+    account_service_i& _account_svc;
+    registration_pool_service_i& _reg_pool_svc;
 };
 
 namespace utils {

@@ -33,6 +33,9 @@ public:
 
     const decline_voting_rights_request_object& create_rights(const account_id_type& account,
                                                               const fc::microseconds& time_to_life) override;
+
+private:
+    dynamic_global_property_service_i& _dgp_svc;
 };
 } // namespace chain
 } // namespace scorum

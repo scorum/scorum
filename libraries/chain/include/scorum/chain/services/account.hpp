@@ -308,6 +308,9 @@ private:
                                                   const authority& owner,
                                                   const authority& active,
                                                   const authority& posting);
+
+    dynamic_global_property_service_i& _dgp_svc;
+    witness_service_i& _witness_svc;
 };
 
 } // namespace chain
