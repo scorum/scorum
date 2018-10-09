@@ -40,10 +40,10 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
     switch (op.type)
     {
     case budget_type::post:
-        _post_budget_svc.create_budget(owner.name, op.balance, op.start, op.deadline, op.json_metadata);
+        _post_budget_svc.create_budget(op.uuid, owner.name, op.balance, op.start, op.deadline, op.json_metadata);
         break;
     case budget_type::banner:
-        _banner_budget_svc.create_budget(owner.name, op.balance, op.start, op.deadline, op.json_metadata);
+        _banner_budget_svc.create_budget(op.uuid, owner.name, op.balance, op.start, op.deadline, op.json_metadata);
         break;
     }
 }

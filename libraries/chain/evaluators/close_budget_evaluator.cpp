@@ -38,12 +38,12 @@ template <protocol::budget_type budget_type_v>
 void close_budget_evaluator::close_budget(adv_budget_service_i<budget_type_v>& budget_svc, const operation_type& op)
 {
     _account_service.check_account_existence(op.owner);
-    FC_ASSERT(budget_svc.is_exists(op.budget_id), "Budget with id ${id} doesn't exist", ("id", op.budget_id));
+    FC_ASSERT(budget_svc.is_exists(op.uuid), "Budget with uuid ${id} doesn't exist", ("id", op.uuid));
 
-    const auto& budget = budget_svc.get(op.budget_id);
-    FC_ASSERT(budget.owner == op.owner, "These is not [${o}/${id}] budget", ("o", op.owner)("id", op.budget_id));
+    const auto& budget = budget_svc.get(op.uuid);
+    FC_ASSERT(budget.owner == op.owner, "These is not [${o}/${id}] budget", ("o", op.owner)("id", op.uuid));
 
-    budget_svc.finish_budget(op.budget_id);
+    budget_svc.finish_budget(op.uuid);
 }
 }
 }

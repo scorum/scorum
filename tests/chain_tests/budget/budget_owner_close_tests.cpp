@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "budget_check_common.hpp"
+#include <boost/uuid/uuid_generators.hpp>
 
 namespace {
 
@@ -20,6 +21,9 @@ public:
     account_service_i& account_service;
 
     Actor alice;
+
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 };
 
 BOOST_FIXTURE_TEST_SUITE(budget_autoclose_check, budget_owner_close_tests_fixture)
@@ -29,15 +33,16 @@ SCORUM_TEST_CASE(owner_should_close_budget_test)
     int balance = 1000;
     int start_offset = 1;
     int deadline_offset = 15;
+    auto uuid = uuid_gen("alice");
 
-    create_budget(alice, budget_type::post, balance, start_offset, deadline_offset);
+    create_budget(uuid, alice, budget_type::post, balance, start_offset, deadline_offset);
     generate_block();
 
     BOOST_REQUIRE(!post_budget_service.get_budgets(alice.name).empty());
 
     close_budget_operation op;
     op.type = budget_type::post;
-    op.budget_id = 0;
+    op.uuid = uuid;
     op.owner = alice.name;
 
     push_operation(op);
@@ -50,15 +55,16 @@ SCORUM_TEST_CASE(non_owner_shouldnt_close_budget_test)
     int balance = 1000;
     int start_offset = 1;
     int deadline_offset = 15;
+    auto uuid = uuid_gen("alice");
 
-    create_budget(alice, budget_type::post, balance, start_offset, deadline_offset);
+    create_budget(uuid, alice, budget_type::post, balance, start_offset, deadline_offset);
     generate_block();
 
     BOOST_REQUIRE(!post_budget_service.get_budgets(alice.name).empty());
 
     close_budget_operation op;
     op.type = budget_type::post;
-    op.budget_id = 0;
+    op.uuid = uuid;
     op.owner = initdelegate.name;
 
     BOOST_CHECK_THROW(push_operation(op), fc::assert_exception);
@@ -74,13 +80,14 @@ SCORUM_TEST_CASE(should_raise_closing_virt_op_test)
     int balance = 1000;
     int start_offset = 1;
     int deadline_offset = 15;
+    auto uuid = uuid_gen("alice");
 
-    create_budget(alice, budget_type::post, balance, start_offset, deadline_offset);
+    create_budget(uuid, alice, budget_type::post, balance, start_offset, deadline_offset);
     generate_block();
 
     close_budget_operation op;
     op.type = budget_type::post;
-    op.budget_id = 0;
+    op.uuid = uuid;
     op.owner = alice.name;
 
     push_operation(op);

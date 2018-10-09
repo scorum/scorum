@@ -1,6 +1,9 @@
 #include <boost/test/unit_test.hpp>
 #include <scorum/chain/services/development_committee.hpp>
 #include <scorum/chain/schema/dev_committee_object.hpp>
+
+#include <boost/uuid/uuid_generators.hpp>
+
 #include "budget_check_common.hpp"
 
 namespace advertising_moderator_tests {
@@ -47,6 +50,9 @@ public:
 
     int64_t proposal_no = 0;
 
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
+
     development_committee_service_i& dev_committee_svc;
 };
 
@@ -56,7 +62,8 @@ SCORUM_TEST_CASE(should_close_post_budget)
 {
     BOOST_REQUIRE_EQUAL(post_budget_service.get_budgets().size(), 0u);
 
-    create_budget(alice, budget_type::post);
+    auto uuid = uuid_gen("alice");
+    create_budget(uuid, alice, budget_type::post);
 
     BOOST_REQUIRE_EQUAL(post_budget_service.get_budgets().size(), 1u);
 
@@ -64,7 +71,7 @@ SCORUM_TEST_CASE(should_close_post_budget)
 
     close_budget_by_advertising_moderator_operation close_budget_op;
     close_budget_op.moderator = moder.name;
-    close_budget_op.budget_id = 0;
+    close_budget_op.uuid = uuid;
     close_budget_op.type = budget_type::post;
 
     push_operation(close_budget_op, moder.private_key);
@@ -76,7 +83,8 @@ SCORUM_TEST_CASE(should_close_banner_budget)
 {
     BOOST_REQUIRE_EQUAL(banner_budget_service.get_budgets().size(), 0u);
 
-    create_budget(alice, budget_type::banner);
+    auto uuid = uuid_gen("alice");
+    create_budget(uuid, alice, budget_type::banner);
 
     BOOST_REQUIRE_EQUAL(banner_budget_service.get_budgets().size(), 1u);
 
@@ -84,7 +92,7 @@ SCORUM_TEST_CASE(should_close_banner_budget)
 
     close_budget_by_advertising_moderator_operation close_budget_op;
     close_budget_op.moderator = moder.name;
-    close_budget_op.budget_id = 0;
+    close_budget_op.uuid = uuid;
     close_budget_op.type = budget_type::banner;
 
     push_operation(close_budget_op, moder.private_key);
@@ -101,8 +109,9 @@ SCORUM_TEST_CASE(should_immidiately_return_the_rest_to_owner)
 
     auto start = 1;
     auto deadline = 5;
+    auto uuid = uuid_gen("alice");
 
-    create_budget(alice, budget_type::banner, 1000, start, deadline);
+    create_budget(uuid, alice, budget_type::banner, 1000, start, deadline);
     auto alice_balance_before = alice_acc.balance;
     auto dev_committee_balance_before = dev_committee.scr_balance;
 
@@ -126,7 +135,7 @@ SCORUM_TEST_CASE(should_immidiately_return_the_rest_to_owner)
 
     close_budget_by_advertising_moderator_operation close_budget_op;
     close_budget_op.moderator = moder.name;
-    close_budget_op.budget_id = 0;
+    close_budget_op.uuid = uuid;
     close_budget_op.type = budget_type::banner;
 
     push_operation(close_budget_op, moder.private_key);
@@ -142,9 +151,12 @@ SCORUM_TEST_CASE(check_moderator_changing)
 {
     BOOST_REQUIRE_EQUAL(banner_budget_service.get_budgets().size(), 0u);
 
-    create_budget(alice, budget_type::banner, BUDGET_BALANCE_DEFAULT,
+    auto uuid0 = uuid_gen("alice0");
+    create_budget(uuid0, alice, budget_type::banner, BUDGET_BALANCE_DEFAULT,
                   100 * BUDGET_DEADLINE_IN_BLOCKS_DEFAULT); // budget 0
-    create_budget(alice, budget_type::banner, BUDGET_BALANCE_DEFAULT,
+
+    auto uuid1 = uuid_gen("alice1");
+    create_budget(uuid1, alice, budget_type::banner, BUDGET_BALANCE_DEFAULT,
                   100 * BUDGET_DEADLINE_IN_BLOCKS_DEFAULT); // budget 1
 
     BOOST_REQUIRE_EQUAL(banner_budget_service.get_budgets().size(), 2u);
@@ -153,7 +165,7 @@ SCORUM_TEST_CASE(check_moderator_changing)
 
     close_budget_by_advertising_moderator_operation close_budget_op;
     close_budget_op.moderator = bob.name;
-    close_budget_op.budget_id = 0;
+    close_budget_op.uuid = uuid0;
     close_budget_op.type = budget_type::banner;
 
     BOOST_REQUIRE_THROW(push_operation(close_budget_op, bob.private_key),
@@ -166,7 +178,7 @@ SCORUM_TEST_CASE(check_moderator_changing)
 
     empower_advertising_moderator(bob); // now 'bob' became moderator ('moder' is not)
 
-    close_budget_op.budget_id = 1;
+    close_budget_op.uuid = uuid1;
     close_budget_op.moderator = moder.name;
     BOOST_REQUIRE_THROW(push_operation(close_budget_op, moder.private_key), fc::assert_exception);
 
@@ -178,11 +190,12 @@ SCORUM_TEST_CASE(check_moderator_changing)
 
 SCORUM_TEST_CASE(should_throw_moderator_not_exists)
 {
-    create_budget(alice, budget_type::post);
+    auto uuid = uuid_gen("alice");
+    create_budget(uuid, alice, budget_type::post);
 
     close_budget_by_advertising_moderator_operation op;
     op.moderator = moder.name;
-    op.budget_id = 0;
+    op.uuid = uuid;
     op.type = budget_type::post;
 
     BOOST_REQUIRE_THROW(push_operation(op, moder.private_key), fc::assert_exception);
@@ -190,13 +203,14 @@ SCORUM_TEST_CASE(should_throw_moderator_not_exists)
 
 SCORUM_TEST_CASE(should_throw_moder_is_not_a_moderator)
 {
-    create_budget(alice, budget_type::post);
+    auto uuid = uuid_gen("alice");
+    create_budget(uuid, alice, budget_type::post);
 
     empower_advertising_moderator(alice);
 
     close_budget_by_advertising_moderator_operation op;
     op.moderator = moder.name;
-    op.budget_id = 0;
+    op.uuid = uuid;
     op.type = budget_type::post;
 
     BOOST_REQUIRE_THROW(push_operation(op, moder.private_key), fc::assert_exception);
@@ -204,13 +218,14 @@ SCORUM_TEST_CASE(should_throw_moder_is_not_a_moderator)
 
 SCORUM_TEST_CASE(should_throw_usual_user_trying_close_budget)
 {
-    create_budget(alice, budget_type::post);
+    auto uuid = uuid_gen("alice");
+    create_budget(uuid, alice, budget_type::post);
 
     empower_advertising_moderator(moder);
 
     close_budget_by_advertising_moderator_operation op;
     op.moderator = initdelegate.name;
-    op.budget_id = 0;
+    op.uuid = uuid;
     op.type = budget_type::post;
 
     BOOST_REQUIRE_THROW(push_operation(op, initdelegate.private_key), fc::assert_exception);
@@ -218,13 +233,14 @@ SCORUM_TEST_CASE(should_throw_usual_user_trying_close_budget)
 
 SCORUM_TEST_CASE(should_throw_active_key_required)
 {
-    create_budget(alice, budget_type::post);
+    auto uuid = uuid_gen("alice");
+    create_budget(uuid, alice, budget_type::post);
 
     empower_advertising_moderator(moder);
 
     close_budget_by_advertising_moderator_operation op;
     op.moderator = moder.name;
-    op.budget_id = 0;
+    op.uuid = uuid;
     op.type = budget_type::post;
 
     signed_transaction tx;
@@ -242,7 +258,8 @@ SCORUM_TEST_CASE(should_raise_closing_virt_op_after_force_closing_by_moder)
         op_notif.op.weak_visit([&](const budget_closing_operation&) { was_raised = true; });
     });
 
-    create_budget(alice, budget_type::post, 1000, 1, 10);
+    auto uuid = uuid_gen("alice");
+    create_budget(uuid, alice, budget_type::post, 1000, 1, 10);
 
     generate_blocks(3);
 
@@ -252,7 +269,7 @@ SCORUM_TEST_CASE(should_raise_closing_virt_op_after_force_closing_by_moder)
 
     close_budget_by_advertising_moderator_operation op;
     op.moderator = moder.name;
-    op.budget_id = 0;
+    op.uuid = uuid;
     op.type = budget_type::post;
 
     push_operation(op);

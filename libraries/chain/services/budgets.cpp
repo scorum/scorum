@@ -102,7 +102,8 @@ dbs_advertising_budget<budget_type_v>::dbs_advertising_budget(database& db)
 
 template <budget_type budget_type_v>
 const adv_budget_object<budget_type_v>&
-dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& owner,
+dbs_advertising_budget<budget_type_v>::create_budget(const uuid_type& uuid,
+                                                     const account_name_type& owner,
                                                      const asset& balance,
                                                      time_point_sec start,
                                                      time_point_sec end,
@@ -121,6 +122,7 @@ dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& ow
         auto cashout_sec = aligned_start_sec + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC - SCORUM_BLOCK_INTERVAL;
 
         const auto& budget = this->create([&](adv_budget_object<budget_type_v>& budget) {
+            budget.uuid = uuid;
             budget.owner = owner;
 #ifndef IS_LOW_MEM
             fc::from_string(budget.json_metadata, json_metadata);
@@ -154,11 +156,20 @@ dbs_advertising_budget<budget_type_v>::get(const oid<adv_budget_object<budget_ty
 }
 
 template <budget_type budget_type_v>
-bool dbs_advertising_budget<budget_type_v>::is_exists(const oid<adv_budget_object<budget_type_v>>& id) const
+const adv_budget_object<budget_type_v>& dbs_advertising_budget<budget_type_v>::get(const uuid_type& uuid) const
 {
     try
     {
-        return nullptr != this->find_by(id);
+        return this->template get_by<by_uuid>(uuid);
+    }
+    FC_CAPTURE_AND_RETHROW((uuid))
+}
+
+template <budget_type budget_type_v> bool dbs_advertising_budget<budget_type_v>::is_exists(const uuid_type& id) const
+{
+    try
+    {
+        return nullptr != this->template find_by<by_uuid>(id);
     }
     FC_CAPTURE_AND_RETHROW((id))
 }
@@ -279,7 +290,7 @@ asset dbs_advertising_budget<budget_type_v>::allocate_cash(const adv_budget_obje
     update_totals([&](adv_total_stats::budget_type_stat& statistic) { statistic.volume -= budget.per_block; });
 
     if (budget.deadline <= _dgp_svc.head_block_time() || budget.balance.amount == 0)
-        finish_budget(budget.id);
+        finish_budget(budget.uuid);
 
     return budget.per_block;
 }
@@ -324,10 +335,9 @@ asset dbs_advertising_budget<budget_type_v>::perform_pending_payouts(const budge
     return budgets_outgo;
 }
 
-template <budget_type budget_type_v>
-void dbs_advertising_budget<budget_type_v>::finish_budget(const oid<adv_budget_object<budget_type_v>>& id)
+template <budget_type budget_type_v> void dbs_advertising_budget<budget_type_v>::finish_budget(const uuid_type& uuid)
 {
-    const auto& budget = get(id);
+    const auto& budget = get(uuid);
 
     update_totals([&](adv_total_stats::budget_type_stat& statistic) {
         statistic.owner_pending_income += budget.balance;

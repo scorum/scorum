@@ -1,15 +1,12 @@
 #include <boost/test/unit_test.hpp>
+#include <limits>
+#include <boost/uuid/uuid_generators.hpp>
 
 #include <scorum/chain/services/budgets.hpp>
-
 #include <scorum/chain/schema/budget_objects.hpp>
-
 #include <scorum/common_api/config_api.hpp>
 
 #include "budget_check_common.hpp"
-
-#include <limits>
-
 #include "actor.hpp"
 
 namespace budget_service_unit_tests {
@@ -21,6 +18,8 @@ using scorum::chain::adv_total_stats;
 struct fixture : budget_check_fixture
 {
     Actor alice;
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 
     fixture()
         : alice("alice")
@@ -48,7 +47,8 @@ struct fixture : budget_check_fixture
         auto start = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
         auto deadline = db.head_block_time() + BUDGET_DEADLINE_IN_BLOCKS_DEFAULT * SCORUM_BLOCK_INTERVAL;
 
-        post_budget_service.create_budget(alice.name, ASSET_SCR(balance), start, deadline, "");
+        auto uuid = uuid_gen("alice");
+        post_budget_service.create_budget(uuid, alice.name, ASSET_SCR(balance), start, deadline, "");
     }
 };
 
@@ -206,7 +206,7 @@ SCORUM_TEST_CASE(finish_budget_increase_owner_pending_income_on_budget_balance)
 
     const auto expected_owner_pending_income = budget.balance;
 
-    post_budget_service.finish_budget(budget.id);
+    post_budget_service.finish_budget(budget.uuid);
 
     BOOST_CHECK_EQUAL(expected_owner_pending_income, post_budgets_stat().owner_pending_income);
 }
@@ -220,7 +220,7 @@ SCORUM_TEST_CASE(finish_budget_decrease_volume_by_budget_balance)
     db.modify(db.get<dynamic_global_property_object>(),
               [&](dynamic_global_property_object& obj) { obj.advertising.post_budgets.volume = budget.balance; });
 
-    post_budget_service.finish_budget(budget.id);
+    post_budget_service.finish_budget(budget.uuid);
 
     BOOST_CHECK_EQUAL(ASSET_NULL_SCR, post_budgets_stat().volume);
 }
@@ -231,8 +231,8 @@ BOOST_FIXTURE_TEST_SUITE(create_budget_tests, fixture)
 
 SCORUM_TEST_CASE(start_and_deadline_same_block_check_per_block_equals_balance)
 {
-    const auto& budget = post_budget_service.create_budget(alice.name, ASSET_SCR(1000), db.head_block_time(),
-                                                           db.head_block_time(), "");
+    const auto& budget = post_budget_service.create_budget(uuid_gen("alice"), alice.name, ASSET_SCR(1000),
+                                                           db.head_block_time(), db.head_block_time(), "");
 
     BOOST_CHECK_EQUAL(budget.per_block.amount, budget.balance.amount);
 }

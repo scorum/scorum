@@ -6,6 +6,8 @@
 #include <scorum/chain/evaluators/close_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/update_budget_evaluator.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+
 namespace evaluators_tests {
 
 using namespace common_fixtures;
@@ -40,6 +42,8 @@ struct evaluators_for_budget_fixture : public services_for_budget_fixture
     close_budget_evaluator::operation_type alice_close_budget_operation;
     update_budget_evaluator::operation_type alice_update_budget_operation;
 
+    scorum::uuid_type alice_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+
     evaluators_for_budget_fixture()
         : services_for_budget_fixture()
         , bob("bob")
@@ -54,10 +58,10 @@ struct evaluators_for_budget_fixture : public services_for_budget_fixture
         alice_create_budget_operation.json_metadata = R"j({"company": "adidas"})j";
 
         alice_close_budget_operation.owner = alice.name;
-        alice_close_budget_operation.budget_id = 1;
+        alice_close_budget_operation.uuid = alice_uuid;
 
         alice_update_budget_operation.owner = alice.name;
-        alice_update_budget_operation.budget_id = 1;
+        alice_update_budget_operation.uuid = alice_uuid;
         alice_update_budget_operation.json_metadata = R"j({"fake_company": "abibas"})j";
     }
 };
