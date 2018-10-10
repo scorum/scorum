@@ -1,13 +1,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/services/budgets.hpp>
-
 #include <scorum/chain/schema/budget_objects.hpp>
-
 #include <scorum/common_api/config_api.hpp>
-
 #include "budget_check_common.hpp"
 
+#include <boost/uuid/uuid_generators.hpp>
 #include <limits>
 
 #include "actor.hpp"
@@ -76,13 +74,16 @@ struct budget_service_getters_check_fixture : public budget_check_fixture
     Actor alice;
     Actor bob;
     Actor sam;
+
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 };
 
 BOOST_FIXTURE_TEST_SUITE(budget_service_check, budget_service_getters_check_fixture)
 
 SCORUM_TEST_CASE(check_that_after_budget_closed_all_stat_is_zero)
 {
-    create_budget(alice, budget_type::post);
+    create_budget(uuid_gen("alice"), alice, budget_type::post);
 
     this->generate_blocks(BUDGET_BALANCE_DEFAULT / BUDGET_PERBLOCK_DEFAULT);
 
@@ -95,11 +96,11 @@ SCORUM_TEST_CASE(check_that_after_budget_closed_all_stat_is_zero)
 
 SCORUM_TEST_CASE(validate_advertising_total_stats)
 {
-    create_budget(alice, budget_type::post, 50, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(alice, budget_type::post, 40, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(alice, budget_type::post, 30, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(alice, budget_type::post, 20, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(alice, budget_type::post, 10, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(uuid_gen("alice0"), alice, budget_type::post, 50, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(uuid_gen("alice1"), alice, budget_type::post, 40, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(uuid_gen("alice2"), alice, budget_type::post, 30, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(uuid_gen("alice3"), alice, budget_type::post, 20, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(uuid_gen("alice4"), alice, budget_type::post, 10, 1, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
 
     // clang-format off
     const std::vector<std::vector<asset>> expectation = {
@@ -128,20 +129,22 @@ SCORUM_TEST_CASE(validate_advertising_total_stats)
 
 SCORUM_TEST_CASE(get_budget_check)
 {
-    create_budget(alice, budget_type::post);
-    create_budget(bob, budget_type::banner);
+    auto alice_uuid = uuid_gen("alice");
+    auto bob_uuid = uuid_gen("bob");
+    create_budget(alice_uuid, alice, budget_type::post);
+    create_budget(bob_uuid, bob, budget_type::banner);
 
-    BOOST_REQUIRE_EQUAL(post_budget_service.get(post_budget_object::id_type(0)).owner, alice.name);
-    BOOST_REQUIRE_EQUAL(banner_budget_service.get(banner_budget_object::id_type(0)).owner, bob.name);
+    BOOST_REQUIRE_EQUAL(post_budget_service.get(alice_uuid).owner, alice.name);
+    BOOST_REQUIRE_EQUAL(banner_budget_service.get(bob_uuid).owner, bob.name);
 }
 
 SCORUM_TEST_CASE(get_all_budgets_check)
 {
-    create_budget(alice, budget_type::post);
-    create_budget(alice, budget_type::post);
-    create_budget(alice, budget_type::banner);
-    create_budget(bob, budget_type::post);
-    create_budget(bob, budget_type::banner);
+    create_budget(uuid_gen("alice0"), alice, budget_type::post);
+    create_budget(uuid_gen("alice1"), alice, budget_type::post);
+    create_budget(uuid_gen("alice2"), alice, budget_type::banner);
+    create_budget(uuid_gen("bob0"), bob, budget_type::post);
+    create_budget(uuid_gen("bob1"), bob, budget_type::banner);
 
     BOOST_REQUIRE_EQUAL(post_budget_service.get_budgets().size(), 3u);
     BOOST_REQUIRE_EQUAL(banner_budget_service.get_budgets().size(), 2u);
@@ -149,9 +152,9 @@ SCORUM_TEST_CASE(get_all_budgets_check)
 
 SCORUM_TEST_CASE(get_owned_budgets_check)
 {
-    create_budget(alice, budget_type::post);
-    create_budget(bob, budget_type::post);
-    create_budget(bob, budget_type::banner);
+    create_budget(uuid_gen("alice"), alice, budget_type::post);
+    create_budget(uuid_gen("bob0"), bob, budget_type::post);
+    create_budget(uuid_gen("bob1"), bob, budget_type::banner);
 
     BOOST_REQUIRE_EQUAL(post_budget_service.get_budgets(alice.name).size(), 1u);
     BOOST_REQUIRE_EQUAL(post_budget_service.get_budgets(bob.name).size(), 1u);
@@ -164,9 +167,9 @@ struct budget_service_lookup_check_fixture : public budget_service_getters_check
 {
     budget_service_lookup_check_fixture()
     {
-        create_budget(alice, budget_type::post);
-        create_budget(bob, budget_type::post);
-        create_budget(bob, budget_type::banner);
+        create_budget(uuid_gen("alice"), alice, budget_type::post);
+        create_budget(uuid_gen("bob0"), bob, budget_type::post);
+        create_budget(uuid_gen("bob1"), bob, budget_type::banner);
     }
 };
 
@@ -209,8 +212,8 @@ struct get_top_budgets_check_fixture : public budget_service_getters_check_fixtu
 {
     template <typename ServiceType> void test_limited_check(ServiceType& service, budget_type type)
     {
-        create_budget(alice, type);
-        create_budget(bob, type);
+        create_budget(uuid_gen("alice"), alice, type);
+        create_budget(uuid_gen("bob"), bob, type);
 
         BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 2u);
 
@@ -224,11 +227,11 @@ struct get_top_budgets_check_fixture : public budget_service_getters_check_fixtu
     {
         const int start_in_blocks = 2;
 
-        create_budget(alice, type, BUDGET_BALANCE_DEFAULT, start_in_blocks,
+        create_budget(uuid_gen("alice0"), alice, type, BUDGET_BALANCE_DEFAULT, start_in_blocks,
                       BUDGET_DEADLINE_IN_BLOCKS_DEFAULT + start_in_blocks);
-        create_budget(alice, type, BUDGET_BALANCE_DEFAULT, start_in_blocks * 2,
+        create_budget(uuid_gen("alice1"), alice, type, BUDGET_BALANCE_DEFAULT, start_in_blocks * 2,
                       BUDGET_DEADLINE_IN_BLOCKS_DEFAULT + start_in_blocks * 2);
-        create_budget(bob, type, BUDGET_BALANCE_DEFAULT, start_in_blocks,
+        create_budget(uuid_gen("bob"), bob, type, BUDGET_BALANCE_DEFAULT, start_in_blocks,
                       BUDGET_DEADLINE_IN_BLOCKS_DEFAULT + start_in_blocks);
 
         BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 3u);
@@ -257,10 +260,14 @@ SCORUM_TEST_CASE(start_time_check)
 
 SCORUM_TEST_CASE(ordered_by_per_block_check)
 {
-    create_budget(alice, budget_type::post, BUDGET_BALANCE_DEFAULT, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(bob, budget_type::post, BUDGET_BALANCE_DEFAULT * 2, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(alice, budget_type::post, BUDGET_BALANCE_DEFAULT * 3, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
-    create_budget(sam, budget_type::post, BUDGET_BALANCE_DEFAULT * 4, BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(uuid_gen("alice0"), alice, budget_type::post, BUDGET_BALANCE_DEFAULT,
+                  BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(uuid_gen("bob"), bob, budget_type::post, BUDGET_BALANCE_DEFAULT * 2,
+                  BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(uuid_gen("alice1"), alice, budget_type::post, BUDGET_BALANCE_DEFAULT * 3,
+                  BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+    create_budget(uuid_gen("sam"), sam, budget_type::post, BUDGET_BALANCE_DEFAULT * 4,
+                  BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
 
     BOOST_REQUIRE_EQUAL(post_budget_service.get_budgets().size(), 4u);
 

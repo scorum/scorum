@@ -1,8 +1,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "budget_check_common.hpp"
+#include <boost/uuid/uuid_generators.hpp>
 
-namespace budget_autoclose_tests {
+namespace {
 
 using namespace budget_check_common;
 
@@ -20,6 +21,9 @@ public:
     account_service_i& account_service;
 
     Actor alice;
+
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 };
 
 BOOST_FIXTURE_TEST_SUITE(budget_autoclose_check, budget_autoclose_tests_fixture)
@@ -29,8 +33,9 @@ SCORUM_TEST_CASE(auto_close_budget_by_balance)
     int balance = 10;
     int start_offset = 1;
     int deadline_offset = 15;
+    auto uuid = uuid_gen("alice");
 
-    create_budget(alice, budget_type::post, balance, start_offset, deadline_offset);
+    create_budget(uuid, alice, budget_type::post, balance, start_offset, deadline_offset);
 
     auto budgets = post_budget_service.get_budgets(alice.name);
     BOOST_REQUIRE(!budgets.empty());
@@ -57,10 +62,11 @@ SCORUM_TEST_CASE(check_acc_balance_after_deadline)
     int start_blocks_offset = 1; // start in following block
     int deadline_block_offset = 4;
     int per_block_amount = 13 / 4;
+    auto uuid = uuid_gen("alice");
 
     auto initial = account_service.get_account(alice.name).balance;
 
-    create_budget(alice, budget_type::post, balance, start_blocks_offset, deadline_block_offset);
+    create_budget(uuid, alice, budget_type::post, balance, start_blocks_offset, deadline_block_offset);
 
     initial -= ASSET_SCR(balance);
 
@@ -255,7 +261,7 @@ SCORUM_TEST_CASE(check_balance_after_deadline)
     auto acc_balance = account_service.get_account(alice.name).balance;
 
     {
-        create_budget(alice, budget_type::post, budget_balance, 1, 2);
+        create_budget(uuid_gen("alice"), alice, budget_type::post, budget_balance, 1, 2);
         generate_blocks(2);
         auto rest = budget_balance - (budget_balance / 2) * 2; // 1
         BOOST_CHECK_EQUAL(acc_balance.amount - budget_balance + rest,
@@ -263,7 +269,7 @@ SCORUM_TEST_CASE(check_balance_after_deadline)
         acc_balance = account_service.get_account(alice.name).balance;
     }
     {
-        create_budget(alice, budget_type::post, budget_balance, 1, 3);
+        create_budget(uuid_gen("alice"), alice, budget_type::post, budget_balance, 1, 3);
         generate_blocks(3);
         auto rest = budget_balance - (budget_balance / 3) * 3; // 0
         BOOST_CHECK_EQUAL(acc_balance.amount - budget_balance + rest,
@@ -271,7 +277,7 @@ SCORUM_TEST_CASE(check_balance_after_deadline)
         acc_balance = account_service.get_account(alice.name).balance;
     }
     {
-        create_budget(alice, budget_type::post, budget_balance, 1, 4);
+        create_budget(uuid_gen("alice"), alice, budget_type::post, budget_balance, 1, 4);
         generate_blocks(4);
         auto rest = budget_balance - (budget_balance / 4) * 4; // 3
         BOOST_CHECK_EQUAL(acc_balance.amount - budget_balance + rest,
@@ -279,7 +285,7 @@ SCORUM_TEST_CASE(check_balance_after_deadline)
         acc_balance = account_service.get_account(alice.name).balance;
     }
     {
-        create_budget(alice, budget_type::post, budget_balance, 0, 3);
+        create_budget(uuid_gen("alice"), alice, budget_type::post, budget_balance, 0, 3);
         generate_blocks(3);
         auto rest = budget_balance - (budget_balance / 4) * 4; // 3
         auto very_first_per_block_which_wasnt_withdrawn = budget_balance / 4;
@@ -293,7 +299,7 @@ SCORUM_TEST_CASE(return_money_to_account_after_deadline_is_over_and_we_have_miss
     int balance = 10;
     int deadline_blocks_offset = 10;
 
-    create_budget(alice, budget_type::post, balance, deadline_blocks_offset);
+    create_budget(uuid_gen("alice"), alice, budget_type::post, balance, deadline_blocks_offset);
 
     BOOST_REQUIRE(!post_budget_service.get_budgets(alice.name).empty());
 
@@ -322,7 +328,7 @@ SCORUM_TEST_CASE(should_raise_closing_virt_operation_after_deadline)
         op_notif.op.weak_visit([&](const budget_closing_operation&) { was_raised = true; });
     });
 
-    create_budget(alice, budget_type::post, 1000, 1, 2);
+    create_budget(uuid_gen("alice"), alice, budget_type::post, 1000, 1, 2);
     generate_blocks(2);
 
     BOOST_CHECK(was_raised);
@@ -330,7 +336,7 @@ SCORUM_TEST_CASE(should_raise_closing_virt_operation_after_deadline)
 
 SCORUM_TEST_CASE(one_satoshi_budget_should_be_closed_in_first_block)
 {
-    create_budget(alice, budget_type::post, 1, 1, 10);
+    create_budget(uuid_gen("alice"), alice, budget_type::post, 1, 1, 10);
 
     BOOST_REQUIRE(!post_budget_service.get_budgets(alice.name).empty());
 
@@ -341,7 +347,7 @@ SCORUM_TEST_CASE(one_satoshi_budget_should_be_closed_in_first_block)
 
 SCORUM_TEST_CASE(not_enough_money_for_each_per_block_should_be_close_when_balance_is_empty)
 {
-    create_budget(alice, budget_type::post, 3, 1, 10); // per_block = 1
+    create_budget(uuid_gen("alice"), alice, budget_type::post, 3, 1, 10); // per_block = 1
 
     BOOST_REQUIRE(!post_budget_service.get_budgets(alice.name).empty());
 

@@ -46,9 +46,9 @@ void close_budget_by_advertising_moderator_evaluator::close_budget(adv_budget_se
     auto& current_moderator = _adv_property_service.get().moderator;
     FC_ASSERT(current_moderator != SCORUM_MISSING_MODERATOR_ACCOUNT, "Advertising moderator was not set");
     FC_ASSERT(current_moderator == op.moderator, "User ${1} is not the advertising moderator", ("1", op.moderator));
-    FC_ASSERT(budget_svc.is_exists(op.budget_id), "Budget with id ${id} doesn't exist", ("id", op.budget_id));
+    FC_ASSERT(budget_svc.is_exists(op.uuid), "Budget with id ${id} doesn't exist", ("id", op.uuid));
 
-    budget_svc.finish_budget(op.budget_id);
+    budget_svc.finish_budget(op.uuid);
 }
 }
 }

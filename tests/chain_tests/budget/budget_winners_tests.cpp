@@ -4,9 +4,9 @@
 
 #include <scorum/chain/services/advertising_property.hpp>
 #include <scorum/chain/services/budgets.hpp>
-
 #include <scorum/chain/schema/advertising_property_object.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
 #include <map>
 
 namespace budget_winners_tests {
@@ -136,11 +136,11 @@ public:
         auto start_offset = 1;
         auto deadline_offset = 1200;
 
-        create_budget(alice, type, 120000, start_offset, deadline_offset);
-        create_budget(bob, type, 240000, start_offset, deadline_offset);
-        create_budget(sam, type, 60000, start_offset, deadline_offset);
-        create_budget(zorro, type, 60000, start_offset, deadline_offset);
-        create_budget(kenny, type, 40000, start_offset, deadline_offset);
+        create_budget(uuid_gen("0"), alice, type, 120000, start_offset, deadline_offset);
+        create_budget(uuid_gen("1"), bob, type, 240000, start_offset, deadline_offset);
+        create_budget(uuid_gen("2"), sam, type, 60000, start_offset, deadline_offset);
+        create_budget(uuid_gen("3"), zorro, type, 60000, start_offset, deadline_offset);
+        create_budget(uuid_gen("4"), kenny, type, 40000, start_offset, deadline_offset);
 
         generate_block(); // start all budgets
         generate_blocks(blocks_in_cashout_period);
@@ -177,6 +177,9 @@ public:
     Actor zorro;
     Actor kenny;
     Actor cartman;
+
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 };
 
 BOOST_FIXTURE_TEST_SUITE(budget_winners_check, budget_winners_tests_fixture)
@@ -196,7 +199,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
 
     {
         budget_payout_visitor v(db);
-        create_budget(alice, budget_type::post, 1000, start, deadline);
+        create_budget(uuid_gen("0"), alice, budget_type::post, 1000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -207,7 +210,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(bob, budget_type::post, 2000, start, deadline);
+        create_budget(uuid_gen("1"), bob, budget_type::post, 2000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -221,7 +224,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(sam, budget_type::post, 3000, start, deadline);
+        create_budget(uuid_gen("2"), sam, budget_type::post, 3000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -238,7 +241,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(zorro, budget_type::post, 4000, start, deadline);
+        create_budget(uuid_gen("3"), zorro, budget_type::post, 4000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -258,7 +261,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(kenny, budget_type::post, 5000, start, deadline);
+        create_budget(uuid_gen("4"), kenny, budget_type::post, 5000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -281,7 +284,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_increasing_per_block_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(cartman, budget_type::post, 6000, start, deadline);
+        create_budget(uuid_gen("5"), cartman, budget_type::post, 6000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -322,7 +325,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
 
     {
         budget_payout_visitor v(db);
-        create_budget(alice, budget_type::post, 6000, start, deadline);
+        create_budget(uuid_gen("0"), alice, budget_type::post, 6000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -333,7 +336,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(bob, budget_type::post, 5000, start, deadline);
+        create_budget(uuid_gen("1"), bob, budget_type::post, 5000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -347,7 +350,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(sam, budget_type::post, 4000, start, deadline);
+        create_budget(uuid_gen("2"), sam, budget_type::post, 4000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -364,7 +367,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(zorro, budget_type::post, 3000, start, deadline);
+        create_budget(uuid_gen("3"), zorro, budget_type::post, 3000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -384,7 +387,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(kenny, budget_type::post, 2000, start, deadline);
+        create_budget(uuid_gen("4"), kenny, budget_type::post, 2000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -407,7 +410,7 @@ SCORUM_TEST_CASE(adding_new_budgets_with_decreasing_per_block_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(cartman, budget_type::post, 1000, start, deadline);
+        create_budget(uuid_gen("5"), cartman, budget_type::post, 1000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         auto bs = post_budget_service.get_budgets();
@@ -443,11 +446,11 @@ SCORUM_TEST_CASE(insert_new_budget_in_the_middle_test)
     int start = 1; // start in following block
     int deadline = 10 * cashout_period_blocks_count;
 
-    create_budget(alice, budget_type::banner, 1000, start, deadline);
-    create_budget(bob, budget_type::banner, 2000, start, deadline);
-    create_budget(zorro, budget_type::banner, 4000, start, deadline);
-    create_budget(kenny, budget_type::banner, 5000, start, deadline);
-    create_budget(cartman, budget_type::banner, 6000, start, deadline);
+    create_budget(uuid_gen("0"), alice, budget_type::banner, 1000, start, deadline);
+    create_budget(uuid_gen("1"), bob, budget_type::banner, 2000, start, deadline);
+    create_budget(uuid_gen("2"), zorro, budget_type::banner, 4000, start, deadline);
+    create_budget(uuid_gen("3"), kenny, budget_type::banner, 5000, start, deadline);
+    create_budget(uuid_gen("4"), cartman, budget_type::banner, 6000, start, deadline);
 
     {
         budget_payout_visitor v(db);
@@ -473,7 +476,7 @@ SCORUM_TEST_CASE(insert_new_budget_in_the_middle_test)
     }
     {
         budget_payout_visitor v(db);
-        create_budget(sam, budget_type::banner, 3000, start, deadline);
+        create_budget(uuid_gen("5"), sam, budget_type::banner, 3000, start, deadline);
         generate_blocks(cashout_period_blocks_count);
 
         // NOTE: budgets order by creator:  alice -bob-zorro-kenny-cartman-sam
@@ -506,7 +509,7 @@ SCORUM_TEST_CASE(no_winnerse_to_arrange_for_any_budget_types_check)
     auto start = budget_start + budget_start_interval;
     auto deadline = start + budget_start_interval;
 
-    create_budget(alice, budget_type::post, budget_balance, start, deadline);
+    create_budget(uuid_gen("0"), alice, budget_type::post, budget_balance, start, deadline);
 
     BOOST_REQUIRE_NO_THROW(generate_blocks(start));
 
@@ -521,7 +524,7 @@ SCORUM_TEST_CASE(no_winnerse_to_arrange_for_any_budget_types_check)
     start = deadline + budget_start_interval;
     deadline = start + budget_start_interval;
 
-    create_budget(alice, budget_type::banner, budget_balance, start, deadline);
+    create_budget(uuid_gen("1"), alice, budget_type::banner, budget_balance, start, deadline);
 
     BOOST_REQUIRE_NO_THROW(generate_blocks(start));
 
@@ -543,7 +546,7 @@ SCORUM_TEST_CASE(two_post_budget_from_same_acc_auction_algorithm_test)
     int start = 1;
     int deadline = 10 * cashout_period_blocks_count;
 
-    create_budget(alice, budget_type::post, 1000, start, deadline); // per_block = 1000 / 100
+    create_budget(uuid_gen("0"), alice, budget_type::post, 1000, start, deadline); // per_block = 1000 / 100
     generate_blocks(cashout_period_blocks_count);
 
     {
@@ -554,7 +557,7 @@ SCORUM_TEST_CASE(two_post_budget_from_same_acc_auction_algorithm_test)
     }
 
     auto alice_balance_before = account_service.get_account(alice.name).balance;
-    create_budget(alice, budget_type::post, 2000, start, deadline);
+    create_budget(uuid_gen("1"), alice, budget_type::post, 2000, start, deadline);
     generate_blocks(cashout_period_blocks_count);
     auto alice_balance_after = account_service.get_account(alice.name).balance;
 

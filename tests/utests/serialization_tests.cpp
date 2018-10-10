@@ -28,6 +28,7 @@
 
 #include <scorum/protocol/transaction.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
 #include <fc/io/json.hpp>
 
 #include "utils.hpp"
@@ -229,6 +230,7 @@ SCORUM_TEST_CASE(hardfork_version_test)
 SCORUM_TEST_CASE(serialize_create_budget_operation_to_binary_test)
 {
     create_budget_operation op;
+    op.uuid = boost::uuids::string_generator()("6DCD3132-E5DF-480A-89A8-91984BCA0A09");
     op.type = scorum::protocol::budget_type::post;
     op.owner = "initdelegate";
     op.balance = ASSET("10.000000000 SCR");
@@ -236,9 +238,9 @@ SCORUM_TEST_CASE(serialize_create_budget_operation_to_binary_test)
     op.deadline = fc::time_point_sec::from_iso_string("2018-08-03T10:13:13");
     op.json_metadata = "{}";
 
-    BOOST_CHECK_EQUAL(
-        "00000000000000000c696e697464656c6567617465027b7d00e40b540200000009534352000000009b2a645bb92a645b",
-        utils::to_hex(op));
+    BOOST_CHECK_EQUAL("00000000000000006dcd3132e5df480a89a891984bca0a090c696e697464656c6567617465027b7d00e40b5402000000"
+                      "09534352000000009b2a645bb92a645b",
+                      utils::to_hex(op));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

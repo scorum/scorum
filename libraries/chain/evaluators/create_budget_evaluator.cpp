@@ -10,6 +10,8 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/budget_objects.hpp>
 
+#include <boost/uuid/uuid_io.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -40,12 +42,24 @@ void create_budget_evaluator::do_apply(const create_budget_evaluator::operation_
     switch (op.type)
     {
     case budget_type::post:
-        _post_budget_svc.create_budget(owner.name, op.balance, op.start, op.deadline, op.json_metadata);
+        create_budget(_post_budget_svc, op, owner.name);
         break;
     case budget_type::banner:
-        _banner_budget_svc.create_budget(owner.name, op.balance, op.start, op.deadline, op.json_metadata);
+        create_budget(_banner_budget_svc, op, owner.name);
         break;
     }
+}
+
+template <budget_type budget_type_v>
+void create_budget_evaluator::create_budget(adv_budget_service_i<budget_type_v>& budget_svc,
+                                            const create_budget_evaluator::operation_type& op,
+                                            account_name_type owner)
+{
+    using namespace boost::uuids;
+
+    FC_ASSERT(!budget_svc.is_exists(op.uuid), "Budget with uuid ${1} already exists", ("1", to_string(op.uuid)));
+
+    budget_svc.create_budget(op.uuid, owner, op.balance, op.start, op.deadline, op.json_metadata);
 }
 }
 }

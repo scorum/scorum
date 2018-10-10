@@ -286,6 +286,7 @@ class budget_api_obj
 public:
     budget_api_obj(const chain::post_budget_object& b)
         : id(b.id._id)
+        , uuid(b.uuid)
         , type(budget_type::post)
         , owner(b.owner)
         , json_metadata(fc::to_string(b.json_metadata))
@@ -302,6 +303,7 @@ public:
 
     budget_api_obj(const chain::banner_budget_object& b)
         : id(b.id._id)
+        , uuid(b.uuid)
         , type(budget_type::banner)
         , owner(b.owner)
         , json_metadata(fc::to_string(b.json_metadata))
@@ -322,6 +324,7 @@ public:
     }
 
     int64_t id;
+    uuid_type uuid;
 
     budget_type type;
 
@@ -544,6 +547,7 @@ FC_REFLECT( scorum::app::proposal_api_obj,
 
 FC_REFLECT( scorum::app::budget_api_obj,
             (id)
+            (uuid)
             (type)
             (owner)
             (json_metadata)

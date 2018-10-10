@@ -624,12 +624,13 @@ struct delegate_scorumpower_operation : public base_operation
 };
 
 /**
- * \details See [advertising details](@ref advdetails) for detailed information about how budgets work.
+ * @details See [advertising details](@ref advdetails) for detailed information about how budgets work.
  */
 struct create_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
+    uuid_type uuid;
     account_name_type owner;
     std::string json_metadata;
 
@@ -648,7 +649,7 @@ struct update_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    int64_t budget_id;
+    uuid_type uuid;
     account_name_type owner;
     std::string json_metadata;
 
@@ -663,7 +664,7 @@ struct close_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    int64_t budget_id;
+    uuid_type uuid;
     account_name_type owner;
 
     void validate() const;
@@ -758,7 +759,7 @@ struct close_budget_by_advertising_moderator_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    int64_t budget_id;
+    uuid_type uuid;
     account_name_type moderator;
 
     void validate() const;
@@ -837,15 +838,15 @@ FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_rec
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
 FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
 
-FC_REFLECT( scorum::protocol::create_budget_operation, (type)(owner)(json_metadata)(balance)(start)(deadline) )
-FC_REFLECT( scorum::protocol::update_budget_operation, (type)(budget_id)(owner)(json_metadata) )
-FC_REFLECT( scorum::protocol::close_budget_operation, (type)(budget_id)(owner) )
+FC_REFLECT( scorum::protocol::create_budget_operation, (type)(uuid)(owner)(json_metadata)(balance)(start)(deadline) )
+FC_REFLECT( scorum::protocol::update_budget_operation, (type)(uuid)(owner)(json_metadata) )
+FC_REFLECT( scorum::protocol::close_budget_operation, (type)(uuid)(owner) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
 FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,(by_initiator)(by_participant))
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
-FC_REFLECT( scorum::protocol::close_budget_by_advertising_moderator_operation, (type)(budget_id)(moderator) )
+FC_REFLECT( scorum::protocol::close_budget_by_advertising_moderator_operation, (type)(uuid)(moderator) )
 
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)

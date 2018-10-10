@@ -17,6 +17,8 @@
 
 #include <scorum/utils/fraction.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+
 #include "database_default_integration.hpp"
 
 #include <limits>
@@ -56,6 +58,9 @@ public:
     voters_reward_scr_service_i& voters_reward_scr_service;
 
     const asset NULL_BALANCE = asset(0, SCORUM_SYMBOL);
+
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 };
 }
 
@@ -98,7 +103,7 @@ SCORUM_TEST_CASE(check_advertising_budget_reward_distribution_deadline_before_ca
 
     BOOST_REQUIRE_LT(deadline.sec_since_epoch(), start.sec_since_epoch() + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC);
 
-    auto budget = adv_budget_svc.create_budget(account.name, advertising_budget, start, deadline, "");
+    auto budget = adv_budget_svc.create_budget(uuid_gen("x"), account.name, advertising_budget, start, deadline, "");
 
     BOOST_REQUIRE_EQUAL(content_reward_scr_service.get().balance.amount, 0);
 
@@ -121,7 +126,7 @@ SCORUM_TEST_CASE(check_advertising_budget_reward_distribution_deadline_after_cas
     BOOST_REQUIRE_GT(deadline.sec_since_epoch(),
                      db.head_block_time().sec_since_epoch() + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC);
 
-    auto budget = adv_budget_svc.create_budget(account.name, advertising_budget, start, deadline, "");
+    auto budget = adv_budget_svc.create_budget(uuid_gen("x"), account.name, advertising_budget, start, deadline, "");
 
     BOOST_REQUIRE_EQUAL(content_reward_scr_service.get().balance.amount, 0);
 
