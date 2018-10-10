@@ -19,9 +19,11 @@ public:
     {
         this->set_hardfork(SCORUM_HARDFORK_0_2);
 
-        genesis_state = create_registration_genesis(schedule_input);
+        genesis_state = create_registration_genesis();
         create_registration_objects(genesis_state);
-        predictor.initialize(registration_supply(), registration_bonus(), schedule_input);
+        predictor.initialize(registration_supply(), registration_bonus(), genesis_state.registration_schedule);
+
+        schedule_input = genesis_state.registration_schedule;
     }
 
     schedule_inputs_type schedule_input;
