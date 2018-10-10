@@ -624,7 +624,7 @@ struct delegate_scorumpower_operation : public base_operation
 };
 
 /**
- * \details See [advertising details](@ref advdetails) for detailed information about how budgets work.
+ * @details See [advertising details](@ref advdetails) for detailed information about how budgets work.
  */
 struct create_budget_operation : public base_operation
 {

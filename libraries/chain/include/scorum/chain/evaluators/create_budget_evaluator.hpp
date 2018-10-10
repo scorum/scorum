@@ -14,7 +14,7 @@ struct dynamic_global_property_service_i;
 template <scorum::protocol::budget_type budget_type_v> struct adv_budget_service_i;
 
 /**
- * \details See [advertising details](@ref advdetails) for detailed information about how budgets work.
+ * @details See [advertising details](@ref advdetails) for detailed information about how budgets work.
  */
 class create_budget_evaluator : public evaluator_impl<data_service_factory_i, create_budget_evaluator>
 {

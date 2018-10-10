@@ -14,7 +14,7 @@ struct advertising_property_service_i;
 template <budget_type> class adv_budget_service_i;
 
 /**
- * \details See [advertising details](@ref advdetails) for detailed information about how budgets work.
+ * @details See [advertising details](@ref advdetails) for detailed information about how budgets work.
  */
 class advertising_auction
 {
