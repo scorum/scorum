@@ -6,6 +6,8 @@
 #include <fc/exception/exception.hpp>
 #include <fc/io/raw.hpp>
 #include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -214,13 +216,11 @@ void from_variant(const fc::variant& var, scorum::protocol::extended_private_key
 
 void to_variant(const boost::uuids::uuid& id, fc::variant& var)
 {
-    std::vector<char> blob(id.begin(), id.end());
-    var = fc::blob{ std::move(blob) };
+    var = boost::uuids::to_string(id);
 }
 
 void from_variant(const fc::variant& var, boost::uuids::uuid& id)
 {
-    auto blob = var.as_blob();
-    std::memcpy(id.data, blob.data.data(), id.size());
+    id = boost::uuids::string_generator()(var.as_string());
 }
 } // fc

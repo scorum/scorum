@@ -22,7 +22,7 @@ public:
         actor(initdelegate).give_scr(bob, BUDGET_BALANCE_DEFAULT * 200);
 
         budget_balance = account_service.get_account(alice.name).balance / 10;
-        budget_start = db.head_block_time();
+        budget_start = db.head_block_time() + 1; // start_time should be greater than head_block_time
         budget_deadline = budget_start + fc::hours(1);
     }
 

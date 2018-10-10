@@ -23,7 +23,8 @@ budget_check_fixture::create_budget(const uuid_type& uuid, const Actor& owner, c
 create_budget_operation budget_check_fixture::create_budget(
     const uuid_type& uuid, const Actor& owner, const budget_type type, int balance, uint32_t deadline_blocks_offset)
 {
-    return create_budget(uuid, owner, type, balance, 0, deadline_blocks_offset);
+    // start_time should be greater than head_block_time
+    return create_budget(uuid, owner, type, balance, 1, deadline_blocks_offset);
 }
 
 create_budget_operation budget_check_fixture::create_budget(const uuid_type& uuid,
