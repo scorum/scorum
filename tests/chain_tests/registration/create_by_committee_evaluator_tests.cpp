@@ -17,6 +17,8 @@ class create_by_committee_evaluator_check_fixture : public registration_check_fi
 public:
     create_by_committee_evaluator_check_fixture()
     {
+        this->set_hardfork(SCORUM_HARDFORK_0_2);
+
         genesis_state = create_registration_genesis(schedule_input);
         create_registration_objects(genesis_state);
         predictor.initialize(registration_supply(), registration_bonus(), schedule_input);

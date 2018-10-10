@@ -9,6 +9,8 @@ class registration_committee_create_account_check_fixture : public registration_
 public:
     registration_committee_create_account_check_fixture()
     {
+        this->set_hardfork(SCORUM_HARDFORK_0_2);
+
         genesis_state = create_registration_genesis(committee_private_keys);
         create_registration_objects(genesis_state);
 
