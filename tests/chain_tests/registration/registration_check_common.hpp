@@ -44,10 +44,7 @@ public:
 
     genesis_state_type create_registration_genesis();
 
-    asset registration_supply() const
-    {
-        return _registration_supply;
-    }
+    asset registration_supply() const;
 
 private:
     data_service_factory_i& _services;
