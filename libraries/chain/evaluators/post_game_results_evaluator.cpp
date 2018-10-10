@@ -28,9 +28,9 @@ void post_game_results_evaluator::do_apply(const operation_type& op)
     _account_service.check_account_existence(op.moderator);
     FC_ASSERT(_betting_service.is_betting_moderator(op.moderator), "User ${u} isn't a betting moderator",
               ("u", op.moderator));
-    FC_ASSERT(_game_service.is_exists(op.game_id), "Game with id '${g}' doesn't exist", ("g", op.game_id));
+    FC_ASSERT(_game_service.is_exists(op.uuid), "Game with uuid '${g}' doesn't exist", ("g", op.uuid));
 
-    const auto& game = _game_service.get_game(op.game_id);
+    const auto& game = _game_service.get_game(op.uuid);
     FC_ASSERT(game.status != game_status::created, "The game is not started yet");
     FC_ASSERT(game.bets_resolve_time > _dprops_service.head_block_time(),
               "Unable to post game results after bets were resolved");

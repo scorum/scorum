@@ -62,8 +62,8 @@ SCORUM_TEST_CASE(live_bets_no_pending_bets_return_after_start_check)
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(alice, result_away::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-    create_bet(bob, result_away::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
+    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
 
     BOOST_CHECK(game_service.get().status == game_status::created);
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
@@ -84,8 +84,8 @@ SCORUM_TEST_CASE(non_live_bets_return_pending_bets_after_start_check)
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2, false); // 500'000
-    create_bet(bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2, false); // 500'000
+    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2, false); // 500'000
+    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2, false); // 500'000
 
     BOOST_CHECK(game_service.get().status == game_status::created);
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
@@ -106,8 +106,8 @@ SCORUM_TEST_CASE(non_live_bets_resolve_test_check)
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(alice, result_away::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-    create_bet(bob, result_away::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
+    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
 
     generate_block(); // game started
 
@@ -138,8 +138,8 @@ SCORUM_TEST_CASE(bets_auto_resolve_test_check)
     auto start_time = game_service.get().start_time;
     generate_block();
 
-    create_bet(alice, result_away::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-    create_bet(bob, result_away::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
+    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
 
     generate_block(); // game started
 
@@ -160,8 +160,8 @@ SCORUM_TEST_CASE(cancel_game_before_start_return_all_check)
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 3);
     generate_block();
 
-    create_bet(alice, result_away::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-    create_bet(bob, result_away::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
+    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
 
     generate_block();
 
@@ -182,8 +182,8 @@ SCORUM_TEST_CASE(cancel_game_after_start_return_all_check)
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(alice, result_away::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
-    create_bet(bob, result_away::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL)); // 500'000
+    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
+    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
 
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
@@ -203,10 +203,10 @@ SCORUM_TEST_CASE(update_markets_trigger_bets_cancelling_check)
     create_game(moderator, { result_away{}, result_draw{} }, SCORUM_BLOCK_INTERVAL * 3);
     generate_block();
 
-    create_bet(alice, result_away::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 4, SCORUM_SYMBOL)); // 250'000
-    create_bet(bob, result_away::no{}, { 10, 8 }, asset(bob.scr_amount.amount / 4, SCORUM_SYMBOL)); // 250'000
-    create_bet(alice, result_draw::yes{}, { 10, 2 }, asset(3 * alice.scr_amount.amount / 4, SCORUM_SYMBOL)); // 750'000
-    create_bet(bob, result_draw::no{}, { 10, 8 }, asset(3 * bob.scr_amount.amount / 4, SCORUM_SYMBOL)); // 750'000
+    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 4); // 250'000
+    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 4); // 250'000
+    create_bet(uuid_gen("b3"), alice, result_draw::yes{}, { 10, 2 }, alice.scr_amount * 3 / 4); // 750'000
+    create_bet(uuid_gen("b4"), bob, result_draw::no{}, { 10, 8 }, bob.scr_amount * 3 / 4); // 750'000
 
     generate_block();
 
@@ -227,11 +227,11 @@ SCORUM_TEST_CASE(cancel_game_after_markets_update_check)
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 4);
     generate_block();
 
-    create_bet(alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 4); // 250'000 (125'000 matched)
-    create_bet(bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000 (500'000 matched)
+    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 4); // 250'000 (125'000 matched)
+    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000 (500'000 matched)
 
-    create_bet(alice, total::over{ 2000 }, { 10, 2 }, alice.scr_amount / 2); // 500'000 (62'500 matched)
-    create_bet(bob, total::under{ 2000 }, { 10, 8 }, bob.scr_amount / 4); // 250'000 (250'000 matched)
+    create_bet(uuid_gen("b3"), alice, total::over{ 2000 }, { 10, 2 }, alice.scr_amount / 2); // 500'000 (62'500 matched)
+    create_bet(uuid_gen("b4"), bob, total::under{ 2000 }, { 10, 8 }, bob.scr_amount / 4); // 250'000 (250'000 matched)
 
     generate_block();
 

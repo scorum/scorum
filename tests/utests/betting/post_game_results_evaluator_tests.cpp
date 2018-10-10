@@ -28,8 +28,8 @@ struct game_evaluator_fixture : public shared_memory_fixture
     using check_account_existence_ptr
         = void (account_service_i::*)(const account_name_type&, const optional<const char*>&) const;
 
-    using get_by_id_ptr = const game_object& (game_service_i::*)(int64_t) const;
-    using exists_by_id_ptr = bool (game_service_i::*)(int64_t) const;
+    using get_by_id_ptr = const game_object& (game_service_i::*)(const scorum::uuid_type&)const;
+    using exists_by_id_ptr = bool (game_service_i::*)(const scorum::uuid_type&) const;
 
     MockRepository mocks;
 

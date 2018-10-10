@@ -114,14 +114,8 @@ SCORUM_TEST_CASE(post_game_results_twice_positive_test)
 
     const auto& game = db.get(game_object::id_type(0));
 
-    post_game_results_operation op;
-    op.moderator = moderator.name;
-    op.game_id = 0;
-    op.wincases = { result_home::no{}, total::over{ 500 }, correct_score::no{ 0, 0 } };
-
     auto fst_update_time = db.head_block_time();
-
-    push_operation(op, moderator.private_key);
+    post_results(moderator, { result_home::no{}, total::over{ 500 }, correct_score::no{ 0, 0 } });
 
     BOOST_REQUIRE_EQUAL((int)game.status, (int)game_status::finished);
     BOOST_REQUIRE_EQUAL(game.results.size(), 3u);
@@ -131,8 +125,8 @@ SCORUM_TEST_CASE(post_game_results_twice_positive_test)
 
     auto snd_update_time = db.head_block_time();
 
-    op.wincases = { result_home::no{}, total::under{ 500 }, total::under{ 2000 }, correct_score::no{ 0, 0 } };
-    push_operation(op, moderator.private_key);
+    post_results(moderator,
+                 { result_home::no{}, total::under{ 500 }, total::under{ 2000 }, correct_score::no{ 0, 0 } });
 
     BOOST_REQUIRE_EQUAL((int)game.status, (int)game_status::finished);
     BOOST_REQUIRE_EQUAL(game.results.size(), 4u);
@@ -169,8 +163,8 @@ SCORUM_TEST_CASE(update_after_game_started_should_cancel_bets)
     create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL);
     generate_block(); // game started
 
-    create_bet(alice, total::under{ 2000 }, { 10, 2 }, asset(1000, SCORUM_SYMBOL)); // 250 matched, 750 pending
-    create_bet(bob, total::over{ 2000 }, { 10, 8 }, asset(1000, SCORUM_SYMBOL)); // 1000 matched
+    create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 250 matched, 750 pending
+    create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
 
     generate_block();
 
@@ -196,8 +190,8 @@ SCORUM_TEST_CASE(update_after_game_started_should_keep_bets)
     create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(alice, total::under{ 2000 }, { 10, 2 }, asset(1000, SCORUM_SYMBOL)); // 250 matched, 750 pending
-    create_bet(bob, total::over{ 2000 }, { 10, 8 }, asset(1000, SCORUM_SYMBOL)); // 1000 matched
+    create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 250 matched, 750 pending
+    create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
 
     generate_block(); // game started
 
@@ -223,11 +217,11 @@ SCORUM_TEST_CASE(update_after_game_started_should_increase_existing_pending_bet)
     create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(alice, total::under{ 2000 }, { 10, 2 }, asset(1000, SCORUM_SYMBOL)); // 250 matched, 750 pending
+    create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 250 matched, 750 pending
 
     generate_block(); // game started
 
-    create_bet(bob, total::over{ 2000 }, { 10, 8 }, asset(1000, SCORUM_SYMBOL)); // 1000 matched
+    create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
 
     auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
     auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
@@ -256,11 +250,11 @@ SCORUM_TEST_CASE(update_after_game_started_should_restore_missing_pending_bet)
 
     auto original_create_time = db.head_block_time();
 
-    create_bet(alice, total::under{ 2000 }, { 10, 2 }, asset(1000, SCORUM_SYMBOL)); // 1000 matched
+    create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 1000 matched
 
     generate_block(); // game started
 
-    create_bet(bob, total::over{ 2000 }, { 10, 8 }, asset(4000, SCORUM_SYMBOL)); // 4000 matched
+    create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(4000)); // 4000 matched
 
     auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
     auto pending_bets = pending_bet_service.get_bets(game_id_type(0));

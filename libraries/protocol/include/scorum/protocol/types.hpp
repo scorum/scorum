@@ -21,6 +21,7 @@
 #include <fc/safe.hpp>
 
 #include <boost/multiprecision/cpp_int.hpp>
+#include <boost/uuid/uuid.hpp>
 
 #include <memory>
 #include <vector>
@@ -49,6 +50,7 @@ using fc::variant_object;
 using fc::ecc::commitment_type;
 using fc::ecc::range_proof_info;
 using fc::ecc::range_proof_type;
+using uuid_type = boost::uuids::uuid;
 struct void_t
 {
 };
@@ -168,6 +170,8 @@ void to_variant(const scorum::protocol::extended_public_key_type& var, fc::varia
 void from_variant(const fc::variant& var, scorum::protocol::extended_public_key_type& vo);
 void to_variant(const scorum::protocol::extended_private_key_type& var, fc::variant& vo);
 void from_variant(const fc::variant& var, scorum::protocol::extended_private_key_type& vo);
+void to_variant(const boost::uuids::uuid&, fc::variant&);
+void from_variant(const fc::variant&, boost::uuids::uuid&);
 } // namespace fc
 
 FC_REFLECT(scorum::protocol::public_key_type, (key_data))
@@ -176,6 +180,7 @@ FC_REFLECT(scorum::protocol::extended_public_key_type, (key_data))
 FC_REFLECT(scorum::protocol::extended_public_key_type::binary_key, (check)(data))
 FC_REFLECT(scorum::protocol::extended_private_key_type, (key_data))
 FC_REFLECT(scorum::protocol::extended_private_key_type::binary_key, (check)(data))
+FC_REFLECT(boost::uuids::uuid, (data))
 
 FC_REFLECT_ENUM(scorum::protocol::curve_id, (quadratic)(linear)(square_root)(power1dot5))
 FC_REFLECT_ENUM(scorum::protocol::budget_type, (post)(banner))

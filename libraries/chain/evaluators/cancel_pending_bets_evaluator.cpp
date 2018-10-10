@@ -22,15 +22,17 @@ void cancel_pending_bets_evaluator::do_apply(const operation_type& op)
     try
     {
         _account_service.check_account_existence(op.better);
-        for (const auto& id : op.bet_ids)
+        for (const auto& uuid : op.bet_uuids)
         {
-            FC_ASSERT(_pending_bet_svc.is_exists(id), "Bet ${id} doesn't exist", ("id", id));
-            FC_ASSERT(_pending_bet_svc.get_pending_bet(id).data.better == op.better, "Invalid better. Bet: ${0}",
-                      ("0", id));
+            FC_ASSERT(_pending_bet_svc.is_exists(uuid), "Bet ${1} doesn't exist", ("1", uuid));
+            FC_ASSERT(_pending_bet_svc.get_pending_bet(uuid).data.better == op.better, "Invalid better");
         }
 
-        for (const auto& id : op.bet_ids)
-            _betting_svc.cancel_pending_bet(id);
+        for (const auto& uuid : op.bet_uuids)
+        {
+            const auto& bet = _pending_bet_svc.get_pending_bet(uuid);
+            _betting_svc.cancel_pending_bet(bet.id);
+        }
     }
     FC_CAPTURE_LOG_AND_RETHROW((op))
 }

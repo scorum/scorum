@@ -70,11 +70,11 @@ SCORUM_TEST_CASE(post_bet_operation_check)
 {
     generate_block();
 
-    create_bet(alice, result_home::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(uuid_gen("b1"), alice, result_home::yes{}, { 10, 2 }, alice.scr_amount / 2);
 
     generate_block();
 
-    create_bet(bob, result_home::yes{}, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(uuid_gen("b2"), bob, result_home::yes{}, { 10, 8 }, bob.scr_amount / 2);
 
     generate_block();
 }
@@ -83,11 +83,11 @@ SCORUM_TEST_CASE(cancel_single_pending_bet_by_better_operation_check)
 {
     generate_block();
 
-    create_bet(alice, result_home::yes{}, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(uuid_gen("b1"), alice, result_home::yes{}, { 10, 2 }, alice.scr_amount / 2);
 
     generate_block();
 
-    cancel_pending_bet(alice, { 0 });
+    cancel_pending_bet(alice, { uuid_gen("b1") });
 
     generate_block();
 }
@@ -96,19 +96,19 @@ SCORUM_TEST_CASE(cancel_some_pending_bets_by_better_operation_check)
 {
     generate_block();
 
-    create_bet(alice, total::under{ 2000 }, { 10, 2 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, alice.scr_amount / 2);
 
     generate_block();
 
-    create_bet(alice, result_home::yes(), { 10, 5 }, asset(alice.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(uuid_gen("b2"), alice, result_home::yes(), { 10, 5 }, alice.scr_amount / 2);
 
     generate_block();
 
-    create_bet(bob, total::over{ 2000 }, { 10, 8 }, asset(bob.scr_amount.amount / 2, SCORUM_SYMBOL));
+    create_bet(uuid_gen("b3"), bob, total::over{ 2000 }, { 10, 8 }, bob.scr_amount / 2);
 
     generate_block();
 
-    cancel_pending_bet(alice, { 0, 1 });
+    cancel_pending_bet(alice, { uuid_gen("b1"), uuid_gen("b2") });
 
     generate_block();
 }

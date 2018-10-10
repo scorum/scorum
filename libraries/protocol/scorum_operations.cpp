@@ -341,25 +341,21 @@ void create_game_operation::validate() const
 
 void cancel_game_operation::validate() const
 {
-    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 }
 
 void update_game_markets_operation::validate() const
 {
-    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 }
 
 void update_game_start_time_operation::validate() const
 {
-    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 }
 
 void post_game_results_operation::validate() const
 {
-    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(moderator);
 
     validate_wincases(wincases);
@@ -367,7 +363,6 @@ void post_game_results_operation::validate() const
 
 void post_bet_operation::validate() const
 {
-    FC_ASSERT(game_id >= 0, "Invalid game Id");
     validate_account_name(better);
     validate_wincase(wincase);
     FC_ASSERT(is_asset_type(stake, SCORUM_SYMBOL), "Stake must be SCR");
@@ -380,7 +375,6 @@ void post_bet_operation::validate() const
 
 void cancel_pending_bets_operation::validate() const
 {
-    validate_bet_ids(bet_ids);
     validate_account_name(better);
 }
 } // namespace protocol

@@ -9,6 +9,8 @@
 #include <scorum/protocol/operations.hpp>
 #include <scorum/protocol/betting/wincase.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+
 #include "database_trx_integration.hpp"
 #include <functional>
 
@@ -24,16 +26,23 @@ struct database_betting_integration_fixture : public database_trx_integration_fi
     virtual ~database_betting_integration_fixture() = default;
 
     void empower_moderator(const Actor& moderator);
+    create_game_operation create_game(const scorum::uuid_type& uuid,
+                                      const Actor& moderator,
+                                      fc::flat_set<market_type> markets,
+                                      uint32_t start_delay = start_delay_default,
+                                      uint32_t auto_resolve_delay_sec = auto_resolve_delay_default);
     create_game_operation create_game(const Actor& moderator,
                                       fc::flat_set<market_type> markets,
                                       uint32_t start_delay = start_delay_default,
                                       uint32_t auto_resolve_delay_sec = auto_resolve_delay_default);
-    post_bet_operation create_bet(const Actor& better,
+    post_bet_operation create_bet(const scorum::uuid_type& uuid,
+                                  const Actor& better,
                                   const wincase_type& wincase,
                                   const odds_input& odds_value,
                                   const asset& stake,
                                   bool is_live = true);
-    cancel_pending_bets_operation cancel_pending_bet(const Actor& better, const fc::flat_set<int64_t>& bet_ids);
+    cancel_pending_bets_operation cancel_pending_bet(const Actor& better,
+                                                     const fc::flat_set<scorum::uuid_type>& bet_uuids);
     cancel_game_operation cancel_game(const Actor& moderator);
     update_game_markets_operation update_markets(const Actor& moderator, fc::flat_set<market_type> markets);
     update_game_start_time_operation update_start_time(const Actor& moderator, uint32_t start_delay);
@@ -45,5 +54,8 @@ struct database_betting_integration_fixture : public database_trx_integration_fi
     betting_property_service_i& betting_property_service;
     account_service_i& account_service;
     game_service_i& game_service;
+
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 };
 }

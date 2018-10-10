@@ -5,6 +5,9 @@
 #include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/betting/betting_serialization.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
 #include <defines.hpp>
 #include <iostream>
 
@@ -14,10 +17,12 @@ using namespace scorum::protocol;
 
 struct post_game_results_serialization_test_fixture
 {
+    uuid_type game_uuid = boost::uuids::string_generator()("e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f");
+
     post_game_results_operation create_post_game_results_operation() const
     {
         post_game_results_operation op;
-        op.game_id = 42;
+        op.uuid = game_uuid;
         op.moderator = "homer";
         op.wincases = wincases;
 
@@ -27,7 +32,7 @@ struct post_game_results_serialization_test_fixture
     void validate_post_game_results_operation(const post_game_results_operation& op) const
     {
         BOOST_CHECK_EQUAL(op.moderator, "homer");
-        BOOST_CHECK_EQUAL(op.game_id, 42);
+        BOOST_CHECK_EQUAL(op.uuid, game_uuid);
 
         validate_wincases(op.wincases);
     }
@@ -108,7 +113,7 @@ struct post_game_results_serialization_test_fixture
 
     const std::string post_results_json_tpl = R"({
                                                    "moderator": "homer",
-                                                   "game_id": 42,
+                                                   "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f",
                                                    "wincases": ${wincases}
                                                  })";
 };
@@ -142,13 +147,14 @@ SCORUM_TEST_CASE(post_game_results_binary_serialization_test)
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(
-        hex, "05686f6d65722a00000000000000110003040708e803090cfe0900000a0d0f1001000200110300020012151618000019e803");
+    BOOST_CHECK_EQUAL(hex, "05686f6d6572e629f9aa6b2c46aa8fa836770e7a7a5f110003040708e803090cfe0900000a0d0f1001000200110"
+                           "300020012151618000019e803");
 }
 
 SCORUM_TEST_CASE(post_game_results_binary_deserialization_test)
 {
-    auto hex = "05686f6d65722a00000000000000110003040708e803090cfe0900000a0d0f1001000200110300020012151618000019e803";
+    auto hex = "05686f6d6572e629f9aa6b2c46aa8fa836770e7a7a5f110003040708e803090cfe0900000a0d0f1001000200110300020012151"
+               "618000019e803";
 
     char buffer[1000];
     fc::from_hex(hex, buffer, sizeof(buffer));
