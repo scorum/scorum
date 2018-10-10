@@ -215,6 +215,8 @@ struct get_top_budgets_check_fixture : public budget_service_getters_check_fixtu
         create_budget(uuid_gen("alice"), alice, type);
         create_budget(uuid_gen("bob"), bob, type);
 
+        generate_block();
+
         BOOST_REQUIRE_EQUAL(service.get_budgets().size(), 2u);
 
         BOOST_REQUIRE_EQUAL(service.get_top_budgets(db.head_block_time(), 1u).size(), 1u);
@@ -268,6 +270,8 @@ SCORUM_TEST_CASE(ordered_by_per_block_check)
                   BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
     create_budget(uuid_gen("sam"), sam, budget_type::post, BUDGET_BALANCE_DEFAULT * 4,
                   BUDGET_DEADLINE_IN_BLOCKS_DEFAULT);
+
+    generate_block();
 
     BOOST_REQUIRE_EQUAL(post_budget_service.get_budgets().size(), 4u);
 
