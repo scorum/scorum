@@ -51,6 +51,7 @@ set(SOURCES
     budgets/auction_calculation_tests.cpp
     budgets/advertising_api_tests.cpp
     budgets/per_block_evaluation_tests.cpp
+    budgets/serialization_tests.cpp
     fraction_tests.cpp
     config_api_tests.cpp
     vote_evaluator_tests.cpp
