@@ -2,6 +2,7 @@
 #include <scorum/protocol/base.hpp>
 #include <scorum/protocol/block_header.hpp>
 #include <scorum/protocol/asset.hpp>
+#include <scorum/protocol/types.hpp>
 
 #include <fc/utf8.hpp>
 
@@ -403,11 +404,15 @@ struct bets_matched_operation : public virtual_operation
     bets_matched_operation() = default;
     bets_matched_operation(account_name_type better1,
                            account_name_type better2,
+                           uuid_type bet1_uuid,
+                           uuid_type bet2_uuid,
                            asset matched_stake1,
                            asset matched_stake2,
                            int64_t matched_bet_id)
         : better1(better1)
         , better2(better2)
+        , bet1_uuid(bet1_uuid)
+        , bet2_uuid(bet2_uuid)
         , matched_stake1(matched_stake1)
         , matched_stake2(matched_stake2)
         , matched_bet_id(matched_bet_id)
@@ -416,6 +421,8 @@ struct bets_matched_operation : public virtual_operation
 
     account_name_type better1;
     account_name_type better2;
+    uuid_type bet1_uuid;
+    uuid_type bet2_uuid;
     asset matched_stake1 = asset(0, SCORUM_SYMBOL);
     asset matched_stake2 = asset(0, SCORUM_SYMBOL);
     int64_t matched_bet_id = -1;
@@ -504,5 +511,13 @@ FC_REFLECT(scorum::protocol::closing_budget_operation,
            (owner)
            (id)
            (cash))
-FC_REFLECT(scorum::protocol::bets_matched_operation, (better1)(better2)(matched_stake1)(matched_stake2)(matched_bet_id))
+
+FC_REFLECT(scorum::protocol::bets_matched_operation,
+           (better1)
+           (better2)
+           (bet1_uuid)
+           (bet2_uuid)
+           (matched_stake1)
+           (matched_stake2)
+           (matched_bet_id))
 // clang-format on
