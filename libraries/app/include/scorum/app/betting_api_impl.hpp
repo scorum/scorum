@@ -49,9 +49,6 @@ public:
 
         FC_ASSERT(_game_dba.is_exists_by<by_uuid>(game_uuid), "Game with uuid '${1}' doesn't exist", ("1", game_uuid));
         const auto& game = _game_dba.get_by<by_uuid>(game_uuid);
-
-        FC_ASSERT(game.status == game_status::finished, "Game '${1}' isn't finished yet", ("1", game_uuid));
-
         auto bets_rng = _matched_bet_dba.get_range_by<by_game_id_market>(game.id);
 
         auto game_results = game.results //
