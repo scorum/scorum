@@ -55,6 +55,7 @@ set(SOURCES
     fraction_tests.cpp
     config_api_tests.cpp
     vote_evaluator_tests.cpp
+    create_account_by_committee_evaluator_tests.cpp
 )
 
 add_executable(utests

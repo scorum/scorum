@@ -60,7 +60,7 @@ config::config() /// production config
     , guaranted_reward_supply_period_in_days(30)
     , reward_increase_threshold_in_days(100)
 
-    , budgets_limit_per_owner(10000)
+    , budgets_limit_per_owner(100)
 
     , atomicswap_initiator_refund_lock_secs(48 * 3600)
     , atomicswap_participant_refund_lock_secs(24 * 3600)
