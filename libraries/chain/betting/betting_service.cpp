@@ -40,7 +40,7 @@ bool betting_service::is_betting_moderator(const account_name_type& account_name
     FC_CAPTURE_LOG_AND_RETHROW((account_name))
 }
 
-void betting_service::cancel_game(const game_id_type& game_id)
+void betting_service::cancel_game(game_id_type game_id)
 {
     // TODO: will be refactored using db_accessors & bidir_ranges
     auto matched_bets = _matched_bet_svc.get_bets(game_id);
@@ -53,13 +53,13 @@ void betting_service::cancel_game(const game_id_type& game_id)
     _game_svc.remove(game);
 }
 
-void betting_service::cancel_bets(const game_id_type& game_id)
+void betting_service::cancel_bets(game_id_type game_id)
 {
     cancel_pending_bets(game_id);
     cancel_matched_bets(game_id);
 }
 
-void betting_service::cancel_bets(const game_id_type& game_id, fc::time_point_sec created_from)
+void betting_service::cancel_bets(game_id_type game_id, fc::time_point_sec created_from)
 {
     auto matched_bets = _matched_bet_svc.get_bets(game_id, created_from);
     auto pending_bets = _pending_bet_svc.get_bets(game_id, created_from);
@@ -75,7 +75,7 @@ void betting_service::cancel_bets(const game_id_type& game_id, fc::time_point_se
     _matched_bet_svc.remove_all(matched_bets);
 }
 
-void betting_service::cancel_bets(const game_id_type& game_id, const fc::flat_set<market_type>& cancelled_markets)
+void betting_service::cancel_bets(game_id_type game_id, const fc::flat_set<market_type>& cancelled_markets)
 {
     // clang-format off
     struct less
@@ -110,13 +110,13 @@ void betting_service::cancel_pending_bet(pending_bet_id_type id)
     _pending_bet_svc.remove(pending_bet);
 }
 
-void betting_service::cancel_pending_bets(const game_id_type& game_id)
+void betting_service::cancel_pending_bets(game_id_type game_id)
 {
     auto pending_bets = _pending_bet_svc.get_bets(game_id);
     cancel_pending_bets(pending_bets);
 }
 
-void betting_service::cancel_pending_bets(const game_id_type& game_id, pending_bet_kind kind)
+void betting_service::cancel_pending_bets(game_id_type game_id, pending_bet_kind kind)
 {
     auto pending_bets = _pending_bet_svc.get_bets(game_id, kind);
     cancel_pending_bets(pending_bets);
@@ -132,7 +132,7 @@ void betting_service::cancel_pending_bets(const pending_bet_crefs_type& pending_
     _pending_bet_svc.remove_all(pending_bets);
 }
 
-void betting_service::cancel_matched_bets(const game_id_type& game_id)
+void betting_service::cancel_matched_bets(game_id_type game_id)
 {
     auto matched_bets = _matched_bet_svc.get_bets(game_id);
     cancel_matched_bets(matched_bets);

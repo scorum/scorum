@@ -33,17 +33,17 @@ struct betting_service_i
 
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;
 
-    virtual void cancel_game(const game_id_type& game_id) = 0;
-    virtual void cancel_bets(const game_id_type& game_id) = 0;
-    virtual void cancel_bets(const game_id_type& game_id, fc::time_point_sec created_from) = 0;
-    virtual void cancel_bets(const game_id_type& game_id, const fc::flat_set<market_type>& cancelled_markets) = 0;
+    virtual void cancel_game(game_id_type game_id) = 0;
+    virtual void cancel_bets(game_id_type game_id) = 0;
+    virtual void cancel_bets(game_id_type game_id, fc::time_point_sec created_from) = 0;
+    virtual void cancel_bets(game_id_type game_id, const fc::flat_set<market_type>& cancelled_markets) = 0;
 
     virtual void cancel_pending_bet(pending_bet_id_type id) = 0;
-    virtual void cancel_pending_bets(const game_id_type& game_id) = 0;
-    virtual void cancel_pending_bets(const game_id_type& game_id, pending_bet_kind kind) = 0;
+    virtual void cancel_pending_bets(game_id_type game_id) = 0;
+    virtual void cancel_pending_bets(game_id_type game_id, pending_bet_kind kind) = 0;
     virtual void cancel_pending_bets(const pending_bet_crefs_type& pending_bets) = 0;
 
-    virtual void cancel_matched_bets(const game_id_type& game_id) = 0;
+    virtual void cancel_matched_bets(game_id_type game_id) = 0;
     virtual void cancel_matched_bets(const matched_bet_crefs_type& matched_bets) = 0;
 };
 
@@ -54,17 +54,17 @@ public:
 
     bool is_betting_moderator(const account_name_type& account_name) const override;
 
-    void cancel_game(const game_id_type& game_id) override;
-    void cancel_bets(const game_id_type& game_id) override;
-    void cancel_bets(const game_id_type& game_id, fc::time_point_sec created_from) override;
-    void cancel_bets(const game_id_type& game_id, const fc::flat_set<market_type>& cancelled_markets) override;
+    void cancel_game(game_id_type game_id) override;
+    void cancel_bets(game_id_type game_id) override;
+    void cancel_bets(game_id_type game_id, fc::time_point_sec created_from) override;
+    void cancel_bets(game_id_type game_id, const fc::flat_set<market_type>& cancelled_markets) override;
 
     void cancel_pending_bet(pending_bet_id_type id) override;
-    void cancel_pending_bets(const game_id_type& game_id) override;
-    void cancel_pending_bets(const game_id_type& game_id, pending_bet_kind kind) override;
+    void cancel_pending_bets(game_id_type game_id) override;
+    void cancel_pending_bets(game_id_type game_id, pending_bet_kind kind) override;
     void cancel_pending_bets(const pending_bet_crefs_type& pending_bets) override;
 
-    void cancel_matched_bets(const game_id_type& game_id) override;
+    void cancel_matched_bets(game_id_type game_id) override;
     void cancel_matched_bets(const matched_bet_crefs_type& matched_bets) override;
 
 private:

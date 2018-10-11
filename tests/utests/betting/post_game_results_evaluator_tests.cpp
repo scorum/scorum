@@ -229,7 +229,7 @@ SCORUM_TEST_CASE(winners_with_same_wincase_type_but_diff_coefficients_shouldnt_t
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(9));
     mocks.OnCallOverload(betting_service,
-                         (void (betting_service_i::*)(const game_id_type&)) & betting_service_i::cancel_pending_bets);
+                         (void (betting_service_i::*)(game_id_type)) & betting_service_i::cancel_pending_bets);
     mocks.ExpectCall(game_service, game_service_i::finish);
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
@@ -256,7 +256,7 @@ SCORUM_TEST_CASE(three_state_market_no_posted_result_shouldnt_throw)
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(9));
     mocks.OnCallOverload(betting_service,
-                         (void (betting_service_i::*)(const game_id_type&)) & betting_service_i::cancel_pending_bets);
+                         (void (betting_service_i::*)(game_id_type)) & betting_service_i::cancel_pending_bets);
     mocks.ExpectCall(game_service, game_service_i::finish);
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
