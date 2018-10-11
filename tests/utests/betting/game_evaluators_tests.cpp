@@ -30,9 +30,15 @@ struct game_evaluator_fixture : public shared_memory_fixture
         = void (account_service_i::*)(const account_name_type&, const optional<const char*>&) const;
 
     using get_by_name_ptr = const game_object& (game_service_i::*)(const std::string&)const;
-    using get_by_id_ptr = const game_object& (game_service_i::*)(int64_t) const;
+    using get_by_id_ptr = const game_object& (game_service_i::*)(const scorum::uuid_type&)const;
     using exists_by_name_ptr = bool (game_service_i::*)(const std::string&) const;
-    using exists_by_id_ptr = bool (game_service_i::*)(int64_t) const;
+    using exists_by_id_ptr = bool (game_service_i::*)(const scorum::uuid_type&) const;
+    using create_game_ptr = const game_object& (game_service_i::*)(const scorum::uuid_type&,
+                                                                   const account_name_type&,
+                                                                   const std::string&,
+                                                                   fc::time_point_sec,
+                                                                   const game_type&,
+                                                                   const fc::flat_set<market_type>&);
 
     MockRepository mocks;
 
@@ -111,23 +117,15 @@ SCORUM_TEST_CASE(game_should_be_created)
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
     mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(false);
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {});
 
-    mocks
-        .OnCallOverload(
-            game_service,
-            (const game_object& (game_service_i::*)(const account_name_type&, const std::string&, fc::time_point_sec,
-                                                    const game_type&, const fc::flat_set<market_type>&))
-                & game_service_i::create_game)
-        .Do([&](const account_name_type& acc_name, const std::string& game_name, fc::time_point_sec start,
-                const game_type& game, const fc::flat_set<market_type>& markets) -> const game_object& {
-            BOOST_CHECK_EQUAL(acc_name, "cartman");
-            BOOST_CHECK_EQUAL(game_name, "game");
-            return game_obj;
-        });
+    mocks.ExpectCallOverload(game_service, (create_game_ptr)&game_service_i::create_game)
+        .With(_, "cartman", "game", _, _, _)
+        .ReturnByRef(game_obj);
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
 }
@@ -234,7 +232,7 @@ SCORUM_TEST_CASE(update_game_new_markets_is_overset_no_cancelled_bets)
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks
         .ExpectCallOverload(betting_service,
-                            (void (betting_service_i::*)(const game_id_type&, const fc::flat_set<market_type>&))
+                            (void (betting_service_i::*)(game_id_type, const fc::flat_set<market_type>&))
                                 & betting_service_i::cancel_bets)
         .Do([](const game_id_type&, const fc::flat_set<market_type>& cancelled_markets) {
             BOOST_CHECK_EQUAL(cancelled_markets.size(), 0u);
@@ -262,7 +260,7 @@ SCORUM_TEST_CASE(update_game_new_markets_is_subset_some_bets_cancelled)
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks
         .ExpectCallOverload(betting_service,
-                            (void (betting_service_i::*)(const game_id_type&, const fc::flat_set<market_type>&))
+                            (void (betting_service_i::*)(game_id_type, const fc::flat_set<market_type>&))
                                 & betting_service_i::cancel_bets)
         .Do([](const game_id_type&, const fc::flat_set<market_type>& cancelled_markets) {
             BOOST_REQUIRE_EQUAL(cancelled_markets.size(), 2u);
@@ -297,7 +295,7 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks
         .ExpectCallOverload(betting_service,
-                            (void (betting_service_i::*)(const game_id_type&, const fc::flat_set<market_type>&))
+                            (void (betting_service_i::*)(game_id_type, const fc::flat_set<market_type>&))
                                 & betting_service_i::cancel_bets)
         .Do([](const game_id_type&, const fc::flat_set<market_type>& cancelled_markets) {
             BOOST_REQUIRE_EQUAL(cancelled_markets.size(), 2u);
@@ -373,7 +371,7 @@ SCORUM_TEST_CASE(after_game_started_shouldnt_throw)
     mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.ExpectCallOverload(betting_service,
-                             (void (betting_service_i::*)(const game_id_type&, fc::time_point_sec))
+                             (void (betting_service_i::*)(game_id_type, fc::time_point_sec))
                                  & betting_service_i::cancel_bets);
     mocks.ExpectCallOverload(game_service,
                              (void (game_service_i::*)(const game_object&, const game_service_i::modifier_type&))
@@ -397,7 +395,7 @@ SCORUM_TEST_CASE(expected_time_update)
     mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCallOverload(betting_service,
-                         (void (betting_service_i::*)(const game_id_type&, fc::time_point_sec))
+                         (void (betting_service_i::*)(game_id_type, fc::time_point_sec))
                              & betting_service_i::cancel_bets);
 
     mocks

@@ -3174,15 +3174,21 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
     return result;
 }
 
-annotated_signed_transaction wallet_api::post_bet(
-    account_name_type better, int64_t game_id, wincase_type wincase, odds_input odds, asset stake, const bool broadcast)
+annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
+                                                  account_name_type better,
+                                                  uuid_type game_uuid,
+                                                  wincase_type wincase,
+                                                  odds_input odds,
+                                                  asset stake,
+                                                  const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     post_bet_operation op;
 
+    op.uuid = uuid;
     op.better = better;
-    op.game_id = game_id;
+    op.game_uuid = game_uuid;
     op.odds = odds;
     op.stake = stake;
 
@@ -3204,14 +3210,14 @@ annotated_signed_transaction wallet_api::post_bet(
 }
 
 annotated_signed_transaction
-wallet_api::cancel_pending_bets(account_name_type better, fc::flat_set<int64_t> bet_ids, const bool broadcast)
+wallet_api::cancel_pending_bets(account_name_type better, fc::flat_set<uuid_type> bet_uuids, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     cancel_pending_bets_operation op;
 
     op.better = better;
-    op.bet_ids = bet_ids;
+    op.bet_uuids = bet_uuids;
 
     signed_transaction tx;
     tx.operations.push_back(op);

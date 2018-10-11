@@ -6,6 +6,8 @@
 #include <scorum/protocol/betting/wincase.hpp>
 #include <scorum/protocol/betting/betting_serialization.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+
 #include <defines.hpp>
 #include <iostream>
 
@@ -15,9 +17,12 @@ using namespace scorum::protocol;
 
 struct game_serialization_test_fixture
 {
+    uuid_type game_uuid = boost::uuids::string_generator()("e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f");
+
     create_game_operation get_soccer_create_game_operation() const
     {
         create_game_operation op;
+        op.uuid = game_uuid;
         op.moderator = "moderator_name";
         op.name = "game_name";
         op.game = soccer_game{};
@@ -31,7 +36,7 @@ struct game_serialization_test_fixture
     update_game_markets_operation get_update_game_markets_operation() const
     {
         update_game_markets_operation op;
-        op.game_id = 0;
+        op.uuid = game_uuid;
         op.moderator = "moderator_name";
         op.markets = get_markets();
 
@@ -57,7 +62,8 @@ struct game_serialization_test_fixture
                                           [ "total", { "threshold": 500 } ],
                                           [ "total", { "threshold": 1000 } ] ])";
 
-    const std::string create_markets_json_tpl = R"({ "moderator": "moderator_name",
+    const std::string create_markets_json_tpl = R"({ "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f",
+                                                     "moderator": "moderator_name",
                                                      "name": "game_name",
                                                      "start_time": "2016-04-25T17:30:00",
                                                      "auto_resolve_delay_sec": 33,
@@ -65,7 +71,7 @@ struct game_serialization_test_fixture
                                                      "markets": ${markets} })";
 
     const std::string update_markets_json_tpl = R"({ "moderator": "moderator_name",
-                                                     "game_id": 0,
+                                                     "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f",
                                                      "markets": ${markets} })";
 
     fc::flat_set<market_type> get_markets() const
@@ -188,6 +194,7 @@ SCORUM_TEST_CASE(serialize_markets)
 SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
 {
     create_game_operation op;
+    op.uuid = game_uuid;
     op.moderator = "admin";
     op.name = "game name";
     op.start_time = time_point_sec::from_iso_string("2018-08-03T10:12:43");
@@ -197,12 +204,13 @@ SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(hex, "0561646d696e0967616d65206e616d659b2a645b210000000000");
+    BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e0967616d65206e616d659b2a645b210000000000");
 }
 
 SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
 {
     create_game_operation op;
+    op.uuid = game_uuid;
     op.moderator = "admin";
     op.name = "game name";
     op.start_time = time_point_sec::from_iso_string("2018-08-03T10:12:43");
@@ -212,7 +220,8 @@ SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(hex, "0561646d696e0967616d65206e616d659b2a645b2100000000010ce803");
+    BOOST_CHECK_EQUAL(hex,
+                      "e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e0967616d65206e616d659b2a645b2100000000010ce803");
 }
 
 SCORUM_TEST_CASE(create_game_json_serialization_test)
@@ -238,6 +247,7 @@ SCORUM_TEST_CASE(create_game_json_deserialization_test)
 SCORUM_TEST_CASE(markets_duplicates_serialization_test)
 {
     create_game_operation op;
+    op.uuid = game_uuid;
     op.game = soccer_game{};
     op.markets = { correct_score_home{}, correct_score_home{} };
     op.auto_resolve_delay_sec = 33;
@@ -247,6 +257,7 @@ SCORUM_TEST_CASE(markets_duplicates_serialization_test)
     auto json_comp = fc::json::to_string(fc::json::from_string(
                                            R"(
                                            {
+                                              "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f"
                                               "moderator":"",
                                               "name":"",
                                               "start_time":"1970-01-01T00:00:00",
@@ -302,6 +313,7 @@ SCORUM_TEST_CASE(markets_duplicates_deserialization_test)
 SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
 {
     create_game_operation op;
+    op.uuid = game_uuid;
     op.game = soccer_game{};
     op.markets = { correct_score{ 1, 1 }, correct_score_home{} };
     op.auto_resolve_delay_sec = 33;
@@ -311,6 +323,7 @@ SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
     auto json_comp = fc::json::to_string(fc::json::from_string(
                                            R"(
                                            {
+                                              "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f"
                                               "moderator":"",
                                               "name":"",
                                               "start_time":"1970-01-01T00:00:00",
@@ -410,14 +423,14 @@ SCORUM_TEST_CASE(create_game_binary_serialization_test)
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e5721000000001200010203040cfe0400000"
-                           "4e80305060708010000000801000100090a0b0c00000cf4010ce803");
+    BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e572"
+                           "1000000001200010203040cfe04000004e80305060708010000000801000100090a0b0c00000cf4010ce803");
 }
 
 SCORUM_TEST_CASE(create_game_binary_deserialization_test)
 {
-    auto hex = "0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e5721000000001200010203040cfe0400000"
-               "4e80305060708010000000801000100090a0b0c00000cf4010ce803";
+    auto hex = "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e572"
+               "1000000001200010203040cfe04000004e80305060708010000000801000100090a0b0c00000cf4010ce803";
 
     char buffer[1000];
     fc::from_hex(hex, buffer, sizeof(buffer));
@@ -432,14 +445,14 @@ SCORUM_TEST_CASE(update_game_markets_binary_serialization_test)
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d6500000000000000001200010203040cfe04000004e80305060708010000000"
-                           "801000100090a0b0c00000cf4010ce803");
+    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d65e629f9aa6b2c46aa8fa836770e7a7a5f1200010203040cfe04000004e8030"
+                           "5060708010000000801000100090a0b0c00000cf4010ce803");
 }
 
 SCORUM_TEST_CASE(update_game_markets_binary_deserialization_test)
 {
-    auto hex = "0e6d6f64657261746f725f6e616d6500000000000000001200010203040cfe04000004e80305060708010000000"
-               "801000100090a0b0c00000cf4010ce803";
+    auto hex = "0e6d6f64657261746f725f6e616d65e629f9aa6b2c46aa8fa836770e7a7a5f1200010203040cfe04000004e8030"
+               "5060708010000000801000100090a0b0c00000cf4010ce803";
 
     char buffer[1000];
     fc::from_hex(hex, buffer, sizeof(buffer));

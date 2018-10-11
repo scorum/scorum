@@ -5,6 +5,9 @@
 #include <fc/crypto/ripemd160.hpp>
 #include <fc/exception/exception.hpp>
 #include <fc/io/raw.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -209,5 +212,15 @@ void to_variant(const scorum::protocol::extended_private_key_type& var, fc::vari
 void from_variant(const fc::variant& var, scorum::protocol::extended_private_key_type& vo)
 {
     vo = scorum::protocol::extended_private_key_type(var.as_string());
+}
+
+void to_variant(const boost::uuids::uuid& id, fc::variant& var)
+{
+    var = boost::uuids::to_string(id);
+}
+
+void from_variant(const fc::variant& var, boost::uuids::uuid& id)
+{
+    id = boost::uuids::string_generator()(var.as_string());
 }
 } // fc

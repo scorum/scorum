@@ -14,7 +14,8 @@ dbs_game::dbs_game(database& db)
 {
 }
 
-const game_object& dbs_game::create_game(const account_name_type& moderator,
+const game_object& dbs_game::create_game(const uuid_type& uuid,
+                                         const account_name_type& moderator,
                                          const std::string& game_name,
                                          fc::time_point_sec start,
                                          uint32_t auto_resolve_delay_sec,
@@ -22,6 +23,7 @@ const game_object& dbs_game::create_game(const account_name_type& moderator,
                                          const fc::flat_set<market_type>& markets)
 {
     return dbs_service_base<game_service_i>::create([&](game_object& obj) {
+        obj.uuid = uuid;
         fc::from_string(obj.name, game_name);
         obj.start_time = start;
         obj.auto_resolve_time = start + auto_resolve_delay_sec;
@@ -68,6 +70,11 @@ bool dbs_game::is_exists(int64_t game_id) const
     return find_by<by_id>(game_id) != nullptr;
 }
 
+bool dbs_game::is_exists(const uuid_type& uuid) const
+{
+    return find_by<by_uuid>(uuid) != nullptr;
+}
+
 const game_object& dbs_game::get_game(const std::string& game_name) const
 {
     return get_by<by_name>(game_name);
@@ -77,6 +84,12 @@ const game_object& dbs_game::get_game(int64_t game_id) const
 {
     return get_by<by_id>(game_id);
 }
+
+const game_object& dbs_game::get_game(const uuid_type& uuid) const
+{
+    return get_by<by_uuid>(uuid);
+}
+
 std::vector<dbs_game::object_cref_type> dbs_game::get_games(fc::time_point_sec start) const
 {
     return get_range_by<by_start_time>(boost::multi_index::unbounded, boost::lambda::_1 <= start);

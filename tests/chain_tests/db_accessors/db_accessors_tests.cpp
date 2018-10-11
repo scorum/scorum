@@ -23,7 +23,10 @@ BOOST_AUTO_TEST_CASE(db_accessors_tests)
 
     BOOST_CHECK(dba.is_empty());
 
-    const auto& o1 = dba.create([](game_object& o) { o.name = "name1"; });
+    const auto& o1 = dba.create([](game_object& o) {
+        o.name = "name1";
+        o.uuid = { 1 };
+    });
     BOOST_CHECK_EQUAL(o1.name, "name1");
 
     dba.update([](game_object& o) { fc::from_string(o.name, "name2"); });

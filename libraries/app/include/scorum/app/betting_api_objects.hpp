@@ -29,6 +29,7 @@ struct game_api_object
 
     game_api_object(const chain::game_object& obj)
         : id(obj.id)
+        , uuid(obj.uuid)
         , name(fc::to_string(obj.name))
         , start_time(obj.start_time)
         , last_update(obj.last_update)
@@ -41,6 +42,7 @@ struct game_api_object
     }
 
     chain::game_id_type id = 0;
+    uuid_type uuid;
 
     std::string moderator;
     std::string name;

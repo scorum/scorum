@@ -1455,15 +1455,17 @@ public:
 
     /**
      * @brief Create bet.
+     * @param uuid bet UUID
      * @param better owner for new bet
-     * @param game_id game id for bet creating
+     * @param game_uuid game UUID which is specified during game creation
      * @param wincase wincase for bet
      * @param odds rational coefficient that define potential result (p). p = odds * stake
      * @param stake amount in SCR to bet
      * @param broadcast
      */
-    annotated_signed_transaction post_bet(account_name_type better,
-                                          int64_t game_id,
+    annotated_signed_transaction post_bet(uuid_type uuid,
+                                          account_name_type better,
+                                          uuid_type game_uuid,
                                           wincase_type wincase,
                                           odds_input odds,
                                           asset stake,
@@ -1472,11 +1474,11 @@ public:
     /**
      * @brief Cancel pending bets list.
      * @param better owner
-     * @param bet_ids bets list that is being canceling
+     * @param bet_uuids UUIDs of bets which are being cancelled
      * @param broadcast
      */
     annotated_signed_transaction
-    cancel_pending_bets(account_name_type better, fc::flat_set<int64_t> bet_ids, const bool broadcast);
+    cancel_pending_bets(account_name_type better, fc::flat_set<uuid_type> bet_uuids, const bool broadcast);
 
     /**
      * @brief Returns games
