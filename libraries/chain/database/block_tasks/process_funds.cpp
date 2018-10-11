@@ -96,8 +96,8 @@ asset process_funds::run_auction_round()
     auto banner_budgets_reward = process_adv_pending_payouts(_banner_budget_service);
     auto adv_budgets_reward = post_budgets_reward + banner_budgets_reward;
 
-    _post_budget_service.close_empty_budgets();
-    _banner_budget_service.close_empty_budgets();
+    close_empty_budgets(_post_budget_service);
+    close_empty_budgets(_banner_budget_service);
 
     return adv_budgets_reward;
 }
@@ -107,8 +107,8 @@ asset process_funds::process_adv_pending_payouts(adv_budget_service_i<budget_typ
 {
     auto pending_budgets = budget_svc.get_pending_budgets();
 
-    std::vector<allocate_cash_from_advertising_budget_operation> allocated_cash_ops;
-    std::vector<cash_back_from_advertising_budget_to_owner_operation> returned_cash_ops;
+    std::vector<budget_outgo_operation> allocated_cash_ops;
+    std::vector<budget_owner_income_operation> returned_cash_ops;
     for (const adv_budget_object<budget_type_v>& budget : pending_budgets)
     {
         if (budget.budget_pending_outgo.amount > 0)
@@ -127,6 +127,19 @@ asset process_funds::process_adv_pending_payouts(adv_budget_service_i<budget_typ
         _virt_op_emitter.push_virtual_operation(op);
 
     return adv_budgets_reward;
+}
+
+template <budget_type budget_type_v>
+void process_funds::close_empty_budgets(adv_budget_service_i<budget_type_v>& budget_svc)
+{
+    auto empty_budgets = budget_svc.get_empty_budgets();
+
+    for (const auto& b : empty_budgets)
+    {
+        _virt_op_emitter.push_virtual_operation(budget_closing_operation(budget_type_v, b.get().owner, b.get().id._id));
+
+        budget_svc.remove(b);
+    }
 }
 
 void process_funds::distribute_reward(const asset& users_reward)

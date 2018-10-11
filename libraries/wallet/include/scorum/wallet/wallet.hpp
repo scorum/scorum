@@ -1125,28 +1125,56 @@ public:
                                                           const bool broadcast);
 
     /**
+     * This method will update budget metadata for banner by owner name and budget uuid
+     *
+     * @param owner account name
+     * @param uuid budget uuid
+     * @param json_metadata some metadata
+     * @param broadcast
+     * @return
+     */
+    annotated_signed_transaction update_budget_for_banner(const std::string& owner,
+                                                          const uuid_type& uuid,
+                                                          const std::string& json_metadata,
+                                                          const bool broadcast);
+
+    /**
+     * This method will update budget metadata for post by owner name and budget uuid
+     *
+     * @param owner account name
+     * @param uuid budget uuid
+     * @param json_metadata some metadata
+     * @param broadcast
+     * @return
+     */
+    annotated_signed_transaction update_budget_for_post(const std::string& owner,
+                                                        const uuid_type& uuid,
+                                                        const std::string& json_metadata,
+                                                        const bool broadcast);
+
+    /**
      *  Closing the budget (for POST type). The budget rest is returned to the owner's account
      */
     annotated_signed_transaction
-    close_budget_for_post(const int64_t id, const std::string& owner, const bool broadcast);
+    close_budget_for_post(const uuid_type& uuid, const std::string& owner, const bool broadcast);
 
     /**
      *  Closing the budget (for BANNER type). The budget rest is returned to the owner's account
      */
     annotated_signed_transaction
-    close_budget_for_banner(const int64_t id, const std::string& owner, const bool broadcast);
+    close_budget_for_banner(const uuid_type& uuid, const std::string& owner, const bool broadcast);
 
     /**
      *  Closing the budget (for POST type). The budget rest is returned to the owner's account
      */
     annotated_signed_transaction
-    close_budget_for_post_by_moderator(const int64_t id, const std::string& moderator, const bool broadcast);
+    close_budget_for_post_by_moderator(const uuid_type& uuid, const std::string& moderator, const bool broadcast);
 
     /**
      *  Closing the budget (for BANNER type). The budget rest is returned to the owner's account
      */
     annotated_signed_transaction
-    close_budget_for_banner_by_moderator(const int64_t id, const std::string& moderator, const bool broadcast);
+    close_budget_for_banner_by_moderator(const uuid_type& uuid, const std::string& moderator, const bool broadcast);
 
     /**
      * Vote for committee proposal
@@ -1533,6 +1561,8 @@ FC_API( scorum::wallet::wallet_api,
         (decline_voting_rights)
         (create_budget_for_post)
         (create_budget_for_banner)
+        (update_budget_for_banner)
+        (update_budget_for_post)
         (close_budget_for_post)
         (close_budget_for_banner)
         (close_budget_for_post_by_moderator)

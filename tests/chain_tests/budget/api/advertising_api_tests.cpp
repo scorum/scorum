@@ -3,6 +3,8 @@
 #include <scorum/app/api_context.hpp>
 #include <scorum/app/advertising_api.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+
 #include "budget/budget_check_common.hpp"
 
 using namespace scorum::app;
@@ -44,6 +46,9 @@ struct advertising_api_fixture : public budget_check_common::budget_check_fixtur
 
     Actor alice = "alice";
     Actor sam = "sam";
+
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 };
 
 BOOST_FIXTURE_TEST_SUITE(advertising_api_tests, advertising_api_fixture)
@@ -73,15 +78,15 @@ SCORUM_TEST_CASE(check_get_moderator)
 
 SCORUM_TEST_CASE(get_budget_winners_check_post_and_banners_do_not_affect_each_other)
 {
-    auto p1 = create_budget(alice, budget_type::post, 100, 10); // id = 0
+    auto p1 = create_budget(uuid_gen("alice0"), alice, budget_type::post, 100, 10); // id = 0
     generate_block();
-    auto p2 = create_budget(sam, budget_type::post, 200, 10); // id = 1
+    auto p2 = create_budget(uuid_gen("sam0"), sam, budget_type::post, 200, 10); // id = 1
     generate_block();
-    auto b1 = create_budget(alice, budget_type::banner, 150, 10); // id = 0
+    auto b1 = create_budget(uuid_gen("alice1"), alice, budget_type::banner, 150, 10); // id = 0
     generate_block();
-    auto b2 = create_budget(sam, budget_type::banner, 50, 10); // id = 1
+    auto b2 = create_budget(uuid_gen("sam1"), sam, budget_type::banner, 50, 10); // id = 1
     generate_block();
-    auto b3 = create_budget(alice, budget_type::banner, 70, 10); // id = 2
+    auto b3 = create_budget(uuid_gen("alice2"), alice, budget_type::banner, 70, 10); // id = 2
     generate_block();
 
     auto post_budgets = _api.get_current_winners(budget_type::post);

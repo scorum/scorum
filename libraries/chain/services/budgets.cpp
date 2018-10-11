@@ -10,10 +10,12 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account.hpp>
 
+#include <scorum/utils/math.hpp>
+
 namespace scorum {
 namespace chain {
 namespace detail {
-asset calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, const asset& balance)
+asset fund_calculate_per_block(time_point_sec start_date, time_point_sec end_date, const asset& balance)
 {
     FC_ASSERT(start_date < end_date, "Start time ${1} must be less end time ${2}", ("1", start_date)("2", end_date));
 
@@ -23,6 +25,28 @@ asset calculate_per_block(const time_point_sec& start_date, const time_point_sec
 
     per_block *= SCORUM_BLOCK_INTERVAL;
     per_block /= delta_in_sec;
+
+    // non zero budget must return at least one satoshi
+    per_block.amount = std::max(per_block.amount, share_type(1));
+
+    return per_block;
+}
+
+asset adv_calculate_per_block(time_point_sec start,
+                              time_point_sec deadline,
+                              time_point_sec last_block_time,
+                              const asset& balance)
+{
+    FC_ASSERT(start <= deadline, "Start time ${1} must be less or equal end time ${2}", ("1", start)("2", deadline));
+
+    auto aligned_start_sec
+        = utils::ceil(start.sec_since_epoch(), last_block_time.sec_since_epoch(), SCORUM_BLOCK_INTERVAL);
+
+    auto aligned_deadline_sec
+        = utils::ceil(deadline.sec_since_epoch(), last_block_time.sec_since_epoch(), SCORUM_BLOCK_INTERVAL);
+
+    auto per_blocks_count = 1 + ((aligned_deadline_sec - aligned_start_sec) / SCORUM_BLOCK_INTERVAL);
+    auto per_block = balance / per_blocks_count;
 
     // non zero budget must return at least one satoshi
     per_block.amount = std::max(per_block.amount, share_type(1));
@@ -44,7 +68,7 @@ const fund_budget_object& dbs_fund_budget::create_budget(const asset& balance, t
         FC_ASSERT(balance.symbol() == SP_SYMBOL, "Invalid asset type (symbol).");
         FC_ASSERT(start < end, "Invalid dates.");
 
-        auto per_block = detail::calculate_per_block(start, end, balance);
+        auto per_block = detail::fund_calculate_per_block(start, end, balance);
 
         return create([&](fund_budget_object& budget) {
             budget.created = _dprops_svc.head_block_time();
@@ -71,14 +95,15 @@ asset dbs_fund_budget::allocate_cash(const fund_budget_object& budget)
 template <budget_type budget_type_v>
 dbs_advertising_budget<budget_type_v>::dbs_advertising_budget(database& db)
     : dbs_service_base<typename budget_service_traits<budget_type_v>::service_type>(db)
-    , _dprops_svc(db.dynamic_global_property_service())
+    , _dgp_svc(db.dynamic_global_property_service())
     , _account_svc(db.account_service())
 {
 }
 
 template <budget_type budget_type_v>
 const adv_budget_object<budget_type_v>&
-dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& owner,
+dbs_advertising_budget<budget_type_v>::create_budget(const uuid_type& uuid,
+                                                     const account_name_type& owner,
                                                      const asset& balance,
                                                      time_point_sec start,
                                                      time_point_sec end,
@@ -88,17 +113,22 @@ dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& ow
     {
         FC_ASSERT(balance.symbol() == SCORUM_SYMBOL, "Invalid asset type (symbol).");
         FC_ASSERT(balance.amount > 0, "Invalid balance.");
-        FC_ASSERT(start < end, "Invalid dates.");
 
-        auto per_block = detail::calculate_per_block(start, end, balance);
+        auto head_block_time = _dgp_svc.head_block_time();
+        auto per_block = detail::adv_calculate_per_block(start, end, head_block_time, balance);
+
+        auto aligned_start_sec
+            = utils::ceil(start.sec_since_epoch(), head_block_time.sec_since_epoch(), SCORUM_BLOCK_INTERVAL);
+        auto cashout_sec = aligned_start_sec + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC - SCORUM_BLOCK_INTERVAL;
 
         const auto& budget = this->create([&](adv_budget_object<budget_type_v>& budget) {
+            budget.uuid = uuid;
             budget.owner = owner;
 #ifndef IS_LOW_MEM
             fc::from_string(budget.json_metadata, json_metadata);
 #endif
-            budget.created = _dprops_svc.head_block_time();
-            budget.cashout_time = budget.created + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
+            budget.created = head_block_time;
+            budget.cashout_time = fc::time_point_sec(cashout_sec);
             budget.start = start;
             budget.deadline = end;
             budget.balance = balance;
@@ -106,6 +136,8 @@ dbs_advertising_budget<budget_type_v>::create_budget(const account_name_type& ow
         });
 
         _account_svc.decrease_balance(_account_svc.get_account(owner), balance);
+
+        update_totals([&](adv_total_stats::budget_type_stat& statistic) { statistic.volume += balance; });
 
         return budget;
     }
@@ -124,11 +156,20 @@ dbs_advertising_budget<budget_type_v>::get(const oid<adv_budget_object<budget_ty
 }
 
 template <budget_type budget_type_v>
-bool dbs_advertising_budget<budget_type_v>::is_exists(const oid<adv_budget_object<budget_type_v>>& id) const
+const adv_budget_object<budget_type_v>& dbs_advertising_budget<budget_type_v>::get(const uuid_type& uuid) const
 {
     try
     {
-        return nullptr != this->find_by(id);
+        return this->template get_by<by_uuid>(uuid);
+    }
+    FC_CAPTURE_AND_RETHROW((uuid))
+}
+
+template <budget_type budget_type_v> bool dbs_advertising_budget<budget_type_v>::is_exists(const uuid_type& id) const
+{
+    try
+    {
+        return nullptr != this->template find_by<by_uuid>(id);
     }
     FC_CAPTURE_AND_RETHROW((id))
 }
@@ -234,7 +275,7 @@ dbs_advertising_budget<budget_type_v>::get_pending_budgets() const
 {
     try
     {
-        auto head_time = _dprops_svc.head_block_time();
+        auto head_time = _dgp_svc.head_block_time();
         return this->template get_range_by<by_cashout_time>(boost::multi_index::unbounded,
                                                             ::boost::lambda::_1 <= head_time);
     }
@@ -246,8 +287,10 @@ asset dbs_advertising_budget<budget_type_v>::allocate_cash(const adv_budget_obje
 {
     this->update(budget, [&](adv_budget_object<budget_type_v>& b) { b.balance -= budget.per_block; });
 
-    if (budget.deadline <= _dprops_svc.head_block_time())
-        finish_budget(budget.id);
+    update_totals([&](adv_total_stats::budget_type_stat& statistic) { statistic.volume -= budget.per_block; });
+
+    if (budget.deadline <= _dgp_svc.head_block_time() || budget.balance.amount == 0)
+        finish_budget(budget.uuid);
 
     return budget.per_block;
 }
@@ -261,6 +304,11 @@ void dbs_advertising_budget<budget_type_v>::update_pending_payouts(const adv_bud
         b.owner_pending_income += owner_incoming;
         b.budget_pending_outgo += budget_outgoing;
     });
+
+    update_totals([&](adv_total_stats::budget_type_stat& statistic) {
+        statistic.owner_pending_income += owner_incoming;
+        statistic.budget_pending_outgo += budget_outgoing;
+    });
 }
 
 template <budget_type budget_type_v>
@@ -272,35 +320,64 @@ asset dbs_advertising_budget<budget_type_v>::perform_pending_payouts(const budge
         budgets_outgo += budget.budget_pending_outgo;
         _account_svc.increase_balance(_account_svc.get_account(budget.owner), budget.owner_pending_income);
 
+        update_totals([&](adv_total_stats::budget_type_stat& statistic) {
+            statistic.owner_pending_income -= budget.owner_pending_income;
+            statistic.budget_pending_outgo -= budget.budget_pending_outgo;
+        });
+
         this->update(budget, [&](adv_budget_object<budget_type_v>& b) {
             b.owner_pending_income.amount = 0;
             b.budget_pending_outgo.amount = 0;
-            b.cashout_time = _dprops_svc.head_block_time() + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
+            b.cashout_time = _dgp_svc.head_block_time() + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC;
         });
     }
+
     return budgets_outgo;
 }
 
-template <budget_type budget_type_v>
-void dbs_advertising_budget<budget_type_v>::finish_budget(const oid<adv_budget_object<budget_type_v>>& id)
+template <budget_type budget_type_v> void dbs_advertising_budget<budget_type_v>::finish_budget(const uuid_type& uuid)
 {
-    const auto& budget = get(id);
+    const auto& budget = get(uuid);
+
+    update_totals([&](adv_total_stats::budget_type_stat& statistic) {
+        statistic.owner_pending_income += budget.balance;
+        statistic.volume -= budget.balance;
+    });
 
     this->update(budget, [&](adv_budget_object<budget_type_v>& b) {
-        b.cashout_time = _dprops_svc.head_block_time();
+        b.cashout_time = _dgp_svc.head_block_time();
         b.owner_pending_income += b.balance;
         b.balance.amount = 0;
     });
 }
 
-template <budget_type budget_type_v> void dbs_advertising_budget<budget_type_v>::close_empty_budgets()
+template <budget_type budget_type_v>
+typename dbs_advertising_budget<budget_type_v>::budgets_type
+dbs_advertising_budget<budget_type_v>::get_empty_budgets() const
 {
     auto zero = asset(0, SCORUM_SYMBOL);
     auto empty_budgets = this->template get_range_by<by_balances>(
         boost::multi_index::unbounded, ::boost::lambda::_1 <= std::make_tuple(zero, zero, zero));
 
-    for (const adv_budget_object<budget_type_v>& budget : empty_budgets)
-        this->remove(budget);
+    return empty_budgets;
+}
+
+template <budget_type budget_type_v>
+void dbs_advertising_budget<budget_type_v>::update_totals(
+    std::function<void(adv_total_stats::budget_type_stat&)> callback)
+{
+    if (budget_type_v == budget_type::banner)
+    {
+        _dgp_svc.update([&](dynamic_global_property_object& dgp) { callback(dgp.advertising.banner_budgets); });
+    }
+    else if (budget_type_v == budget_type::post)
+    {
+        _dgp_svc.update([&](dynamic_global_property_object& dgp) { callback(dgp.advertising.post_budgets); });
+    }
+    else
+    {
+        FC_THROW("unsuported budget type");
+    }
 }
 
 template class dbs_advertising_budget<budget_type::post>;

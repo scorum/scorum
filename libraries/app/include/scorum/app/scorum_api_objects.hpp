@@ -280,11 +280,13 @@ struct witness_api_obj
 
 /// @addtogroup adv_api
 /// @{
+
 class budget_api_obj
 {
 public:
     budget_api_obj(const chain::post_budget_object& b)
         : id(b.id._id)
+        , uuid(b.uuid)
         , type(budget_type::post)
         , owner(b.owner)
         , json_metadata(fc::to_string(b.json_metadata))
@@ -293,11 +295,15 @@ public:
         , deadline(b.deadline)
         , balance(b.balance)
         , per_block(b.per_block)
+        , cashout_time(b.cashout_time)
+        , owner_pending_income(b.owner_pending_income)
+        , budget_pending_outgo(b.budget_pending_outgo)
     {
     }
 
     budget_api_obj(const chain::banner_budget_object& b)
         : id(b.id._id)
+        , uuid(b.uuid)
         , type(budget_type::banner)
         , owner(b.owner)
         , json_metadata(fc::to_string(b.json_metadata))
@@ -306,6 +312,9 @@ public:
         , deadline(b.deadline)
         , balance(b.balance)
         , per_block(b.per_block)
+        , cashout_time(b.cashout_time)
+        , owner_pending_income(b.owner_pending_income)
+        , budget_pending_outgo(b.budget_pending_outgo)
     {
     }
 
@@ -315,18 +324,23 @@ public:
     }
 
     int64_t id;
+    uuid_type uuid;
 
     budget_type type;
 
     account_name_type owner;
     std::string json_metadata;
 
-    time_point_sec created;
-    time_point_sec start;
-    time_point_sec deadline;
+    fc::time_point_sec created;
+    fc::time_point_sec start;
+    fc::time_point_sec deadline;
 
     asset balance = asset(0, SCORUM_SYMBOL);
     asset per_block;
+
+    fc::time_point_sec cashout_time;
+    asset owner_pending_income = asset(0, SCORUM_SYMBOL);
+    asset budget_pending_outgo = asset(0, SCORUM_SYMBOL);
 };
 
 /// @}
@@ -533,6 +547,7 @@ FC_REFLECT( scorum::app::proposal_api_obj,
 
 FC_REFLECT( scorum::app::budget_api_obj,
             (id)
+            (uuid)
             (type)
             (owner)
             (json_metadata)
@@ -541,6 +556,9 @@ FC_REFLECT( scorum::app::budget_api_obj,
             (deadline)
             (balance)
             (per_block)
+            (cashout_time)
+            (budget_pending_outgo)
+            (owner_pending_income)
           )
 
 FC_REFLECT( scorum::app::atomicswap_contract_api_obj,
