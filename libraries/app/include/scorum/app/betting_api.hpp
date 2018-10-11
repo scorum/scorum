@@ -38,6 +38,13 @@ public:
     /// @{
 
     /**
+     * @brief Returns all winners for particular game
+     * @param game_uuid Game UUID
+     * @return array of winner_api_object's
+     */
+    std::vector<winner_api_object> get_game_winners(const uuid_type& game_uuid) const;
+
+    /**
      * @brief Returns games
      * @param filter [created, started, finished]
      * @return array of game_api_object's
@@ -78,7 +85,8 @@ private:
 } // namespace scorum
 
 // clang-format off
-FC_API(scorum::app::betting_api, (get_games)
+FC_API(scorum::app::betting_api, (get_game_winners)
+                                 (get_games)
                                  (get_matched_bets)
                                  (get_pending_bets)
                                  (get_betting_properties))

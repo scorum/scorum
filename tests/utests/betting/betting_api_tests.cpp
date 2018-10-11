@@ -22,7 +22,13 @@ public:
     matched_bet_service_i* matched_bet_service = mocks.Mock<matched_bet_service_i>();
     betting_property_service_i* betting_property_service = mocks.Mock<betting_property_service_i>();
 
+    database* db_mock = mocks.Mock<database>();
+    dba::db_accessor<game_object> game_dba;
+    dba::db_accessor<matched_bet_object> matched_bet_dba;
+
     fixture()
+        : game_dba(*db_mock)
+        , matched_bet_dba(*db_mock)
     {
     }
 
@@ -48,14 +54,14 @@ BOOST_FIXTURE_TEST_CASE(get_services_in_constructor, fixture)
     mocks.ExpectCall(factory, data_service_factory_i::matched_bet_service).ReturnByRef(*matched_bet_service);
     mocks.ExpectCall(factory, data_service_factory_i::betting_property_service).ReturnByRef(*betting_property_service);
 
-    BOOST_REQUIRE_NO_THROW(betting_api_impl api(*factory));
+    BOOST_REQUIRE_NO_THROW(betting_api_impl api(*factory, game_dba, matched_bet_dba));
 }
 
 BOOST_FIXTURE_TEST_CASE(get_games_dont_throw, fixture)
 {
     init();
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
 
     std::vector<game_object> objects;
 
@@ -93,7 +99,7 @@ BOOST_FIXTURE_TEST_CASE(get_games_return_all_games, get_games_fixture)
                             (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     std::vector<game_api_object> games = api.get_games(game_filter::all);
 
     BOOST_CHECK_EQUAL(games.size(), 3u);
@@ -106,7 +112,7 @@ BOOST_FIXTURE_TEST_CASE(get_games_does_not_change_order, get_games_fixture)
                             (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     std::vector<game_api_object> games = api.get_games(game_filter::all);
 
     BOOST_CHECK(games[0].status == game_status::created);
@@ -121,7 +127,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_created_status, get_games_fixture)
                             (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     std::vector<game_api_object> games = api.get_games(game_filter::created);
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
@@ -135,7 +141,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_started_status, get_games_fixture)
                             (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     std::vector<game_api_object> games = api.get_games(game_filter::started);
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
@@ -149,7 +155,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_finished_status, get_games_fixture)
                             (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     std::vector<game_api_object> games = api.get_games(game_filter::finished);
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
@@ -165,7 +171,7 @@ BOOST_FIXTURE_TEST_CASE(return_two_games_with_finished_status, get_games_fixture
                             (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     std::vector<game_api_object> games = api.get_games(game_filter::finished);
 
     BOOST_REQUIRE_EQUAL(games.size(), 2);
@@ -180,7 +186,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_not_finished_status, get_games_fixture)
                             (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     std::vector<game_api_object> games = api.get_games(game_filter::not_finished);
 
     BOOST_REQUIRE_EQUAL(games.size(), 2);
@@ -190,7 +196,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_not_finished_status, get_games_fixture)
 
 BOOST_FIXTURE_TEST_CASE(throw_exception_when_limit_is_negative, get_games_fixture)
 {
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
 
     BOOST_REQUIRE_THROW(api.get_pending_bets(0, -1), fc::assert_exception);
     BOOST_REQUIRE_THROW(api.get_matched_bets(0, -1), fc::assert_exception);
@@ -200,7 +206,7 @@ BOOST_FIXTURE_TEST_CASE(throw_exception_when_limit_gt_than_max_limit, get_games_
 {
     const auto max_limit = 100;
 
-    betting_api_impl api(*factory, max_limit);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, max_limit);
 
     BOOST_REQUIRE_THROW(api.get_pending_bets(0, max_limit + 1), fc::assert_exception);
     BOOST_REQUIRE_THROW(api.get_matched_bets(0, max_limit + 1), fc::assert_exception);
@@ -208,7 +214,7 @@ BOOST_FIXTURE_TEST_CASE(throw_exception_when_limit_gt_than_max_limit, get_games_
 
 BOOST_FIXTURE_TEST_CASE(dont_throw_when_limit_is_zero, get_games_fixture)
 {
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
 
     std::vector<pending_bet_object> pbets;
     std::vector<matched_bet_object> mbets;
@@ -235,7 +241,7 @@ BOOST_FIXTURE_TEST_CASE(dont_throw_when_limit_eq_max, get_games_fixture)
 {
     const auto max_limit = 100;
 
-    betting_api_impl api(*factory, max_limit);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, max_limit);
 
     std::vector<pending_bet_object> pbets;
     std::vector<matched_bet_object> mbets;
@@ -282,7 +288,7 @@ BOOST_FIXTURE_TEST_CASE(check_get_pending_bets_from_arg, get_bets_fixture<pendin
         .With(from)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     api.get_pending_bets(from, 1);
 }
 
@@ -295,7 +301,7 @@ BOOST_FIXTURE_TEST_CASE(get_one_pending_bet, get_bets_fixture<pending_bet_object
         .With(_)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     auto bets = api.get_pending_bets(0, 1);
 
     BOOST_REQUIRE_EQUAL(bets.size(), 1);
@@ -312,7 +318,7 @@ BOOST_FIXTURE_TEST_CASE(get_all_pending_bets, get_bets_fixture<pending_bet_objec
         .With(_)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     auto bets = api.get_pending_bets(0, 100);
 
     BOOST_REQUIRE_EQUAL(bets.size(), 3);
@@ -332,7 +338,7 @@ BOOST_FIXTURE_TEST_CASE(check_get_matched_bets_from_arg, get_bets_fixture<matche
         .With(from)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     api.get_matched_bets(from, 1);
 }
 
@@ -345,7 +351,7 @@ BOOST_FIXTURE_TEST_CASE(get_one_matched_bet, get_bets_fixture<matched_bet_object
         .With(_)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     auto bets = api.get_matched_bets(0, 1);
 
     BOOST_REQUIRE_EQUAL(bets.size(), 1);
@@ -362,7 +368,7 @@ BOOST_FIXTURE_TEST_CASE(get_all_matched_bets, get_bets_fixture<matched_bet_objec
         .With(_)
         .Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory);
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
     auto bets = api.get_matched_bets(0, 100);
 
     BOOST_REQUIRE_EQUAL(bets.size(), 3);

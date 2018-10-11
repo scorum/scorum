@@ -75,6 +75,15 @@ template <typename TObject, typename IndexBy, typename Key> const TObject* find_
     FC_CAPTURE_AND_RETHROW()
 }
 
+template <typename TObject, typename IndexBy, typename Key> bool is_exists_by(db_index& db_idx, const Key& arg)
+{
+    try
+    {
+        return nullptr != db_idx.template find<TObject, IndexBy>(arg);
+    }
+    FC_CAPTURE_AND_RETHROW()
+}
+
 template <typename TIdx, typename TKey> auto get_lower_bound(TIdx& idx, const detail::bound<TKey>& bound);
 template <typename TIdx, typename TKey> auto get_upper_bound(TIdx& idx, const detail::bound<TKey>& bound);
 
@@ -188,11 +197,21 @@ public:
         return detail::find_by<TObject, IndexBy, Key>(_db_idx, arg);
     }
 
+    template <class IndexBy, class Key> bool is_exists_by(const Key& arg) const
+    {
+        return detail::is_exists_by<TObject, IndexBy, Key>(_db_idx, arg);
+    }
+
     template <typename IndexBy, typename TKey>
     utils::bidir_range<object_type> get_range_by(const detail::bound<TKey>& lower,
                                                  const detail::bound<TKey>& upper) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
+    }
+
+    template <typename IndexBy, typename TKey> utils::bidir_range<object_type> get_range_by(const TKey& key) const
+    {
+        return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, key <= _x, _x <= key);
     }
 
     template <typename IndexBy, typename TKey>
