@@ -113,6 +113,7 @@ FC_REFLECT_ENUM(scorum::app::game_filter,
 
 FC_REFLECT(scorum::app::game_api_object,
            (id)
+           (uuid)
            (moderator)
            (name)
            (start_time)
