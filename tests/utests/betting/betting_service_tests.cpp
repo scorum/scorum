@@ -15,7 +15,7 @@ struct betting_service_fixture : public betting_common::betting_service_fixture_
 {
     MockRepository mocks;
 
-    database* db = mocks.Mock<database>();
+    dba::db_index* db = mocks.Mock<dba::db_index>();
     chainbase::database_index<chainbase::segment_manager>* db_index
         = mocks.Mock<chainbase::database_index<chainbase::segment_manager>>();
 
