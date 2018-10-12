@@ -1,69 +1,94 @@
 #pragma once
 #include <cstddef>
 #include <vector>
-#include <cstdint>
+#include <map>
+#include <boost/container/flat_map.hpp>
 #include <boost/range/algorithm/copy.hpp>
 
 namespace scorum {
 namespace utils {
 namespace adaptors {
-namespace traits {
-template <class...> using void_t = void;
-template <typename T, typename = void> struct has_push_back : std::false_type
-{
-};
-template <typename T>
-struct has_push_back<T, void_t<decltype(std::declval<T>().push_back(*std::declval<T>().begin()))>> : std::true_type
-{
-};
-
-template <typename T, typename = void> struct has_reserve : std::false_type
-{
-};
-template <typename T> struct has_reserve<T, void_t<decltype(std::declval<T>().reserve(size_t(0)))>> : std::true_type
-{
-};
-}
-namespace detail {
-
-template <typename T> auto get_inserter(std::enable_if_t<traits::has_push_back<T>::value, T&> container)
-{
-    return std::back_inserter(container);
-}
-template <typename T> auto get_inserter(std::enable_if_t<!traits::has_push_back<T>::value, T&> container)
-{
-    return std::inserter(container, container.end());
-}
-
-template <typename T> void reserve(std::enable_if_t<traits::has_reserve<T>::value, T&> container, size_t n)
-{
-    container.reserve(n);
-}
-template <typename T> void reserve(std::enable_if_t<!traits::has_reserve<T>::value, T&> container, size_t)
-{
-}
-}
 
 template <template <typename...> class TContainer> struct collect
 {
-    collect(size_t n = 0)
-        : n(n)
+};
+
+template <> struct collect<std::vector>
+{
+    collect(size_t reserve = 0)
+        : reserve(reserve)
     {
     }
 
-    size_t n;
+    size_t reserve;
 };
 
-template <typename TRng, template <typename...> class TTargetContainer>
-inline auto operator|(TRng&& rng, const adaptors::collect<TTargetContainer>& adaptor)
+template <> struct collect<boost::container::flat_map>
 {
-    using container_type = TTargetContainer<typename TRng::value_type>;
-    container_type container;
-    detail::reserve<container_type>(container, adaptor.n);
+    collect(size_t reserve = 0)
+        : reserve(reserve)
+    {
+    }
 
-    boost::copy(rng, detail::get_inserter<container_type>(container));
+    size_t reserve;
+};
 
-    return container;
+namespace detail {
+template <typename TRng, template <typename...> class TTargetContainer> struct collector
+{
+    template <typename URng> auto collect(URng&& rng, collect<TTargetContainer> c) const
+    {
+        return TTargetContainer<typename TRng::value_type>(std::begin(rng), std::end(rng));
+    }
+};
+
+template <typename TRng> struct collector<TRng, std::map>
+{
+    template <typename URng> auto collect(URng&& rng, collect<std::map>) const
+    {
+        using key_type = typename TRng::value_type::first_type;
+        using val_type = typename TRng::value_type::second_type;
+
+        std::map<key_type, val_type> result(std::begin(rng), std::end(rng));
+
+        return rng;
+    }
+};
+
+template <typename TRng> struct collector<TRng, boost::container::flat_map>
+{
+    template <typename URng> auto collect(URng&& rng, collect<boost::container::flat_map> adaptor) const
+    {
+        using key_type = typename TRng::value_type::first_type;
+        using val_type = typename TRng::value_type::second_type;
+
+        boost::container::flat_map<key_type, val_type> result;
+        result.reserve(adaptor.reserve);
+
+        boost::copy(rng, std::inserter(result, std::end(result)));
+
+        return result;
+    }
+};
+
+template <typename TRng> struct collector<TRng, std::vector>
+{
+    template <typename URng> auto collect(URng&& rng, collect<std::vector> adaptor) const
+    {
+        std::vector<typename TRng::value_type> result;
+        result.reserve(adaptor.reserve);
+        result.assign(std::begin(rng), std::end(rng));
+
+        return result;
+    }
+};
+}
+
+template <typename TRng, template <typename...> class TTargetContainer>
+inline auto operator|(TRng&& rng, collect<TTargetContainer> adaptor)
+{
+    // TODO: Could be dramatically simplified with C++17 (class template agrument deduction)
+    return detail::collector<TRng, TTargetContainer>().collect(std::forward<TRng>(rng), adaptor);
 }
 }
 }
