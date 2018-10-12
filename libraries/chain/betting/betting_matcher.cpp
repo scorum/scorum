@@ -32,7 +32,6 @@ void betting_matcher::match(const pending_bet_object& bet2)
         betting_service_i::pending_bet_crefs_type pending_bets_to_cancel;
 
         _pending_bet_service.foreach_pending_bets(bet2.game, [&](const pending_bet_object& bet1) {
-
             if (!is_bets_matched(bet1, bet2))
                 return true;
 
@@ -53,9 +52,9 @@ void betting_matcher::match(const pending_bet_object& bet2)
                 _pending_bet_service.update(bet1, [&](pending_bet_object& o) { o.data.stake -= matched.bet1_matched; });
                 _pending_bet_service.update(bet2, [&](pending_bet_object& o) { o.data.stake -= matched.bet2_matched; });
 
-                _virt_op_emitter.push_virtual_operation(
-                    protocol::bets_matched_operation(bet1.data.better, bet2.data.better, matched.bet1_matched,
-                                                     matched.bet2_matched, matched_bet.id._id));
+                _virt_op_emitter.push_virtual_operation(protocol::bets_matched_operation(
+                    bet1.data.better, bet2.data.better, bet1.get_uuid(), bet2.get_uuid(), matched.bet1_matched,
+                    matched.bet2_matched, matched_bet.id._id));
             }
 
             if (!can_be_matched(bet1.data.stake, bet1.data.bet_odds))
@@ -82,5 +81,5 @@ bool betting_matcher::can_be_matched(const asset& stake, const odds& bet_odds) c
 {
     return stake * bet_odds > stake;
 }
-}
-}
+} // namespace chain
+} // namespace scorum
