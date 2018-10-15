@@ -1295,7 +1295,8 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator(new update_game_markets_evaluator(*this, _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(
         new update_game_start_time_evaluator(*this, _my->get_betting_service()));
-    _my->_evaluator_registry.register_evaluator(new post_game_results_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(
+        new post_game_results_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(
         new post_bet_evaluator(*this, _my->get_betting_service(), _my->get_betting_matcher()));
     _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->get_betting_service()));
@@ -1585,8 +1586,9 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
         database_ns::process_active_sp_holders_cashout().apply(task_ctx);
-        database_ns::process_games_startup(_my->get_betting_service()).apply(task_ctx);
-        database_ns::process_bets_resolving(_my->get_betting_service(), _my->get_betting_resolver()).apply(task_ctx);
+        database_ns::process_games_startup(_my->get_betting_service(), *this).apply(task_ctx);
+        database_ns::process_bets_resolving(_my->get_betting_service(), _my->get_betting_resolver(), *this)
+            .apply(task_ctx);
         // TODO: using boost::di to avoid these explicit calls
         database_ns::process_bets_auto_resolving(_my->get_betting_service(), *this, get_dba<matched_bet_object>(),
                                                  get_dba<pending_bet_object>())

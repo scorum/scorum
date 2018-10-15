@@ -64,9 +64,6 @@ void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
         }
     }
 
-    _virt_op_emitter.push_virtual_operation(
-        game_status_changed{ game.uuid, game_status::finished, game_status::resolved });
-
     _matched_bet_dba.remove_all(matched_bets);
 }
 }

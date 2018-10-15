@@ -35,12 +35,13 @@ void process_bets_auto_resolving::on_apply(block_task_context& ctx)
 
     for (const game_object& game : games)
     {
+        auto game_uuid = game.uuid;
+
         _betting_svc.cancel_bets(game.id);
+        _betting_svc.cancel_game(game.id);
 
         _virt_op_emitter.push_virtual_operation(
-            game_status_changed{ game.uuid, game_status::finished, game_status::expired });
-
-        _betting_svc.cancel_game(game.id);
+            game_status_changed{ game_uuid, game_status::finished, game_status::expired });
     }
 
     debug_log(ctx.get_block_info(), "process_bets_auto_resolving END");
