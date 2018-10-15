@@ -1,10 +1,11 @@
 #pragma once
-
 #include <scorum/chain/betting/betting_math.hpp>
-#include <scorum/chain/schema/bet_objects.hpp>
 
 namespace scorum {
 namespace chain {
+
+class pending_bet_object;
+class game_object;
 
 struct data_service_factory_i;
 
@@ -15,6 +16,10 @@ struct pending_bet_service_i;
 struct matched_bet_service_i;
 struct database_virtual_operations_emmiter_i;
 
+namespace dba {
+template <typename> struct db_accessor;
+}
+
 struct betting_matcher_i
 {
     virtual void match(const pending_bet_object& bet1) = 0;
@@ -23,7 +28,10 @@ struct betting_matcher_i
 class betting_matcher : public betting_matcher_i
 {
 public:
-    betting_matcher(data_service_factory_i&, database_virtual_operations_emmiter_i&, betting_service_i&);
+    betting_matcher(data_service_factory_i&,
+                    database_virtual_operations_emmiter_i&,
+                    betting_service_i&,
+                    dba::db_accessor<game_object>&);
 
     void match(const pending_bet_object& bet2) override;
 
@@ -36,6 +44,7 @@ private:
     betting_property_service_i& _betting_property;
     pending_bet_service_i& _pending_bet_service;
     matched_bet_service_i& _matched_bet_service;
+    dba::db_accessor<game_object>& _game_dba;
     database_virtual_operations_emmiter_i& _virt_op_emitter;
 };
 }

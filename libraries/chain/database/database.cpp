@@ -136,11 +136,22 @@ private:
 database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
-    , _betting_service(static_cast<data_service_factory_i&>(_self), static_cast<dba::db_accessor_factory&>(_self))
+    // TODO: using boost::di to avoid these explicit calls
+    , _betting_service(static_cast<data_service_factory_i&>(_self),
+                       static_cast<database_virtual_operations_emmiter_i&>(_self),
+                       _self.get_dba<betting_property_object>(),
+                       _self.get_dba<matched_bet_object>(),
+                       _self.get_dba<pending_bet_object>(),
+                       _self.get_dba<game_object>())
     , _betting_matcher(static_cast<data_service_factory_i&>(_self),
                        static_cast<database_virtual_operations_emmiter_i&>(_self),
-                       _betting_service)
-    , _betting_resolver(_betting_service, _self.matched_bet_service(), _self.account_service())
+                       _betting_service,
+                       _self.get_dba<game_object>())
+    , _betting_resolver(_betting_service,
+                        _self.account_service(),
+                        static_cast<database_virtual_operations_emmiter_i&>(_self),
+                        _self.get_dba<matched_bet_object>(),
+                        _self.get_dba<game_object>())
 {
 }
 
@@ -1576,7 +1587,9 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_active_sp_holders_cashout().apply(task_ctx);
         database_ns::process_games_startup(_my->get_betting_service()).apply(task_ctx);
         database_ns::process_bets_resolving(_my->get_betting_service(), _my->get_betting_resolver()).apply(task_ctx);
-        database_ns::process_bets_auto_resolving(_my->get_betting_service(), _my->get_betting_resolver())
+        // TODO: using boost::di to avoid these explicit calls
+        database_ns::process_bets_auto_resolving(_my->get_betting_service(), *this, get_dba<matched_bet_object>(),
+                                                 get_dba<pending_bet_object>())
             .apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");

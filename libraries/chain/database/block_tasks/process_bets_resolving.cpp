@@ -5,7 +5,6 @@
 #include <scorum/chain/betting/betting_service.hpp>
 
 #include <scorum/chain/schema/bet_objects.hpp>
-#include <scorum/chain/database/database.hpp>
 
 namespace scorum {
 namespace chain {

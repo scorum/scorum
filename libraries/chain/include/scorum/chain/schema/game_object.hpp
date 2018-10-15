@@ -3,6 +3,7 @@
 #include <fc/shared_containers.hpp>
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
+#include <scorum/protocol/betting/game_status.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 
@@ -14,13 +15,6 @@ using namespace scorum::protocol;
 using scorum::protocol::game_type;
 using scorum::protocol::market_type;
 using scorum::protocol::wincase_type;
-
-enum class game_status : uint8_t
-{
-    created = 0b0001,
-    started = 0b0010,
-    finished = 0b0100
-};
 
 struct by_name;
 struct by_uuid;
@@ -80,7 +74,6 @@ using game_index
 }
 }
 
-FC_REFLECT_ENUM(scorum::chain::game_status, (created)(started)(finished))
 FC_REFLECT(scorum::chain::game_object,
            (id)(uuid)(name)(start_time)(original_start_time)(last_update)(bets_resolve_time)(auto_resolve_time)(status)(
                game)(markets)(results))

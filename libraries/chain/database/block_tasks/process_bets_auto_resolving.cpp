@@ -4,16 +4,23 @@
 #include <scorum/chain/betting/betting_resolver.hpp>
 #include <scorum/chain/betting/betting_service.hpp>
 
+#include <scorum/chain/dba/db_accessor.hpp>
+
 #include <scorum/chain/schema/bet_objects.hpp>
-#include <scorum/chain/database/database.hpp>
+#include <scorum/chain/database/database_virtual_operations.hpp>
 
 namespace scorum {
 namespace chain {
 namespace database_ns {
 
-process_bets_auto_resolving::process_bets_auto_resolving(betting_service_i& betting_svc, betting_resolver_i& resolver)
+process_bets_auto_resolving::process_bets_auto_resolving(betting_service_i& betting_svc,
+                                                         database_virtual_operations_emmiter_i& virt_op_emitter,
+                                                         dba::db_accessor<matched_bet_object>& matched_bet_dba,
+                                                         dba::db_accessor<pending_bet_object>& pending_bet_dba)
     : _betting_svc(betting_svc)
-    , _resolver(resolver)
+    , _virt_op_emitter(virt_op_emitter)
+    , _matched_bet_dba(matched_bet_dba)
+    , _pending_bet_dba(pending_bet_dba)
 {
 }
 
@@ -29,6 +36,10 @@ void process_bets_auto_resolving::on_apply(block_task_context& ctx)
     for (const game_object& game : games)
     {
         _betting_svc.cancel_bets(game.id);
+
+        _virt_op_emitter.push_virtual_operation(
+            game_status_changed{ game.uuid, game_status::finished, game_status::expired });
+
         _betting_svc.cancel_game(game.id);
     }
 
