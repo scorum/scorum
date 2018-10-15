@@ -5,7 +5,7 @@ Here are some details and insights abount how advertising budgets work.
 ## Table of contents
 * [How start_time and deadline will be aligned to blockchain interval?](#advalignment)
 * [How per-block payment is evaluated?](#advperblock)
-* [What if you do not specify start_time?](#advemptystart)
+* [What if you specify start_time which is greater than head block time but less than current applying block time?](#advemptystart)
 * [What is a budget's cashout and how it works?](#advcashout)
 * [What if budget's start_time equal deadline (start and end are within same block)?](#advstartendsameblock)
 * [How advertising auction works?](#advauction)
@@ -67,39 +67,45 @@ Fox example, if budget balance equals 100 SCR, `start_time` equals 3sec and `dea
 
 <a name="advemptystart"></a>
 
-## What if you do not specify start_time?
+## What if you specify start_time which is greater than head block time but less than current applying block time?
 
-In this case `start_time` will equal to last block head time. If no blocks were missed then `start_time` will equal previous block head time relative to current applying block timestamp.
+In this case `start_time` will be aligned to the next block time after head block (see [start_time and deadline alignment](#advalignment)). If no blocks were missed then `start_time` will be equal to current applying block time.
 
-Let's say we are creating budget in block #2 (+6 sec) with no specified `start_time` and `deadline` which equals 12 sec. In this case `start_time` corresponds to previous block i.e. to block #1 and equals 3 sec.
+Let's say we are creating budget in block #2 (+6 sec) with `start_time` which equals 1 sec and `deadline` which equals 12 sec. In this case `start_time` will be aligned to block #1 and will be equal 3 sec.
 
-|                   |       |       |       |       |        |       |
-|------------------:|:-----:|:-----:|:-----:|:-----:|:------:|:-----:|
-| Block time (+sec) |   +0  |   +3  |   +6  |   +9  |   +12  |  +15  |
-|           Block # |   0   |   1   |   2   |   3   |    4   |   5   |
-|     Budget bounds |       | start |   -   |   -   | finish |       |
-|      When created |       |       |   x   |       |        |       |
-|      When started |       |       |   x   |       |        |       |
-|   Payment occured |       |       |   x   |   x   |    x   |       |
-|    Budget balance |       |       |   75  |   50  |   25   |       |
-|    Payment amount |       |       |   25  |   25  |   25   |       |
+|                           |       |       |       |       |       |       |       |        |       |
+|--------------------------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:------:|:-----:|
+|         Block time (+sec) |   +0  |   +3  |       |       |   +6  |   +9  |  +12  |   +15  |  +18  |
+|               Time (+sec) |   +0  |   +3  |  +4   |  +5   |   +6  |   +9  |  +12  |   +15  |  +18  |
+|                   Block # |   0   |   1   |       |       |   2   |   3   |   4   |    5   |   6   |
+| Not aligned budget bounds |       |       |*start*|       |       |       |       | finish |       |
+|     Aligned budget bounds |       |       |       |       | start |   -   |   -   | finish |       |
+|              When created |       |       |       |       |   x   |       |       |        |       |
+|              When started |       |       |       |       |   x   |       |       |        |       |
+|           Payment occured |       |       |       |       |   x   |   x   |   x   |   x    |       |
+|            Budget balance |       |       |       |       |  75   |  50   |  25   |   0    |       |
+|            Payment amount |       |       |       |       |  25   |  25   |  25   |   25   |       |
+
+<a name="advmissedblocks"></a>
+
+If (during budget creation) previous block is missed and `start_time` equal 1 sec then `start_time` will be aligned to 3 sec and per block payment will be equal `[100 / ((15 - 3) / 3 + 1)]` i.e. 20 SCR. 20 SCR will be returned to owner after budget will close.
 
 > NOTE:
-> * Per block payment is evaluated to 25 SCR (based on `start_time` and `deadline`)
-> * Budget balance isn't empty after 3rd payment and 25 SCR should be returned to budget's owner.
+> * Per block payment is evaluated to 20 SCR (based on `start_time` and `deadline`)
+> * Budget balance isn't empty after 3rd payment and 20 SCR should be returned to budget's owner.
 
-If previous block is missed then `start_time` will be equal 0 sec. In this case per block payment will be equal `[100 / ((12 - 0) / 3 + 1)]` i.e. 20 SCR. 40 SCR will be returned to owner after budget will close.
-
-|                   |       |          |       |       |        |       |
-|------------------:|:-----:|:--------:|:-----:|:-----:|:------:|:-----:|
-| Block time (+sec) |   +0  |    +3    |   +6  |   +9  |   +12  |  +15  |
-|           Block # |   0   | *missed* |   1   |   2   |    3   |   4   |
-|     Budget bounds | start |     -    |   -   |   -   | finish |       |
-|      When created |       |          |   x   |       |        |       |
-|      When started |       |          |   x   |       |        |       |
-|   Payment occured |       |          |   x   |   x   |    x   |       |
-|    Budget balance |       |          |   80  |   60  |   40   |       |
-|    Payment amount |       |          |   20  |   20  |   20   |       |
+|                           |       |       |       |        |       |       |       |        |       |
+|--------------------------:|:-----:|:-----:|:-----:|:------:|:-----:|:-----:|:-----:|:------:|:-----:|
+|         Block time (+sec) |   +0  |       |       |        |   +6  |   +9  |  +12  |   +15  |  +18  |
+|               Time (+sec) |   +0  |   +1  |  +2   |   +3   |   +6  |   +9  |  +12  |   +15  |  +18  |
+|                   Block # |   0   |       |       |*missed*|   1   |   2   |   3   |    4   |   5   |
+| Not aligned budget bounds |       |*start*|       |        |       |       |       | finish |       |
+|     Aligned budget bounds |       |       |       | start  |   -   |   -   |   -   | finish |       |
+|              When created |       |       |       |        |   x   |       |       |        |       |
+|              When started |       |       |       |        |   x   |       |       |        |       |
+|           Payment occured |       |       |       |        |   x   |   x   |   x   |   x    |       |
+|            Budget balance |       |       |       |  100   |  80   |  60   |  40   |   20   |       |
+|            Payment amount |       |       |       |        |  20   |  20   |  20   |   20   |       |
 
 > We can say that `start_time` means that budget won't start before this time but it could start after this timestamp because of missed blocks.
 
@@ -155,13 +161,19 @@ After auction such budget will be closed.
 
 ## How advertising auction works?
 
-Our web platform has various places to put advertising on it. Some of these places are better, some are worse. Advertisers which are ready to pay max value obtain better place for its' ads. Each advertising place has its own coefficient from 0 to 100.
+Our web platform has various places to put advertising on it. Some of these places are better, some are worse. Advertisers which are ready to pay max value obtain better place for its' ads. Each advertising place has its own coefficient from 1 to 100.
+
+Let's say we have:
+- `N` budgets (`N >= 0`)
+- `M` auction coefficients (`M >= 1`)
 
 Algorithm:
-1. Getting top budgets ordered by its' per block payment amount in ascending order
-2. Getting ads coefficients ordered in ascending order
-3. Evaluating bet for each budget using recurrent formula:
-    - bet[n] = per_block[n-1], n = 0, per_block[n-1] exists
-    - bet[n] = per_block[n], n = 0, per_block[n-1] do not exist
-    - bet[n] = min(bet[n-1] + (coeff[n] - coeff[n-1])/coeff[MAX-1], per_block[n]), n = 1..MAX-1
-    - MAX    = min(ads places count, budgets count)
+1. If there are no budgets at all then auction does not take place
+2. Otherwise:
+    1. Getting budgets ordered by its per block payment amount in **descending order**
+    2. Getting ads coefficients ordered in **descending order**
+    3. Evaluating budgets count (`BCNT`) which will participate in auction as `BCNT = min(N,M)`
+    4. Evaluating `spent_amount` for each budget like `for (i = BCNT-1; i >=0; --i)` (from min per_block to max):
+        - if `i == BCNT-1 and N  > BCNT` then `spent_amount[i] = per_block[i+1]`
+        - if `i == BCNT-1 and N == BCNT` then `spent_amount[i] = per_block[i]`
+        - otherwise                           `spent_amount[i] = min(spent_amount[i+1] + per_block[i+1]*(coeff[i] - coeff[i+1])/coeff[0], per_block[i])`
