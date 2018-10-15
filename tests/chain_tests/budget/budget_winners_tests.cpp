@@ -577,6 +577,24 @@ SCORUM_TEST_CASE(two_post_budget_from_same_acc_auction_algorithm_test)
     }
 }
 
+SCORUM_TEST_CASE(single_auction_coeff_works_test)
+{
+    advertising_property_service.update(
+        [&](advertising_property_object& adv) { adv.auction_post_coefficients.assign({ 50 }); });
+
+    BOOST_REQUIRE_EQUAL(advertising_property_service.get().auction_post_coefficients.size(), 1u);
+
+    uint32_t start = 1;
+    uint32_t deadline = 4;
+    create_budget(uuid_gen("0"), alice, budget_type::post, 1000, start, deadline);
+
+    BOOST_CHECK_EQUAL(post_budget_service.get_budgets()[0].get().balance.amount, 1000u);
+
+    generate_block();
+
+    BOOST_CHECK_EQUAL(post_budget_service.get_budgets()[0].get().balance.amount, 750u);
+}
+
 SCORUM_TEST_CASE(post_budget_winners_arranging_check)
 {
     winners_arranging_test(post_budget_service, budget_type::post);
