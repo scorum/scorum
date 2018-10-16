@@ -8,7 +8,11 @@ class fund_budget_object;
 template <budget_type> class adv_budget_object;
 
 namespace detail {
-asset calculate_per_block(const time_point_sec& start_date, const time_point_sec& end_date, const asset& balance);
+asset fund_calculate_per_block(time_point_sec start, time_point_sec deadline, const asset& balance);
+asset adv_calculate_per_block(time_point_sec start,
+                              time_point_sec deadline,
+                              time_point_sec block_time_sec,
+                              const asset& balance);
 }
 
 struct fund_budget_service_i : public base_service_i<fund_budget_object>
@@ -42,7 +46,8 @@ struct adv_budget_service_i : public base_service_i<adv_budget_object<budget_typ
     using budget_cref_type = typename base_service_i<adv_budget_object<budget_type_v>>::object_cref_type;
     using budgets_type = std::vector<budget_cref_type>;
 
-    virtual const adv_budget_object<budget_type_v>& create_budget(const account_name_type& owner,
+    virtual const adv_budget_object<budget_type_v>& create_budget(const uuid_type& uuid,
+                                                                  const account_name_type& owner,
                                                                   const asset& balance,
                                                                   fc::time_point_sec start,
                                                                   fc::time_point_sec end,
@@ -50,7 +55,8 @@ struct adv_budget_service_i : public base_service_i<adv_budget_object<budget_typ
         = 0;
 
     virtual const adv_budget_object<budget_type_v>& get(const oid<adv_budget_object<budget_type_v>>&) const = 0;
-    virtual bool is_exists(const oid<adv_budget_object<budget_type_v>>& id) const = 0;
+    virtual const adv_budget_object<budget_type_v>& get(const uuid_type& uuid) const = 0;
+    virtual bool is_exists(const uuid_type& uuid) const = 0;
     virtual const adv_budget_object<budget_type_v>* find(const oid<adv_budget_object<budget_type_v>>&) const = 0;
 
     virtual budgets_type get_budgets() const = 0;
@@ -68,8 +74,8 @@ struct adv_budget_service_i : public base_service_i<adv_budget_object<budget_typ
         = 0;
 
     virtual asset perform_pending_payouts(const budgets_type& budgets) = 0;
-    virtual void finish_budget(const oid<adv_budget_object<budget_type_v>>& id) = 0;
-    virtual void close_empty_budgets() = 0;
+    virtual void finish_budget(const uuid_type& uuid) = 0;
+    virtual budgets_type get_empty_budgets() const = 0;
 };
 
 struct banner_budget_service_i : public adv_budget_service_i<budget_type::banner>
@@ -100,14 +106,16 @@ protected:
 public:
     using budgets_type = typename adv_budget_service_i<budget_type_v>::budgets_type;
 
-    const adv_budget_object<budget_type_v>& create_budget(const account_name_type& owner,
+    const adv_budget_object<budget_type_v>& create_budget(const uuid_type& uuid,
+                                                          const account_name_type& owner,
                                                           const asset& balance,
                                                           fc::time_point_sec start_date,
                                                           fc::time_point_sec end_date,
                                                           const std::string& json_metadata) override;
 
     const adv_budget_object<budget_type_v>& get(const oid<adv_budget_object<budget_type_v>>& id) const override;
-    bool is_exists(const oid<adv_budget_object<budget_type_v>>& id) const override;
+    const adv_budget_object<budget_type_v>& get(const uuid_type& uuid) const override;
+    bool is_exists(const uuid_type& uuid) const override;
     const adv_budget_object<budget_type_v>* find(const oid<adv_budget_object<budget_type_v>>& id) const override;
 
     budgets_type get_budgets() const override;
@@ -129,11 +137,13 @@ public:
 
     asset perform_pending_payouts(const budgets_type& budgets) override;
 
-    void finish_budget(const oid<adv_budget_object<budget_type_v>>& id) override;
-    void close_empty_budgets() override;
+    void finish_budget(const uuid_type& uuid) override;
+    budgets_type get_empty_budgets() const override;
 
 private:
-    dynamic_global_property_service_i& _dprops_svc;
+    void update_totals(std::function<void(adv_total_stats::budget_type_stat&)> callback);
+
+    dynamic_global_property_service_i& _dgp_svc;
     account_service_i& _account_svc;
 };
 

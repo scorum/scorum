@@ -55,15 +55,15 @@ public:
         return ret;
     }
 
-    fc::optional<budget_api_obj> get_budget(int64_t id, budget_type type) const
+    fc::optional<budget_api_obj> get_budget(const uuid_type& uuid, budget_type type) const
     {
         switch (type)
         {
         case budget_type::post:
-            return get_budget(_post_budget_service, id);
+            return get_budget(_post_budget_service, uuid);
 
         case budget_type::banner:
-            return get_budget(_banner_budget_service, id);
+            return get_budget(_banner_budget_service, uuid);
         }
 
         FC_THROW("unreachable");
@@ -83,16 +83,31 @@ public:
         FC_THROW("unreachable");
     }
 
+    std::vector<percent_type> get_auction_coefficients(budget_type type) const
+    {
+        switch (type)
+        {
+        case budget_type::post:
+            return std::vector<percent_type>{ _adv_service.get().auction_post_coefficients.begin(),
+                                              _adv_service.get().auction_post_coefficients.end() };
+
+        case budget_type::banner:
+            return std::vector<percent_type>{ _adv_service.get().auction_banner_coefficients.begin(),
+                                              _adv_service.get().auction_banner_coefficients.end() };
+        }
+
+        FC_THROW("unreachable");
+    }
+
 private:
     template <budget_type budget_type_v>
     fc::optional<budget_api_obj> get_budget(const chain::adv_budget_service_i<budget_type_v>& budget_service,
-                                            int64_t id) const
+                                            const uuid_type& uuid) const
     {
         fc::optional<budget_api_obj> ret;
 
-        const auto* budget = budget_service.find(id);
-        if (budget)
-            ret = budget_api_obj(*budget);
+        if (budget_service.is_exists(uuid))
+            ret = budget_service.get(uuid);
 
         return ret;
     }
