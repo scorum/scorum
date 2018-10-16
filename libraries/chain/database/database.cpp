@@ -159,7 +159,7 @@ database::database(uint32_t options)
     : chainbase::database()
     , dbservice_dbs_factory(*this)
     , data_service_factory(*this)
-    , db_accessor_factory(*this)
+    , db_accessor_factory(static_cast<dba::db_index&>(*this))
     , _my(new database_impl(*this))
     , _options(options)
 {
