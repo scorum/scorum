@@ -1,4 +1,7 @@
 #include <boost/test/unit_test.hpp>
+
+#include <boost/range/adaptor/reversed.hpp>
+
 #include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/dba/db_accessor_factory.hpp>
 #include <scorum/chain/schema/game_object.hpp>
@@ -48,14 +51,14 @@ BOOST_AUTO_TEST_CASE(db_accessors_tests)
 
     const auto& o6 = dba.create([](game_object& o) { o.name = "name2"; });
     {
-        auto vec = dba.get_range_by<by_name>(dba::unbounded, dba::unbounded);
-        BOOST_CHECK(vec.front().name == "name1");
-        BOOST_CHECK(vec.back().name == "name2");
+        auto rng = dba.get_range_by<by_name>(dba::unbounded, dba::unbounded);
+        BOOST_CHECK(rng.begin()->name == "name1");
+        BOOST_CHECK((rng | boost::adaptors::reversed).begin()->name == "name2");
     }
     {
         dba.remove();
-        auto vec = dba.get_range_by<by_name>(dba::unbounded, dba::unbounded);
-        BOOST_CHECK(vec.front().name == "name2");
+        auto rng = dba.get_range_by<by_name>(dba::unbounded, dba::unbounded);
+        BOOST_CHECK(rng.begin()->name == "name2");
     }
 
     dba.remove(o6);
@@ -84,13 +87,13 @@ BOOST_AUTO_TEST_CASE(get_range_by_bounds_tests)
 
     BOOST_TEST_MESSAGE("Checking...");
 
-    auto check
-        = [](utils::bidir_range<comment_object> rng, const std::string& fst, const std::string& lst, size_t size) {
-              BOOST_TEST_MESSAGE("Checking: lower=" << fst << "; upper=" << lst << "; size=" << size << ";");
-              BOOST_REQUIRE_EQUAL(std::distance(rng.begin(), rng.end()), size);
-              BOOST_CHECK_EQUAL(rng.front().author, fst);
-              BOOST_CHECK_EQUAL(rng.back().author, lst);
-          };
+    auto check = [](utils::bidir_range<const comment_object> rng, const std::string& fst, const std::string& lst,
+                    size_t size) {
+        BOOST_TEST_MESSAGE("Checking: lower=" << fst << "; upper=" << lst << "; size=" << size << ";");
+        BOOST_REQUIRE_EQUAL(std::distance(rng.begin(), rng.end()), size);
+        BOOST_CHECK_EQUAL(rng.front().author, fst);
+        BOOST_CHECK_EQUAL(rng.back().author, lst);
+    };
 
     check(dba.get_range_by<by_permlink>("test_1"s < _x, _x < "test_4"s), "test_2", "test_3", 2);
     check(dba.get_range_by<by_permlink>("test_1"s <= _x, _x < "test_4"s), "test_1", "test_3", 4);

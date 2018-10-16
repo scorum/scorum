@@ -4,6 +4,7 @@
 #include <scorum/chain/betting/betting_service.hpp>
 #include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/dba/db_accessor_factory.hpp>
+
 #include "betting_common.hpp"
 
 namespace {
@@ -18,6 +19,7 @@ struct betting_service_fixture : public betting_common::betting_service_fixture_
     database* db = mocks.Mock<database>();
     chainbase::database_index<chainbase::segment_manager>* db_index
         = mocks.Mock<chainbase::database_index<chainbase::segment_manager>>();
+    database_virtual_operations_emmiter_i* virt_op_emitter = mocks.Mock<database_virtual_operations_emmiter_i>();
 
     betting_service_fixture()
         : dba_factory(*db)
@@ -38,7 +40,9 @@ BOOST_FIXTURE_TEST_SUITE(betting_service_tests, betting_service_fixture)
 
 SCORUM_TEST_CASE(budget_service_is_betting_moderator_check)
 {
-    betting_service service(*dbs_services, dba_factory);
+    betting_service service(*dbs_services, *virt_op_emitter, dba_factory.get_dba<betting_property_object>(),
+                            dba_factory.get_dba<matched_bet_object>(), dba_factory.get_dba<pending_bet_object>(),
+                            dba_factory.get_dba<game_object>());
 
     BOOST_CHECK(!service.is_betting_moderator("jack"));
     BOOST_CHECK(service.is_betting_moderator(moderator));

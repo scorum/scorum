@@ -1,5 +1,8 @@
 #include <scorum/chain/betting/betting_matcher.hpp>
 
+#include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/schema/game_object.hpp>
+
 #include <scorum/chain/data_service_factory.hpp>
 
 #include <scorum/chain/services/dynamic_global_property.hpp>
@@ -8,19 +11,25 @@
 #include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/betting/betting_service.hpp>
 
+#include <scorum/chain/dba/db_accessor.hpp>
+
 #include <scorum/protocol/betting/market.hpp>
+
+#include <scorum/utils/range/unwrap_ref_wrapper_adaptor.hpp>
 
 namespace scorum {
 namespace chain {
 
 betting_matcher::betting_matcher(data_service_factory_i& db,
                                  database_virtual_operations_emmiter_i& virt_op_emitter,
-                                 betting_service_i& betting_svc)
+                                 betting_service_i& betting_svc,
+                                 dba::db_accessor<game_object>& game_dba)
     : _betting_svc(betting_svc)
     , _dgp_property(db.dynamic_global_property_service())
     , _betting_property(db.betting_property_service())
     , _pending_bet_service(db.pending_bet_service())
     , _matched_bet_service(db.matched_bet_service())
+    , _game_dba(game_dba)
     , _virt_op_emitter(virt_op_emitter)
 {
 }
@@ -29,7 +38,7 @@ void betting_matcher::match(const pending_bet_object& bet2)
 {
     try
     {
-        betting_service_i::pending_bet_crefs_type pending_bets_to_cancel;
+        std::vector<std::reference_wrapper<const pending_bet_object>> pending_bets_to_cancel;
 
         _pending_bet_service.foreach_pending_bets(bet2.game, [&](const pending_bet_object& bet1) {
             if (!is_bets_matched(bet1, bet2))
@@ -65,7 +74,9 @@ void betting_matcher::match(const pending_bet_object& bet2)
             return can_be_matched(bet2.data.stake, bet2.data.bet_odds);
         });
 
-        _betting_svc.cancel_pending_bets(pending_bets_to_cancel);
+        const auto& game = _game_dba.get_by<by_id>(bet2.game);
+
+        _betting_svc.cancel_pending_bets(utils::unwrap_ref_wrapper(pending_bets_to_cancel), game.uuid);
     }
     FC_CAPTURE_LOG_AND_RETHROW((bet2))
 }

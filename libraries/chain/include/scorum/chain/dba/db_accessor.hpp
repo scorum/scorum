@@ -47,6 +47,16 @@ template <typename TObject> void remove(db_index& db_idx, const TObject& o)
     db_idx.remove(o);
 }
 
+template <typename TObject> void remove_all(db_index& db_idx, utils::bidir_range<const TObject> items)
+{
+    for (auto it = items.begin(); it != items.end();)
+    {
+        const auto& obj = *it;
+        ++it;
+        db_idx.remove(obj);
+    }
+}
+
 template <typename TObject> void remove_single(db_index& db_idx)
 {
     db_idx.remove(get_single<TObject>(db_idx));
@@ -88,7 +98,7 @@ template <typename TIdx, typename TKey> auto get_lower_bound(TIdx& idx, const de
 template <typename TIdx, typename TKey> auto get_upper_bound(TIdx& idx, const detail::bound<TKey>& bound);
 
 template <typename TObject, typename IndexBy, typename TKey>
-utils::bidir_range<TObject>
+utils::bidir_range<const TObject>
 get_range_by(db_index& db_idx, const detail::bound<TKey>& lower, const detail::bound<TKey>& upper)
 {
     try
@@ -177,6 +187,11 @@ public:
         detail::remove(_db_idx, o);
     }
 
+    void remove_all(utils::bidir_range<const object_type> items)
+    {
+        detail::remove_all(_db_idx, items);
+    }
+
     bool is_empty() const
     {
         return detail::is_empty<TObject>(_db_idx);
@@ -203,31 +218,33 @@ public:
     }
 
     template <typename IndexBy, typename TKey>
-    utils::bidir_range<object_type> get_range_by(const detail::bound<TKey>& lower,
-                                                 const detail::bound<TKey>& upper) const
+    utils::bidir_range<const object_type> get_range_by(const detail::bound<TKey>& lower,
+                                                       const detail::bound<TKey>& upper) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }
 
-    template <typename IndexBy, typename TKey> utils::bidir_range<object_type> get_range_by(const TKey& key) const
+    template <typename IndexBy, typename TKey> utils::bidir_range<const object_type> get_range_by(const TKey& key) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, key <= _x, _x <= key);
     }
 
     template <typename IndexBy, typename TKey>
-    utils::bidir_range<object_type> get_range_by(unbounded_placeholder lower, const detail::bound<TKey>& upper) const
+    utils::bidir_range<const object_type> get_range_by(unbounded_placeholder lower,
+                                                       const detail::bound<TKey>& upper) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }
 
     template <typename IndexBy, typename TKey>
-    utils::bidir_range<object_type> get_range_by(const detail::bound<TKey>& lower, unbounded_placeholder upper) const
+    utils::bidir_range<const object_type> get_range_by(const detail::bound<TKey>& lower,
+                                                       unbounded_placeholder upper) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }
 
     template <typename IndexBy, typename TKey = index_key_type<TObject, IndexBy>>
-    utils::bidir_range<object_type> get_range_by(unbounded_placeholder lower, unbounded_placeholder upper) const
+    utils::bidir_range<const object_type> get_range_by(unbounded_placeholder lower, unbounded_placeholder upper) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }

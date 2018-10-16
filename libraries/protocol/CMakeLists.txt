@@ -21,6 +21,7 @@ add_library( scorum_protocol
              odds.cpp
              betting/invariants_validation.cpp
              betting/market_kind.cpp
+             betting/game_status.cpp
              betting/betting_serialization.cpp
              betting/market.cpp
 

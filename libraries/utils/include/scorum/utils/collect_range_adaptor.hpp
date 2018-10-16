@@ -38,7 +38,7 @@ template <typename TRng, template <typename...> class TTargetContainer> struct c
 {
     template <typename URng> auto collect(URng&& rng, collect<TTargetContainer> c) const
     {
-        return TTargetContainer<typename TRng::value_type>(std::begin(rng), std::end(rng));
+        return TTargetContainer<typename std::decay_t<TRng>::value_type>(std::begin(rng), std::end(rng));
     }
 };
 
@@ -46,8 +46,8 @@ template <typename TRng> struct collector<TRng, std::map>
 {
     template <typename URng> auto collect(URng&& rng, collect<std::map>) const
     {
-        using key_type = typename TRng::value_type::first_type;
-        using val_type = typename TRng::value_type::second_type;
+        using key_type = typename std::decay_t<TRng>::value_type::first_type;
+        using val_type = typename std::decay_t<TRng>::value_type::second_type;
 
         std::map<key_type, val_type> result(std::begin(rng), std::end(rng));
 
@@ -59,8 +59,8 @@ template <typename TRng> struct collector<TRng, boost::container::flat_map>
 {
     template <typename URng> auto collect(URng&& rng, collect<boost::container::flat_map> adaptor) const
     {
-        using key_type = typename TRng::value_type::first_type;
-        using val_type = typename TRng::value_type::second_type;
+        using key_type = typename std::decay_t<TRng>::value_type::first_type;
+        using val_type = typename std::decay_t<TRng>::value_type::second_type;
 
         boost::container::flat_map<key_type, val_type> result;
         result.reserve(adaptor.reserve);
@@ -75,7 +75,7 @@ template <typename TRng> struct collector<TRng, std::vector>
 {
     template <typename URng> auto collect(URng&& rng, collect<std::vector> adaptor) const
     {
-        std::vector<typename TRng::value_type> result;
+        std::vector<typename std::decay_t<TRng>::value_type> result;
         result.reserve(adaptor.reserve);
         result.assign(std::begin(rng), std::end(rng));
 
