@@ -56,7 +56,7 @@ public:
     development_committee_service_i& dev_committee_svc;
 };
 
-BOOST_FIXTURE_TEST_SUITE(advertising_moderator_close_budget_tests, advertising_moderator_fixture)
+BOOST_FIXTURE_TEST_SUITE(advertising_moderator_tests, advertising_moderator_fixture)
 
 SCORUM_TEST_CASE(should_close_post_budget)
 {
@@ -249,6 +249,21 @@ SCORUM_TEST_CASE(should_throw_active_key_required)
     tx.sign(moder.post_key, db.get_chain_id());
 
     SCORUM_REQUIRE_THROW(db.push_transaction(tx, 0), tx_missing_active_auth);
+}
+
+SCORUM_TEST_CASE(single_auction_coeff_test)
+{
+    empower_advertising_moderator(initdelegate);
+
+    development_committee_change_banner_budgets_auction_properties_operation inner_op;
+    inner_op.auction_coefficients = { 50 };
+
+    proposal_create_operation op;
+    op.operation = inner_op;
+    op.creator = initdelegate.name;
+    op.lifetime_sec = SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS;
+
+    BOOST_REQUIRE_NO_THROW(push_operation(op, initdelegate.private_key));
 }
 
 SCORUM_TEST_CASE(should_raise_closing_virt_op_after_force_closing_by_moder)
