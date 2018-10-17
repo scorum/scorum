@@ -26,7 +26,7 @@ struct betting_matcher_fixture : public betting_common::betting_service_fixture_
     using cancel_ptr = void (betting_service_i::*)(utils::bidir_range<const pending_bet_object>, uuid_type);
 
     betting_matcher_fixture()
-        : dba_factory(*mocks.Mock<database>())
+        : dba_factory(*mocks.Mock<dba::db_index>())
         , matcher(*dbs_services, *virt_op_emitter, *betting_svc, dba_factory.get_dba<game_object>())
     {
         mocks.OnCallFunc((dba::detail::get_by<game_object, by_id, game_id_type>))
