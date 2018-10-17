@@ -111,9 +111,8 @@ struct post_game_results_serialization_test_fixture
                                            [ "total::over", { "threshold": 0 } ],
                                            [ "total::under", { "threshold": 1000 } ] ])";
 
-    const std::string post_results_json_tpl = R"({
+    const std::string post_results_json_tpl = R"({ "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f",
                                                    "moderator": "homer",
-                                                   "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f",
                                                    "wincases": ${wincases}
                                                  })";
 };
@@ -147,14 +146,14 @@ SCORUM_TEST_CASE(post_game_results_binary_serialization_test)
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(hex, "05686f6d6572e629f9aa6b2c46aa8fa836770e7a7a5f110003040708e803090cfe0900000a0d0f1001000200110"
+    BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f05686f6d6572110003040708e803090cfe0900000a0d0f1001000200110"
                            "300020012151618000019e803");
 }
 
 SCORUM_TEST_CASE(post_game_results_binary_deserialization_test)
 {
-    auto hex = "05686f6d6572e629f9aa6b2c46aa8fa836770e7a7a5f110003040708e803090cfe0900000a0d0f1001000200110300020012151"
-               "618000019e803";
+    auto hex = "e629f9aa6b2c46aa8fa836770e7a7a5f05686f6d6572110003040708e803090cfe0900000a0d0f1001000200110"
+               "300020012151618000019e803";
 
     char buffer[1000];
     fc::from_hex(hex, buffer, sizeof(buffer));

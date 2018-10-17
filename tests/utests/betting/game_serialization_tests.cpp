@@ -70,8 +70,8 @@ struct game_serialization_test_fixture
                                                      "game": [ "soccer_game", {} ],
                                                      "markets": ${markets} })";
 
-    const std::string update_markets_json_tpl = R"({ "moderator": "moderator_name",
-                                                     "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f",
+    const std::string update_markets_json_tpl = R"({ "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f",
+                                                     "moderator": "moderator_name",
                                                      "markets": ${markets} })";
 
     fc::flat_set<market_type> get_markets() const
@@ -445,13 +445,13 @@ SCORUM_TEST_CASE(update_game_markets_binary_serialization_test)
 
     auto hex = fc::to_hex(fc::raw::pack(op));
 
-    BOOST_CHECK_EQUAL(hex, "0e6d6f64657261746f725f6e616d65e629f9aa6b2c46aa8fa836770e7a7a5f1200010203040cfe04000004e8030"
+    BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d651200010203040cfe04000004e8030"
                            "5060708010000000801000100090a0b0c00000cf4010ce803");
 }
 
 SCORUM_TEST_CASE(update_game_markets_binary_deserialization_test)
 {
-    auto hex = "0e6d6f64657261746f725f6e616d65e629f9aa6b2c46aa8fa836770e7a7a5f1200010203040cfe04000004e8030"
+    auto hex = "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d651200010203040cfe04000004e8030"
                "5060708010000000801000100090a0b0c00000cf4010ce803";
 
     char buffer[1000];
