@@ -46,6 +46,8 @@ set(SOURCES
     rewards/comment_reward_tests.cpp
     utils/string_algorithm_tests.cpp
     utils/take_n_range_tests.cpp
+    utils/flatten_range_tests.cpp
+    utils/join_range_tests.cpp
     utils/static_variant_comparison_tests.cpp
     fc/static_variant_visitor_tests.cpp
     tasks_base_tests.cpp
@@ -80,6 +82,7 @@ add_executable(utests
 
 target_link_libraries(utests
                       fc
+                      chainbase
                       ucommon_test
                       scorum_app
                       scorum_rewards_math
