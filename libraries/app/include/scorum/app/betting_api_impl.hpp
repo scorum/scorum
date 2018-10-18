@@ -74,14 +74,11 @@ public:
         return winners;
     }
 
-    std::vector<game_api_object> get_games(game_filter filter) const
+    std::vector<game_api_object> get_games(const fc::flat_set<chain::game_status>& filter) const
     {
-        // clang-format off
-        auto rng = _game_service.get_games()
-                | boost::adaptors::filtered([&](const auto& obj) {
-                    return static_cast<uint8_t>(obj.status) & static_cast<uint8_t>(filter); })
-                | boost::adaptors::transformed([](const auto& obj) { return game_api_object(obj); });
-        // clang-format on
+        auto rng = _game_service.get_games() //
+            | boost::adaptors::filtered([&](const auto& obj) { return filter.find(obj.status) != filter.end(); })
+            | boost::adaptors::transformed([](const auto& obj) { return game_api_object(obj); });
 
         return { rng.begin(), rng.end() };
     }

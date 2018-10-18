@@ -3209,8 +3209,9 @@ annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
     return ret;
 }
 
-annotated_signed_transaction
-wallet_api::cancel_pending_bets(account_name_type better, fc::flat_set<uuid_type> bet_uuids, const bool broadcast)
+annotated_signed_transaction wallet_api::cancel_pending_bets(account_name_type better,
+                                                             const fc::flat_set<uuid_type>& bet_uuids,
+                                                             const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -3246,7 +3247,7 @@ chain_capital_api_obj wallet_api::get_chain_capital() const
     return my->_chain_api->get_chain_capital();
 }
 
-std::vector<game_api_object> wallet_api::get_games(game_filter filter) const
+std::vector<game_api_object> wallet_api::get_games(const fc::flat_set<game_status>& filter) const
 {
     auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
 

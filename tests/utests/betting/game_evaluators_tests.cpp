@@ -50,6 +50,7 @@ struct game_evaluator_fixture : public shared_memory_fixture
     dynamic_global_property_service_i* dynprop_service = mocks.Mock<dynamic_global_property_service_i>();
     account_service_i* account_service = mocks.Mock<account_service_i>();
     game_service_i* game_service = mocks.Mock<game_service_i>();
+    database_virtual_operations_emmiter_i* virt_op_emitter = mocks.Mock<database_virtual_operations_emmiter_i>();
 
     game_evaluator_fixture()
     {
@@ -58,6 +59,7 @@ struct game_evaluator_fixture : public shared_memory_fixture
         mocks.OnCall(dbs_services, data_service_factory_i::dynamic_global_property_service)
             .ReturnByRef(*dynprop_service);
         mocks.OnCall(dbs_services, data_service_factory_i::game_service).ReturnByRef(*game_service);
+        mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
     }
 };
 
@@ -137,7 +139,7 @@ BOOST_FIXTURE_TEST_SUITE(cancel_game_evaluator_tests, game_evaluator_fixture)
 
 SCORUM_TEST_CASE(cancel_by_no_moderator_throw)
 {
-    cancel_game_evaluator ev(*dbs_services, *betting_service);
+    cancel_game_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     cancel_game_operation op;
 
@@ -149,7 +151,7 @@ SCORUM_TEST_CASE(cancel_by_no_moderator_throw)
 
 SCORUM_TEST_CASE(cancel_after_game_finished_throw)
 {
-    cancel_game_evaluator ev(*dbs_services, *betting_service);
+    cancel_game_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     cancel_game_operation op;
 
@@ -309,7 +311,7 @@ BOOST_FIXTURE_TEST_SUITE(update_game_start_time_evaluator_tests, game_evaluator_
 
 SCORUM_TEST_CASE(update_invalid_time_throw)
 {
-    update_game_start_time_evaluator ev(*dbs_services, *betting_service);
+    update_game_start_time_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     update_game_start_time_operation op;
     op.start_time = fc::time_point_sec(0);
@@ -321,7 +323,7 @@ SCORUM_TEST_CASE(update_invalid_time_throw)
 
 SCORUM_TEST_CASE(update_by_no_moderator_throw)
 {
-    update_game_start_time_evaluator ev(*dbs_services, *betting_service);
+    update_game_start_time_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     update_game_start_time_operation op;
     op.start_time = fc::time_point_sec(1);
@@ -335,7 +337,7 @@ SCORUM_TEST_CASE(update_by_no_moderator_throw)
 
 SCORUM_TEST_CASE(cannot_find_game_throw)
 {
-    update_game_start_time_evaluator ev(*dbs_services, *betting_service);
+    update_game_start_time_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     update_game_start_time_operation op;
     op.start_time = fc::time_point_sec(1);
@@ -350,7 +352,7 @@ SCORUM_TEST_CASE(cannot_find_game_throw)
 
 SCORUM_TEST_CASE(after_game_started_shouldnt_throw)
 {
-    update_game_start_time_evaluator ev(*dbs_services, *betting_service);
+    update_game_start_time_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     update_game_start_time_operation op;
     op.start_time = fc::time_point_sec(1);
@@ -374,7 +376,7 @@ SCORUM_TEST_CASE(after_game_started_shouldnt_throw)
 
 SCORUM_TEST_CASE(expected_time_update)
 {
-    update_game_start_time_evaluator ev(*dbs_services, *betting_service);
+    update_game_start_time_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     update_game_start_time_operation op;
     op.start_time = fc::time_point_sec(1);

@@ -41,7 +41,7 @@ void process_bets_auto_resolving::on_apply(block_task_context& ctx)
         _betting_svc.cancel_game(game.id);
 
         _virt_op_emitter.push_virtual_operation(
-            game_status_changed{ game_uuid, game_status::finished, game_status::expired });
+            game_status_changed{ game_uuid, game_status::started, game_status::expired });
     }
 
     debug_log(ctx.get_block_info(), "process_bets_auto_resolving END");

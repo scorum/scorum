@@ -1291,10 +1291,10 @@ void database::initialize_evaluators()
         static_cast<database_virtual_operations_emmiter_i&>(_my->_self));
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator(new create_game_evaluator(*this, _my->get_betting_service()));
-    _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(new update_game_markets_evaluator(*this, _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(
-        new update_game_start_time_evaluator(*this, _my->get_betting_service()));
+        new update_game_start_time_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(
         new post_game_results_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(

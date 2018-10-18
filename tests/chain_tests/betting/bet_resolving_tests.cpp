@@ -256,5 +256,20 @@ SCORUM_TEST_CASE(cancel_game_after_markets_update_check)
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 750'000 + 250'000); // matched 250'000 + 0 pending returned
 }
 
+SCORUM_TEST_CASE(game_resolve_time_is_after_auto_resolve_time)
+{
+    create_game(moderator, { result_away{} }, SCORUM_BLOCK_INTERVAL, SCORUM_BLOCK_INTERVAL * 4);
+
+    generate_blocks(3);
+    post_results(moderator, { result_away::yes{} });
+    generate_block();
+
+    BOOST_CHECK(game_service.is_exists(0));
+
+    generate_block();
+
+    BOOST_CHECK(game_service.is_exists(0));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }

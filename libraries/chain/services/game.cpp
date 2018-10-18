@@ -44,6 +44,7 @@ void dbs_game::finish(const game_object& game, const fc::flat_set<wincase_type>&
             g.bets_resolve_time = _dprops_service.head_block_time() + _betting_props_service.get().resolve_delay_sec;
         g.status = game_status::finished;
         g.last_update = _dprops_service.head_block_time();
+        g.auto_resolve_time = fc::time_point_sec::maximum();
 
         g.results.clear();
         for (const auto& w : wincases)

@@ -8,11 +8,14 @@
 
 namespace scorum {
 namespace chain {
-cancel_game_evaluator::cancel_game_evaluator(data_service_factory_i& services, betting_service_i& betting_service)
+cancel_game_evaluator::cancel_game_evaluator(data_service_factory_i& services,
+                                             betting_service_i& betting_service,
+                                             database_virtual_operations_emmiter_i& virt_op_emitter)
     : evaluator_impl<data_service_factory_i, cancel_game_evaluator>(services)
     , _account_service(services.account_service())
     , _betting_service(betting_service)
     , _game_service(services.game_service())
+    , _virt_op_emitter(virt_op_emitter)
 {
 }
 
@@ -29,7 +32,12 @@ void cancel_game_evaluator::do_apply(const operation_type& op)
 
     _betting_service.cancel_pending_bets(game.id);
     _betting_service.cancel_matched_bets(game.id);
+
+    auto status = game.status;
+    auto uuid = game.uuid;
     _betting_service.cancel_game(game.id);
+
+    _virt_op_emitter.push_virtual_operation(game_status_changed(uuid, status, game_status::cancelled));
 }
 }
 }

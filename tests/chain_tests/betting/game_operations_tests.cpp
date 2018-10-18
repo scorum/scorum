@@ -276,5 +276,17 @@ SCORUM_TEST_CASE(update_after_game_started_should_restore_missing_pending_bet)
     }
 }
 
+SCORUM_TEST_CASE(update_after_game_started_should_change_status)
+{
+    create_game(moderator, { result_home{} }, SCORUM_BLOCK_INTERVAL);
+    generate_block(); // game started
+
+    BOOST_REQUIRE(game_service.get_game(0).status == game_status::started);
+
+    update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
+
+    BOOST_CHECK(game_service.get_game(0).status == game_status::created);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }

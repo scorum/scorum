@@ -42,12 +42,11 @@ void post_game_results_evaluator::do_apply(const operation_type& op)
 
     _betting_service.cancel_pending_bets(game.id);
 
-    auto old_game_status = game.status;
+    auto old_status = game.status;
     _game_service.finish(game, op.wincases);
 
-    if (old_game_status == game_status::started)
-        _virt_op_emitter.push_virtual_operation(
-            game_status_changed(game.uuid, game_status::started, game_status::finished));
+    if (old_status == game_status::started)
+        _virt_op_emitter.push_virtual_operation(game_status_changed(game.uuid, old_status, game_status::finished));
 }
 
 void post_game_results_evaluator::validate_all_winners_present(const fc::shared_flat_set<market_type>& markets,
