@@ -21,7 +21,7 @@ BOOST_FIXTURE_TEST_SUITE(db_accessors_tests, database_fixture::database_default_
 
 BOOST_AUTO_TEST_CASE(db_accessors_tests)
 {
-    db_accessor_factory dba_factory{ db };
+    db_accessor_factory dba_factory{ static_cast<dba::db_index&>(db) };
     db_accessor<game_object>& dba = dba_factory.get_dba<game_object>();
 
     BOOST_CHECK(dba.is_empty());
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(get_range_by_bounds_tests)
 {
     BOOST_TEST_MESSAGE("Preparing index data...");
 
-    db_accessor_factory dba_factory{ db };
+    db_accessor_factory dba_factory{ static_cast<dba::db_index&>(db) };
     db_accessor<comment_object>& dba = dba_factory.get_dba<comment_object>();
 
     BOOST_CHECK(dba.is_empty());

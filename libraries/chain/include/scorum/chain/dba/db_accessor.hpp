@@ -1,6 +1,9 @@
 #pragma once
+
 #include <chainbase/database_index.hpp>
 #include <chainbase/segment_manager.hpp>
+
+#include <scorum/chain/dba/dba.hpp>
 #include <scorum/chain/dba/db_accessor_helpers.hpp>
 #include <scorum/chain/dba/db_accessor_traits.hpp>
 #include <scorum/utils/function_view.hpp>
@@ -12,7 +15,6 @@ namespace dba {
 template <typename TObject> using modifier_type = utils::function_view<void(TObject&)>;
 template <typename TObject> using predicate_type = utils::function_view<bool(const TObject&)>;
 template <typename TObject> using cref_type = std::reference_wrapper<const TObject>;
-using db_index = chainbase::database_index<chainbase::segment_manager>;
 
 namespace detail {
 
@@ -162,7 +164,7 @@ template <typename TIdx, typename TKey> auto get_upper_bound(TIdx& idx, const de
 template <typename TObject> class db_accessor
 {
 public:
-    explicit db_accessor(chainbase::database_index<chainbase::segment_manager>& db_idx)
+    explicit db_accessor(db_index& db_idx)
         : _db_idx(db_idx)
     {
     }
@@ -264,7 +266,7 @@ public:
     }
 
 private:
-    chainbase::database_index<chainbase::segment_manager>& _db_idx;
+    db_index& _db_idx;
 };
 }
 }
