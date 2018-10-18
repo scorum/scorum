@@ -126,17 +126,18 @@ struct pay_for_comments_fixture : public shared_memory_fixture
 
     void mock_do_nothing()
     {
+        static auto stat_sp = create_object<comment_statistic_sp_object>(shm);
+        static auto stat_scr = create_object<comment_statistic_scr_object>(shm);
+        static auto blog_stat = create_object<account_blogging_statistic_object>(shm);
         // clang-format off
         mocks.OnCallOverload(comment_service, (update_ptr<comment_service_i>) &comment_service_i::update);
         mocks.OnCallOverload(sp_stats_service, (update_ptr<comment_statistic_sp_service_i>) &comment_statistic_sp_service_i::update);
-        mocks.OnCallOverload(sp_stats_service, (get_by_comment_id_ptr<comment_statistic_sp_service_i>) &comment_statistic_sp_service_i::get);
+        mocks.OnCallOverload(sp_stats_service, (get_by_comment_id_ptr<comment_statistic_sp_service_i>) &comment_statistic_sp_service_i::get).ReturnByRef(stat_sp);
         mocks.OnCallOverload(scr_stats_service, (update_ptr<comment_statistic_scr_service_i>) &comment_statistic_scr_service_i::update);
-        mocks.OnCallOverload(scr_stats_service, (get_by_comment_id_ptr<comment_statistic_scr_service_i>) &comment_statistic_scr_service_i::get);
-        mocks.OnCall(acc_blog_stats_service, account_blogging_statistic_service_i::obtain);
+        mocks.OnCallOverload(scr_stats_service, (get_by_comment_id_ptr<comment_statistic_scr_service_i>) &comment_statistic_scr_service_i::get).ReturnByRef(stat_scr);
+        mocks.OnCall(acc_blog_stats_service, account_blogging_statistic_service_i::obtain).ReturnByRef(blog_stat);
         mocks.OnCall(acc_blog_stats_service, account_blogging_statistic_service_i::increase_posting_rewards);
         mocks.OnCall(acc_blog_stats_service, account_blogging_statistic_service_i::increase_curation_rewards);
-        static auto obj = create_object<account_blogging_statistic_object>(shm);
-        mocks.OnCall(acc_blog_stats_service, account_blogging_statistic_service_i::obtain).ReturnByRef(obj);
         mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
         // clang-format on
     }
