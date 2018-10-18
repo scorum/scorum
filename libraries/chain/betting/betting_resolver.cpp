@@ -1,21 +1,31 @@
 #include <scorum/chain/betting/betting_resolver.hpp>
 
+#include <scorum/chain/schema/game_object.hpp>
+#include <scorum/chain/schema/bet_objects.hpp>
+
 #include <scorum/chain/data_service_factory.hpp>
-#include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/account.hpp>
+#include <scorum/chain/dba/db_accessor.hpp>
+#include <scorum/chain/database/database_virtual_operations.hpp>
 
 namespace scorum {
 namespace chain {
-betting_resolver::betting_resolver(matched_bet_service_i& matched_bet_svc, account_service_i& account_svc)
-    : _matched_bet_svc(matched_bet_svc)
-    , _account_svc(account_svc)
+betting_resolver::betting_resolver(account_service_i& account_svc,
+                                   database_virtual_operations_emmiter_i& virt_op_emitter,
+                                   dba::db_accessor<matched_bet_object>& matched_bet_dba,
+                                   dba::db_accessor<game_object>& game_dba)
+    : _account_svc(account_svc)
+    , _virt_op_emitter(virt_op_emitter)
+    , _matched_bet_dba(matched_bet_dba)
+    , _game_dba(game_dba)
 {
 }
 
 void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
                                             const fc::shared_flat_set<wincase_type>& results) const
 {
-    auto matched_bets = _matched_bet_svc.get_bets(game_id);
+    auto matched_bets = _matched_bet_dba.get_range_by<by_game_id_market>(game_id);
+    const auto& game = _game_dba.get_by<by_id>(game_id);
 
     for (const matched_bet_object& bet : matched_bets)
     {
@@ -23,17 +33,34 @@ void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
         auto snd_won = results.find(bet.bet2_data.wincase) != results.end();
 
         if (fst_won)
-            _account_svc.increase_balance(bet.bet1_data.better, bet.bet1_data.stake + bet.bet2_data.stake);
+        {
+            auto income = bet.bet1_data.stake + bet.bet2_data.stake;
+            _account_svc.increase_balance(bet.bet1_data.better, income);
+
+            _virt_op_emitter.push_virtual_operation(bet_resolved_operation(
+                game.uuid, bet.bet1_data.better, bet.bet1_data.uuid, income, bet_resolve_kind::win));
+        }
         else if (snd_won)
-            _account_svc.increase_balance(bet.bet2_data.better, bet.bet1_data.stake + bet.bet2_data.stake);
+        {
+            auto income = bet.bet1_data.stake + bet.bet2_data.stake;
+            _account_svc.increase_balance(bet.bet2_data.better, income);
+
+            _virt_op_emitter.push_virtual_operation(bet_resolved_operation(
+                game.uuid, bet.bet2_data.better, bet.bet2_data.uuid, income, bet_resolve_kind::win));
+        }
         else
         {
             _account_svc.increase_balance(bet.bet1_data.better, bet.bet1_data.stake);
             _account_svc.increase_balance(bet.bet2_data.better, bet.bet2_data.stake);
+
+            _virt_op_emitter.push_virtual_operation(bet_resolved_operation(
+                game.uuid, bet.bet1_data.better, bet.bet1_data.uuid, bet.bet1_data.stake, bet_resolve_kind::draw));
+            _virt_op_emitter.push_virtual_operation(bet_resolved_operation(
+                game.uuid, bet.bet1_data.better, bet.bet1_data.uuid, bet.bet1_data.stake, bet_resolve_kind::draw));
         }
     }
 
-    _matched_bet_svc.remove_all(matched_bets);
+    _matched_bet_dba.remove_all(matched_bets);
 }
 }
 }

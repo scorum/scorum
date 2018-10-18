@@ -1,7 +1,11 @@
 #pragma once
+
 #include <chainbase/database_index.hpp>
 #include <chainbase/segment_manager.hpp>
+
+#include <scorum/chain/dba/dba.hpp>
 #include <scorum/chain/dba/db_accessor_helpers.hpp>
+
 #include <scorum/utils/function_view.hpp>
 #include <scorum/utils/any_range.hpp>
 
@@ -11,7 +15,6 @@ namespace dba {
 template <typename TObject> using modifier_type = utils::function_view<void(TObject&)>;
 template <typename TObject> using predicate_type = utils::function_view<bool(const TObject&)>;
 template <typename TObject> using cref_type = std::reference_wrapper<const TObject>;
-using db_index = chainbase::database_index<chainbase::segment_manager>;
 
 namespace detail {
 
@@ -47,6 +50,16 @@ template <typename TObject> void remove(db_index& db_idx, const TObject& o)
     db_idx.remove(o);
 }
 
+template <typename TObject> void remove_all(db_index& db_idx, utils::bidir_range<const TObject> items)
+{
+    for (auto it = items.begin(); it != items.end();)
+    {
+        const auto& obj = *it;
+        ++it;
+        db_idx.remove(obj);
+    }
+}
+
 template <typename TObject> void remove_single(db_index& db_idx)
 {
     db_idx.remove(get_single<TObject>(db_idx));
@@ -75,11 +88,20 @@ template <typename TObject, typename IndexBy, typename Key> const TObject* find_
     FC_CAPTURE_AND_RETHROW()
 }
 
+template <typename TObject, typename IndexBy, typename Key> bool is_exists_by(db_index& db_idx, const Key& arg)
+{
+    try
+    {
+        return nullptr != db_idx.template find<TObject, IndexBy>(arg);
+    }
+    FC_CAPTURE_AND_RETHROW()
+}
+
 template <typename TIdx, typename TKey> auto get_lower_bound(TIdx& idx, const detail::bound<TKey>& bound);
 template <typename TIdx, typename TKey> auto get_upper_bound(TIdx& idx, const detail::bound<TKey>& bound);
 
 template <typename TObject, typename IndexBy, typename TKey>
-utils::bidir_range<TObject>
+utils::bidir_range<const TObject>
 get_range_by(db_index& db_idx, const detail::bound<TKey>& lower, const detail::bound<TKey>& upper)
 {
     try
@@ -132,7 +154,7 @@ template <typename TIdx, typename TKey> auto get_upper_bound(TIdx& idx, const de
 template <typename TObject> class db_accessor
 {
 public:
-    explicit db_accessor(chainbase::database_index<chainbase::segment_manager>& db_idx)
+    explicit db_accessor(db_index& db_idx)
         : _db_idx(db_idx)
     {
     }
@@ -168,6 +190,11 @@ public:
         detail::remove(_db_idx, o);
     }
 
+    void remove_all(utils::bidir_range<const object_type> items)
+    {
+        detail::remove_all(_db_idx, items);
+    }
+
     bool is_empty() const
     {
         return detail::is_empty<TObject>(_db_idx);
@@ -188,33 +215,45 @@ public:
         return detail::find_by<TObject, IndexBy, Key>(_db_idx, arg);
     }
 
+    template <class IndexBy, class Key> bool is_exists_by(const Key& arg) const
+    {
+        return detail::is_exists_by<TObject, IndexBy, Key>(_db_idx, arg);
+    }
+
     template <typename IndexBy, typename TKey>
-    utils::bidir_range<object_type> get_range_by(const detail::bound<TKey>& lower,
-                                                 const detail::bound<TKey>& upper) const
+    utils::bidir_range<const object_type> get_range_by(const detail::bound<TKey>& lower,
+                                                       const detail::bound<TKey>& upper) const
+    {
+        return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
+    }
+
+    template <typename IndexBy, typename TKey> utils::bidir_range<const object_type> get_range_by(const TKey& key) const
+    {
+        return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, key <= _x, _x <= key);
+    }
+
+    template <typename IndexBy, typename TKey>
+    utils::bidir_range<const object_type> get_range_by(unbounded_placeholder lower,
+                                                       const detail::bound<TKey>& upper) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }
 
     template <typename IndexBy, typename TKey>
-    utils::bidir_range<object_type> get_range_by(unbounded_placeholder lower, const detail::bound<TKey>& upper) const
-    {
-        return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
-    }
-
-    template <typename IndexBy, typename TKey>
-    utils::bidir_range<object_type> get_range_by(const detail::bound<TKey>& lower, unbounded_placeholder upper) const
+    utils::bidir_range<const object_type> get_range_by(const detail::bound<TKey>& lower,
+                                                       unbounded_placeholder upper) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }
 
     template <typename IndexBy, typename TKey = index_key_type<TObject, IndexBy>>
-    utils::bidir_range<object_type> get_range_by(unbounded_placeholder lower, unbounded_placeholder upper) const
+    utils::bidir_range<const object_type> get_range_by(unbounded_placeholder lower, unbounded_placeholder upper) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
     }
 
 private:
-    chainbase::database_index<chainbase::segment_manager>& _db_idx;
+    db_index& _db_idx;
 };
 }
 }

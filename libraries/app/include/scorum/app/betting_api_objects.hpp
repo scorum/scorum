@@ -29,6 +29,7 @@ struct game_api_object
 
     game_api_object(const chain::game_object& obj)
         : id(obj.id)
+        , uuid(obj.uuid)
         , name(fc::to_string(obj.name))
         , start_time(obj.start_time)
         , last_update(obj.last_update)
@@ -41,6 +42,7 @@ struct game_api_object
     }
 
     chain::game_id_type id = 0;
+    uuid_type uuid;
 
     std::string moderator;
     std::string name;
@@ -54,6 +56,42 @@ struct game_api_object
 
     fc::flat_set<chain::market_type> markets;
     fc::flat_set<chain::wincase_type> results;
+};
+
+struct winner_api_object
+{
+    winner_api_object() = default;
+    winner_api_object(const chain::market_type& market, const chain::bet_data& winner, const chain::bet_data& loser)
+        : winner({ winner.uuid, winner.better, winner.wincase })
+        , loser({ loser.uuid, loser.better, loser.wincase })
+        , market(market)
+        , profit(loser.stake)
+        , income(winner.stake + loser.stake)
+    {
+    }
+
+    /**
+     * @brief Brief information about better
+     */
+    struct better
+    {
+        uuid_type uuid;
+        protocol::account_name_type name;
+        chain::wincase_type wincase;
+    };
+
+    better winner;
+    better loser;
+    chain::market_type market;
+
+    /**
+     * @brief Winner's net win
+     */
+    protocol::asset profit;
+    /**
+     * @brief Winner's net win + winner's stake
+     */
+    protocol::asset income;
 };
 
 using matched_bet_api_object = api_obj<chain::matched_bet_object>;
@@ -75,6 +113,7 @@ FC_REFLECT_ENUM(scorum::app::game_filter,
 
 FC_REFLECT(scorum::app::game_api_object,
            (id)
+           (uuid)
            (moderator)
            (name)
            (start_time)
@@ -84,6 +123,18 @@ FC_REFLECT(scorum::app::game_api_object,
            (game)
            (markets)
            (results))
+
+FC_REFLECT(scorum::app::winner_api_object::better,
+          (uuid)
+          (name)
+          (wincase))
+
+FC_REFLECT(scorum::app::winner_api_object,
+          (winner)
+          (loser)
+          (market)
+          (profit)
+          (income))
 // clang-format on
 
 FC_REFLECT_DERIVED(scorum::app::matched_bet_api_object, (scorum::chain::matched_bet_object), BOOST_PP_SEQ_NIL)

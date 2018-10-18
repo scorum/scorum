@@ -1,25 +1,39 @@
 #include <boost/test/unit_test.hpp>
 
+#include <scorum/chain/dba/db_accessor_factory.hpp>
+#include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/betting/betting_matcher.hpp>
+#include <scorum/utils/any_range.hpp>
+#include <scorum/utils/collect_range_adaptor.hpp>
 
 #include "betting_common.hpp"
 
+namespace std {
+void operator<<(std::ostream& os, const scorum::chain::pending_bet_object&)
+{
+}
+}
+
 namespace betting_matcher_tests {
 
+using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
-
 using namespace service_wrappers;
 
 struct betting_matcher_fixture : public betting_common::betting_service_fixture_impl
 {
-    using cancel_ptr = void (betting_service_i::*)(const betting_service_i::pending_bet_crefs_type&);
+    using cancel_ptr = void (betting_service_i::*)(utils::bidir_range<const pending_bet_object>, uuid_type);
 
     betting_matcher_fixture()
-        : matcher(*dbs_services, *virt_op_emitter, *betting_svc)
+        : dba_factory(*mocks.Mock<dba::db_index>())
+        , matcher(*dbs_services, *virt_op_emitter, *betting_svc, dba_factory.get_dba<game_object>())
     {
+        mocks.OnCallFunc((dba::detail::get_by<game_object, by_id, game_id_type>))
+            .Return(create_object<game_object>(shm, [](game_object& o) { o.uuid = { 0 }; }));
     }
 
+    dba::db_accessor_factory dba_factory;
     betting_matcher matcher;
 };
 
@@ -48,10 +62,11 @@ SCORUM_TEST_CASE(matched_for_full_stake_check)
 
     mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
-            BOOST_REQUIRE_EQUAL(bets.size(), 2u);
-            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0u);
-            BOOST_CHECK_EQUAL(bets[1].get().data.stake.amount, 0u);
+        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
+            auto vec = bets | utils::adaptors::collect<std::vector>();
+            BOOST_REQUIRE_EQUAL(vec.size(), 2u);
+            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0u);
+            BOOST_CHECK_EQUAL(vec[1].data.stake.amount, 0u);
         });
 
     matcher.match(bet2);
@@ -72,10 +87,11 @@ SCORUM_TEST_CASE(matched_for_part_stake_check)
     const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(8000));
 
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
-            BOOST_REQUIRE_EQUAL(bets.size(), 1u);
-            BOOST_CHECK_EQUAL(bets[0].get().data.better, "bob");
-            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0);
+        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
+            auto vec = bets | utils::adaptors::collect<std::vector>();
+            BOOST_REQUIRE_EQUAL(vec.size(), 1u);
+            BOOST_CHECK_EQUAL(vec[0].data.better, "bob");
+            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0);
         });
 
     matcher.match(bet2);
@@ -99,10 +115,11 @@ SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
     const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(8000));
 
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
-            BOOST_REQUIRE_EQUAL(bets.size(), 1u);
-            BOOST_CHECK_EQUAL(bets[0].get().data.better, "bob");
-            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0);
+        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
+            auto vec = bets | utils::adaptors::collect<std::vector>();
+            BOOST_REQUIRE_EQUAL(vec.size(), 1u);
+            BOOST_CHECK_EQUAL(vec[0].data.better, "bob");
+            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0);
         });
 
     matcher.match(bet2);
@@ -121,12 +138,13 @@ SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
     const auto& bet3 = create_bet("sam", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(1009));
 
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
-            BOOST_REQUIRE_EQUAL(bets.size(), 2u);
-            BOOST_CHECK_EQUAL(bets[0].get().data.better, "alice");
-            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0);
-            BOOST_CHECK_EQUAL(bets[1].get().data.better, "sam");
-            BOOST_CHECK_EQUAL(bets[1].get().data.stake.amount, 1);
+        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
+            auto vec = bets | utils::adaptors::collect<std::vector>();
+            BOOST_REQUIRE_EQUAL(vec.size(), 2u);
+            BOOST_CHECK_EQUAL(vec[0].data.better, "alice");
+            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0);
+            BOOST_CHECK_EQUAL(vec[1].data.better, "sam");
+            BOOST_CHECK_EQUAL(vec[1].data.stake.amount, 1);
         });
 
     matcher.match(bet3);
@@ -152,12 +170,13 @@ SCORUM_TEST_CASE(matched_from_larger_potential_result_check)
     const auto& bet3 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1000));
 
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
-            BOOST_REQUIRE_EQUAL(bets.size(), 2u);
-            BOOST_CHECK_EQUAL(bets[0].get().data.better, "bob");
-            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0);
-            BOOST_CHECK_EQUAL(bets[1].get().data.better, "sam");
-            BOOST_CHECK_EQUAL(bets[1].get().data.stake.amount, 0);
+        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
+            auto vec = bets | utils::adaptors::collect<std::vector>();
+            BOOST_REQUIRE_EQUAL(vec.size(), 2u);
+            BOOST_CHECK_EQUAL(vec[0].data.better, "bob");
+            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0);
+            BOOST_CHECK_EQUAL(vec[1].data.better, "sam");
+            BOOST_CHECK_EQUAL(vec[1].data.stake.amount, 0);
         });
 
     matcher.match(bet3);
@@ -206,10 +225,11 @@ SCORUM_TEST_CASE(extra_large_coefficient_big_gain_mismatch_test)
     const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10000/9999", ASSET_SCR(90'000'000));
 
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
-            BOOST_REQUIRE_EQUAL(bets.size(), 1u);
-            BOOST_CHECK_EQUAL(bets[0].get().data.better, "bob");
-            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 0u);
+        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
+            auto vec = bets | utils::adaptors::collect<std::vector>();
+            BOOST_REQUIRE_EQUAL(vec.size(), 1u);
+            BOOST_CHECK_EQUAL(vec[0].data.better, "bob");
+            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0u);
         });
 
     matcher.match(bet2);
@@ -233,10 +253,11 @@ SCORUM_TEST_CASE(extra_small_bet_which_cannot_be_matched_test)
     const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/2", ASSET_SCR(1000));
 
     mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](const betting_service_i::pending_bet_crefs_type& bets) {
-            BOOST_REQUIRE_EQUAL(bets.size(), 1u);
-            BOOST_CHECK_EQUAL(bets[0].get().data.better, "alice");
-            BOOST_CHECK_EQUAL(bets[0].get().data.stake.amount, 2u);
+        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
+            auto vec = bets | utils::adaptors::collect<std::vector>();
+            BOOST_REQUIRE_EQUAL(vec.size(), 1u);
+            BOOST_CHECK_EQUAL(vec[0].data.better, "alice");
+            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 2u);
         });
 
     matcher.match(bet2);

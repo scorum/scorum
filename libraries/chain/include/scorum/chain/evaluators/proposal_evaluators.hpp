@@ -157,7 +157,7 @@ struct development_committee_change_betting_resolve_delay_evaluator
 };
 
 template <budget_type type>
-class development_committee_change_budgets_auction_properties_evaluator
+struct development_committee_change_budgets_auction_properties_evaluator
     : public proposal_operation_evaluator<development_committee_change_budgets_auction_properties_evaluator<type>>
 {
 public:

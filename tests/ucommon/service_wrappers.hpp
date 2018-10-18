@@ -445,8 +445,21 @@ public:
                         break;
                 }
             });
-        _mocks.OnCall(_service, pending_bet_service_i::get_pending_bet)
+        _mocks
+            .OnCallOverload(_service,
+                            (const pending_bet_object& (pending_bet_service_i::*)(const pending_bet_id_type&)const)
+                                & pending_bet_service_i::get_pending_bet)
             .Do([this](const pending_bet_id_type& obj_id) -> const pending_bet_object& { return this->get(obj_id); });
+
+        _mocks
+            .OnCallOverload(_service,
+                            (const pending_bet_object& (pending_bet_service_i::*)(const scorum::uuid_type&)const)
+                                & pending_bet_service_i::get_pending_bet)
+            .Do([this](const scorum::uuid_type& uuid) -> const pending_bet_object& {
+                auto found_it = std::find_if(_objects_by_id.begin(), _objects_by_id.end(),
+                                             [&](const auto& pair) { return pair.second.data.uuid == uuid; });
+                return found_it->second;
+            });
     }
 };
 

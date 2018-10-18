@@ -13,6 +13,8 @@ namespace chain {
 
 dbs_witness::dbs_witness(database& db)
     : base_service_type(db)
+    , _dgp_svc(db.dynamic_global_property_service())
+    , _witness_schedule_svc(db.witness_schedule_service())
 {
 }
 
@@ -44,13 +46,11 @@ const witness_object& dbs_witness::create_witness(const account_name_type& owner
 {
     FC_ASSERT(owner.size(), "Witness 'owner_name' should not be empty.");
 
-    const auto& dprops = db_impl().obtain_service<dbs_dynamic_global_property>().get();
-
     const auto& new_witness = create_internal(owner, block_signing_key);
 
     update(new_witness, [&](witness_object& w) {
         fc::from_string(w.url, url);
-        w.created = dprops.time;
+        w.created = _dgp_svc.head_block_time();
         w.proposed_chain_props = props;
     });
 
@@ -104,9 +104,9 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, const share
 {
     block_info ctx = db_impl().head_block_context();
 
-    const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
+    const auto& props = _dgp_svc.get();
+    const auto& wso = _witness_schedule_svc.get();
 
-    const witness_schedule_object& wso = db_impl().obtain_service<dbs_witness_schedule>().get();
     update(witness, [&](witness_object& w) {
         debug_log(ctx, "updating votes for witness=${w}", ("w", w.owner));
 

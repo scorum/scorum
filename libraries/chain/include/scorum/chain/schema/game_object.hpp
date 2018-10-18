@@ -3,7 +3,9 @@
 #include <fc/shared_containers.hpp>
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
+#include <scorum/protocol/betting/game_status.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
+#include <boost/multi_index/hashed_index.hpp>
 
 namespace scorum {
 namespace chain {
@@ -14,14 +16,8 @@ using scorum::protocol::game_type;
 using scorum::protocol::market_type;
 using scorum::protocol::wincase_type;
 
-enum class game_status : uint8_t
-{
-    created = 0b0001,
-    started = 0b0010,
-    finished = 0b0100
-};
-
 struct by_name;
+struct by_uuid;
 struct by_start_time;
 struct by_bets_resolve_time;
 struct by_auto_resolve_time;
@@ -36,6 +32,7 @@ public:
     typedef typename object<game_object_type, game_object>::id_type id_type;
 
     id_type id;
+    uuid_type uuid;
 
     fc::shared_string name;
     time_point_sec start_time = time_point_sec::min();
@@ -57,6 +54,8 @@ using game_index
                                                              member<game_object,
                                                                     game_object::id_type,
                                                                     &game_object::id>>,
+                                              hashed_unique<tag<by_uuid>,
+                                                            member<game_object, uuid_type, &game_object::uuid>>,
                                               ordered_non_unique<tag<by_auto_resolve_time>,
                                                                  member<game_object,
                                                                         time_point_sec,
@@ -75,9 +74,8 @@ using game_index
 }
 }
 
-FC_REFLECT_ENUM(scorum::chain::game_status, (created)(started)(finished))
 FC_REFLECT(scorum::chain::game_object,
-           (id)(name)(start_time)(original_start_time)(last_update)(bets_resolve_time)(auto_resolve_time)(status)(game)(
-               markets)(results))
+           (id)(uuid)(name)(start_time)(original_start_time)(last_update)(bets_resolve_time)(auto_resolve_time)(status)(
+               game)(markets)(results))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_object, scorum::chain::game_index)

@@ -39,11 +39,11 @@ private:
 template <budget_type budget_type_v>
 struct adv_budget_service_i : public base_service_i<adv_budget_object<budget_type_v>>
 {
-    using budget_cref_type = typename base_service_i<adv_budget_object<budget_type_v>>::object_cref_type;
-    using budgets_type = std::vector<budget_cref_type>;
-
     using base_service_i<adv_budget_object<budget_type_v>>::get;
     using base_service_i<adv_budget_object<budget_type_v>>::is_exists;
+
+    using budget_cref_type = typename base_service_i<adv_budget_object<budget_type_v>>::object_cref_type;
+    using budgets_type = std::vector<budget_cref_type>;
 
     virtual const adv_budget_object<budget_type_v>& create_budget(const account_name_type& owner,
                                                                   const asset& balance,
@@ -101,10 +101,9 @@ protected:
     explicit dbs_advertising_budget(database& db);
 
 public:
-    using budgets_type = typename adv_budget_service_i<budget_type_v>::budgets_type;
-
     using base_service_i<adv_budget_object<budget_type_v>>::get;
     using base_service_i<adv_budget_object<budget_type_v>>::is_exists;
+    using budgets_type = typename adv_budget_service_i<budget_type_v>::budgets_type;
 
     const adv_budget_object<budget_type_v>& create_budget(const account_name_type& owner,
                                                           const asset& balance,

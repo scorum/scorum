@@ -26,9 +26,10 @@ post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
 
 void post_bet_evaluator::do_apply(const operation_type& op)
 {
-    FC_ASSERT(_game_service.is_exists(op.game_id));
+    FC_ASSERT(_game_service.is_exists(op.game_uuid), "Game with uuid ${1} doesn't exist", ("1", op.game_uuid));
+    FC_ASSERT(!_pending_bet_svc.is_exists(op.uuid), "Bet with uuid ${1} already exists", ("1", op.uuid));
 
-    auto game_obj = _game_service.get_game(op.game_id);
+    auto game_obj = _game_service.get_game(op.game_uuid);
 
     validate_if_wincase_in_game(game_obj.game, op.wincase);
 
@@ -46,8 +47,9 @@ void post_bet_evaluator::do_apply(const operation_type& op)
         : pending_bet_kind::non_live;
 
     const auto& pending_bet = _pending_bet_svc.create([&](pending_bet_object& o) {
-        o.game = op.game_id;
+        o.game = game_obj.id;
         o.market = create_market(op.wincase);
+        o.data.uuid = op.uuid;
         o.data.stake = op.stake;
         o.data.bet_odds = odds(op.odds.numerator, op.odds.denominator);
         o.data.created = _dynprops_svc.head_block_time();

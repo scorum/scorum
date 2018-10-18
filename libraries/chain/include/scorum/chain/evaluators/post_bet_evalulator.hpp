@@ -1,7 +1,6 @@
 #pragma once
 
 #include <scorum/protocol/scorum_operations.hpp>
-
 #include <scorum/chain/evaluators/evaluator.hpp>
 
 namespace scorum {

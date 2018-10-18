@@ -6,6 +6,7 @@ file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/genesis/*.hpp"
                   "include/scorum/chain/genesis/initializators/*.hpp"
                   "include/scorum/chain/database/*.hpp"
+                  "include/scorum/chain/dba/*.hpp"
                   "include/scorum/chain/database/block_tasks/*.hpp"
                   "database/block_tasks/*.hpp")
 

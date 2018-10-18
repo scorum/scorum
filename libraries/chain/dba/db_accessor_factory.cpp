@@ -1,6 +1,5 @@
 #include <scorum/chain/dba/db_accessor_factory.hpp>
 #include <scorum/chain/dba/db_accessor.hpp>
-#include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/game_object.hpp>
 #include <scorum/chain/schema/proposal_object.hpp>
@@ -25,7 +24,7 @@ namespace scorum {
 namespace chain {
 namespace dba {
 
-db_accessor_factory::db_accessor_factory(database& db)
+db_accessor_factory::db_accessor_factory(db_index& db)
     : _db(db)
 {
 }

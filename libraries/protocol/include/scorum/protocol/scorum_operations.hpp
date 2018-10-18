@@ -787,6 +787,9 @@ struct odds_input
  */
 struct create_game_operation : public base_operation
 {
+    /// Universal Unique Identifier which is unique for each game
+    uuid_type uuid;
+
     /// moderator account name
     account_name_type moderator;
 
@@ -821,8 +824,8 @@ struct create_game_operation : public base_operation
  */
 struct cancel_game_operation : public base_operation
 {
-    /// game id
-    int64_t game_id;
+    /// Universal Unique Identifier which is specified during game creation
+    uuid_type uuid;
 
     /// moderator account name
     account_name_type moderator;
@@ -844,8 +847,8 @@ struct cancel_game_operation : public base_operation
  */
 struct update_game_markets_operation : public base_operation
 {
-    /// game id
-    int64_t game_id;
+    /// Universal Unique Identifier which is specified during game creation
+    uuid_type uuid;
 
     /// moderator account name
     account_name_type moderator;
@@ -869,8 +872,8 @@ struct update_game_markets_operation : public base_operation
  */
 struct update_game_start_time_operation : public base_operation
 {
-    /// game id
-    int64_t game_id;
+    /// Universal Unique Identifier which is specified during game creation
+    uuid_type uuid;
 
     /// moderator account name
     account_name_type moderator;
@@ -896,8 +899,8 @@ struct update_game_start_time_operation : public base_operation
  */
 struct post_game_results_operation : public base_operation
 {
-    /// game id
-    int64_t game_id;
+    /// Universal Unique Identifier which is specified during game creation
+    uuid_type uuid;
 
     /// moderator account name
     account_name_type moderator;
@@ -919,11 +922,14 @@ struct post_game_results_operation : public base_operation
  */
 struct post_bet_operation : public base_operation
 {
+    /// Universal Unique Identifier which is unique for each bet
+    uuid_type uuid;
+
     /// owner for new bet
     account_name_type better;
 
-    /// game for bet creating
-    int64_t game_id;
+    /// Universal Unique Identifier which is specified during game creation
+    uuid_type game_uuid;
 
     /// wincase
     wincase_type wincase;
@@ -952,7 +958,7 @@ struct post_bet_operation : public base_operation
 struct cancel_pending_bets_operation : public base_operation
 {
     /// bets list that is being canceling
-    fc::flat_set<int64_t> bet_ids;
+    fc::flat_set<uuid_type> bet_uuids;
 
     /// owner
     account_name_type better;
@@ -1049,11 +1055,11 @@ FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
 FC_REFLECT( scorum::protocol::close_budget_by_advertising_moderator_operation, (type)(budget_id)(moderator) )
-FC_REFLECT( scorum::protocol::create_game_operation, (moderator)(name)(start_time)(auto_resolve_delay_sec)(game)(markets) )
-FC_REFLECT( scorum::protocol::cancel_game_operation, (moderator)(game_id) )
-FC_REFLECT( scorum::protocol::update_game_markets_operation, (moderator)(game_id)(markets) )
-FC_REFLECT( scorum::protocol::update_game_start_time_operation, (moderator)(game_id)(start_time) )
-FC_REFLECT( scorum::protocol::post_game_results_operation, (moderator)(game_id)(wincases) )
+FC_REFLECT( scorum::protocol::create_game_operation, (uuid)(moderator)(name)(start_time)(auto_resolve_delay_sec)(game)(markets) )
+FC_REFLECT( scorum::protocol::cancel_game_operation, (uuid)(moderator) )
+FC_REFLECT( scorum::protocol::update_game_markets_operation, (uuid)(moderator)(markets) )
+FC_REFLECT( scorum::protocol::update_game_start_time_operation, (uuid)(moderator)(start_time) )
+FC_REFLECT( scorum::protocol::post_game_results_operation, (uuid)(moderator)(wincases) )
 
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)
@@ -1069,13 +1075,14 @@ FC_REFLECT(scorum::protocol::odds_input,
            (denominator))
 
 FC_REFLECT( scorum::protocol::post_bet_operation,
+           (uuid)
            (better)
-           (game_id)
+           (game_uuid)
            (wincase)
            (odds)
            (stake)
            (live))
 FC_REFLECT( scorum::protocol::cancel_pending_bets_operation,
-           (bet_ids)
+           (bet_uuids)
            (better))
 // clang-format on
