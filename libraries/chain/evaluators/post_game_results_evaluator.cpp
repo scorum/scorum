@@ -14,12 +14,14 @@
 namespace scorum {
 namespace chain {
 post_game_results_evaluator::post_game_results_evaluator(data_service_factory_i& services,
-                                                         betting_service_i& betting_service)
+                                                         betting_service_i& betting_service,
+                                                         database_virtual_operations_emmiter_i& virt_op_emitter)
     : evaluator_impl<data_service_factory_i, post_game_results_evaluator>(services)
     , _account_service(services.account_service())
     , _betting_service(betting_service)
     , _game_service(services.game_service())
     , _dprops_service(services.dynamic_global_property_service())
+    , _virt_op_emitter(virt_op_emitter)
 {
 }
 
@@ -40,7 +42,12 @@ void post_game_results_evaluator::do_apply(const operation_type& op)
 
     _betting_service.cancel_pending_bets(game.id);
 
+    auto old_game_status = game.status;
     _game_service.finish(game, op.wincases);
+
+    if (old_game_status == game_status::started)
+        _virt_op_emitter.push_virtual_operation(
+            game_status_changed(game.uuid, game_status::started, game_status::finished));
 }
 
 void post_game_results_evaluator::validate_all_winners_present(const fc::shared_flat_set<market_type>& markets,

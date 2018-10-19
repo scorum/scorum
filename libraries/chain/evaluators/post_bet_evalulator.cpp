@@ -11,6 +11,8 @@
 
 #include <scorum/protocol/betting/invariants_validation.hpp>
 
+#include <scorum/utils/range/unwrap_ref_wrapper_adaptor.hpp>
+
 namespace scorum {
 namespace chain {
 post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
@@ -22,7 +24,7 @@ post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
     , _betting_service(betting_service)
     , _betting_matcher(betting_matcher)
     , _pending_bet_svc(services.pending_bet_service())
-    , _dynprops_svc(services.dynamic_global_property_service())
+    , _dgp_svc(services.dynamic_global_property_service())
 {
 }
 
@@ -44,7 +46,7 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     FC_ASSERT(better.balance >= op.stake, "Insufficient funds");
 
-    auto kind = op.live //
+    const auto kind = op.live //
         ? pending_bet_kind::live
         : pending_bet_kind::non_live;
 
@@ -54,7 +56,7 @@ void post_bet_evaluator::do_apply(const operation_type& op)
         o.data.uuid = op.uuid;
         o.data.stake = op.stake;
         o.data.bet_odds = odds(op.odds.numerator, op.odds.denominator);
-        o.data.created = _dynprops_svc.head_block_time();
+        o.data.created = _dgp_svc.head_block_time();
         o.data.better = op.better;
         o.data.kind = kind;
         o.data.wincase = op.wincase;
@@ -64,9 +66,9 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     std::vector<std::reference_wrapper<const pending_bet_object>> bets_to_cancel;
 
-    _betting_matcher.match(pending_bet, _dynprops_svc.head_block_time(), bets_to_cancel);
+    _betting_matcher.match(pending_bet, _dgp_svc.head_block_time(), bets_to_cancel);
 
-    _betting_service.cancel_pending_bets(bets_to_cancel);
+    _betting_service.cancel_pending_bets(utils::unwrap_ref_wrapper(bets_to_cancel), game_obj.uuid);
 }
 }
 }

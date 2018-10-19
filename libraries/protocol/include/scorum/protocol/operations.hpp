@@ -90,7 +90,10 @@ using operation = fc::static_variant<vote_operation,
                                      allocate_cash_from_advertising_budget_operation,
                                      cash_back_from_advertising_budget_to_owner_operation,
                                      closing_budget_operation,
-                                     bets_matched_operation>;
+                                     bets_matched_operation,
+                                     game_status_changed,
+                                     bet_resolved_operation,
+                                     bet_cancelled_operation>;
 
 /*void operation_get_required_authorities( const operation& op,
                                          flat_set<string>& active,

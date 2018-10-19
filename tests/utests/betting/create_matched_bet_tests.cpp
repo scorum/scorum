@@ -4,6 +4,7 @@
 
 #include <scorum/chain/schema/bet_objects.hpp>
 #include <scorum/chain/betting/betting_matcher.hpp>
+#include <scorum/chain/betting/betting_math.hpp>
 #include <scorum/chain/dba/db_accessor.hpp>
 
 #include "defines.hpp"
@@ -213,8 +214,8 @@ SCORUM_TEST_CASE(check_ids_for_two_matched_bets)
     auto id1 = create_matched_bet(matched_dba, bet1, bet2, matched, fc::time_point_sec());
     auto id2 = create_matched_bet(matched_dba, bet1, bet2, matched, fc::time_point_sec());
 
-    BOOST_CHECK_EQUAL(0u, id1._id);
-    BOOST_CHECK_EQUAL(1u, id2._id);
+    BOOST_CHECK_EQUAL(0u, id1);
+    BOOST_CHECK_EQUAL(1u, id2);
 }
 
 SCORUM_TEST_CASE(throw_exception_when_bets_have_different_game)

@@ -38,6 +38,7 @@ struct game_evaluator_fixture : public shared_memory_fixture
     dynamic_global_property_service_i* dynprop_service = mocks.Mock<dynamic_global_property_service_i>();
     account_service_i* account_service = mocks.Mock<account_service_i>();
     game_service_i* game_service = mocks.Mock<game_service_i>();
+    database_virtual_operations_emmiter_i* virt_op_emitter = mocks.Mock<database_virtual_operations_emmiter_i>();
 
     game_evaluator_fixture()
     {
@@ -45,6 +46,7 @@ struct game_evaluator_fixture : public shared_memory_fixture
         mocks.OnCall(dbs_services, data_service_factory_i::dynamic_global_property_service)
             .ReturnByRef(*dynprop_service);
         mocks.OnCall(dbs_services, data_service_factory_i::game_service).ReturnByRef(*game_service);
+        mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
     }
 };
 
@@ -52,7 +54,7 @@ BOOST_FIXTURE_TEST_SUITE(post_game_results_evaluator_tests, game_evaluator_fixtu
 
 SCORUM_TEST_CASE(invalid_moderator_should_throw)
 {
-    post_game_results_evaluator ev(*dbs_services, *betting_service);
+    post_game_results_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     post_game_results_operation op;
 
@@ -64,7 +66,7 @@ SCORUM_TEST_CASE(invalid_moderator_should_throw)
 
 SCORUM_TEST_CASE(non_existing_game_should_throw)
 {
-    post_game_results_evaluator ev(*dbs_services, *betting_service);
+    post_game_results_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     post_game_results_operation op;
 
@@ -77,7 +79,7 @@ SCORUM_TEST_CASE(non_existing_game_should_throw)
 
 SCORUM_TEST_CASE(non_started_game_should_throw)
 {
-    post_game_results_evaluator ev(*dbs_services, *betting_service);
+    post_game_results_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     post_game_results_operation op;
 
@@ -93,7 +95,7 @@ SCORUM_TEST_CASE(non_started_game_should_throw)
 
 SCORUM_TEST_CASE(post_results_after_bets_resolve_delay_should_throw)
 {
-    post_game_results_evaluator ev(*dbs_services, *betting_service);
+    post_game_results_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     post_game_results_operation op;
 
@@ -116,7 +118,7 @@ SCORUM_TEST_CASE(wincases_and_markets_mismatch_should_throw)
 {
     using namespace scorum::protocol;
 
-    post_game_results_evaluator ev(*dbs_services, *betting_service);
+    post_game_results_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     post_game_results_operation op;
     op.wincases = { round_home::no{} };
@@ -140,7 +142,7 @@ SCORUM_TEST_CASE(both_wincases_from_pair_were_provided_should_throw)
 {
     using namespace scorum::protocol;
 
-    post_game_results_evaluator ev(*dbs_services, *betting_service);
+    post_game_results_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     post_game_results_operation op;
     op.wincases = { round_home::yes{}, round_home::no{} };
@@ -164,7 +166,7 @@ SCORUM_TEST_CASE(not_all_winners_were_posted_should_throw)
 {
     using namespace scorum::protocol;
 
-    post_game_results_evaluator ev(*dbs_services, *betting_service);
+    post_game_results_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     post_game_results_operation op;
     op.wincases = { total::over{ 500 } };
@@ -188,7 +190,7 @@ SCORUM_TEST_CASE(wrong_coefficient_should_throw)
 {
     using namespace scorum::protocol;
 
-    post_game_results_evaluator ev(*dbs_services, *betting_service);
+    post_game_results_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     post_game_results_operation op;
     op.wincases = { total::over{ 500 } };
@@ -212,7 +214,7 @@ SCORUM_TEST_CASE(winners_with_same_wincase_type_but_diff_coefficients_shouldnt_t
 {
     using namespace scorum::protocol;
 
-    post_game_results_evaluator ev(*dbs_services, *betting_service);
+    post_game_results_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     post_game_results_operation op;
     op.wincases = { total::over{ 500 }, total::over{ 1500 } };
@@ -239,7 +241,7 @@ SCORUM_TEST_CASE(three_state_market_no_posted_result_shouldnt_throw)
 {
     using namespace scorum::protocol;
 
-    post_game_results_evaluator ev(*dbs_services, *betting_service);
+    post_game_results_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     post_game_results_operation op;
     op.wincases = {};

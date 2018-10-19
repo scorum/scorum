@@ -1,16 +1,10 @@
 #include <scorum/chain/betting/betting_matcher.hpp>
 
-#include <scorum/chain/data_service_factory.hpp>
-
-#include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/chain/services/betting_property.hpp>
-#include <scorum/chain/services/pending_bet.hpp>
-#include <scorum/chain/services/matched_bet.hpp>
-#include <scorum/chain/betting/betting_service.hpp>
-
-#include <scorum/protocol/betting/market.hpp>
-
+#include <scorum/chain/database/database_virtual_operations.hpp>
+#include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/betting/betting_math.hpp>
 #include <scorum/chain/dba/db_accessor.hpp>
+#include <scorum/protocol/betting/market.hpp>
 
 namespace scorum {
 namespace chain {
@@ -20,7 +14,7 @@ bool can_be_matched(const pending_bet_object& bet)
     return bet.data.stake * bet.data.bet_odds > bet.data.stake;
 }
 
-betting_matcher::~betting_matcher()
+betting_matcher_i::~betting_matcher_i()
 {
 }
 
@@ -59,7 +53,7 @@ void betting_matcher::match(const pending_bet_object& bet2,
 
                 _virt_op_emitter.push_virtual_operation(protocol::bets_matched_operation(
                     bet1.data.better, bet2.data.better, bet1.get_uuid(), bet2.get_uuid(), matched.bet1_matched,
-                    matched.bet2_matched, matched_bet_id._id));
+                    matched.bet2_matched, matched_bet_id));
             }
 
             if (!can_be_matched(bet1))
@@ -82,15 +76,14 @@ bool betting_matcher::is_bets_matched(const pending_bet_object& bet1, const pend
     return bet1.data.bet_odds.inverted() == bet2.data.bet_odds;
 }
 
-matched_bet_object::id_type create_matched_bet(dba::db_accessor<matched_bet_object>& matched_bet_dba,
-                                               const pending_bet_object& bet1,
-                                               const pending_bet_object& bet2,
-                                               matched_stake_type matched,
-                                               fc::time_point_sec head_block_time)
+int64_t create_matched_bet(dba::db_accessor<matched_bet_object>& matched_bet_dba,
+                           const pending_bet_object& bet1,
+                           const pending_bet_object& bet2,
+                           const matched_stake_type& matched,
+                           fc::time_point_sec head_block_time)
 {
     FC_ASSERT(bet1.game == bet2.game, "bets game id is not equal.");
     FC_ASSERT(bet1.get_wincase() == create_opposite(bet2.get_wincase()));
-    //        FC_ASSERT(bet1.market == bet2.market, "bets market type is not equal");
 
     return matched_bet_dba
         .create([&](matched_bet_object& obj) {
@@ -102,7 +95,7 @@ matched_bet_object::id_type create_matched_bet(dba::db_accessor<matched_bet_obje
             obj.game = bet1.game;
             obj.created = head_block_time;
         })
-        .id;
+        .id._id;
 }
 
 } // namespace chain

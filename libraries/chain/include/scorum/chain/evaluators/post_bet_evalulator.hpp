@@ -29,7 +29,7 @@ private:
     betting_service_i& _betting_service;
     betting_matcher_i& _betting_matcher;
     pending_bet_service_i& _pending_bet_svc;
-    dynamic_global_property_service_i& _dynprops_svc;
+    dynamic_global_property_service_i& _dgp_svc;
 };
 }
 }

@@ -5,15 +5,17 @@
 #include <scorum/chain/betting/betting_service.hpp>
 
 #include <scorum/chain/schema/bet_objects.hpp>
-#include <scorum/chain/database/database.hpp>
 
 namespace scorum {
 namespace chain {
 namespace database_ns {
 
-process_bets_resolving::process_bets_resolving(betting_service_i& betting_svc, betting_resolver_i& resolver)
+process_bets_resolving::process_bets_resolving(betting_service_i& betting_svc,
+                                               betting_resolver_i& resolver,
+                                               database_virtual_operations_emmiter_i& virt_op_emitter)
     : _betting_svc(betting_svc)
     , _resolver(resolver)
+    , _virt_op_emitter(virt_op_emitter)
 {
 }
 
@@ -28,9 +30,14 @@ void process_bets_resolving::on_apply(block_task_context& ctx)
 
     for (const game_object& game : games)
     {
+        auto game_uuid = game.uuid;
+
         _resolver.resolve_matched_bets(game.id, game.results);
         _betting_svc.cancel_pending_bets(game.id);
         _betting_svc.cancel_game(game.id);
+
+        _virt_op_emitter.push_virtual_operation(
+            game_status_changed(game_uuid, game_status::finished, game_status::resolved));
     }
 
     debug_log(ctx.get_block_info(), "process_bets_resolving END");
