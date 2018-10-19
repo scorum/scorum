@@ -39,8 +39,6 @@ public:
 
     betting_matcher matcher;
 
-    std::vector<std::reference_wrapper<const pending_bet_object>> bets_to_cancel;
-
     no_bets_fixture()
         : pending_dba(dba::db_accessor_factory(db).get_dba<pending_bet_object>())
         , matched_dba(dba::db_accessor_factory(db).get_dba<matched_bet_object>())
@@ -96,7 +94,7 @@ BOOST_FIXTURE_TEST_CASE(add_bet_with_no_stake_to_the_close_list, no_bets_fixture
         bet.data.wincase = create_opposite(bet1.data.wincase);
     });
 
-    matcher.match(bet2, fc::time_point_sec::maximum(), bets_to_cancel);
+    auto bets_to_cancel = matcher.match(bet2, fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(1u, bets_to_cancel.size());
 }
@@ -115,7 +113,7 @@ BOOST_FIXTURE_TEST_CASE(dont_create_matched_bet_when_stake_is_zero, no_bets_fixt
         bet.data.wincase = create_opposite(bet1.data.wincase);
     });
 
-    matcher.match(bet2, fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(bet2, fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
@@ -128,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(dont_add_bet_with_no_stake_to_the_close_list, no_bets_fi
         bet.data.wincase = total::over({ 1 });
     });
 
-    matcher.match(bet1, fc::time_point_sec::maximum(), bets_to_cancel);
+    auto bets_to_cancel = matcher.match(bet1, fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(0u, bets_to_cancel.size());
 }
@@ -147,7 +145,7 @@ BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_wincase, no_bets_fixture)
         bet.data.wincase = bet1.data.wincase;
     });
 
-    matcher.match(bet2, fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(bet2, fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
@@ -166,7 +164,7 @@ BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_odds, no_bets_fixture)
         bet.data.wincase = create_opposite(bet1.data.wincase);
     });
 
-    matcher.match(bet2, fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(bet2, fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
@@ -197,7 +195,7 @@ BOOST_FIXTURE_TEST_CASE(match_with_two_bets, no_bets_fixture)
         bet.data.wincase = create_opposite(total_over_1);
     });
 
-    matcher.match(bet3, fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(bet3, fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(2u, count<matched_bet_index>());
 }
@@ -226,7 +224,7 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(add_fully_matched_bet_to_cancel_list, two_bets_fixture)
 {
-    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum(), bets_to_cancel);
+    auto bets_to_cancel = matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
 
     BOOST_REQUIRE_EQUAL(1u, bets_to_cancel.size());
 
@@ -252,19 +250,19 @@ BOOST_FIXTURE_TEST_CASE(expect_virtual_operation_call_on_bets_matching, two_bets
         .With(_)
         .Do(check_virtual_operation);
 
-    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
 }
 
 BOOST_FIXTURE_TEST_CASE(create_one_matched_bet, two_bets_fixture)
 {
-    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(1u, count<matched_bet_index>());
 }
 
 BOOST_FIXTURE_TEST_CASE(check_bets_matched_stake, two_bets_fixture)
 {
-    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(10u, matched_dba.get_by<by_id>(0u).bet1_data.stake.amount);
     BOOST_CHECK_EQUAL(5u, matched_dba.get_by<by_id>(0u).bet2_data.stake.amount);
@@ -272,14 +270,14 @@ BOOST_FIXTURE_TEST_CASE(check_bets_matched_stake, two_bets_fixture)
 
 BOOST_FIXTURE_TEST_CASE(second_bet_matched_on_five_tockens, two_bets_fixture)
 {
-    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(5u, pending_dba.get_by<by_uuid>(bet2.uuid).data.stake.amount);
 }
 
 BOOST_FIXTURE_TEST_CASE(first_bet_matched_on_hole_stake, two_bets_fixture)
 {
-    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(0u, pending_dba.get_by<by_uuid>(bet1.uuid).data.stake.amount);
 }
@@ -322,14 +320,14 @@ struct three_bets_fixture : public no_bets_fixture
 
 BOOST_FIXTURE_TEST_CASE(dont_match_bets_when_odds_dont_match, three_bets_fixture)
 {
-    matcher.match(pending_dba.get_by<by_uuid>(bet3.uuid), fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(pending_dba.get_by<by_uuid>(bet3.uuid), fc::time_point_sec::maximum());
 
     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
 
 BOOST_FIXTURE_TEST_CASE(dont_change_pending_bet_stake_when_matching_dont_occur, three_bets_fixture)
 {
-    matcher.match(pending_dba.get_by<by_uuid>(bet3.uuid), fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(pending_dba.get_by<by_uuid>(bet3.uuid), fc::time_point_sec::maximum());
 
     BOOST_CHECK(compare_bet_data(bet1, pending_dba.get_by<by_uuid>(bet1.uuid).data));
     BOOST_CHECK(compare_bet_data(bet2, pending_dba.get_by<by_uuid>(bet2.uuid).data));
@@ -345,7 +343,7 @@ BOOST_FIXTURE_TEST_CASE(stop_matching_when_stake_is_spent, three_bets_fixture)
         bet.data.wincase = create_opposite(total_over_1);
     });
 
-    matcher.match(bet4, fc::time_point_sec::maximum(), bets_to_cancel);
+    matcher.match(bet4, fc::time_point_sec::maximum());
 
     BOOST_REQUIRE_EQUAL(1u, count<matched_bet_index>());
 

@@ -27,16 +27,17 @@ betting_matcher::betting_matcher(database_virtual_operations_emmiter_i& virt_op_
 {
 }
 
-void betting_matcher::match(const pending_bet_object& bet2,
-                            const fc::time_point_sec& head_block_time,
-                            std::vector<std::reference_wrapper<const pending_bet_object>>& bets_to_cancel)
+std::vector<std::reference_wrapper<const pending_bet_object>>
+betting_matcher::match(const pending_bet_object& bet2, const fc::time_point_sec& head_block_time)
 {
     try
     {
-        auto key = std::make_tuple(bet2.game, create_opposite(bet2.get_wincase()));
-        auto range = _pending_bet_dba.get_range_by<by_game_id_wincase>(key);
+        std::vector<std::reference_wrapper<const pending_bet_object>> bets_to_cancel;
 
-        for (const auto& bet1 : range)
+        auto key = std::make_tuple(bet2.game, create_opposite(bet2.get_wincase()));
+        auto pending_bets = _pending_bet_dba.get_range_by<by_game_id_wincase>(key);
+
+        for (const auto& bet1 : pending_bets)
         {
             if (!is_bets_matched(bet1, bet2))
                 continue;
@@ -67,6 +68,8 @@ void betting_matcher::match(const pending_bet_object& bet2,
                 break;
             }
         }
+
+        return bets_to_cancel;
     }
     FC_CAPTURE_LOG_AND_RETHROW((bet2))
 }

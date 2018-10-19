@@ -64,9 +64,8 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     _account_service.decrease_balance(better, op.stake);
 
-    std::vector<std::reference_wrapper<const pending_bet_object>> bets_to_cancel;
-
-    _betting_matcher.match(pending_bet, _dgp_svc.head_block_time(), bets_to_cancel);
+    std::vector<std::reference_wrapper<const pending_bet_object>> bets_to_cancel
+        = _betting_matcher.match(pending_bet, _dgp_svc.head_block_time());
 
     _betting_service.cancel_pending_bets(utils::unwrap_ref_wrapper(bets_to_cancel), game_obj.uuid);
 }

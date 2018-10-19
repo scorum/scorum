@@ -2,6 +2,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <scorum/utils/collect_range_adaptor.hpp>
+
 #include <scorum/chain/schema/bet_objects.hpp>
 #include <scorum/chain/betting/betting_matcher.hpp>
 #include <scorum/chain/betting/betting_math.hpp>
@@ -15,6 +17,8 @@ namespace create_matched_bet_tests {
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
+
+using namespace scorum::utils::adaptors;
 
 struct fixture
 {
@@ -61,7 +65,7 @@ auto get_range(const dba::db_accessor<pending_bet_object>& accessor, game_id_typ
     return accessor.get_range_by<by_game_id_wincase>(key);
 }
 
-SCORUM_TEST_CASE(return_range_of_bets_with_equal_game_id_and_wincase)
+SCORUM_TEST_CASE(check_order_in_range_of_bets_with_equal_game_id_and_wincase)
 {
     dba::db_accessor<pending_bet_object> pending_dba(db);
 
@@ -70,14 +74,19 @@ SCORUM_TEST_CASE(return_range_of_bets_with_equal_game_id_and_wincase)
         bet.data.wincase = total::over({ 1 });
     });
 
-    create_bet([&](pending_bet_object& bet) {
+    auto bet2 = create_bet([&](pending_bet_object& bet) {
         bet.game = 1;
         bet.data.wincase = total::over({ 1 });
     });
 
     auto range = get_range(pending_dba, bet1.game, total::over({ 1 }));
 
-    BOOST_CHECK_EQUAL(2u, boost::distance(range));
+    auto pending_bets = range | collect<std::vector>();
+
+    BOOST_REQUIRE_EQUAL(2u, pending_bets.size());
+
+    BOOST_CHECK(pending_bets[0].data.uuid == bet1.data.uuid);
+    BOOST_CHECK(pending_bets[1].data.uuid == bet2.data.uuid);
 }
 
 SCORUM_TEST_CASE(dont_return_bet_if_game_id_is_different)
