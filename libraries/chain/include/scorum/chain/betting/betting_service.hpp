@@ -31,6 +31,8 @@ struct betting_service_i
     using pending_bet_crefs_type = std::vector<std::reference_wrapper<const pending_bet_object>>;
     using matched_bet_crefs_type = std::vector<std::reference_wrapper<const matched_bet_object>>;
 
+    virtual ~betting_service_i();
+
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;
 
     virtual void cancel_game(game_id_type game_id) = 0;

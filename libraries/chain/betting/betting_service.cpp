@@ -20,6 +20,10 @@
 namespace scorum {
 namespace chain {
 
+betting_service_i::~betting_service_i()
+{
+}
+
 betting_service::betting_service(data_service_factory_i& db, dba::db_accessor_factory& dba_factory)
     : _dgp_property_service(db.dynamic_global_property_service())
     , _betting_property_service(db.betting_property_service())

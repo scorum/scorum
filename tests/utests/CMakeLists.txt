@@ -70,6 +70,7 @@ set(SOURCES
     betting/post_game_results_serialization_tests.cpp
     betting/wincase_type_tests.cpp
     betting/market_type_tests.cpp
+    betting/create_matched_bet_tests.cpp
     db_accessors/db_accessors_tests.cpp
     odds_tests.cpp
 )
@@ -80,6 +81,7 @@ add_executable(utests
 
 target_link_libraries(utests
                       fc
+                      common_test
                       ucommon_test
                       scorum_app
                       scorum_rewards_math

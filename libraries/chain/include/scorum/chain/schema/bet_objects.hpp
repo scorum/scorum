@@ -52,6 +52,8 @@ public:
     account_name_type get_better() const { return data.better; }
     pending_bet_kind get_kind() const { return data.kind; }
     uuid_type get_uuid() const { return data.uuid; }
+    wincase_type get_wincase() const { return data.wincase; }
+
     // clang-format on
 };
 
@@ -76,6 +78,7 @@ struct by_game_id_kind;
 struct by_game_id_market;
 struct by_game_id_better;
 struct by_game_id_created;
+struct by_game_id_wincase;
 
 typedef shared_multi_index_container<pending_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
@@ -86,6 +89,17 @@ typedef shared_multi_index_container<pending_bet_object,
                                                               const_mem_fun<pending_bet_object,
                                                                             uuid_type,
                                                                             &pending_bet_object::get_uuid>>,
+
+                                                ordered_non_unique<tag<by_game_id_wincase>,
+                                                                   composite_key<pending_bet_object,
+                                                                                 member<pending_bet_object,
+                                                                                        game_id_type,
+                                                                                        &pending_bet_object::game>,
+                                                                                 const_mem_fun<pending_bet_object,
+                                                                                               wincase_type,
+                                                                                               &pending_bet_object::
+                                                                                                   get_wincase>>>,
+
                                                 ordered_non_unique<tag<by_game_id_kind>,
                                                                    composite_key<pending_bet_object,
                                                                                  member<pending_bet_object,

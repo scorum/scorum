@@ -13,11 +13,13 @@ set( SOURCES
   database_blog_integration.cpp
   database_betting_integration.cpp
   actoractions.cpp
+  detail.cpp
 )
 
 add_library(common_test 
             ${SOURCES}
             ${HEADERS})
+
 target_link_libraries(common_test
                       ucommon_test
                       HippoMocks
