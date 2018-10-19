@@ -39,6 +39,13 @@ List of exception that could be raised on betting operations
 * Assert Exception "Cannot cancel the game after it is finished" -- raises when try to cancel game which status is finished(status changed to finished after game.start_time + game.auto_resolve_delay_sec was reached)
 
 ## post_bet_operation
+* Assert Exception "Account name is invalid"
+* Assert Exception "Wincase '${w}' is invalid"
+* Assert Exception "Stake must be SCR"
+* Assert Exception "Stake must be greater  or equal then ${s}" 
+* Assert Exception "odds numerator must be greater then zero"
+* Assert Exception "odds denominator must be greater then zero"
+* Assert Exception "odds must be greater then one"
 * Assert Exception "Account \"${1}\" must exist." -- raises when account with name op.better doens't exists
 * Assert Exception "Game with uuid ${1} doesn't exist" -- raises when there is no game with passed uid
 * Assert Exception "Cannot post bet for game that is finished" -- raises when try post bet on game which status is "finished"(status changed to finished after game.start_time + game.auto_resolve_delay_sec was reached)
