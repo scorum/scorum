@@ -114,6 +114,21 @@ BOOST_AUTO_TEST_CASE(serialize_development_committee_empower_betting_moderator_o
     BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000b05616c696365", utils::to_hex(op));
 }
 
+BOOST_AUTO_TEST_CASE(serialize_development_committee_change_betting_resolve_delay_operation_to_hex)
+{
+    development_committee_change_betting_resolve_delay_operation resolve_delay_op;
+    resolve_delay_op.delay_sec = 10;
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.operation = resolve_delay_op;
+    proposal_create_op.creator = "initdelegate";
+    proposal_create_op.lifetime_sec = 86400;
+
+    scorum::protocol::operation op = proposal_create_op;
+
+    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000c0a000000", utils::to_hex(op));
+}
+
 BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)
 {
     const std::string hex_str = "1d00000000000005616c696365";
