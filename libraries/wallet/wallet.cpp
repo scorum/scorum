@@ -3246,11 +3246,25 @@ chain_capital_api_obj wallet_api::get_chain_capital() const
     return my->_chain_api->get_chain_capital();
 }
 
-std::vector<game_api_object> wallet_api::get_games(game_filter filter) const
+std::vector<game_api_object> wallet_api::get_games_by_status(game_filter filter) const
 {
     auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
 
-    return api->get_games(filter);
+    return api->get_games_by_status(filter);
+}
+
+std::vector<game_api_object> wallet_api::get_games_by_uuids(const std::vector<uuid_type>& uuids) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_games_by_uuids(uuids);
+}
+
+std::vector<game_api_object> wallet_api::lookup_games_by_id(game_id_type from, uint32_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->lookup_games_by_id(from, limit);
 }
 
 std::vector<matched_bet_api_object> wallet_api::get_matched_bets(matched_bet_id_type from, int64_t limit) const

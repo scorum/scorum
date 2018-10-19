@@ -1485,7 +1485,22 @@ public:
      * @param filter [created, started, finished]
      * @return array of game_api_object's
      */
-    std::vector<game_api_object> get_games(game_filter filter) const;
+    std::vector<game_api_object> get_games_by_status(game_filter filter) const;
+
+    /**
+     * @brief Returns games
+     * @param UUIDs of games to return
+     * @return array of game_api_object's
+     */
+    std::vector<game_api_object> get_games_by_uuids(const std::vector<uuid_type>& uuids) const;
+
+    /**
+     * @brief Returns games
+     * @param from lower bound game id
+     * @param limit query limit
+     * @return array of game_api_object's
+     */
+    std::vector<game_api_object> lookup_games_by_id(game_id_type from, uint32_t limit) const;
 
     /**
      * @brief Returns matched bets
@@ -1682,7 +1697,9 @@ FC_API( scorum::wallet::wallet_api,
         (exit)
 
         // Beting api
-        (get_games)
+        (get_games_by_status)
+        (get_games_by_uuids)
+        (lookup_games_by_id)
         (get_matched_bets)
         (get_pending_bets)
       )
