@@ -233,8 +233,9 @@ BOOST_FIXTURE_TEST_SUITE(get_content, get_content_fixture)
 
 SCORUM_TEST_CASE(check_total_payout)
 {
-    actor(initdelegate)
-        .create_budget(R"j({"tag": 1})j", asset::from_string("5.000000000 SCR"), db.head_block_time() + fc::days(30));
+    auto start = db.head_block_time() + 1; // start_time should be greater than head_block_time
+    auto deadline = db.head_block_time() + fc::minutes(1);
+    actor(initdelegate).create_budget(R"j({"tag": 1})j", asset::from_string("5.000000000 SCR"), start, deadline);
 
     auto post = create_post(initdelegate).in_block();
     generate_blocks(db.head_block_time() + SCORUM_MIN_ROOT_COMMENT_INTERVAL);
@@ -250,7 +251,7 @@ SCORUM_TEST_CASE(check_total_payout)
 
     d = _api.get_content(post.author(), post.permlink());
 
-    BOOST_CHECK_EQUAL(d.total_payout_scr_value, asset::from_string("0.000000007 SCR"));
+    BOOST_CHECK_EQUAL(d.total_payout_scr_value, asset::from_string("0.000000014 SCR"));
     BOOST_CHECK_EQUAL(d.total_payout_sp_value, asset::from_string("0.000001040 SP"));
 }
 
@@ -274,8 +275,9 @@ SCORUM_TEST_CASE(pending_payout_is_zero_before_any_payouts)
 
 SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
 {
-    actor(initdelegate)
-        .create_budget(R"j({"tag": 1})j", asset::from_string("5.000000000 SCR"), db.head_block_time() + fc::days(30));
+    auto start = db.head_block_time() + 1; // start_time should be greater than head_block_time
+    auto deadline = db.head_block_time() + fc::days(30);
+    actor(initdelegate).create_budget(R"j({"tag": 1})j", asset::from_string("5.000000000 SCR"), start, deadline);
 
     // first payout
     {
@@ -296,7 +298,7 @@ SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
 
     auto d = _api.get_content(post2.author(), post2.permlink());
 
-    BOOST_CHECK_EQUAL(d.pending_payout_scr, asset::from_string("0.000000005 SCR"));
+    BOOST_CHECK_EQUAL(d.pending_payout_scr, asset::from_string("0.000000009 SCR"));
     BOOST_CHECK_EQUAL(d.pending_payout_sp, asset::from_string("0.000000438 SP"));
 }
 BOOST_AUTO_TEST_SUITE_END()

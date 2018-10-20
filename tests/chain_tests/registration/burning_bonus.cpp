@@ -24,6 +24,8 @@ struct registration_committee_burning_bonus_fixture : public database_trx_integr
                   .generate();
 
         open_database(genesis);
+
+        this->set_hardfork(SCORUM_HARDFORK_0_2);
     }
 
     void create_account_by_committee(const Actor& new_account)

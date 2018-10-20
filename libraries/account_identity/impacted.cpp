@@ -251,7 +251,7 @@ struct get_impacted_account_visitor
         _impacted.insert(op.account);
     }
 
-    void operator()(const comment_benefactor_reward_operation& op)
+    void operator()(const comment_benefficiary_reward_operation& op)
     {
         _impacted.insert(op.benefactor);
         _impacted.insert(op.author);
@@ -278,12 +278,17 @@ struct get_impacted_account_visitor
         _impacted.insert(op.from_account);
     }
 
-    void operator()(const allocate_cash_from_advertising_budget_operation& op)
+    void operator()(const budget_outgo_operation& op)
     {
         _impacted.insert(op.owner);
     }
 
-    void operator()(const cash_back_from_advertising_budget_to_owner_operation& op)
+    void operator()(const budget_owner_income_operation& op)
+    {
+        _impacted.insert(op.owner);
+    }
+
+    void operator()(const budget_closing_operation& op)
     {
         _impacted.insert(op.owner);
     }

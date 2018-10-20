@@ -34,6 +34,7 @@ add_library( scorum_chain
              services/account.cpp
              services/account_blogging_statistic.cpp
              services/atomicswap.cpp
+             services/budgets.cpp
              services/comment.cpp
              services/comment_vote.cpp
              services/dbs_base.cpp
@@ -108,6 +109,8 @@ add_library( scorum_chain
              database/block_tasks/process_active_sp_holders_cashout.cpp
 
              database/process_user_activity.cpp
+
+             advertising/advertising_auction.cpp
 
              ${HEADERS}
              ${hardfork_hpp_file}

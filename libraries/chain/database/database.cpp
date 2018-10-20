@@ -1207,7 +1207,6 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<atomicswap_redeem_evaluator>();
     _my->_evaluator_registry.register_evaluator<atomicswap_refund_evaluator>();
     _my->_evaluator_registry.register_evaluator<change_recovery_account_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_evaluator>();
     _my->_evaluator_registry.register_evaluator<comment_options_evaluator>();
     _my->_evaluator_registry.register_evaluator<decline_voting_rights_evaluator>();
@@ -1506,7 +1505,7 @@ void database::_apply_block(const signed_block& next_block)
                                                  static_cast<database_virtual_operations_emmiter_i&>(*this),
                                                  _current_block_num, ctx);
 
-        database_ns::process_funds().apply(task_ctx);
+        database_ns::process_funds(task_ctx).apply(task_ctx);
         database_ns::process_fifa_world_cup_2018_bounty_initialize().apply(task_ctx);
         database_ns::process_comments_cashout().apply(task_ctx);
         database_ns::process_fifa_world_cup_2018_bounty_cashout().apply(task_ctx);
@@ -1965,6 +1964,10 @@ void database::init_hardforks(time_point_sec genesis_time)
     _hardfork_times[SCORUM_HARDFORK_0_2] = fc::time_point_sec(SCORUM_HARDFORK_0_2_TIME);
     _hardfork_versions[SCORUM_HARDFORK_0_2] = SCORUM_HARDFORK_0_2_VERSION;
 
+    FC_ASSERT(SCORUM_HARDFORK_0_3 == 3, "Invalid hardfork #3 configuration");
+    _hardfork_times[SCORUM_HARDFORK_0_3] = fc::time_point_sec(SCORUM_HARDFORK_0_3_TIME);
+    _hardfork_versions[SCORUM_HARDFORK_0_3] = SCORUM_HARDFORK_0_3_VERSION;
+
     const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",
               ("hardforks.last_hardfork", hardforks.last_hardfork)("SCORUM_NUM_HARDFORKS", SCORUM_NUM_HARDFORKS));
@@ -2098,11 +2101,15 @@ void database::validate_invariants() const
         for (const post_budget_object& budget : obtain_service<dbs_post_budget>().get_budgets())
         {
             total_supply += budget.balance;
+            total_supply += budget.owner_pending_income;
+            total_supply += budget.budget_pending_outgo;
         }
 
         for (const banner_budget_object& budget : obtain_service<dbs_banner_budget>().get_budgets())
         {
             total_supply += budget.balance;
+            total_supply += budget.owner_pending_income;
+            total_supply += budget.budget_pending_outgo;
         }
 
         if (obtain_service<dbs_fund_budget>().is_exists())

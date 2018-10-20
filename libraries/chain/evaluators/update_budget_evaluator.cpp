@@ -21,33 +21,31 @@ update_budget_evaluator::update_budget_evaluator(data_service_factory_i& service
 
 void update_budget_evaluator::do_apply(const operation_type& op)
 {
-    _account_service.check_account_existence(op.owner);
-
     switch (op.type)
     {
     case budget_type::post:
-    {
-        const auto& budget = _post_budget_service.get_budget(op.owner, op.budget_id);
-#ifndef IS_LOW_MEM
-        _post_budget_service.update(budget,
-                                    [&](post_budget_object& b) { fc::from_string(b.json_metadata, op.json_metadata); });
-#else //! IS_LOW_MEM
-        boost::ignore_unused_variable_warning(budget);
-#endif // IS_LOW_MEM
-    }
-    break;
+        update_budget(_post_budget_service, op);
+        break;
     case budget_type::banner:
-    {
-        const auto& budget = _banner_budget_service.get_budget(op.owner, op.budget_id);
+        update_budget(_banner_budget_service, op);
+        break;
+    }
+}
+
+template <protocol::budget_type budget_type_v>
+void update_budget_evaluator::update_budget(adv_budget_service_i<budget_type_v>& budget_svc, const operation_type& op)
+{
+    _account_service.check_account_existence(op.owner);
+    FC_ASSERT(budget_svc.is_exists(op.uuid), "Budget with id ${id} doesn't exist", ("id", op.uuid));
+
+    const auto& budget = budget_svc.get(op.uuid);
+    FC_ASSERT(budget.owner == op.owner, "These is not [${o}/${id}] budget", ("o", op.owner)("id", op.uuid));
+
 #ifndef IS_LOW_MEM
-        _banner_budget_service.update(
-            budget, [&](banner_budget_object& b) { fc::from_string(b.json_metadata, op.json_metadata); });
-#else //! IS_LOW_MEM
-        boost::ignore_unused_variable_warning(budget);
-#endif // IS_LOW_MEM
-    }
-    break;
-    }
+    budget_svc.update(budget, [&](auto& b) { fc::from_string(b.json_metadata, op.json_metadata); });
+#else
+    boost::ignore_unused_variable_warning(budget);
+#endif
 }
 }
 }

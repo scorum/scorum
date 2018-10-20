@@ -236,15 +236,15 @@ struct return_scorumpower_delegation_operation : public virtual_operation
     asset scorumpower = asset(0, SP_SYMBOL);
 };
 
-struct comment_benefactor_reward_operation : public virtual_operation
+struct comment_benefficiary_reward_operation : public virtual_operation
 {
-    comment_benefactor_reward_operation()
+    comment_benefficiary_reward_operation()
     {
     }
-    comment_benefactor_reward_operation(const account_name_type& b,
-                                        const account_name_type& a,
-                                        const std::string& p,
-                                        const asset& r)
+    comment_benefficiary_reward_operation(const account_name_type& b,
+                                          const account_name_type& a,
+                                          const std::string& p,
+                                          const asset& r)
         : benefactor(b)
         , author(a)
         , permlink(p)
@@ -329,15 +329,15 @@ struct proposal_virtual_operation : public virtual_operation
     protocol::proposal_operation proposal_op;
 };
 
-struct allocate_cash_from_advertising_budget_operation : public virtual_operation
+struct budget_outgo_operation : public virtual_operation
 {
-    allocate_cash_from_advertising_budget_operation()
+    budget_outgo_operation()
     {
     }
-    allocate_cash_from_advertising_budget_operation(const budget_type type_,
-                                                    const account_name_type& owner_,
-                                                    const int64_t id_,
-                                                    const asset& cash_)
+    budget_outgo_operation(const budget_type type_,
+                           const account_name_type& owner_,
+                           const int64_t id_,
+                           const asset& cash_)
         : type(type_)
         , owner(owner_)
         , id(id_)
@@ -352,15 +352,15 @@ struct allocate_cash_from_advertising_budget_operation : public virtual_operatio
     asset cash = asset(0, SCORUM_SYMBOL);
 };
 
-struct cash_back_from_advertising_budget_to_owner_operation : public virtual_operation
+struct budget_owner_income_operation : public virtual_operation
 {
-    cash_back_from_advertising_budget_to_owner_operation()
+    budget_owner_income_operation()
     {
     }
-    cash_back_from_advertising_budget_to_owner_operation(const budget_type type_,
-                                                         const account_name_type& owner_,
-                                                         const int64_t id_,
-                                                         const asset& cash_)
+    budget_owner_income_operation(const budget_type type_,
+                                  const account_name_type& owner_,
+                                  const int64_t id_,
+                                  const asset& cash_)
         : type(type_)
         , owner(owner_)
         , id(id_)
@@ -373,6 +373,23 @@ struct cash_back_from_advertising_budget_to_owner_operation : public virtual_ope
     account_name_type owner;
     int64_t id = -1;
     asset cash = asset(0, SCORUM_SYMBOL);
+};
+
+struct budget_closing_operation : public virtual_operation
+{
+    budget_closing_operation()
+    {
+    }
+    budget_closing_operation(const budget_type type, const account_name_type& owner, const int64_t id)
+        : type(type)
+        , owner(owner)
+        , id(id)
+    {
+    }
+
+    budget_type type = budget_type::post;
+    account_name_type owner;
+    int64_t id = -1;
 };
 }
 } // scorum::protocol
@@ -410,7 +427,7 @@ FC_REFLECT(scorum::protocol::comment_payout_update_operation,
 FC_REFLECT(scorum::protocol::return_scorumpower_delegation_operation,
            (account)
            (scorumpower))
-FC_REFLECT(scorum::protocol::comment_benefactor_reward_operation,
+FC_REFLECT(scorum::protocol::comment_benefficiary_reward_operation,
            (benefactor)
            (author)
            (permlink)
@@ -443,14 +460,18 @@ FC_REFLECT(scorum::protocol::devpool_to_devpool_vesting_withdraw_operation,
            (withdrawn))
 FC_REFLECT(scorum::protocol::proposal_virtual_operation,
            (proposal_op))
-FC_REFLECT(scorum::protocol::allocate_cash_from_advertising_budget_operation,
+FC_REFLECT(scorum::protocol::budget_outgo_operation,
            (type)
            (owner)
            (id)
            (cash))
-FC_REFLECT(scorum::protocol::cash_back_from_advertising_budget_to_owner_operation,
+FC_REFLECT(scorum::protocol::budget_owner_income_operation,
            (type)
            (owner)
            (id)
            (cash))
+FC_REFLECT(scorum::protocol::budget_closing_operation,
+           (type)
+           (owner)
+           (id))
 // clang-format on

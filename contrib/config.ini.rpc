@@ -37,7 +37,7 @@ rpc-endpoint = 0.0.0.0:8001
 # api-user =
 
 # Set an API to be publicly available, may be specified multiple times
-public-api = database_api login_api network_broadcast_api account_by_key_api blockchain_history_api account_history_api account_statistics_api chain_api tags_api node_monitoring_api blockchain_statistics_api
+public-api = database_api login_api network_broadcast_api account_by_key_api blockchain_history_api account_history_api account_statistics_api chain_api tags_api node_monitoring_api blockchain_statistics_api advertising_api
 
 # Plugin(s) to enable, may be specified multiple times
 enable-plugin = witness blockchain_history account_by_key account_statistics tags blockchain_monitoring
