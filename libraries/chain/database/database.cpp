@@ -142,7 +142,8 @@ database_impl::database_impl(database& self)
                        _self.get_dba<betting_property_object>(),
                        _self.get_dba<matched_bet_object>(),
                        _self.get_dba<pending_bet_object>(),
-                       _self.get_dba<game_object>())
+                       _self.get_dba<game_object>(),
+                       _self.get_dba<dynamic_global_property_object>())
     , _betting_matcher(static_cast<data_service_factory_i&>(_self),
                        static_cast<database_virtual_operations_emmiter_i&>(_self),
                        _betting_service,

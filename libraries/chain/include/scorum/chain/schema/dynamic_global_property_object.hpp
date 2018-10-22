@@ -14,6 +14,12 @@ using scorum::protocol::asset;
 using scorum::protocol::chain_properties;
 using scorum::protocol::version;
 
+struct betting_total_stats
+{
+    asset pending_bets_volume = asset(0, SCORUM_SYMBOL);
+    asset matched_bets_volume = asset(0, SCORUM_SYMBOL);
+};
+
 /**
  * @class dynamic_global_property_object
  * @brief Maintains global state information
@@ -87,6 +93,9 @@ public:
 
     /// last irreversible block num
     uint32_t last_irreversible_block_num = 0;
+
+    /// this section display information about betting totals
+    betting_total_stats betting_stats;
 };
 
 typedef shared_multi_index_container<dynamic_global_property_object,
@@ -117,7 +126,10 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (current_aslot)
           (recent_slots_filled)
           (participation_count)
-          (last_irreversible_block_num))
+          (last_irreversible_block_num)
+          (betting_stats))
+
+FC_REFLECT(scorum::chain::betting_total_stats, (pending_bets_volume)(matched_bets_volume))
 // clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dynamic_global_property_object, scorum::chain::dynamic_global_property_index)

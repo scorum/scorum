@@ -5,6 +5,7 @@
 #include <scorum/protocol/version.hpp>
 #include <scorum/app/schema/api_template.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/witness/witness_objects.hpp>
 
 namespace scorum {
@@ -131,6 +132,8 @@ struct chain_capital_api_obj
     asset total_pending_scr = asset(0, SCORUM_SYMBOL);
     /// Total amount of pending SP (planned rewards for account)
     asset total_pending_sp = asset(0, SP_SYMBOL);
+
+    scorum::chain::betting_total_stats betting_stats;
 };
 }
 }
@@ -185,5 +188,6 @@ FC_REFLECT(scorum::app::chain_capital_api_obj,
            (total_witness_reward_sp)
            (witness_reward_in_sp_migration_fund)
            (total_pending_scr)
-           (total_pending_sp))
+           (total_pending_sp)
+           (betting_stats))
 // clang-format on

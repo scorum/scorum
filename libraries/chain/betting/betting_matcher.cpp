@@ -61,6 +61,11 @@ void betting_matcher::match(const pending_bet_object& bet2)
                 _pending_bet_service.update(bet1, [&](pending_bet_object& o) { o.data.stake -= matched.bet1_matched; });
                 _pending_bet_service.update(bet2, [&](pending_bet_object& o) { o.data.stake -= matched.bet2_matched; });
 
+                _dgp_property.update([&](dynamic_global_property_object& obj) {
+                    obj.betting_stats.matched_bets_volume += matched.bet1_matched + matched.bet2_matched;
+                    obj.betting_stats.pending_bets_volume -= matched.bet1_matched + matched.bet2_matched;
+                });
+
                 _virt_op_emitter.push_virtual_operation(protocol::bets_matched_operation(
                     bet1.data.better, bet2.data.better, bet1.get_uuid(), bet2.get_uuid(), matched.bet1_matched,
                     matched.bet2_matched, matched_bet.id._id));

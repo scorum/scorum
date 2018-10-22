@@ -504,6 +504,27 @@ struct bet_cancelled_operation : public virtual_operation
     asset stake;
     bet_kind kind;
 };
+
+struct bet_restored_operation : public virtual_operation
+{
+    // TODO: could be removed in C++17
+    bet_restored_operation() = default;
+    bet_restored_operation(const uuid_type& game_uuid,
+                           const account_name_type& better,
+                           const uuid_type& bet_uuid,
+                           const asset& stake)
+        : game_uuid(game_uuid)
+        , better(better)
+        , bet_uuid(bet_uuid)
+        , stake(stake)
+    {
+    }
+
+    uuid_type game_uuid;
+    account_name_type better;
+    uuid_type bet_uuid;
+    asset stake;
+};
 }
 } // scorum::protocol
 
@@ -611,6 +632,11 @@ FC_REFLECT(scorum::protocol::bet_cancelled_operation,
            (bet_uuid)
            (stake)
            (kind))
+FC_REFLECT(scorum::protocol::bet_restored_operation,
+           (game_uuid)
+           (better)
+           (bet_uuid)
+           (stake))
 FC_REFLECT(scorum::protocol::bets_matched_operation, (better1)(better2)(bet1_uuid)
            (bet2_uuid)
            (matched_stake1)
