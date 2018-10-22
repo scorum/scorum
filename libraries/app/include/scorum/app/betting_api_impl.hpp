@@ -81,7 +81,7 @@ public:
         return winners;
     }
 
-    std::vector<game_api_object> get_games(const fc::flat_set<chain::game_status>& filter) const
+    std::vector<game_api_object> get_games_by_status(const fc::flat_set<chain::game_status>& filter) const
     {
         auto games = _game_service.get_games();
         auto rng = games //
@@ -89,6 +89,35 @@ public:
             | boost::adaptors::transformed([](const auto& obj) { return game_api_object(obj); });
 
         return { rng.begin(), rng.end() };
+    }
+
+    std::vector<game_api_object> get_games_by_uuids(const std::vector<uuid_type>& uuids) const
+    {
+        using namespace boost::adaptors;
+        using namespace utils::adaptors;
+
+        auto result = uuids //
+            | filtered([&](auto uid) { return _game_dba.is_exists_by<by_uuid>(uid); })
+            | transformed([&](auto uid) { return game_api_object(_game_dba.get_by<by_uuid>(uid)); })
+            | collect<std::vector>(uuids.size());
+
+        return result;
+    }
+
+    std::vector<game_api_object> lookup_games_by_id(game_id_type from, uint32_t limit) const
+    {
+        using namespace boost::adaptors;
+        using namespace utils::adaptors;
+
+        auto lookup_limit = std::min(limit, _lookup_limit);
+        auto games = _game_dba.get_range_by<by_id>(from <= dba::_x, dba::unbounded);
+
+        auto result = games //
+            | take_n(lookup_limit) //
+            | transformed([&](const auto& obj) { return game_api_object(obj); }) //
+            | collect<std::vector>(lookup_limit);
+
+        return result;
     }
 
     auto lookup_matched_bets(matched_bet_id_type from, uint32_t limit) const
@@ -143,14 +172,19 @@ public:
     template <typename ApiObjectType, typename ServiceType, typename IdType>
     std::vector<ApiObjectType> get_bets(ServiceType& service, IdType from, uint32_t limit) const
     {
+        using namespace boost::adaptors;
+        using namespace utils::adaptors;
+
         FC_ASSERT(limit <= _lookup_limit, "Limit should be le than LOOKUP_LIMIT",
                   ("limit", limit)("LOOKUP_LIMIT", _lookup_limit));
 
-        auto rng = service.get_bets(from) //
-            | utils::adaptors::take_n(limit) //
-            | boost::adaptors::transformed([](const auto& obj) { return ApiObjectType(obj); });
+        auto bets = service.get_bets(from);
+        auto result = bets //
+            | take_n(limit) //
+            | transformed([](const auto& obj) { return ApiObjectType(obj); }) //
+            | collect<std::vector>();
 
-        return { rng.begin(), rng.end() };
+        return result;
     }
 
     betting_property_api_object get_betting_properties() const

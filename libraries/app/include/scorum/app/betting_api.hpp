@@ -49,7 +49,22 @@ public:
      * @param filter [created, started, finished, resolved, expired, cancelled]
      * @return array of game_api_object's
      */
-    std::vector<game_api_object> get_games(const fc::flat_set<chain::game_status>& filter) const;
+    std::vector<game_api_object> get_games_by_status(const fc::flat_set<chain::game_status>& filter) const;
+
+    /**
+     * @brief Returns games
+     * @param UUIDs of games to return
+     * @return array of game_api_object's
+     */
+    std::vector<game_api_object> get_games_by_uuids(const std::vector<uuid_type>& uuids) const;
+
+    /**
+     * @brief Returns games
+     * @param from lower bound game id
+     * @param limit query limit
+     * @return array of game_api_object's
+     */
+    std::vector<game_api_object> lookup_games_by_id(game_id_type from, uint32_t limit) const;
 
     /**
      * @brief Returns matched bets
@@ -100,7 +115,9 @@ private:
 
 // clang-format off
 FC_API(scorum::app::betting_api, (get_game_winners)
-                                 (get_games)
+                                 (get_games_by_status)
+                                 (get_games_by_uuids)
+                                 (lookup_games_by_id)
                                  (lookup_matched_bets)
                                  (lookup_pending_bets)
                                  (get_matched_bets)
