@@ -13,23 +13,8 @@ struct foo
 
     foo() = default;
     foo(std::string s) : member(std::move(s)) {}
-    foo(const foo& x) : member(x.member) { was_copied = true; }
-    foo(foo&& x) noexcept : member(std::move(x.member)) { was_moved = true; }
-    foo& operator=(const foo& x) { member = x.member; was_copied = true; return *this; }
-    foo& operator=(foo&& x) noexcept { member = std::move(x.member); was_moved = true; return *this; }
-
-    bool was_copied = false;
-    bool was_moved = false;
 };
 
-std::vector<foo> get_foo_vector()
-{
-    std::vector<foo> vec;
-    vec.reserve(1);
-    vec.emplace_back();
-
-    return vec;
-}
 // clang-format on
 
 using namespace scorum;
@@ -124,27 +109,6 @@ BOOST_AUTO_TEST_CASE(const_underlying_range_unable_to_modify_test)
 
     for (const auto& x : rng)
         BOOST_CHECK_EQUAL(x.member, "0");
-}
-
-BOOST_AUTO_TEST_CASE(lvalue_underlying_range_copy_test)
-{
-    std::vector<foo> vec;
-    vec.reserve(1);
-    vec.emplace_back();
-
-    auto rng = vec | utils::adaptors::take_n(1);
-    auto& fst_foo = *rng.begin();
-
-    BOOST_CHECK(!fst_foo.was_moved);
-    BOOST_CHECK(fst_foo.was_copied);
-}
-
-BOOST_AUTO_TEST_CASE(rvalue_underlying_range_move_test)
-{
-    auto rng = get_foo_vector() | utils::adaptors::take_n(1);
-    auto& fst_foo = *rng.begin();
-
-    BOOST_CHECK(!fst_foo.was_copied);
 }
 
 BOOST_AUTO_TEST_CASE(boost_adaptors_interaction_test)

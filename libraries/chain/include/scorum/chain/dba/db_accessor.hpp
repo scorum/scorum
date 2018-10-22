@@ -5,7 +5,7 @@
 
 #include <scorum/chain/dba/dba.hpp>
 #include <scorum/chain/dba/db_accessor_helpers.hpp>
-
+#include <scorum/chain/dba/db_accessor_traits.hpp>
 #include <scorum/utils/function_view.hpp>
 #include <scorum/utils/any_range.hpp>
 
@@ -97,6 +97,20 @@ template <typename TObject, typename IndexBy, typename Key> bool is_exists_by(db
     FC_CAPTURE_AND_RETHROW()
 }
 
+template <typename TObject, typename IndexBy, typename TKey>
+utils::forward_range<const TObject> hashed_get_range_by(db_index& db_idx, const TKey& key)
+{
+    const auto& idx = db_idx.get_index<typename chainbase::get_index_type<TObject>::type, IndexBy>();
+    return idx.equal_range(key);
+}
+
+template <typename TObject, typename IndexBy, typename TKey>
+utils::bidir_range<const TObject> ordered_get_range_by(db_index& db_idx, const TKey& key)
+{
+    const auto& idx = db_idx.get_index<typename chainbase::get_index_type<TObject>::type, IndexBy>();
+    return idx.equal_range(key);
+}
+
 template <typename TIdx, typename TKey> auto get_lower_bound(TIdx& idx, const detail::bound<TKey>& bound);
 template <typename TIdx, typename TKey> auto get_upper_bound(TIdx& idx, const detail::bound<TKey>& bound);
 
@@ -104,16 +118,12 @@ template <typename TObject, typename IndexBy, typename TKey>
 utils::bidir_range<const TObject>
 get_range_by(db_index& db_idx, const detail::bound<TKey>& lower, const detail::bound<TKey>& upper)
 {
-    try
-    {
-        const auto& idx = db_idx.get_index<typename chainbase::get_index_type<TObject>::type, IndexBy>();
+    const auto& idx = db_idx.get_index<typename chainbase::get_index_type<TObject>::type, IndexBy>();
 
-        auto from = get_lower_bound(idx, lower);
-        auto to = get_upper_bound(idx, upper);
+    auto from = get_lower_bound(idx, lower);
+    auto to = get_upper_bound(idx, upper);
 
-        return { from, to };
-    }
-    FC_CAPTURE_AND_RETHROW()
+    return { from, to };
 }
 
 template <typename TIdx, typename TKey> auto get_lower_bound(TIdx& idx, const detail::bound<TKey>& bound)
@@ -220,16 +230,19 @@ public:
         return detail::is_exists_by<TObject, IndexBy, Key>(_db_idx, arg);
     }
 
+    // TODO: using different get_range_by for different indeces (implement using SFINAE):
+    //   for ordered indices using get_range_by which returns bidirectional range
+    //   for hashed indices using get_range_by which returns forward range
+    template <typename IndexBy, typename TKey> utils::bidir_range<const object_type> get_range_by(const TKey& key) const
+    {
+        return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, key <= _x, _x <= key);
+    }
+
     template <typename IndexBy, typename TKey>
     utils::bidir_range<const object_type> get_range_by(const detail::bound<TKey>& lower,
                                                        const detail::bound<TKey>& upper) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, lower, upper);
-    }
-
-    template <typename IndexBy, typename TKey> utils::bidir_range<const object_type> get_range_by(const TKey& key) const
-    {
-        return detail::get_range_by<TObject, IndexBy, TKey>(_db_idx, key <= _x, _x <= key);
     }
 
     template <typename IndexBy, typename TKey>

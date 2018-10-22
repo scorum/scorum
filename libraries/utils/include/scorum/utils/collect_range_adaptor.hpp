@@ -3,6 +3,8 @@
 #include <vector>
 #include <map>
 #include <boost/container/flat_map.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
+#include <boost/range/algorithm_ext/insert.hpp>
 #include <boost/range/algorithm/copy.hpp>
 
 namespace scorum {
@@ -49,9 +51,10 @@ template <typename TRng> struct collector<TRng, std::map>
         using key_type = typename std::decay_t<TRng>::value_type::first_type;
         using val_type = typename std::decay_t<TRng>::value_type::second_type;
 
-        std::map<key_type, val_type> result(std::begin(rng), std::end(rng));
+        std::map<key_type, val_type> result;
+        boost::insert(result, rng);
 
-        return rng;
+        return result;
     }
 };
 
@@ -64,8 +67,7 @@ template <typename TRng> struct collector<TRng, boost::container::flat_map>
 
         boost::container::flat_map<key_type, val_type> result;
         result.reserve(adaptor.reserve);
-
-        boost::copy(rng, std::inserter(result, std::end(result)));
+        boost::insert(result, rng);
 
         return result;
     }
@@ -77,7 +79,7 @@ template <typename TRng> struct collector<TRng, std::vector>
     {
         std::vector<typename std::decay_t<TRng>::value_type> result;
         result.reserve(adaptor.reserve);
-        result.assign(std::begin(rng), std::end(rng));
+        boost::push_back(result, rng);
 
         return result;
     }

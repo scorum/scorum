@@ -69,6 +69,11 @@ public:
 
     bet_data bet1_data;
     bet_data bet2_data;
+
+    // clang-format off
+    uuid_type get_bet1_uuid() const { return bet1_data.uuid; }
+    uuid_type get_bet2_uuid() const { return bet2_data.uuid; }
+    // clang-format on
 };
 
 struct by_uuid;
@@ -123,11 +128,22 @@ typedef shared_multi_index_container<pending_bet_object,
                                                                                                    get_created>>>>>
     pending_bet_index;
 
+struct by_bet1_uuid;
+struct by_bet2_uuid;
+
 typedef shared_multi_index_container<matched_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
                                                                member<matched_bet_object,
                                                                       matched_bet_id_type,
                                                                       &matched_bet_object::id>>,
+                                                ordered_non_unique<tag<by_bet1_uuid>,
+                                                                   const_mem_fun<matched_bet_object,
+                                                                                 uuid_type,
+                                                                                 &matched_bet_object::get_bet1_uuid>>,
+                                                ordered_non_unique<tag<by_bet2_uuid>,
+                                                                   const_mem_fun<matched_bet_object,
+                                                                                 uuid_type,
+                                                                                 &matched_bet_object::get_bet2_uuid>>,
                                                 ordered_non_unique<tag<by_game_id_market>,
                                                                    composite_key<matched_bet_object,
                                                                                  member<matched_bet_object,

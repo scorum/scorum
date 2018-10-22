@@ -3397,14 +3397,14 @@ std::vector<matched_bet_api_object> wallet_api::get_matched_bets(matched_bet_id_
 {
     auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
 
-    return api->get_matched_bets(from, limit);
+    return api->lookup_matched_bets(from, limit);
 }
 
 std::vector<pending_bet_api_object> wallet_api::get_pending_bets(pending_bet_id_type from, int64_t limit) const
 {
     auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
 
-    return api->get_pending_bets(from, limit);
+    return api->lookup_pending_bets(from, limit);
 }
 
 } // namespace wallet
