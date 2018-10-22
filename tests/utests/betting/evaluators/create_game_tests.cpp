@@ -37,7 +37,6 @@ struct game_evaluator_fixture : public shared_memory_fixture
 
     data_service_factory_i* dbs_services = mocks.Mock<data_service_factory_i>();
     betting_service_i* betting_service = mocks.Mock<betting_service_i>();
-    betting_property_service_i* betting_prop_service = mocks.Mock<betting_property_service_i>();
     dynamic_global_property_service_i* dynprop_service = mocks.Mock<dynamic_global_property_service_i>();
     account_service_i* account_service = mocks.Mock<account_service_i>();
     game_service_i* game_service = mocks.Mock<game_service_i>();
@@ -45,7 +44,6 @@ struct game_evaluator_fixture : public shared_memory_fixture
 
     game_evaluator_fixture()
     {
-        mocks.OnCall(dbs_services, data_service_factory_i::betting_property_service).ReturnByRef(*betting_prop_service);
         mocks.OnCall(dbs_services, data_service_factory_i::account_service).ReturnByRef(*account_service);
         mocks.OnCall(dbs_services, data_service_factory_i::dynamic_global_property_service)
             .ReturnByRef(*dynprop_service);
@@ -92,8 +90,9 @@ SCORUM_TEST_CASE(create_by_no_moderator_throw)
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
     mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(false);
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
-    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(false);
+    mocks.ExpectCall(betting_service, betting_service_i::is_betting_moderator).Return(false);
 
     BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
 }
