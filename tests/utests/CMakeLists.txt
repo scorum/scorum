@@ -60,16 +60,19 @@ set(SOURCES
     betting/wincase_comparison_tests.cpp
     betting/threshold_comparison_tests.cpp
     betting/game_serialization_tests.cpp
-    betting/game_evaluators_tests.cpp
     betting/betting_service_tests.cpp
     betting/betting_math_tests.cpp
     betting/betting_matcher_tests.cpp
     betting/bet_evaluators_tests.cpp
     betting/betting_api_tests.cpp
-    betting/post_game_results_evaluator_tests.cpp
     betting/post_game_results_serialization_tests.cpp
     betting/wincase_type_tests.cpp
     betting/market_type_tests.cpp
+    betting/evaluators/create_game_tests.cpp
+    betting/evaluators/cancel_game_tests.cpp
+    betting/evaluators/update_game_markets_tests.cpp
+    betting/evaluators/update_start_time_tests.cpp
+    betting/evaluators/post_game_results_tests.cpp
     db_accessors/db_accessors_tests.cpp
     odds_tests.cpp
 )
