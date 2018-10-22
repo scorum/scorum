@@ -80,7 +80,7 @@ BOOST_FIXTURE_TEST_CASE(get_games_dont_throw, fixture)
                             (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
         .Return({ objects.begin(), objects.end() });
 
-    BOOST_REQUIRE_NO_THROW(api.get_games({ game_status::resolved }));
+    BOOST_REQUIRE_NO_THROW(api.get_games_by_status({ game_status::resolved }));
 }
 
 struct get_game_winners_fixture : public fixture
@@ -305,8 +305,8 @@ BOOST_FIXTURE_TEST_CASE(get_games_return_all_games_in_creation_order, get_games_
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
     std::vector<game_api_object> games
-        = api.get_games({ game_status::started, game_status::created, game_status::finished, game_status::cancelled,
-                          game_status::expired, game_status::resolved });
+        = api.get_games_by_status({ game_status::started, game_status::created, game_status::finished,
+                                    game_status::cancelled, game_status::expired, game_status::resolved });
 
     BOOST_CHECK_EQUAL(games.size(), 6u);
     BOOST_CHECK(games[0].status == game_status::created);
@@ -325,7 +325,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_created_status, get_games_fixture)
         .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-    std::vector<game_api_object> games = api.get_games({ game_status::created });
+    std::vector<game_api_object> games = api.get_games_by_status({ game_status::created });
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
     BOOST_CHECK(games[0].status == game_status::created);
@@ -339,7 +339,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_started_status, get_games_fixture)
         .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-    std::vector<game_api_object> games = api.get_games({ game_status::started });
+    std::vector<game_api_object> games = api.get_games_by_status({ game_status::started });
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
     BOOST_CHECK(games[0].status == game_status::started);
@@ -353,7 +353,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_finished_status, get_games_fixture)
         .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-    std::vector<game_api_object> games = api.get_games({ game_status::finished });
+    std::vector<game_api_object> games = api.get_games_by_status({ game_status::finished });
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
     BOOST_CHECK(games[0].status == game_status::finished);
@@ -368,7 +368,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_created_finished_cancelled_status, get
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
     std::vector<game_api_object> games
-        = api.get_games({ game_status::finished, game_status::created, game_status::cancelled });
+        = api.get_games_by_status({ game_status::finished, game_status::created, game_status::cancelled });
 
     BOOST_REQUIRE_EQUAL(games.size(), 3);
     BOOST_CHECK(games[0].status == game_status::created);
@@ -386,7 +386,7 @@ BOOST_FIXTURE_TEST_CASE(return_two_games_with_finished_status, get_games_fixture
         .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-    std::vector<game_api_object> games = api.get_games({ game_status::finished });
+    std::vector<game_api_object> games = api.get_games_by_status({ game_status::finished });
 
     BOOST_REQUIRE_EQUAL(games.size(), 2);
     BOOST_CHECK(games[0].status == game_status::finished);
@@ -579,7 +579,7 @@ BOOST_FIXTURE_TEST_CASE(get_all_matched_bets, get_bets_fixture<matched_bet_objec
 
 BOOST_AUTO_TEST_SUITE_END()
 
-class get_by_uuids_fixture
+class betting_api_fixture
 {
 public:
     db_mock db;
@@ -598,11 +598,12 @@ public:
     uuid_type uuid_ns = boost::uuids::string_generator()("e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f");
     boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(uuid_ns);
 
-    get_by_uuids_fixture()
+    betting_api_fixture()
         : game_dba(db)
         , matched_bet_dba(db)
         , pending_bet_dba(db)
     {
+        db.add_index<game_index>();
         db.add_index<pending_bet_index>();
         db.add_index<matched_bet_index>();
 
@@ -613,9 +614,153 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_SUITE(betting_api_tests)
+BOOST_FIXTURE_TEST_SUITE(get_games_betting_api_tests, betting_api_fixture)
 
-BOOST_FIXTURE_TEST_CASE(get_pending_bets_test_passed_uuids_is_subset, get_by_uuids_fixture)
+BOOST_AUTO_TEST_CASE(empty_uuids_list_should_return_empty)
+{
+    // clang-format off
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
+    // clang-format on
+
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+
+    auto result = api.get_games_by_uuids({});
+
+    BOOST_REQUIRE_EQUAL(result.size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(non_exists_uuid_should_return_empty)
+{
+    // clang-format off
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
+    // clang-format on
+
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+
+    auto result = api.get_games_by_uuids({ uuid_gen("b1") });
+
+    BOOST_REQUIRE_EQUAL(result.size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(passed_uuids_is_superset_should_return_in_correct_order)
+{
+    // clang-format off
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
+    // clang-format on
+
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+
+    auto result = api.get_games_by_uuids({ uuid_gen("b2"), uuid_gen("b1"), uuid_gen("b0") });
+
+    BOOST_REQUIRE_EQUAL(result.size(), 2u);
+    BOOST_CHECK_EQUAL(result[0].uuid, uuid_gen("b1"));
+    BOOST_CHECK_EQUAL(result[1].uuid, uuid_gen("b0"));
+}
+
+BOOST_AUTO_TEST_CASE(passed_uuids_is_subset_should_return_in_correct_order)
+{
+    // clang-format off
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); fc::from_string(o.name, "2"); });
+    // clang-format on
+
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+
+    auto result = api.get_games_by_uuids({ uuid_gen("b1"), uuid_gen("b2") });
+
+    BOOST_REQUIRE_EQUAL(result.size(), 2u);
+    BOOST_CHECK_EQUAL(result[0].uuid, uuid_gen("b1"));
+    BOOST_CHECK_EQUAL(result[1].uuid, uuid_gen("b2"));
+}
+
+BOOST_AUTO_TEST_CASE(get_by_uuids_empty_db_should_return_empty)
+{
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+
+    auto result = api.get_games_by_uuids({ uuid_gen("b1"), uuid_gen("b2") });
+
+    BOOST_REQUIRE_EQUAL(result.size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(return_all_starting_from_the_beginning)
+{
+    // clang-format off
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
+    // clang-format on
+
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+
+    auto result = api.lookup_games_by_id(0, 42);
+
+    BOOST_REQUIRE_EQUAL(result.size(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(return_the_tail_starting_from_the_middle)
+{
+    // clang-format off
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); fc::from_string(o.name, "2"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); fc::from_string(o.name, "3"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); fc::from_string(o.name, "4"); });
+    // clang-format on
+
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+
+    auto result = api.lookup_games_by_id(2, 42);
+
+    BOOST_REQUIRE_EQUAL(result.size(), 3u);
+    BOOST_CHECK_EQUAL(result[0].uuid, uuid_gen("b2"));
+    BOOST_CHECK_EQUAL(result[1].uuid, uuid_gen("b3"));
+    BOOST_CHECK_EQUAL(result[2].uuid, uuid_gen("b4"));
+}
+
+BOOST_AUTO_TEST_CASE(limit_test)
+{
+    // clang-format off
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); fc::from_string(o.name, "2"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); fc::from_string(o.name, "3"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); fc::from_string(o.name, "4"); });
+    // clang-format on
+
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+
+    auto result = api.lookup_games_by_id(1, 2);
+
+    BOOST_REQUIRE_EQUAL(result.size(), 2u);
+    BOOST_CHECK_EQUAL(result[0].uuid, uuid_gen("b1"));
+    BOOST_CHECK_EQUAL(result[1].uuid, uuid_gen("b2"));
+}
+
+BOOST_AUTO_TEST_CASE(api_lookup_limit_is_less_than_limit)
+{
+    // clang-format off
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); fc::from_string(o.name, "2"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); fc::from_string(o.name, "3"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); fc::from_string(o.name, "4"); });
+    // clang-format on
+
+    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba, 2);
+
+    auto result = api.lookup_games_by_id(1, 3);
+
+    BOOST_REQUIRE_EQUAL(result.size(), 2u);
+    BOOST_CHECK_EQUAL(result[0].uuid, uuid_gen("b1"));
+    BOOST_CHECK_EQUAL(result[1].uuid, uuid_gen("b2"));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(bet_bets_betting_api_tests, betting_api_fixture)
+
+BOOST_AUTO_TEST_CASE(get_pending_bets_test_passed_uuids_is_subset)
 {
     db.create<pending_bet_object>([&](pending_bet_object& o) { o.data.uuid = uuid_gen("b0"); });
     db.create<pending_bet_object>([&](pending_bet_object& o) { o.data.uuid = uuid_gen("b1"); });
@@ -630,7 +775,7 @@ BOOST_FIXTURE_TEST_CASE(get_pending_bets_test_passed_uuids_is_subset, get_by_uui
     BOOST_CHECK_EQUAL(result[1].data.uuid, uuid_gen("b2"));
 }
 
-BOOST_FIXTURE_TEST_CASE(get_pending_bets_test_passed_uuids_is_superset, get_by_uuids_fixture)
+BOOST_AUTO_TEST_CASE(get_pending_bets_test_passed_uuids_is_superset)
 {
     db.create<pending_bet_object>([&](pending_bet_object& o) { o.data.uuid = uuid_gen("b0"); });
     db.create<pending_bet_object>([&](pending_bet_object& o) { o.data.uuid = uuid_gen("b1"); });
@@ -644,7 +789,7 @@ BOOST_FIXTURE_TEST_CASE(get_pending_bets_test_passed_uuids_is_superset, get_by_u
     BOOST_CHECK_EQUAL(result[1].data.uuid, uuid_gen("b1"));
 }
 
-BOOST_FIXTURE_TEST_CASE(get_pending_bets_test_passed_uuids_is_empty, get_by_uuids_fixture)
+BOOST_AUTO_TEST_CASE(get_pending_bets_test_passed_uuids_is_empty)
 {
     db.create<pending_bet_object>([&](pending_bet_object& o) { o.data.uuid = uuid_gen("b0"); });
 
@@ -655,7 +800,7 @@ BOOST_FIXTURE_TEST_CASE(get_pending_bets_test_passed_uuids_is_empty, get_by_uuid
     BOOST_REQUIRE_EQUAL(result.size(), 0u);
 }
 
-BOOST_FIXTURE_TEST_CASE(get_pending_bets_test_empty_db, get_by_uuids_fixture)
+BOOST_AUTO_TEST_CASE(get_pending_bets_test_empty_db)
 {
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
 
@@ -664,7 +809,7 @@ BOOST_FIXTURE_TEST_CASE(get_pending_bets_test_empty_db, get_by_uuids_fixture)
     BOOST_REQUIRE_EQUAL(result.size(), 0u);
 }
 
-BOOST_FIXTURE_TEST_CASE(get_matched_bets_no_duplicates_check, get_by_uuids_fixture)
+BOOST_AUTO_TEST_CASE(get_matched_bets_no_duplicates_check)
 {
     // clang-format off
     db.create<matched_bet_object>([&](matched_bet_object& o) { o.bet1_data.uuid = uuid_gen("b0"); o.bet2_data.uuid = uuid_gen("b1"); });
@@ -682,7 +827,7 @@ BOOST_FIXTURE_TEST_CASE(get_matched_bets_no_duplicates_check, get_by_uuids_fixtu
     BOOST_CHECK_EQUAL(result[1].id._id, 2);
 }
 
-BOOST_FIXTURE_TEST_CASE(get_matched_bets_same_better_several_bets_should_return, get_by_uuids_fixture)
+BOOST_AUTO_TEST_CASE(get_matched_bets_same_better_several_bets_should_return)
 {
     // clang-format off
     db.create<matched_bet_object>([&](matched_bet_object& o) { o.bet1_data.uuid = uuid_gen("b0"); o.bet2_data.uuid = uuid_gen("b1"); });
@@ -702,7 +847,7 @@ BOOST_FIXTURE_TEST_CASE(get_matched_bets_same_better_several_bets_should_return,
     BOOST_CHECK_EQUAL(result[2].id._id, 3);
 }
 
-BOOST_FIXTURE_TEST_CASE(get_matched_bets_test_passed_uuids_is_empty, get_by_uuids_fixture)
+BOOST_AUTO_TEST_CASE(get_matched_bets_test_passed_uuids_is_empty)
 {
     // clang-format off
     db.create<matched_bet_object>([&](matched_bet_object& o) { o.bet1_data.uuid = uuid_gen("b0"); o.bet2_data.uuid = uuid_gen("b1"); });
@@ -715,7 +860,7 @@ BOOST_FIXTURE_TEST_CASE(get_matched_bets_test_passed_uuids_is_empty, get_by_uuid
     BOOST_REQUIRE_EQUAL(result.size(), 0u);
 }
 
-BOOST_FIXTURE_TEST_CASE(get_matched_bets_test_empty_db, get_by_uuids_fixture)
+BOOST_AUTO_TEST_CASE(get_matched_bets_test_empty_db)
 {
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
 

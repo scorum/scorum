@@ -1294,7 +1294,8 @@ void database::initialize_evaluators()
         new update_game_start_time_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(
         new post_game_results_evaluator(*this, _my->get_betting_service(), *this));
-    _my->_evaluator_registry.register_evaluator(new post_bet_evaluator(*this, _my->get_betting_matcher()));
+    _my->_evaluator_registry.register_evaluator(
+        new post_bet_evaluator(*this, _my->get_betting_matcher(), _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->get_betting_service()));
 }
 

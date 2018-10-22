@@ -4,6 +4,7 @@
 #include <scorum/chain/services/game.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/betting/betting_service.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
 
 #include <scorum/chain/betting/betting_service.hpp>
@@ -16,13 +17,15 @@
 namespace scorum {
 namespace chain {
 post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
-                                       betting_matcher_i& betting_matcher)
+                                       betting_matcher_i& betting_matcher,
+                                       betting_service_i& betting_service)
     : evaluator_impl<data_service_factory_i, post_bet_evaluator>(services)
     , _account_service(services.account_service())
     , _game_service(services.game_service())
     , _betting_matcher(betting_matcher)
     , _pending_bet_svc(services.pending_bet_service())
     , _dgp_svc(services.dynamic_global_property_service())
+    , _betting_svc(betting_service)
 {
 }
 
@@ -65,7 +68,7 @@ void post_bet_evaluator::do_apply(const operation_type& op)
     std::vector<std::reference_wrapper<const pending_bet_object>> bets_to_cancel
         = _betting_matcher.match(pending_bet, _dgp_svc.head_block_time());
 
-    _betting_service.cancel_pending_bets(utils::unwrap_ref_wrapper(bets_to_cancel), game_obj.uuid);
+    _betting_svc.cancel_pending_bets(utils::unwrap_ref_wrapper(bets_to_cancel), game_obj.uuid);
 }
 }
 }
