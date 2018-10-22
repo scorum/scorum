@@ -146,8 +146,7 @@ database_impl::database_impl(database& self)
     , _betting_matcher(static_cast<database_virtual_operations_emmiter_i&>(_self),
                        static_cast<dba::db_accessor_factory&>(_self).get_dba<pending_bet_object>(),
                        static_cast<dba::db_accessor_factory&>(_self).get_dba<matched_bet_object>())
-    , _betting_resolver(_betting_service,
-                        _self.account_service(),
+    , _betting_resolver(_self.account_service(),
                         static_cast<database_virtual_operations_emmiter_i&>(_self),
                         _self.get_dba<matched_bet_object>(),
                         _self.get_dba<game_object>())
@@ -969,7 +968,7 @@ void database::pop_block()
 
     if (_fork_db.head())
     {
-        ctx = std::move(block_info(_fork_db.head()->data));
+        ctx = block_info(_fork_db.head()->data);
     }
 
     debug_log(ctx, "pop_block");
@@ -1229,12 +1228,11 @@ block_info database::head_block_context() const
     auto b = fetch_block_by_id(head_block_id());
     if (b.valid())
     {
-        ret = std::move(block_info(*b));
+        ret = block_info(*b);
     }
     else
     {
-        ret = std::move(
-            block_info(head_block_time(), obtain_service<dbs_dynamic_global_property>().get().current_witness));
+        ret = block_info(head_block_time(), obtain_service<dbs_dynamic_global_property>().get().current_witness);
     }
     return ret;
 }
@@ -1290,14 +1288,13 @@ void database::initialize_evaluators()
         static_cast<database_virtual_operations_emmiter_i&>(_my->_self));
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator(new create_game_evaluator(*this, _my->get_betting_service()));
-    _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(new update_game_markets_evaluator(*this, _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(
-        new update_game_start_time_evaluator(*this, _my->get_betting_service()));
+        new update_game_start_time_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(
         new post_game_results_evaluator(*this, _my->get_betting_service(), *this));
-    _my->_evaluator_registry.register_evaluator(
-        new post_bet_evaluator(*this, _my->get_betting_service(), _my->get_betting_matcher()));
+    _my->_evaluator_registry.register_evaluator(new post_bet_evaluator(*this, _my->get_betting_matcher()));
     _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->get_betting_service()));
 }
 
@@ -1589,9 +1586,7 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_bets_resolving(_my->get_betting_service(), _my->get_betting_resolver(), *this)
             .apply(task_ctx);
         // TODO: using boost::di to avoid these explicit calls
-        database_ns::process_bets_auto_resolving(_my->get_betting_service(), *this, get_dba<matched_bet_object>(),
-                                                 get_dba<pending_bet_object>())
-            .apply(task_ctx);
+        database_ns::process_bets_auto_resolving(_my->get_betting_service(), *this).apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();

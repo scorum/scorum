@@ -11,7 +11,7 @@ namespace scorum {
 namespace chain {
 
 namespace dba {
-template <typename> struct db_accessor;
+template <typename> class db_accessor;
 }
 
 struct database_virtual_operations_emmiter_i;

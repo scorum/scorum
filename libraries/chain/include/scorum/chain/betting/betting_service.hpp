@@ -25,7 +25,7 @@ class pending_bet_object;
 class matched_bet_object;
 
 namespace dba {
-template <typename> struct db_accessor;
+template <typename> class db_accessor;
 }
 
 struct betting_service_i

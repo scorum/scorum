@@ -30,7 +30,7 @@ public:
     }
 };
 
-class data_service_factory_i;
+struct data_service_factory_i;
 
 template <typename ContextType = data_service_factory_i,
           typename ReentranceGuardType = dummy_reentrance_guard<ContextType>>

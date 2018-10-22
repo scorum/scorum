@@ -13,11 +13,16 @@
 #include <scorum/app/application.hpp>
 #include <scorum/common_api/config_api.hpp>
 
+#include <boost/range/algorithm/sort.hpp>
+#include <boost/range/algorithm/unique.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
+#include <boost/range/algorithm/set_algorithm.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/adaptor/filtered.hpp>
-#include <boost/range/algorithm/set_algorithm.hpp>
 
 #include <scorum/utils/take_n_range.hpp>
+#include <scorum/utils/range/join_range.hpp>
+#include <scorum/utils/range/flatten_range.hpp>
 #include <scorum/utils/collect_range_adaptor.hpp>
 #include <scorum/utils/set_intersection.hpp>
 
@@ -30,6 +35,7 @@ public:
     betting_api_impl(data_service_factory_i& service_factory,
                      dba::db_accessor<game_object>& game_dba,
                      dba::db_accessor<matched_bet_object>& matched_bet_dba,
+                     dba::db_accessor<pending_bet_object>& pending_bet_dba,
                      uint32_t lookup_limit = LOOKUP_LIMIT)
         : _game_service(service_factory.game_service())
         , _pending_bet_service(service_factory.pending_bet_service())
@@ -37,6 +43,7 @@ public:
         , _betting_property_service(service_factory.betting_property_service())
         , _game_dba(game_dba)
         , _matched_bet_dba(matched_bet_dba)
+        , _pending_bet_dba(pending_bet_dba)
         , _lookup_limit(lookup_limit)
     {
     }
@@ -74,26 +81,63 @@ public:
         return winners;
     }
 
-    std::vector<game_api_object> get_games(game_filter filter) const
+    std::vector<game_api_object> get_games(const fc::flat_set<chain::game_status>& filter) const
     {
-        // clang-format off
-        auto rng = _game_service.get_games()
-                | boost::adaptors::filtered([&](const auto& obj) {
-                    return static_cast<uint8_t>(obj.status) & static_cast<uint8_t>(filter); })
-                | boost::adaptors::transformed([](const auto& obj) { return game_api_object(obj); });
-        // clang-format on
+        auto games = _game_service.get_games();
+        auto rng = games //
+            | boost::adaptors::filtered([&](const auto& obj) { return filter.find(obj.status) != filter.end(); })
+            | boost::adaptors::transformed([](const auto& obj) { return game_api_object(obj); });
 
         return { rng.begin(), rng.end() };
     }
 
-    auto get_matched_bets(matched_bet_id_type from, uint32_t limit) const
+    auto lookup_matched_bets(matched_bet_id_type from, uint32_t limit) const
     {
         return get_bets<matched_bet_api_object>(_matched_bet_service, from, limit);
     }
 
-    auto get_pending_bets(pending_bet_id_type from, uint32_t limit) const
+    auto lookup_pending_bets(pending_bet_id_type from, uint32_t limit) const
     {
         return get_bets<pending_bet_api_object>(_pending_bet_service, from, limit);
+    }
+
+    std::vector<matched_bet_api_object> get_matched_bets(const std::vector<uuid_type>& uuids) const
+    {
+        using namespace boost::adaptors;
+        using namespace utils::adaptors;
+
+        auto with_bet1_matched = uuids
+            | transformed([&](auto uid) { return _matched_bet_dba.get_range_by<by_bet1_uuid>(uid); }) //
+            | flatten;
+
+        auto with_bet2_matched = uuids
+            | transformed([&](auto uid) { return _matched_bet_dba.get_range_by<by_bet2_uuid>(uid); }) //
+            | flatten;
+
+        auto matched_bets_vec = with_bet1_matched //
+            | joined(with_bet2_matched) //
+            | transformed([](const auto& bet) { return matched_bet_api_object(bet); }) //
+            | collect<std::vector>();
+
+        boost::range::sort(matched_bets_vec, [](const auto& l, const auto& r) { return l.id < r.id; });
+        auto tail = boost::range::unique(matched_bets_vec, [](const auto& l, const auto& r) { return l.id == r.id; });
+
+        matched_bets_vec.erase(tail.end(), matched_bets_vec.end());
+
+        return matched_bets_vec;
+    }
+
+    std::vector<pending_bet_api_object> get_pending_bets(const std::vector<uuid_type>& uuids) const
+    {
+        using namespace boost::adaptors;
+        using namespace utils::adaptors;
+
+        auto result = uuids //
+            | filtered([&](auto uid) { return _pending_bet_dba.is_exists_by<by_uuid>(uid); })
+            | transformed([&](auto uid) { return pending_bet_api_object(_pending_bet_dba.get_by<by_uuid>(uid)); })
+            | collect<std::vector>(uuids.size());
+
+        return result;
     }
 
     template <typename ApiObjectType, typename ServiceType, typename IdType>
@@ -102,11 +146,9 @@ public:
         FC_ASSERT(limit <= _lookup_limit, "Limit should be le than LOOKUP_LIMIT",
                   ("limit", limit)("LOOKUP_LIMIT", _lookup_limit));
 
-        // clang-format off
-        auto rng = service.get_bets(from)
-                | utils::adaptors::take_n(limit)
-                | boost::adaptors::transformed([](const auto& obj) { return ApiObjectType(obj); });
-        // clang-format on
+        auto rng = service.get_bets(from) //
+            | utils::adaptors::take_n(limit) //
+            | boost::adaptors::transformed([](const auto& obj) { return ApiObjectType(obj); });
 
         return { rng.begin(), rng.end() };
     }
@@ -124,6 +166,7 @@ private:
 
     dba::db_accessor<game_object>& _game_dba;
     dba::db_accessor<matched_bet_object>& _matched_bet_dba;
+    dba::db_accessor<pending_bet_object>& _pending_bet_dba;
 
     const uint32_t _lookup_limit;
 };

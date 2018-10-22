@@ -1,7 +1,5 @@
 #include <scorum/chain/betting/betting_resolver.hpp>
 
-#include <scorum/chain/betting/betting_service.hpp>
-
 #include <scorum/chain/schema/game_object.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
 
@@ -12,13 +10,11 @@
 
 namespace scorum {
 namespace chain {
-betting_resolver::betting_resolver(betting_service_i& betting_svc,
-                                   account_service_i& account_svc,
+betting_resolver::betting_resolver(account_service_i& account_svc,
                                    database_virtual_operations_emmiter_i& virt_op_emitter,
                                    dba::db_accessor<matched_bet_object>& matched_bet_dba,
                                    dba::db_accessor<game_object>& game_dba)
-    : _betting_svc(betting_svc)
-    , _account_svc(account_svc)
+    : _account_svc(account_svc)
     , _virt_op_emitter(virt_op_emitter)
     , _matched_bet_dba(matched_bet_dba)
     , _game_dba(game_dba)

@@ -4,6 +4,7 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
 set( SOURCES
     main.cpp
     block_tests.cpp
+    boost_interprocess_clang_test.cpp
     chain_api_tests.cpp
     operation_tests.cpp
     fork_tests.cpp

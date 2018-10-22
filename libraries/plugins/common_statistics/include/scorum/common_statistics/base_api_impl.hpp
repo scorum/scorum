@@ -25,7 +25,7 @@ public:
     Statistic get_stats_for_time(const fc::time_point_sec& open, uint32_t interval) const
     {
         Statistic result;
-        const auto& bucket_idx = _app.chain_database()->template get_index<bucket_index>().indices().get<by_bucket>();
+        const auto& bucket_idx = _app.chain_database()->template get_index<bucket_index, by_bucket>();
         auto itr = bucket_idx.lower_bound(boost::make_tuple(interval, open));
 
         if (itr != bucket_idx.end())
@@ -38,7 +38,7 @@ public:
     Statistic get_stats_for_interval(const fc::time_point_sec& start, const fc::time_point_sec& end) const
     {
         Statistic result;
-        const auto& bucket_itr = _app.chain_database()->template get_index<bucket_index>().indices().get<by_bucket>();
+        const auto& bucket_itr = _app.chain_database()->template get_index<bucket_index, by_bucket>();
         const auto& sizes = _app.get_plugin<Plugin>(_plugin_name)->get_tracked_buckets();
         auto size_itr = sizes.rbegin();
         auto time = start;
@@ -67,7 +67,7 @@ public:
     {
         Statistic result;
 
-        const auto& bucket_idx = _app.chain_database()->template get_index<bucket_index>().indices().get<by_bucket>();
+        const auto& bucket_idx = _app.chain_database()->template get_index<bucket_index, by_bucket>();
         auto itr = bucket_idx.find(boost::make_tuple(LIFE_TIME_PERIOD, fc::time_point_sec()));
 
         if (itr != bucket_idx.end())

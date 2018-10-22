@@ -12,17 +12,6 @@
 namespace scorum {
 namespace app {
 
-enum class game_filter : uint8_t
-{
-    created = (uint8_t)chain::game_status::created,
-    started = (uint8_t)chain::game_status::started,
-    finished = (uint8_t)chain::game_status::finished,
-    not_finished = created | started,
-    not_started = created | finished,
-    not_created = started | finished,
-    all = created | started | finished
-};
-
 struct game_api_object
 {
     game_api_object() = default;
@@ -102,14 +91,6 @@ using betting_property_api_object = api_obj<chain::betting_property_object>;
 } // namespace scorum
 
 // clang-format off
-FC_REFLECT_ENUM(scorum::app::game_filter,
-                (all)
-                (created)
-                (started)
-                (finished)
-                (not_created)
-                (not_finished)
-                (not_started))
 
 FC_REFLECT(scorum::app::game_api_object,
            (id)

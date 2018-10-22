@@ -23,8 +23,6 @@ class game_object;
 class matched_bet_object;
 struct bet_data;
 
-struct betting_service_i;
-
 struct betting_resolver_i
 {
     virtual void resolve_matched_bets(const chainbase::oid<game_object>& game_id,
@@ -34,8 +32,7 @@ struct betting_resolver_i
 class betting_resolver : public betting_resolver_i
 {
 public:
-    betting_resolver(betting_service_i& betting_svc,
-                     account_service_i& account_svc,
+    betting_resolver(account_service_i& account_svc,
                      database_virtual_operations_emmiter_i& virt_op_emitter,
                      dba::db_accessor<matched_bet_object>& matched_bet_dba,
                      dba::db_accessor<game_object>& game_dba);
@@ -44,7 +41,6 @@ public:
                               const fc::shared_flat_set<protocol::wincase_type>& results) const override;
 
 private:
-    betting_service_i& _betting_svc;
     account_service_i& _account_svc;
     database_virtual_operations_emmiter_i& _virt_op_emitter;
     dba::db_accessor<matched_bet_object>& _matched_bet_dba;

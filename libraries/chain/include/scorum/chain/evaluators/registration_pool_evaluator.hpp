@@ -11,12 +11,12 @@
 namespace scorum {
 namespace chain {
 
-class data_service_factory_i;
+struct data_service_factory_i;
 
-class account_service_i;
-class registration_pool_service_i;
-class registration_committee_service_i;
-class dynamic_global_property_service_i;
+struct account_service_i;
+struct registration_pool_service_i;
+struct registration_committee_service_i;
+struct dynamic_global_property_service_i;
 
 class registration_pool_object;
 class account_object;

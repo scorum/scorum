@@ -50,7 +50,6 @@ public:
 
     void setup_db()
     {
-        db.open();
         db.add_index<pending_bet_index>();
         db.add_index<matched_bet_index>();
         db.add_index<game_index>();

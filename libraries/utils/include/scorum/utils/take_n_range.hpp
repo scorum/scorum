@@ -8,21 +8,6 @@
 
 namespace scorum {
 namespace utils {
-
-namespace detail {
-template <typename TRng> class rng_holder
-{
-public:
-    template <typename URng>
-    rng_holder(URng&& rng)
-        : _rng(std::forward<URng>(rng))
-    {
-    }
-
-    TRng _rng;
-};
-}
-
 template <typename TRngIt>
 class take_n_iterator : public boost::iterator_adaptor<take_n_iterator<TRngIt>,
                                                        TRngIt,
@@ -46,13 +31,13 @@ public:
 private:
     friend class boost::iterator_core_access;
 
-    void increment()
+    void increment() noexcept
     {
         if (--_n != 0)
             ++this->base_reference();
     }
 
-    bool equal(take_n_iterator that) const
+    bool equal(take_n_iterator that) const noexcept
     {
         return (that._n == 0 && _n == 0) || this->base_reference() == that.base_reference();
     }
@@ -60,9 +45,7 @@ private:
     size_t _n;
 };
 
-template <typename TRng>
-class take_n_range : public detail::rng_holder<TRng>,
-                     public boost::iterator_range<take_n_iterator<typename TRng::iterator>>
+template <typename TRng> class take_n_range : public boost::iterator_range<take_n_iterator<typename TRng::iterator>>
 {
     using iterator_type = take_n_iterator<typename TRng::iterator>;
     using base_range_type = boost::iterator_range<iterator_type>;
@@ -70,8 +53,7 @@ class take_n_range : public detail::rng_holder<TRng>,
 public:
     template <typename URng>
     take_n_range(URng&& rng, size_t n)
-        : detail::rng_holder<TRng>(std::forward<URng>(rng))
-        , base_range_type(iterator_type(boost::begin(this->_rng), n), iterator_type(boost::end(this->_rng), 0))
+        : base_range_type(iterator_type(boost::begin(rng), n), iterator_type(boost::end(rng), 0))
     {
     }
 };

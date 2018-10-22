@@ -32,6 +32,6 @@ abstract_undo_session_ptr undo_db_state::start_undo_session()
 
     for_each_index([&](abstract_generic_index_i& item) { sub_sessions.push_back(item.start_undo_session()); });
 
-    return std::move(abstract_undo_session_ptr(new session_container(std::move(sub_sessions))));
+    return abstract_undo_session_ptr(new session_container(std::move(sub_sessions)));
 }
 }

@@ -46,10 +46,10 @@ public:
 
     /**
      * @brief Returns games
-     * @param filter [created, started, finished]
+     * @param filter [created, started, finished, resolved, expired, cancelled]
      * @return array of game_api_object's
      */
-    std::vector<game_api_object> get_games(game_filter filter) const;
+    std::vector<game_api_object> get_games(const fc::flat_set<chain::game_status>& filter) const;
 
     /**
      * @brief Returns matched bets
@@ -57,7 +57,7 @@ public:
      * @param limit query limit
      * @return array of matched_bet_api_object's
      */
-    std::vector<matched_bet_api_object> get_matched_bets(matched_bet_id_type from, uint32_t limit) const;
+    std::vector<matched_bet_api_object> lookup_matched_bets(matched_bet_id_type from, uint32_t limit) const;
 
     /**
      * @brief Return pending bets
@@ -65,7 +65,21 @@ public:
      * @param limit query limit
      * @return array of pending_bet_api_object's
      */
-    std::vector<pending_bet_api_object> get_pending_bets(pending_bet_id_type from, uint32_t limit) const;
+    std::vector<pending_bet_api_object> lookup_pending_bets(pending_bet_id_type from, uint32_t limit) const;
+
+    /**
+     * @brief Returns matched bets
+     * @param uuids  The vector of UUIDs of pending bets which form matched bets
+     * @return array of matched_bet_api_object's
+     */
+    std::vector<matched_bet_api_object> get_matched_bets(const std::vector<uuid_type>& uuids) const;
+
+    /**
+     * @brief Return pending bets
+     * @param uuids The vector of UUIDs of pending bets which should be returned
+     * @return array of pending_bet_api_object's
+     */
+    std::vector<pending_bet_api_object> get_pending_bets(const std::vector<uuid_type>& uuids) const;
 
     /**
      * @brief Return betting properties
@@ -87,6 +101,8 @@ private:
 // clang-format off
 FC_API(scorum::app::betting_api, (get_game_winners)
                                  (get_games)
+                                 (lookup_matched_bets)
+                                 (lookup_pending_bets)
                                  (get_matched_bets)
                                  (get_pending_bets)
                                  (get_betting_properties))

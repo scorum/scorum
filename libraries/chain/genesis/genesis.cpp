@@ -99,7 +99,7 @@ db_genesis::db_genesis(scorum::chain::database& db, const genesis_state_type& ge
     genesis::advertising_property_initializator_impl advertising_property_initializator;
     genesis::betting_property_initializator_impl betting_property_initializator;
 
-    genesis::initializator_context ctx(db, genesis_state);
+    genesis::initializator_context ctx(_db, _genesis_state);
 
     accounts_initializator.after(global_property_initializator).apply(ctx);
     rewards_initializator.after(global_property_initializator).apply(ctx);

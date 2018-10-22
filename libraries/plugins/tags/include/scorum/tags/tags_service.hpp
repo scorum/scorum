@@ -16,7 +16,7 @@ using scorum::protocol::asset;
 using scorum::chain::comment_object;
 using scorum::chain::comment_id_type;
 
-struct tag_object;
+class tag_object;
 
 struct tags_service_i
 {

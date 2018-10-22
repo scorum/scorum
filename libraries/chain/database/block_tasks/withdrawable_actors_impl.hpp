@@ -7,9 +7,9 @@
 namespace scorum {
 namespace chain {
 
-class account_service_i;
-class dev_pool_service_i;
-class dynamic_global_property_service_i;
+struct account_service_i;
+struct dev_pool_service_i;
+struct dynamic_global_property_service_i;
 
 namespace database_ns {
 
