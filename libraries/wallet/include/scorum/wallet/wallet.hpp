@@ -1559,7 +1559,7 @@ public:
 
     /**
      * @brief Returns games
-     * @param UUIDs of games to return
+     * @param uuids UUIDs of games to return
      * @return array of game_api_object's
      */
     std::vector<game_api_object> get_games_by_uuids(const std::vector<uuid_type>& uuids) const;
