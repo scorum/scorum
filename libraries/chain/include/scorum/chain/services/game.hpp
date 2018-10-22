@@ -13,6 +13,8 @@ struct betting_property_service_i;
 
 struct game_service_i : public base_service_i<game_object>
 {
+    using base_service_i<game_object>::is_exists;
+
     virtual const game_object& create_game(const uuid_type& uuid,
                                            const account_name_type& moderator,
                                            const std::string& game_name,
@@ -48,6 +50,8 @@ protected:
     explicit dbs_game(database& db);
 
 public:
+    using base_service_i<game_object>::is_exists;
+
     virtual const game_object& create_game(const uuid_type& uuid,
                                            const account_name_type& moderator,
                                            const std::string& game_name,

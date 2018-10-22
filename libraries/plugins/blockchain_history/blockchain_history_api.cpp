@@ -118,7 +118,7 @@ public:
 
         result_type result;
 
-        const auto& idx = _db->get_index<IndexType>().indices().get<by_timestamp>();
+        const auto& idx = _db->get_index<IndexType, by_timestamp>();
         if (idx.empty())
             return result;
 

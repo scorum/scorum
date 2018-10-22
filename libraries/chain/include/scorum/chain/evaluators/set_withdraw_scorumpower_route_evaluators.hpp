@@ -11,12 +11,12 @@
 namespace scorum {
 namespace chain {
 
-class account_service_i;
-class dev_pool_service_i;
+struct account_service_i;
+struct dev_pool_service_i;
 
 class set_withdraw_scorumpower_route_evaluator_impl;
 
-class data_service_factory_i;
+struct data_service_factory_i;
 
 // This evaluator sets withdraw scorumpower route from account to account
 // by operation set_withdraw_scorumpower_route_to_account_operation.

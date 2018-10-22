@@ -17,7 +17,7 @@ struct matched_bet_service_i;
 struct database_virtual_operations_emmiter_i;
 
 namespace dba {
-template <typename> struct db_accessor;
+template <typename> class db_accessor;
 }
 
 struct betting_matcher_i

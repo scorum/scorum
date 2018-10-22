@@ -46,10 +46,10 @@ public:
 
     /**
      * @brief Returns games
-     * @param filter [created, started, finished]
+     * @param filter [created, started, finished, resolved, expired, cancelled]
      * @return array of game_api_object's
      */
-    std::vector<game_api_object> get_games_by_status(game_filter filter) const;
+    std::vector<game_api_object> get_games_by_status(const fc::flat_set<chain::game_status>& filter) const;
 
     /**
      * @brief Returns games

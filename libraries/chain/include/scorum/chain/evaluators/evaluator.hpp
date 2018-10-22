@@ -5,12 +5,13 @@
 namespace scorum {
 namespace chain {
 
-class data_service_factory_i;
+struct data_service_factory_i;
 class database;
 
 template <typename OperationType = scorum::protocol::operation> class evaluator
 {
 public:
+    virtual ~evaluator() = default;
     virtual void apply(const OperationType& op) = 0;
 };
 

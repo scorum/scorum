@@ -5,8 +5,8 @@
 namespace scorum {
 namespace chain {
 
-class data_service_factory_i;
-class genesis_state_type;
+struct data_service_factory_i;
+struct genesis_state_type;
 
 namespace genesis {
 

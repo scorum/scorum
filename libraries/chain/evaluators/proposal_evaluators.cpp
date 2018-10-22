@@ -125,8 +125,8 @@ void development_committee_change_budgets_auction_properties_evaluator<budget_ty
     });
 }
 
-template class development_committee_change_budgets_auction_properties_evaluator<budget_type::post>;
-template class development_committee_change_budgets_auction_properties_evaluator<budget_type::banner>;
+template struct development_committee_change_budgets_auction_properties_evaluator<budget_type::post>;
+template struct development_committee_change_budgets_auction_properties_evaluator<budget_type::banner>;
 
 } // namespace chain
 } // namespace scorum

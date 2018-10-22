@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    virtual void process_bucket_creation(const bucket_object& bucket)
+    virtual void process_bucket_creation(const bucket_object& bucket) override
     {
         auto& db = _self.database();
 
