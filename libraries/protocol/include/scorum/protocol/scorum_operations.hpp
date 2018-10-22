@@ -725,6 +725,7 @@ struct delegate_scorumpower_operation : public base_operation
 };
 
 /// @defgroup advertising Advertising operations
+/// @brief Operations to work with advertising budgets
 /// @ingroup operations
 /// @{
 /**
