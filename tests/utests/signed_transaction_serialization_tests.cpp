@@ -3,6 +3,8 @@
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/protocol/transaction.hpp>
 
+#include <graphene/utilities/key_conversion.hpp>
+
 #include <fc/io/json.hpp>
 
 #include "defines.hpp"
@@ -106,6 +108,27 @@ SCORUM_TEST_CASE(testing_transaction_json_pack_and_unpack)
     signed_transaction unpacked = packed.as<signed_transaction>();
     unpacked.validate();
     BOOST_CHECK(trx.digest() == unpacked.digest());
+}
+
+SCORUM_TEST_CASE(wincase_update_transaction_serialization_test)
+{
+    scorum::protocol::transaction trx;
+    trx.ref_block_num = 10483;
+    trx.ref_block_prefix = 285062829;
+    trx.expiration = fc::time_point_sec::from_iso_string("2018-10-18T09:11:09");
+
+    scorum::protocol::witness_update_operation op;
+    op.owner = "leonarda";
+    op.url = "leonarda.com";
+    op.block_signing_key = scorum::protocol::public_key_type("SCR7zPNg5nAsJjP9gvMfQ4UnAwDwf91WPYC8KFzobtMuQ52ns1D6T");
+    op.proposed_chain_props.account_creation_fee = asset::from_string("0.100000000 SCR");
+    op.proposed_chain_props.maximum_block_size = 131072;
+
+    trx.operations.push_back(op);
+
+    BOOST_CHECK_EQUAL("f328adb6fd102d4ec85b0109086c656f6e617264610c6c656f6e617264612e636f6d03987a5a967458c114c15091198c"
+                      "06a822f54b494ea486204551a53f85effa314200e1f5050000000009534352000000000000020000",
+                      utils::to_hex(trx));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

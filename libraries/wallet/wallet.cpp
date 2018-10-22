@@ -3174,6 +3174,145 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
     return result;
 }
 
+annotated_signed_transaction wallet_api::create_game(uuid_type uuid,
+                                                     account_name_type moderator,
+                                                     const std::string& name,
+                                                     fc::time_point_sec start_time,
+                                                     uint32_t auto_resolve_delay_sec,
+                                                     game_type game,
+                                                     const fc::flat_set<market_type>& markets,
+                                                     const bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+
+        create_game_operation op;
+
+        op.uuid = uuid;
+        op.moderator = moderator;
+        op.game = game;
+        op.name = name;
+        op.start_time = start_time;
+        op.auto_resolve_delay_sec = auto_resolve_delay_sec;
+        op.markets = markets;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        annotated_signed_transaction ret;
+        ret = my->sign_transaction(tx, broadcast);
+
+        return ret;
+    }
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(name)(start_time)(auto_resolve_delay_sec)(game)(broadcast))
+}
+
+annotated_signed_transaction wallet_api::cancel_game(uuid_type uuid, account_name_type moderator, const bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+
+        cancel_game_operation op;
+
+        op.uuid = uuid;
+        op.moderator = moderator;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        annotated_signed_transaction ret;
+        ret = my->sign_transaction(tx, broadcast);
+
+        return ret;
+    }
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(broadcast))
+}
+
+annotated_signed_transaction wallet_api::update_game_markets(uuid_type uuid,
+                                                             account_name_type moderator,
+                                                             const fc::flat_set<market_type>& markets,
+                                                             const bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+
+        update_game_markets_operation op;
+
+        op.uuid = uuid;
+        op.moderator = moderator;
+        op.markets = markets;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        annotated_signed_transaction ret;
+        ret = my->sign_transaction(tx, broadcast);
+
+        return ret;
+    }
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(broadcast))
+}
+
+annotated_signed_transaction wallet_api::update_game_start_time(uuid_type uuid,
+                                                                account_name_type moderator,
+                                                                fc::time_point_sec start_time,
+                                                                const bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+
+        update_game_start_time_operation op;
+
+        op.uuid = uuid;
+        op.moderator = moderator;
+        op.start_time = start_time;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        annotated_signed_transaction ret;
+        ret = my->sign_transaction(tx, broadcast);
+
+        return ret;
+    }
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(start_time)(broadcast))
+}
+
+annotated_signed_transaction wallet_api::post_game_results(uuid_type uuid,
+                                                           account_name_type moderator,
+                                                           const fc::flat_set<wincase_type>& wincases,
+                                                           const bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+
+        post_game_results_operation op;
+
+        op.uuid = uuid;
+        op.moderator = moderator;
+        op.wincases = wincases;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        annotated_signed_transaction ret;
+        ret = my->sign_transaction(tx, broadcast);
+
+        return ret;
+    }
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(broadcast))
+}
+
 annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
                                                   account_name_type better,
                                                   uuid_type game_uuid,
