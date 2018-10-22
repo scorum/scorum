@@ -8,6 +8,9 @@ namespace chain {
 
 struct witness_vote_service_i : public base_service_i<witness_vote_object>
 {
+    using base_service_i<witness_vote_object>::get;
+    using base_service_i<witness_vote_object>::is_exists;
+
     virtual bool is_exists(witness_id_type witness_id, account_id_type voter_id) const = 0;
     virtual const witness_vote_object& get(witness_id_type witness_id, account_id_type voter_id) = 0;
 };
@@ -20,6 +23,9 @@ protected:
     explicit dbs_witness_vote(database& db);
 
 public:
+    using base_service_i<witness_vote_object>::get;
+    using base_service_i<witness_vote_object>::is_exists;
+
     virtual bool is_exists(witness_id_type witness_id, account_id_type voter_id) const override;
     virtual const witness_vote_object& get(witness_id_type witness_id, account_id_type voter_id) override;
 };

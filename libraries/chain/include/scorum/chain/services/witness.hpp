@@ -5,7 +5,7 @@
 
 namespace scorum {
 namespace protocol {
-class chain_properties;
+struct chain_properties;
 }
 namespace chain {
 
@@ -15,6 +15,9 @@ using chain_properties = scorum::protocol::chain_properties;
 
 struct witness_service_i : public base_service_i<witness_object>
 {
+    using base_service_i<witness_object>::get;
+    using base_service_i<witness_object>::is_exists;
+
     virtual const witness_object& get(const account_name_type& owner) const = 0;
 
     virtual bool is_exists(const account_name_type& owner) const = 0;
@@ -52,6 +55,9 @@ protected:
     explicit dbs_witness(database& db);
 
 public:
+    using base_service_i<witness_object>::get;
+    using base_service_i<witness_object>::is_exists;
+
     const witness_object& get(const account_name_type& owner) const override;
 
     bool is_exists(const account_name_type& owner) const override;

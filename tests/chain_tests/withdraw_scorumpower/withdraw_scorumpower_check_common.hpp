@@ -8,11 +8,11 @@
 namespace scorum {
 namespace chain {
 
-class dev_pool_service_i;
-class account_service_i;
-class withdraw_scorumpower_service_i;
-class withdraw_scorumpower_route_service_i;
-class dynamic_global_property_service_i;
+struct dev_pool_service_i;
+struct account_service_i;
+struct withdraw_scorumpower_service_i;
+struct withdraw_scorumpower_route_service_i;
+struct dynamic_global_property_service_i;
 
 } // namespace chain
 } // namespace scorum

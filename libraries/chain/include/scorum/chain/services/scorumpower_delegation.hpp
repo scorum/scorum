@@ -11,6 +11,9 @@ class scorumpower_delegation_expiration_object;
 
 struct scorumpower_delegation_service_i : public base_service_i<scorumpower_delegation_object>
 {
+    using base_service_i<scorumpower_delegation_object>::get;
+    using base_service_i<scorumpower_delegation_object>::is_exists;
+
     virtual const scorumpower_delegation_object& get(const account_name_type& delegator,
                                                      const account_name_type& delegatee) const = 0;
 
@@ -29,6 +32,9 @@ protected:
     explicit dbs_scorumpower_delegation(database& db);
 
 public:
+    using base_service_i<scorumpower_delegation_object>::get;
+    using base_service_i<scorumpower_delegation_object>::is_exists;
+
     const scorumpower_delegation_object& get(const account_name_type& delegator,
                                              const account_name_type& delegatee) const override;
 

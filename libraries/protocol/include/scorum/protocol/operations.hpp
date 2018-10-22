@@ -91,7 +91,7 @@ using operation = fc::static_variant<vote_operation,
                                      cash_back_from_advertising_budget_to_owner_operation,
                                      closing_budget_operation,
                                      bets_matched_operation,
-                                     game_status_changed,
+                                     game_status_changed_operation,
                                      bet_resolved_operation,
                                      bet_cancelled_operation>;
 

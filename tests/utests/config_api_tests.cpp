@@ -42,9 +42,9 @@ BOOST_FIXTURE_TEST_SUITE(config_api_tests, config_api_fixture)
 
 BOOST_AUTO_TEST_CASE(get_api_config_no_throw)
 {
-    BOOST_REQUIRE_NO_THROW(get_api_config().lookup_limit);
+    BOOST_REQUIRE_NO_THROW(get_api_config());
 
-    BOOST_REQUIRE_NO_THROW(get_api_config(any_api_name).lookup_limit);
+    BOOST_REQUIRE_NO_THROW(get_api_config(any_api_name));
 }
 
 BOOST_AUTO_TEST_CASE(set_and_reset_options_for_api_config)

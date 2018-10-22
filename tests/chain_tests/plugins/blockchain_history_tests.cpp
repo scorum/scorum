@@ -66,9 +66,8 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
     template <typename history_object_type>
     operation_map_type get_operations_accomplished_by_account(const std::string& account_name)
     {
-        const auto& idx = db.get_index<blockchain_history::account_history_index<history_object_type>>()
-                              .indices()
-                              .get<blockchain_history::by_account>();
+        const auto& idx = db.get_index<blockchain_history::account_history_index<history_object_type>,
+                                       blockchain_history::by_account>();
 
         auto itr = idx.lower_bound(boost::make_tuple(account_name, uint32_t(-1)));
         if (itr != idx.end())

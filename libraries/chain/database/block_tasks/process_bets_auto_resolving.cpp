@@ -14,13 +14,9 @@ namespace chain {
 namespace database_ns {
 
 process_bets_auto_resolving::process_bets_auto_resolving(betting_service_i& betting_svc,
-                                                         database_virtual_operations_emmiter_i& virt_op_emitter,
-                                                         dba::db_accessor<matched_bet_object>& matched_bet_dba,
-                                                         dba::db_accessor<pending_bet_object>& pending_bet_dba)
+                                                         database_virtual_operations_emmiter_i& virt_op_emitter)
     : _betting_svc(betting_svc)
     , _virt_op_emitter(virt_op_emitter)
-    , _matched_bet_dba(matched_bet_dba)
-    , _pending_bet_dba(pending_bet_dba)
 {
 }
 
@@ -36,12 +32,13 @@ void process_bets_auto_resolving::on_apply(block_task_context& ctx)
     for (const game_object& game : games)
     {
         auto game_uuid = game.uuid;
+        auto old_status = game.status;
 
         _betting_svc.cancel_bets(game.id);
         _betting_svc.cancel_game(game.id);
 
         _virt_op_emitter.push_virtual_operation(
-            game_status_changed{ game_uuid, game_status::finished, game_status::expired });
+            game_status_changed_operation{ game_uuid, old_status, game_status::expired });
     }
 
     debug_log(ctx.get_block_info(), "process_bets_auto_resolving END");

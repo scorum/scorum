@@ -18,7 +18,6 @@ struct budget_payout_visitor
     typedef void result_type;
 
     budget_payout_visitor(database& db)
-        : _db(db)
     {
         conn = db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(*this); });
     }
@@ -72,7 +71,6 @@ private:
     account_stat_type _cashback_summ;
     account_stat_type _last_adv_amount;
     account_stat_type _last_cashback_amount;
-    database& _db;
     fc::scoped_connection conn;
 };
 

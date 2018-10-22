@@ -8,6 +8,9 @@ namespace chain {
 
 struct decline_voting_rights_request_service_i : public base_service_i<decline_voting_rights_request_object>
 {
+    using base_service_i<decline_voting_rights_request_object>::get;
+    using base_service_i<decline_voting_rights_request_object>::is_exists;
+
     virtual const decline_voting_rights_request_object& get(const account_id_type& account_id) const = 0;
 
     virtual bool is_exists(const account_id_type& account_id) const = 0;
@@ -27,6 +30,9 @@ protected:
     explicit dbs_decline_voting_rights_request(database& db);
 
 public:
+    using base_service_i<decline_voting_rights_request_object>::get;
+    using base_service_i<decline_voting_rights_request_object>::is_exists;
+
     const decline_voting_rights_request_object& get(const account_id_type& account_id) const override;
 
     bool is_exists(const account_id_type& account_id) const override;
