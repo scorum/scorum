@@ -51,7 +51,8 @@ void update_game_start_time_evaluator::do_apply(const operation_type& op)
     });
 
     if (old_status == game_status::started)
-        _virt_op_emitter.push_virtual_operation(game_status_changed(game.uuid, old_status, game_status::created));
+        _virt_op_emitter.push_virtual_operation(
+            game_status_changed_operation(game.uuid, old_status, game_status::created));
 }
 }
 }

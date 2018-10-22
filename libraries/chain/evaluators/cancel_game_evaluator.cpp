@@ -37,7 +37,7 @@ void cancel_game_evaluator::do_apply(const operation_type& op)
     auto uuid = game.uuid;
     _betting_service.cancel_game(game.id);
 
-    _virt_op_emitter.push_virtual_operation(game_status_changed(uuid, status, game_status::cancelled));
+    _virt_op_emitter.push_virtual_operation(game_status_changed_operation(uuid, status, game_status::cancelled));
 }
 }
 }

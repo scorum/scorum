@@ -292,7 +292,7 @@ struct get_games_fixture : public fixture
     std::vector<game_object> objects;
 };
 
-BOOST_FIXTURE_TEST_CASE(get_games_return_all_games_in_correct_order, get_games_fixture)
+BOOST_FIXTURE_TEST_CASE(get_games_return_all_games_in_creation_order, get_games_fixture)
 {
     mocks
         .ExpectCallOverload(game_service,
@@ -301,10 +301,16 @@ BOOST_FIXTURE_TEST_CASE(get_games_return_all_games_in_correct_order, get_games_f
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba);
     std::vector<game_api_object> games
-        = api.get_games({ game_status::started, game_status::created, game_status::finished, game_status::resolved,
-                          game_status::expired, game_status::cancelled });
+        = api.get_games({ game_status::started, game_status::created, game_status::finished, game_status::cancelled,
+                          game_status::expired, game_status::resolved });
 
     BOOST_CHECK_EQUAL(games.size(), 6u);
+    BOOST_CHECK(games[0].status == game_status::created);
+    BOOST_CHECK(games[1].status == game_status::started);
+    BOOST_CHECK(games[2].status == game_status::finished);
+    BOOST_CHECK(games[3].status == game_status::resolved);
+    BOOST_CHECK(games[4].status == game_status::expired);
+    BOOST_CHECK(games[5].status == game_status::cancelled);
 }
 
 BOOST_FIXTURE_TEST_CASE(return_games_with_created_status, get_games_fixture)
