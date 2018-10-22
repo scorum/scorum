@@ -1454,6 +1454,76 @@ public:
      */
 
     /**
+     * Create betting game
+     * @param uuid game UUID
+     * @param moderator betting moderator
+     * @param name unique name for game
+     * @param start_time time when game should start
+     * @param auto_resolve_delay_sec delay starting from @p start_time after expiration of which (if game results
+     * weren't posted) game will be cancelled
+     * @param game type of game (soccer, hockey, etc.)
+     * @param markets betting markets for this particular game
+     * @param broadcast
+     * @return signed transaction
+     */
+    annotated_signed_transaction create_game(uuid_type uuid,
+                                             account_name_type moderator,
+                                             const std::string& name,
+                                             fc::time_point_sec start_time,
+                                             uint32_t auto_resolve_delay_sec,
+                                             game_type game,
+                                             const fc::flat_set<market_type>& markets,
+                                             const bool broadcast);
+
+    /**
+     * Cancel game (return all bets to owners)
+     * @param uuid game UUID
+     * @param moderator betting moderator
+     * @param broadcast
+     * @return signed transaction
+     */
+    annotated_signed_transaction cancel_game(uuid_type uuid, account_name_type moderator, const bool broadcast);
+
+    /**
+     * Update betting markets for the game
+     * @param uuid game UUID
+     * @param moderator betting moderator
+     * @param markets new betting markets for this game
+     * @param broadcast
+     * @return signed transaction
+     */
+    annotated_signed_transaction update_game_markets(uuid_type uuid,
+                                                     account_name_type moderator,
+                                                     const fc::flat_set<market_type>& markets,
+                                                     const bool broadcast);
+
+    /**
+     * Update game start time
+     * @param uuid game UUID
+     * @param moderator betting moderator
+     * @param start_time game new start time
+     * @param broadcast
+     * @return signed transaction
+     */
+    annotated_signed_transaction update_game_start_time(uuid_type uuid,
+                                                        account_name_type moderator,
+                                                        fc::time_point_sec start_time,
+                                                        const bool broadcast);
+
+    /**
+     * Post game results (provide won wincases)
+     * @param uuid game UUID
+     * @param moderator betting moderator
+     * @param wincases won wincases
+     * @param broadcast
+     * @return signed transaction
+     */
+    annotated_signed_transaction post_game_results(uuid_type uuid,
+                                                   account_name_type moderator,
+                                                   const fc::flat_set<wincase_type>& wincases,
+                                                   const bool broadcast);
+
+    /**
      * @brief Create bet.
      * @param uuid bet UUID
      * @param better owner for new bet
@@ -1665,6 +1735,11 @@ FC_API( scorum::wallet::wallet_api,
         (get_atomicswap_contracts)
 
         // betting API
+        (create_game)
+        (cancel_game)
+        (update_game_markets)
+        (update_game_start_time)
+        (post_game_results)
         (post_bet)
         (cancel_pending_bets)
 
