@@ -76,7 +76,7 @@ BOOST_FIXTURE_TEST_CASE(get_games_dont_throw, fixture)
                             (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
         .Return({ objects.begin(), objects.end() });
 
-    BOOST_REQUIRE_NO_THROW(api.get_games(game_filter::all));
+    BOOST_REQUIRE_NO_THROW(api.get_games({ game_status::resolved }));
 }
 
 struct get_game_winners_fixture : public fixture
@@ -278,12 +278,21 @@ struct get_games_fixture : public fixture
 
         objects.push_back(
             create_object<game_object>(shm, [&](game_object& game) { game.status = game_status::finished; }));
+
+        objects.push_back(
+            create_object<game_object>(shm, [&](game_object& game) { game.status = game_status::resolved; }));
+
+        objects.push_back(
+            create_object<game_object>(shm, [&](game_object& game) { game.status = game_status::expired; }));
+
+        objects.push_back(
+            create_object<game_object>(shm, [&](game_object& game) { game.status = game_status::cancelled; }));
     }
 
     std::vector<game_object> objects;
 };
 
-BOOST_FIXTURE_TEST_CASE(get_games_return_all_games, get_games_fixture)
+BOOST_FIXTURE_TEST_CASE(get_games_return_all_games_in_creation_order, get_games_fixture)
 {
     mocks
         .ExpectCallOverload(game_service,
@@ -291,24 +300,17 @@ BOOST_FIXTURE_TEST_CASE(get_games_return_all_games, get_games_fixture)
         .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba);
-    std::vector<game_api_object> games = api.get_games(game_filter::all);
+    std::vector<game_api_object> games
+        = api.get_games({ game_status::started, game_status::created, game_status::finished, game_status::cancelled,
+                          game_status::expired, game_status::resolved });
 
-    BOOST_CHECK_EQUAL(games.size(), 3u);
-}
-
-BOOST_FIXTURE_TEST_CASE(get_games_does_not_change_order, get_games_fixture)
-{
-    mocks
-        .ExpectCallOverload(game_service,
-                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
-        .Return({ objects.begin(), objects.end() });
-
-    betting_api_impl api(*factory, game_dba, matched_bet_dba);
-    std::vector<game_api_object> games = api.get_games(game_filter::all);
-
+    BOOST_CHECK_EQUAL(games.size(), 6u);
     BOOST_CHECK(games[0].status == game_status::created);
     BOOST_CHECK(games[1].status == game_status::started);
     BOOST_CHECK(games[2].status == game_status::finished);
+    BOOST_CHECK(games[3].status == game_status::resolved);
+    BOOST_CHECK(games[4].status == game_status::expired);
+    BOOST_CHECK(games[5].status == game_status::cancelled);
 }
 
 BOOST_FIXTURE_TEST_CASE(return_games_with_created_status, get_games_fixture)
@@ -319,7 +321,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_created_status, get_games_fixture)
         .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba);
-    std::vector<game_api_object> games = api.get_games(game_filter::created);
+    std::vector<game_api_object> games = api.get_games({ game_status::created });
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
     BOOST_CHECK(games[0].status == game_status::created);
@@ -333,7 +335,7 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_started_status, get_games_fixture)
         .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba);
-    std::vector<game_api_object> games = api.get_games(game_filter::started);
+    std::vector<game_api_object> games = api.get_games({ game_status::started });
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
     BOOST_CHECK(games[0].status == game_status::started);
@@ -347,10 +349,27 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_finished_status, get_games_fixture)
         .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba);
-    std::vector<game_api_object> games = api.get_games(game_filter::finished);
+    std::vector<game_api_object> games = api.get_games({ game_status::finished });
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
     BOOST_CHECK(games[0].status == game_status::finished);
+}
+
+BOOST_FIXTURE_TEST_CASE(return_games_with_created_finished_cancelled_status, get_games_fixture)
+{
+    mocks
+        .ExpectCallOverload(game_service,
+                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
+        .Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(*factory, game_dba, matched_bet_dba);
+    std::vector<game_api_object> games
+        = api.get_games({ game_status::finished, game_status::created, game_status::cancelled });
+
+    BOOST_REQUIRE_EQUAL(games.size(), 3);
+    BOOST_CHECK(games[0].status == game_status::created);
+    BOOST_CHECK(games[1].status == game_status::finished);
+    BOOST_CHECK(games[2].status == game_status::cancelled);
 }
 
 BOOST_FIXTURE_TEST_CASE(return_two_games_with_finished_status, get_games_fixture)
@@ -363,26 +382,11 @@ BOOST_FIXTURE_TEST_CASE(return_two_games_with_finished_status, get_games_fixture
         .Return({ objects.begin(), objects.end() });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba);
-    std::vector<game_api_object> games = api.get_games(game_filter::finished);
+    std::vector<game_api_object> games = api.get_games({ game_status::finished });
 
     BOOST_REQUIRE_EQUAL(games.size(), 2);
     BOOST_CHECK(games[0].status == game_status::finished);
     BOOST_CHECK(games[1].status == game_status::finished);
-}
-
-BOOST_FIXTURE_TEST_CASE(return_games_not_finished_status, get_games_fixture)
-{
-    mocks
-        .ExpectCallOverload(game_service,
-                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
-        .Return({ objects.begin(), objects.end() });
-
-    betting_api_impl api(*factory, game_dba, matched_bet_dba);
-    std::vector<game_api_object> games = api.get_games(game_filter::not_finished);
-
-    BOOST_REQUIRE_EQUAL(games.size(), 2);
-    BOOST_CHECK(games[0].status == game_status::created);
-    BOOST_CHECK(games[1].status == game_status::started);
 }
 
 BOOST_FIXTURE_TEST_CASE(throw_exception_when_limit_is_negative, get_games_fixture)
