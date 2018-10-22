@@ -775,11 +775,12 @@ struct odds_input
 };
 
 /// @defgroup betting_operations Betting operations
-///
 /// This is a set of betting operations
+/// @ingroup operations
 /// @{
 
 /**
+ * @ingroup operations
  * @brief This operation creates game object
  *
  * Game will have status 'created' until start_time < head_block_time. Game status changed to 'started' when
@@ -818,6 +819,7 @@ struct create_game_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief This operation canceling game.
  *
  * Moderator could cancel game any time. All accepted bets would be canceled and returned back.
@@ -840,6 +842,7 @@ struct cancel_game_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief This operation updates game markets list
  *
  * Before game started moderator could add or remove markets. All accepted bets would be canceled and returned back when
@@ -866,6 +869,7 @@ struct update_game_markets_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief This operation updates game start time.
  *
  * After game started moderator could update start_time only in 12 hours range.
@@ -891,6 +895,7 @@ struct update_game_start_time_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief With this operation moderator provides game results(wincases)
  *
  * This operation changes game status to 'finished'. Stop accepting bets. All unmatched bets returned back. This
@@ -918,6 +923,7 @@ struct post_game_results_operation : public base_operation
     /// @endcond
 };
 /**
+ * @ingroup operations
  * @brief This operation creates bet
  */
 struct post_bet_operation : public base_operation
@@ -953,6 +959,7 @@ struct post_bet_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief This operation cancel unmatched bets by id
  */
 struct cancel_pending_bets_operation : public base_operation
