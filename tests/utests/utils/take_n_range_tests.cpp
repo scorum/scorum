@@ -28,7 +28,7 @@ std::vector<foo> get_foo_vector()
     vec.reserve(1);
     vec.emplace_back();
 
-    return std::move(vec);
+    return vec;
 }
 // clang-format on
 

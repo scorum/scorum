@@ -189,7 +189,7 @@ private:
         _stack.back().old_next_id = this->_next_id;
         _stack.back().revision = ++_revision;
 
-        return std::move(abstract_undo_session_ptr(new session(*this)));
+        return abstract_undo_session_ptr(new session(*this));
     }
 
     /**

@@ -727,7 +727,7 @@ public:
 
         m["gethelp"] = [](variant result, const fc::variants& a) { return result.get_string(); };
 
-        m["list_my_accounts"] = [this](variant result, const fc::variants& a) {
+        m["list_my_accounts"] = [](variant result, const fc::variants& a) {
             auto accounts = result.as<std::vector<account_api_obj>>();
 
             cli::formatter p;
@@ -755,7 +755,7 @@ public:
 
             return p.str();
         };
-        m["get_account_balance"] = [this](variant result, const fc::variants& a) -> std::string {
+        m["get_account_balance"] = [](variant result, const fc::variants& a) -> std::string {
             auto rt = result.as<account_balance_info_api_obj>();
 
             cli::formatter p;
@@ -771,7 +771,7 @@ public:
             return p.str();
         };
 
-        auto history_formatter = [this](variant result, const fc::variants& a) {
+        auto history_formatter = [](variant result, const fc::variants& a) {
             const auto& results = result.get_array();
 
             cli::formatter p;
@@ -808,7 +808,7 @@ public:
         m["get_devcommittee_scr_to_scr_transfers"] = history_formatter;
         m["get_devcommittee_sp_to_scr_transfers"] = history_formatter;
 
-        m["get_withdraw_routes"] = [this](variant result, const fc::variants& a) {
+        m["get_withdraw_routes"] = [](variant result, const fc::variants& a) {
             auto routes = result.as<std::vector<withdraw_route>>();
 
             cli::formatter p;

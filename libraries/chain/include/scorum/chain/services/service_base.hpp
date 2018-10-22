@@ -60,6 +60,9 @@ protected:
     using base_service_type = dbs_service_base;
 
 public:
+    using service_interface::get;
+    using service_interface::is_exists;
+
     using modifier_type = typename service_interface::modifier_type;
     using object_type = typename service_interface::object_type;
     using object_cref_type = typename service_interface::object_cref_type;

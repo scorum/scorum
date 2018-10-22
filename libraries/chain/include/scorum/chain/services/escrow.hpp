@@ -8,6 +8,8 @@ namespace chain {
 
 struct escrow_service_i : public base_service_i<escrow_object>
 {
+    using base_service_i<escrow_object>::get;
+
     virtual const escrow_object& get(const account_name_type& name, uint32_t escrow_id) const = 0;
 
     virtual const escrow_object& create_escrow(uint32_t escrow_id,
@@ -29,6 +31,8 @@ protected:
     explicit dbs_escrow(database& db);
 
 public:
+    using base_service_i<escrow_object>::get;
+
     const escrow_object& get(const account_name_type& name, uint32_t escrow_id) const override;
 
     const escrow_object& create_escrow(uint32_t escrow_id,

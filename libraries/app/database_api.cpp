@@ -190,7 +190,6 @@ void database_api_impl::set_block_applied_callback(std::function<void(const vari
 
 database_api::database_api(const scorum::app::api_context& ctx)
     : my(new database_api_impl(ctx))
-    , _app(ctx.app)
 {
 }
 
@@ -664,7 +663,7 @@ database_api_impl::lookup_registration_committee_members(const std::string& lowe
 {
     FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
 
-    return committee::lookup_members<registration_committee_member_index>(_db, lower_bound_name, limit);
+    return chain::committee::lookup_members<registration_committee_member_index>(_db, lower_bound_name, limit);
 }
 
 std::set<account_name_type> database_api_impl::lookup_development_committee_members(const std::string& lower_bound_name,
@@ -672,7 +671,7 @@ std::set<account_name_type> database_api_impl::lookup_development_committee_memb
 {
     FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
 
-    return committee::lookup_members<dev_committee_member_index>(_db, lower_bound_name, limit);
+    return chain::committee::lookup_members<dev_committee_member_index>(_db, lower_bound_name, limit);
 }
 
 std::vector<proposal_api_obj> database_api::lookup_proposals() const

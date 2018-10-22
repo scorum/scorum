@@ -202,11 +202,9 @@ class update_statistic_visitor : public void_return_visitor
     public:
         update_statistic_from_dev_committee_visitor(account_service_i& account_service,
                                                     database_virtual_operations_emmiter_i& emmiter,
-                                                    const dev_committee_id_type& from,
                                                     const asset& amount)
             : _account_service(account_service)
             , _emmiter(emmiter)
-            , _from(from)
             , _amount(amount)
         {
         }
@@ -226,7 +224,6 @@ class update_statistic_visitor : public void_return_visitor
     private:
         account_service_i& _account_service;
         database_virtual_operations_emmiter_i& _emmiter;
-        const dev_committee_id_type& _from;
         const asset& _amount;
     };
 
@@ -247,9 +244,9 @@ public:
         _to.visit(update_statistic_from_account_visitor(_account_service, _emmiter, from, _amount));
     }
 
-    void operator()(const dev_committee_id_type& from) const
+    void operator()(const dev_committee_id_type&) const
     {
-        _to.visit(update_statistic_from_dev_committee_visitor(_account_service, _emmiter, from, _amount));
+        _to.visit(update_statistic_from_dev_committee_visitor(_account_service, _emmiter, _amount));
     }
 
 private:

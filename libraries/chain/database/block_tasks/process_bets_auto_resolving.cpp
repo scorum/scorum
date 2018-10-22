@@ -14,13 +14,9 @@ namespace chain {
 namespace database_ns {
 
 process_bets_auto_resolving::process_bets_auto_resolving(betting_service_i& betting_svc,
-                                                         database_virtual_operations_emmiter_i& virt_op_emitter,
-                                                         dba::db_accessor<matched_bet_object>& matched_bet_dba,
-                                                         dba::db_accessor<pending_bet_object>& pending_bet_dba)
+                                                         database_virtual_operations_emmiter_i& virt_op_emitter)
     : _betting_svc(betting_svc)
     , _virt_op_emitter(virt_op_emitter)
-    , _matched_bet_dba(matched_bet_dba)
-    , _pending_bet_dba(pending_bet_dba)
 {
 }
 

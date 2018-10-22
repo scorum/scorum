@@ -200,7 +200,7 @@ class node : public std::enable_shared_from_this<node>
 {
 public:
     node(const std::string& user_agent);
-    ~node();
+    virtual ~node();
 
     void close();
 

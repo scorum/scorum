@@ -8,6 +8,7 @@ namespace chain {
 struct pending_bet_service_i : public base_service_i<pending_bet_object>
 {
     using pending_bet_call_type = std::function<bool(const base_service_i::object_type&)>;
+    using base_service_i<pending_bet_object>::is_exists;
 
     virtual void foreach_pending_bets(const game_id_type&, pending_bet_call_type) = 0;
 
@@ -31,6 +32,8 @@ protected:
     explicit dbs_pending_bet(database& db);
 
 public:
+    using base_service_i<pending_bet_object>::is_exists;
+
     virtual void foreach_pending_bets(const game_id_type&, pending_bet_call_type) override;
 
     bool is_exists(const pending_bet_id_type& id) const override;
