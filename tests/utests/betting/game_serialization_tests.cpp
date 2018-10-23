@@ -198,11 +198,48 @@ SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
     op.game = soccer_game{};
     op.markets = {};
 
-    auto hex = to_hex(op);
+    scorum::protocol::operation ops = op;
+    auto hex = to_hex(ops);
 
-    BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e027b7d9b2a645b210000000000");
+    BOOST_CHECK_EQUAL(hex, "23e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e0967616d65206e616d659b2a645b210000000000");
 }
 
+SCORUM_TEST_CASE(serialize_cancel_game)
+{
+    cancel_game_operation op;
+    op.uuid = game_uuid;
+    op.moderator = "admin";
+
+    scorum::protocol::operation ops = op;
+    auto hex = fc::to_hex(fc::raw::pack(ops));
+
+    BOOST_CHECK_EQUAL(hex, "24e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e");
+}
+
+SCORUM_TEST_CASE(serialize_update_game_start_time)
+{
+    update_game_start_time_operation op;
+    op.uuid = game_uuid;
+    op.moderator = "admin";
+    op.start_time = time_point_sec::from_iso_string("2018-08-03T10:12:43");
+
+    scorum::protocol::operation ops = op;
+    auto hex = fc::to_hex(fc::raw::pack(ops));
+
+    BOOST_CHECK_EQUAL(hex, "26e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e9b2a645b");
+}
+
+SCORUM_TEST_CASE(serialize_update_game_markets)
+{
+    update_game_markets_operation op;
+    op.uuid = game_uuid;
+    op.moderator = "admin";
+    op.markets = { total{ 1000 } };
+
+    scorum::protocol::operation ops = op;
+    auto hex = fc::to_hex(fc::raw::pack(ops));
+
+    BOOST_CHECK_EQUAL(hex, "25e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e010ce803");
 SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
 {
     create_game_operation op;
@@ -217,6 +254,50 @@ SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
     auto hex = to_hex(op);
 
     BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e027b7d9b2a645b2100000000010ce803");
+}
+
+SCORUM_TEST_CASE(serialize_post_game_results_to_hex)
+{
+    post_game_results_operation op;
+    op.uuid = game_uuid;
+    op.moderator = "admin";
+    op.wincases = { correct_score::yes{ 17, 23 } };
+
+    scorum::protocol::operation ops = op;
+    auto hex = fc::to_hex(fc::raw::pack(ops));
+
+    BOOST_CHECK_EQUAL(hex, "27e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e011011001700");
+}
+
+
+SCORUM_TEST_CASE(serialize_post_bet_to_hex)
+{
+    post_bet_operation op;
+    op.uuid = game_uuid;  // should be user_uuid
+    op.better = "admin";
+    op.game_uuid = game_uuid;
+    op.wincase = correct_score::yes{ 17, 23 };
+    op.odds = { 1, 2 };
+    op.stake = asset::from_string("10.000000000 SCR");
+    op.live = true;
+
+    scorum::protocol::operation ops = op;
+    auto hex = fc::to_hex(fc::raw::pack(ops));
+
+    BOOST_CHECK_EQUAL(hex, "28e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696ee629f9aa6b2c46aa8fa836770e7a7a5f10110017000"
+                                                                          "100020000e40b5402000000095343520000000001");
+}
+
+SCORUM_TEST_CASE(serialize_cancel_pending_bet_to_hex)
+{
+    cancel_pending_bets_operation op;
+    op.bet_uuids = {game_uuid};
+    op.better = "admin";
+
+    scorum::protocol::operation ops = op;
+    auto hex = fc::to_hex(fc::raw::pack(ops));
+
+    BOOST_CHECK_EQUAL(hex, "2901e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e");
 }
 
 SCORUM_TEST_CASE(create_game_json_serialization_test)
