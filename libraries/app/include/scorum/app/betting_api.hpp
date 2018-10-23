@@ -2,10 +2,8 @@
 
 #define API_BETTING "betting_api"
 
-#include <memory>
+#include <fc/api.hpp>
 
-#include <scorum/protocol/types.hpp>
-#include <scorum/app/api.hpp>
 #include <scorum/app/betting_api_objects.hpp>
 
 namespace chainbase {
@@ -15,7 +13,6 @@ class database_guard;
 namespace scorum {
 namespace app {
 
-class betting_api_impl;
 struct api_context;
 
 /**
@@ -26,10 +23,12 @@ struct api_context;
  * @ingroup api
  * @addtogroup betting_api Betting API
  */
-class betting_api : public std::enable_shared_from_this<betting_api>
+class betting_api
 {
 public:
     betting_api(const api_context& ctx);
+
+    ~betting_api();
 
     void on_api_startup();
 
@@ -64,7 +63,7 @@ public:
      * @param limit query limit
      * @return array of game_api_object's
      */
-    std::vector<game_api_object> lookup_games_by_id(game_id_type from, uint32_t limit) const;
+    std::vector<game_api_object> lookup_games_by_id(chain::game_id_type from, uint32_t limit) const;
 
     /**
      * @brief Returns matched bets
@@ -72,7 +71,7 @@ public:
      * @param limit query limit
      * @return array of matched_bet_api_object's
      */
-    std::vector<matched_bet_api_object> lookup_matched_bets(matched_bet_id_type from, uint32_t limit) const;
+    std::vector<matched_bet_api_object> lookup_matched_bets(chain::matched_bet_id_type from, uint32_t limit) const;
 
     /**
      * @brief Return pending bets
@@ -80,7 +79,7 @@ public:
      * @param limit query limit
      * @return array of pending_bet_api_object's
      */
-    std::vector<pending_bet_api_object> lookup_pending_bets(pending_bet_id_type from, uint32_t limit) const;
+    std::vector<pending_bet_api_object> lookup_pending_bets(chain::pending_bet_id_type from, uint32_t limit) const;
 
     /**
      * @brief Returns matched bets
@@ -104,8 +103,10 @@ public:
 
     /// @}
 
+    class impl;
+
 private:
-    std::unique_ptr<betting_api_impl> _impl;
+    std::unique_ptr<impl> _impl;
 
     std::shared_ptr<chainbase::database_guard> _guard;
 };

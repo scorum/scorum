@@ -5,10 +5,12 @@ namespace scorum {
 namespace app {
 
 advertising_api::advertising_api(const api_context& ctx)
-    : _impl(std::make_shared<impl>(*ctx.app.chain_database(),
+    : _impl(std::make_unique<impl>(*ctx.app.chain_database(),
                                    static_cast<chain::data_service_factory_i&>(*ctx.app.chain_database())))
 {
 }
+
+advertising_api::~advertising_api() = default;
 
 fc::optional<account_api_obj> advertising_api::get_moderator() const
 {
