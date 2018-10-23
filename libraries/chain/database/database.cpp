@@ -143,10 +143,9 @@ database_impl::database_impl(database& self)
                        _self.get_dba<matched_bet_object>(),
                        _self.get_dba<pending_bet_object>(),
                        _self.get_dba<game_object>())
-    , _betting_matcher(static_cast<data_service_factory_i&>(_self),
-                       static_cast<database_virtual_operations_emmiter_i&>(_self),
-                       _betting_service,
-                       _self.get_dba<game_object>())
+    , _betting_matcher(static_cast<database_virtual_operations_emmiter_i&>(_self),
+                       static_cast<dba::db_accessor_factory&>(_self).get_dba<pending_bet_object>(),
+                       static_cast<dba::db_accessor_factory&>(_self).get_dba<matched_bet_object>())
     , _betting_resolver(_self.account_service(),
                         static_cast<database_virtual_operations_emmiter_i&>(_self),
                         _self.get_dba<matched_bet_object>(),
@@ -1295,7 +1294,8 @@ void database::initialize_evaluators()
         new update_game_start_time_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(
         new post_game_results_evaluator(*this, _my->get_betting_service(), *this));
-    _my->_evaluator_registry.register_evaluator(new post_bet_evaluator(*this, _my->get_betting_matcher()));
+    _my->_evaluator_registry.register_evaluator(
+        new post_bet_evaluator(*this, _my->get_betting_matcher(), _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->get_betting_service()));
 }
 

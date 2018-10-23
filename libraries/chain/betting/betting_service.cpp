@@ -3,22 +3,26 @@
 #include <boost/range/algorithm/set_algorithm.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 
+#include <scorum/chain/schema/bet_objects.hpp>
 #include <scorum/chain/schema/game_object.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
 #include <scorum/chain/schema/betting_property_object.hpp>
 
+#include <scorum/chain/betting/betting_math.hpp>
+
 #include <scorum/chain/services/account.hpp>
+
 #include <scorum/chain/dba/db_accessor_factory.hpp>
 #include <scorum/chain/dba/db_accessor.hpp>
-#include <scorum/chain/betting/betting_math.hpp>
-#include <scorum/chain/schema/bet_objects.hpp>
-
-#include <scorum/protocol/betting/market.hpp>
 
 #include <scorum/utils/range/unwrap_ref_wrapper_adaptor.hpp>
 
 namespace scorum {
 namespace chain {
+
+betting_service_i::~betting_service_i()
+{
+}
 
 betting_service::betting_service(data_service_factory_i& db,
                                  database_virtual_operations_emmiter_i& virt_op_emitter,
@@ -26,8 +30,7 @@ betting_service::betting_service(data_service_factory_i& db,
                                  dba::db_accessor<matched_bet_object>& matched_bet_dba,
                                  dba::db_accessor<pending_bet_object>& pending_bet_dba,
                                  dba::db_accessor<game_object>& game_dba)
-    : _dgp_property_service(db.dynamic_global_property_service())
-    , _account_svc(db.account_service())
+    : _account_svc(db.account_service())
     , _virt_op_emitter(virt_op_emitter)
     , _betting_property_dba(betting_property_dba)
     , _matched_bet_dba(matched_bet_dba)

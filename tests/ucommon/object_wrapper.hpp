@@ -77,5 +77,11 @@ public:
     {
     }
 
+    template <typename T, typename C> T create(C&& constructor)
+    {
+        wrapper_object<T> obj(shm, constructor);
+        return std::move(obj.get());
+    }
+
     bip::managed_shared_memory shm;
 };

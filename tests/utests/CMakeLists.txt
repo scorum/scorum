@@ -70,6 +70,7 @@ set(SOURCES
     betting/post_game_results_serialization_tests.cpp
     betting/wincase_type_tests.cpp
     betting/market_type_tests.cpp
+    betting/create_matched_bet_tests.cpp
     betting/evaluators/create_game_tests.cpp
     betting/evaluators/cancel_game_tests.cpp
     betting/evaluators/update_game_markets_tests.cpp
@@ -86,6 +87,7 @@ add_executable(utests
 target_link_libraries(utests
                       fc
                       chainbase
+                      common_test
                       ucommon_test
                       scorum_app
                       scorum_rewards_math

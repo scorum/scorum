@@ -1,20 +1,22 @@
 #pragma once
 #include <vector>
 #include <functional>
+
 #include <scorum/protocol/betting/market.hpp>
-#include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
+
 #include <scorum/utils/any_range.hpp>
 
 namespace scorum {
 namespace chain {
 
+struct bet_data;
+enum class pending_bet_kind : uint8_t;
+
 using scorum::protocol::market_type;
 
 struct data_service_factory_i;
 
-struct dynamic_global_property_service_i;
-struct betting_property_service_i;
-struct game_service_i;
 struct account_service_i;
 struct database_virtual_operations_emmiter_i;
 
@@ -28,6 +30,8 @@ template <typename> class db_accessor;
 
 struct betting_service_i
 {
+    virtual ~betting_service_i();
+
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;
 
     virtual void cancel_game(game_id_type game_id) = 0;
@@ -75,7 +79,6 @@ private:
     void push_matched_bet_cancelled_op(const bet_data& bet, uuid_type game_uuid);
     void push_pending_bet_cancelled_op(const bet_data& bet, uuid_type game_uuid);
 
-    dynamic_global_property_service_i& _dgp_property_service;
     account_service_i& _account_svc;
     database_virtual_operations_emmiter_i& _virt_op_emitter;
     dba::db_accessor<betting_property_object>& _betting_property_dba;
