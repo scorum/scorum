@@ -1,4 +1,5 @@
 #include <scorum/protocol/betting/market.hpp>
+#include <scorum/utils/static_variant_serialization.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -73,5 +74,45 @@ bool match_wincases(const wincase_type& lhs, const wincase_type& rhs)
 
     return !(lhs_opposite < rhs) && !(rhs < lhs_opposite);
 }
+}
+
+namespace utils {
+/**
+ * Customisation point for static_variant serialization which transforms a particular type of a variant's types to
+ * string
+ * @tparam TVariantItem one of variant's types
+ * @param obj object of a particular variant's type
+ * @return serialized type
+ */
+template <>
+template <typename TVariantItem>
+std::string static_variant_convertor<protocol::wincase_type>::get_type_name(const TVariantItem& obj) const
+{
+    std::string type_name = fc::get_typename<TVariantItem>::name();
+    auto nested_type_threshold = type_name.find_last_of(':') - 2;
+    auto type_threshold = type_name.find_last_of(':', nested_type_threshold) + 1;
+    return type_name.substr(type_threshold, type_name.size() - type_threshold);
+}
+}
+}
+
+namespace fc {
+
+template <> void to_variant(const wincase_type& wincase, fc::variant& var)
+{
+    scorum::utils::to_variant(wincase, var);
+}
+template <> void from_variant(const fc::variant& var, wincase_type& wincase)
+{
+    scorum::utils::from_variant(var, wincase);
+}
+
+template <> void to_variant(const market_type& market, fc::variant& var)
+{
+    scorum::utils::to_variant(market, var);
+}
+template <> void from_variant(const fc::variant& var, market_type& market)
+{
+    scorum::utils::from_variant(var, market);
 }
 }
