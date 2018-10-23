@@ -331,15 +331,15 @@ struct proposal_virtual_operation : public virtual_operation
     protocol::proposal_operation proposal_op;
 };
 
-struct allocate_cash_from_advertising_budget_operation : public virtual_operation
+struct budget_outgo_operation : public virtual_operation
 {
-    allocate_cash_from_advertising_budget_operation()
+    budget_outgo_operation()
     {
     }
-    allocate_cash_from_advertising_budget_operation(const budget_type type_,
-                                                    const account_name_type& owner_,
-                                                    const int64_t id_,
-                                                    const asset& cash_)
+    budget_outgo_operation(const budget_type type_,
+                           const account_name_type& owner_,
+                           const int64_t id_,
+                           const asset& cash_)
         : type(type_)
         , owner(owner_)
         , id(id_)
@@ -354,15 +354,15 @@ struct allocate_cash_from_advertising_budget_operation : public virtual_operatio
     asset cash = asset(0, SCORUM_SYMBOL);
 };
 
-struct cash_back_from_advertising_budget_to_owner_operation : public virtual_operation
+struct budget_owner_income_operation : public virtual_operation
 {
-    cash_back_from_advertising_budget_to_owner_operation()
+    budget_owner_income_operation()
     {
     }
-    cash_back_from_advertising_budget_to_owner_operation(const budget_type type_,
-                                                         const account_name_type& owner_,
-                                                         const int64_t id_,
-                                                         const asset& cash_)
+    budget_owner_income_operation(const budget_type type_,
+                                  const account_name_type& owner_,
+                                  const int64_t id_,
+                                  const asset& cash_)
         : type(type_)
         , owner(owner_)
         , id(id_)
@@ -377,27 +377,21 @@ struct cash_back_from_advertising_budget_to_owner_operation : public virtual_ope
     asset cash = asset(0, SCORUM_SYMBOL);
 };
 
-struct closing_budget_operation : public virtual_operation
+struct budget_closing_operation : public virtual_operation
 {
-    closing_budget_operation()
+    budget_closing_operation()
     {
     }
-    closing_budget_operation(const budget_type type,
-                             const account_name_type& owner,
-                             const int64_t id,
-                             const asset& cash)
+    budget_closing_operation(const budget_type type, const account_name_type& owner, const int64_t id)
         : type(type)
         , owner(owner)
         , id(id)
-        , cash(cash)
     {
-        FC_ASSERT(cash.symbol() == SCORUM_SYMBOL);
     }
 
     budget_type type = budget_type::post;
     account_name_type owner;
     int64_t id = -1;
-    asset cash = asset(0, SCORUM_SYMBOL);
 };
 
 struct bets_matched_operation : public virtual_operation
@@ -573,22 +567,20 @@ FC_REFLECT(scorum::protocol::devpool_to_devpool_vesting_withdraw_operation,
            (withdrawn))
 FC_REFLECT(scorum::protocol::proposal_virtual_operation,
            (proposal_op))
-FC_REFLECT(scorum::protocol::allocate_cash_from_advertising_budget_operation,
+FC_REFLECT(scorum::protocol::budget_outgo_operation,
            (type)
            (owner)
            (id)
            (cash))
-FC_REFLECT(scorum::protocol::cash_back_from_advertising_budget_to_owner_operation,
+FC_REFLECT(scorum::protocol::budget_owner_income_operation,
            (type)
            (owner)
            (id)
            (cash))
-FC_REFLECT(scorum::protocol::closing_budget_operation,
+FC_REFLECT(scorum::protocol::budget_closing_operation,
            (type)
            (owner)
-           (id)
-           (cash))
-
+           (id))
 FC_REFLECT(scorum::protocol::game_status_changed_operation,
            (game_uuid)
            (old_status)

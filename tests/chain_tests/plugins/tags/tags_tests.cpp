@@ -233,7 +233,7 @@ BOOST_FIXTURE_TEST_SUITE(get_content, get_content_fixture)
 
 SCORUM_TEST_CASE(check_total_payout)
 {
-    auto start = db.head_block_time();
+    auto start = db.head_block_time() + 1; // start_time should be greater than head_block_time
     auto deadline = db.head_block_time() + fc::minutes(1);
     actor(initdelegate).create_budget(R"j({"tag": 1})j", asset::from_string("5.000000000 SCR"), start, deadline);
 
@@ -275,7 +275,7 @@ SCORUM_TEST_CASE(pending_payout_is_zero_before_any_payouts)
 
 SCORUM_TEST_CASE(check_pending_payout_after_first_payout)
 {
-    auto start = db.head_block_time();
+    auto start = db.head_block_time() + 1; // start_time should be greater than head_block_time
     auto deadline = db.head_block_time() + fc::days(30);
     actor(initdelegate).create_budget(R"j({"tag": 1})j", asset::from_string("5.000000000 SCR"), start, deadline);
 

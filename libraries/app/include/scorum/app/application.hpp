@@ -38,6 +38,15 @@
 #define SCORUMD_CONFIG_FILE_NAME "config.ini"
 
 /**
+ * @mainpage
+ *
+ * - @subpage api
+ * - @subpage plugins
+ * - @subpage operations
+ *
+ */
+
+/**
  * @defgroup api APIs
  * @brief List of public APIs
  *
@@ -60,6 +69,16 @@
  * enable-plugins = witness node_monitoring
  * ```
  */
+
+
+/**
+ * @defgroup operations Operations
+ * @brief List if operations
+ *
+ * Operations to push in network_broadcast_api
+ *
+ */
+
 
 namespace scorum {
 namespace chain {
