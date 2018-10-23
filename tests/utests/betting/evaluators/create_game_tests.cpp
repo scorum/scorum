@@ -92,7 +92,7 @@ SCORUM_TEST_CASE(create_by_no_moderator_throw)
     mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
     mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(false);
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
-    mocks.ExpectCall(betting_service, betting_service_i::is_betting_moderator).Return(false);
+    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(false);
 
     BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
 }
