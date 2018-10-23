@@ -58,7 +58,7 @@ void database::update_witness_schedule()
 
     if ((_db.head_block_num() % SCORUM_MAX_WITNESSES) == 0)
     {
-        block_info ctx = std::move(_db.head_block_context());
+        block_info ctx = _db.head_block_context();
 
         debug_log(ctx, "update_witness_schedule");
 
@@ -195,7 +195,7 @@ void database::_reset_witness_virtual_schedule_time()
 {
     database& _db = (*this);
 
-    block_info ctx = std::move(_db.head_block_context());
+    block_info ctx = _db.head_block_context();
 
     debug_log(ctx, "_reset_witness_virtual_schedule_time");
 

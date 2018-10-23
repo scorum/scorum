@@ -60,7 +60,6 @@ public:
     rewards_stat() = delete;
 
     rewards_stat(database& db)
-        : _db(db)
     {
         _conn = db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(*this); });
     }
@@ -112,7 +111,6 @@ public:
     } /// ignore all other ops
 
 private:
-    database& _db;
     fc::scoped_connection _conn;
     std::map<account_name_type, rewards_stat_data> _stats;
 };

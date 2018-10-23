@@ -429,11 +429,11 @@ struct bets_matched_operation : public virtual_operation
     int64_t matched_bet_id = -1;
 };
 
-struct game_status_changed : public virtual_operation
+struct game_status_changed_operation : public virtual_operation
 {
     // TODO: could be removed in C++17
-    game_status_changed() = default;
-    game_status_changed(const uuid_type& game_uuid, game_status old_status, game_status new_status)
+    game_status_changed_operation() = default;
+    game_status_changed_operation(const uuid_type& game_uuid, game_status old_status, game_status new_status)
         : game_uuid(game_uuid)
         , old_status(old_status)
         , new_status(new_status)
@@ -610,7 +610,7 @@ FC_REFLECT(scorum::protocol::closing_budget_operation,
            (id)
            (cash))
 
-FC_REFLECT(scorum::protocol::game_status_changed,
+FC_REFLECT(scorum::protocol::game_status_changed_operation,
            (game_uuid)
            (old_status)
            (new_status))

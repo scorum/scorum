@@ -1,19 +1,23 @@
 #pragma once
+#include <scorum/protocol/betting/market.hpp>
+#include <scorum/chain/schema/scorum_object_types.hpp>
+#include <scorum/utils/any_range.hpp>
+
+#include <scorum/protocol/types.hpp>
+
 #include <vector>
 #include <functional>
-#include <scorum/protocol/betting/market.hpp>
-#include <scorum/chain/schema/bet_objects.hpp>
-#include <scorum/utils/any_range.hpp>
 
 namespace scorum {
 namespace chain {
+
+struct bet_data;
+enum class pending_bet_kind : uint8_t;
 
 using scorum::protocol::market_type;
 
 struct data_service_factory_i;
 
-struct betting_property_service_i;
-struct game_service_i;
 struct account_service_i;
 struct database_virtual_operations_emmiter_i;
 
@@ -23,17 +27,19 @@ class pending_bet_object;
 class matched_bet_object;
 
 namespace dba {
-template <typename> struct db_accessor;
+template <typename> class db_accessor;
 }
 
 struct betting_service_i
 {
+    virtual ~betting_service_i();
+
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;
 
     virtual const pending_bet_object& create_pending_bet(const account_name_type& better,
-                                                         const asset& stake,
-                                                         odds odds,
-                                                         const wincase_type& wincase,
+                                                         const protocol::asset& stake,
+                                                         protocol::odds odds,
+                                                         const protocol::wincase_type& wincase,
                                                          game_id_type game,
                                                          uuid_type bet_uuid,
                                                          pending_bet_kind kind)
@@ -67,9 +73,9 @@ public:
     bool is_betting_moderator(const account_name_type& account_name) const override;
 
     const pending_bet_object& create_pending_bet(const account_name_type& better,
-                                                 const asset& stake,
-                                                 odds odds,
-                                                 const wincase_type& wincase,
+                                                 const protocol::asset& stake,
+                                                 protocol::odds odds,
+                                                 const protocol::wincase_type& wincase,
                                                  game_id_type game,
                                                  uuid_type bet_uuid,
                                                  pending_bet_kind kind) override;

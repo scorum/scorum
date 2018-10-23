@@ -25,6 +25,9 @@ struct accounts_total
 
 struct account_service_i : public base_service_i<account_object>
 {
+    using base_service_i<account_object>::get;
+    using base_service_i<account_object>::is_exists;
+
     virtual const account_object& get(const account_id_type&) const = 0;
 
     virtual const account_object& get_account(const account_name_type&) const = 0;
@@ -172,6 +175,9 @@ protected:
     explicit dbs_account(database& db);
 
 public:
+    using base_service_i<account_object>::get;
+    using base_service_i<account_object>::is_exists;
+
     virtual const account_object& get(const account_id_type&) const override;
 
     virtual const account_object& get_account(const account_name_type&) const override;

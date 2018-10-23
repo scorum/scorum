@@ -22,7 +22,7 @@ add_library( scorum_protocol
              betting/invariants_validation.cpp
              betting/market_kind.cpp
              betting/game_status.cpp
-             betting/betting_serialization.cpp
+             betting/game.cpp
              betting/market.cpp
 
              ${HEADERS}

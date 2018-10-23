@@ -35,7 +35,7 @@ public:
                   ("l", limit)("2", get_api_config(API_ACCOUNT_HISTORY).max_blockchain_history_depth));
         FC_ASSERT(from >= limit, "From must be greater than limit");
 
-        const auto& idx = db->get_index<account_history_index<history_object_type>>().indices().get<by_account>();
+        const auto& idx = db->get_index<account_history_index<history_object_type>, by_account>();
         auto itr = idx.lower_bound(boost::make_tuple(account, from));
         if (itr != idx.end())
         {

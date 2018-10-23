@@ -22,7 +22,7 @@ std::vector<winner_api_object> betting_api::get_game_winners(const uuid_type& ga
     return _guard->with_read_lock([&] { return _impl->get_game_winners(game_uuid); });
 }
 
-std::vector<game_api_object> betting_api::get_games_by_status(game_filter filter) const
+std::vector<game_api_object> betting_api::get_games_by_status(const fc::flat_set<chain::game_status>& filter) const
 {
     return _guard->with_read_lock([&] { return _impl->get_games_by_status(filter); });
 }

@@ -14,6 +14,20 @@ using namespace scorum::chain;
 
 BOOST_AUTO_TEST_SUITE(betting_math_tests)
 
+SCORUM_TEST_CASE(extra_large_coefficient_big_gain_mismatch_test)
+{
+    const asset bet1_stake = ASSET_SCR(10000);
+    const asset bet2_stake = ASSET_SCR(90'000'000);
+
+    const odds bet1_odds(10000, 1);
+    const odds bet2_odds(10000, 9999);
+
+    const auto matched = calculate_matched_stake(bet1_stake, bet2_stake, bet1_odds, bet2_odds);
+
+    BOOST_CHECK_EQUAL(matched.bet1_matched.amount, 9000);
+    BOOST_CHECK_EQUAL(matched.bet2_matched.amount, bet2_stake.amount);
+}
+
 SCORUM_TEST_CASE(more_than_matched_check) // to catch and log exceptions in calculate_matched_stake
 {
     const asset stake_my = ASSET_SCR(1e+9);

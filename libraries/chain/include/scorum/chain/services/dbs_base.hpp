@@ -22,7 +22,7 @@ using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
 using scorum::protocol::public_key_type;
 
-struct dbs_base
+class dbs_base
 {
 protected:
     dbs_base() = delete;

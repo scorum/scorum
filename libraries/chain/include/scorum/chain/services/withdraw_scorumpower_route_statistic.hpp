@@ -9,6 +9,9 @@ namespace chain {
 struct withdraw_scorumpower_route_statistic_service_i
     : public base_service_i<withdraw_scorumpower_route_statistic_object>
 {
+    using base_service_i<withdraw_scorumpower_route_statistic_object>::get;
+    using base_service_i<withdraw_scorumpower_route_statistic_object>::is_exists;
+
     virtual bool is_exists(const account_id_type& from) const = 0;
 
     virtual bool is_exists(const dev_committee_id_type& from) const = 0;
@@ -26,6 +29,9 @@ protected:
     explicit dbs_withdraw_scorumpower_route_statistic(database& db);
 
 public:
+    using base_service_i<withdraw_scorumpower_route_statistic_object>::get;
+    using base_service_i<withdraw_scorumpower_route_statistic_object>::is_exists;
+
     ~dbs_withdraw_scorumpower_route_statistic();
 
     virtual bool is_exists(const account_id_type& from) const override;

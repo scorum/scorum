@@ -727,7 +727,7 @@ public:
 
         m["gethelp"] = [](variant result, const fc::variants& a) { return result.get_string(); };
 
-        m["list_my_accounts"] = [this](variant result, const fc::variants& a) {
+        m["list_my_accounts"] = [](variant result, const fc::variants& a) {
             auto accounts = result.as<std::vector<account_api_obj>>();
 
             cli::formatter p;
@@ -755,7 +755,7 @@ public:
 
             return p.str();
         };
-        m["get_account_balance"] = [this](variant result, const fc::variants& a) -> std::string {
+        m["get_account_balance"] = [](variant result, const fc::variants& a) -> std::string {
             auto rt = result.as<account_balance_info_api_obj>();
 
             cli::formatter p;
@@ -771,7 +771,7 @@ public:
             return p.str();
         };
 
-        auto history_formatter = [this](variant result, const fc::variants& a) {
+        auto history_formatter = [](variant result, const fc::variants& a) {
             const auto& results = result.get_array();
 
             cli::formatter p;
@@ -808,7 +808,7 @@ public:
         m["get_devcommittee_scr_to_scr_transfers"] = history_formatter;
         m["get_devcommittee_sp_to_scr_transfers"] = history_formatter;
 
-        m["get_withdraw_routes"] = [this](variant result, const fc::variants& a) {
+        m["get_withdraw_routes"] = [](variant result, const fc::variants& a) {
             auto routes = result.as<std::vector<withdraw_route>>();
 
             cli::formatter p;
@@ -3174,6 +3174,145 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
     return result;
 }
 
+annotated_signed_transaction wallet_api::create_game(uuid_type uuid,
+                                                     account_name_type moderator,
+                                                     const std::string& name,
+                                                     fc::time_point_sec start_time,
+                                                     uint32_t auto_resolve_delay_sec,
+                                                     game_type game,
+                                                     const fc::flat_set<market_type>& markets,
+                                                     const bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+
+        create_game_operation op;
+
+        op.uuid = uuid;
+        op.moderator = moderator;
+        op.game = game;
+        op.name = name;
+        op.start_time = start_time;
+        op.auto_resolve_delay_sec = auto_resolve_delay_sec;
+        op.markets = markets;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        annotated_signed_transaction ret;
+        ret = my->sign_transaction(tx, broadcast);
+
+        return ret;
+    }
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(name)(start_time)(auto_resolve_delay_sec)(game)(broadcast))
+}
+
+annotated_signed_transaction wallet_api::cancel_game(uuid_type uuid, account_name_type moderator, const bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+
+        cancel_game_operation op;
+
+        op.uuid = uuid;
+        op.moderator = moderator;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        annotated_signed_transaction ret;
+        ret = my->sign_transaction(tx, broadcast);
+
+        return ret;
+    }
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(broadcast))
+}
+
+annotated_signed_transaction wallet_api::update_game_markets(uuid_type uuid,
+                                                             account_name_type moderator,
+                                                             const fc::flat_set<market_type>& markets,
+                                                             const bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+
+        update_game_markets_operation op;
+
+        op.uuid = uuid;
+        op.moderator = moderator;
+        op.markets = markets;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        annotated_signed_transaction ret;
+        ret = my->sign_transaction(tx, broadcast);
+
+        return ret;
+    }
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(broadcast))
+}
+
+annotated_signed_transaction wallet_api::update_game_start_time(uuid_type uuid,
+                                                                account_name_type moderator,
+                                                                fc::time_point_sec start_time,
+                                                                const bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+
+        update_game_start_time_operation op;
+
+        op.uuid = uuid;
+        op.moderator = moderator;
+        op.start_time = start_time;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        annotated_signed_transaction ret;
+        ret = my->sign_transaction(tx, broadcast);
+
+        return ret;
+    }
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(start_time)(broadcast))
+}
+
+annotated_signed_transaction wallet_api::post_game_results(uuid_type uuid,
+                                                           account_name_type moderator,
+                                                           const fc::flat_set<wincase_type>& wincases,
+                                                           const bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+
+        post_game_results_operation op;
+
+        op.uuid = uuid;
+        op.moderator = moderator;
+        op.wincases = wincases;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        annotated_signed_transaction ret;
+        ret = my->sign_transaction(tx, broadcast);
+
+        return ret;
+    }
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(broadcast))
+}
+
 annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
                                                   account_name_type better,
                                                   uuid_type game_uuid,
@@ -3209,8 +3348,9 @@ annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
     return ret;
 }
 
-annotated_signed_transaction
-wallet_api::cancel_pending_bets(account_name_type better, fc::flat_set<uuid_type> bet_uuids, const bool broadcast)
+annotated_signed_transaction wallet_api::cancel_pending_bets(account_name_type better,
+                                                             const fc::flat_set<uuid_type>& bet_uuids,
+                                                             const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
@@ -3246,7 +3386,7 @@ chain_capital_api_obj wallet_api::get_chain_capital() const
     return my->_chain_api->get_chain_capital();
 }
 
-std::vector<game_api_object> wallet_api::get_games_by_status(game_filter filter) const
+std::vector<game_api_object> wallet_api::get_games_by_status(const fc::flat_set<game_status>& filter) const
 {
     auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
 

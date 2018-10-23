@@ -94,7 +94,7 @@ public:
 
         _current_buckets.clear();
 
-        const auto& bucket_idx = db.template get_index<bucket_index>().indices().get<common_statistics::by_bucket>();
+        const auto& bucket_idx = db.template get_index<bucket_index, common_statistics::by_bucket>();
 
         for (const auto& bucket : _tracked_buckets)
         {

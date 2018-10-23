@@ -81,13 +81,12 @@ public:
         return winners;
     }
 
-    std::vector<game_api_object> get_games_by_status(game_filter filter) const
+    std::vector<game_api_object> get_games_by_status(const fc::flat_set<chain::game_status>& filter) const
     {
-        using namespace boost::adaptors;
-
-        auto rng = _game_service.get_games()
-            | filtered([&](const auto& obj) { return static_cast<uint8_t>(obj.status) & static_cast<uint8_t>(filter); })
-            | transformed([](const auto& obj) { return game_api_object(obj); });
+        auto games = _game_service.get_games();
+        auto rng = games //
+            | boost::adaptors::filtered([&](const auto& obj) { return filter.find(obj.status) != filter.end(); })
+            | boost::adaptors::transformed([](const auto& obj) { return game_api_object(obj); });
 
         return { rng.begin(), rng.end() };
     }

@@ -1,3 +1,6 @@
+#pragma once
+#include <iterator>
+
 namespace scorum {
 namespace utils {
 template <typename InputRng, typename Callback> void foreach (InputRng&& rng, Callback && callback)

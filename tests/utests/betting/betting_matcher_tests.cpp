@@ -1,268 +1,358 @@
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/dba/db_accessor_factory.hpp>
-#include <scorum/chain/dba/db_accessor.hpp>
+#include <scorum/chain/database/database_virtual_operations.hpp>
+
 #include <scorum/chain/betting/betting_matcher.hpp>
-#include <scorum/utils/any_range.hpp>
-#include <scorum/utils/collect_range_adaptor.hpp>
 
-#include "betting_common.hpp"
+#include <scorum/chain/dba/db_accessor_factory.hpp>
 
-namespace std {
-void operator<<(std::ostream& os, const scorum::chain::pending_bet_object&)
-{
-}
-}
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/schema/game_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+
+#include <scorum/chain/dba/db_accessor.hpp>
+
+#include "detail.hpp"
+#include "db_mock.hpp"
+#include "defines.hpp"
+#include "hippomocks.h"
 
 namespace betting_matcher_tests {
 
-using namespace scorum;
+using namespace boost::uuids;
+
 using namespace scorum::chain;
 using namespace scorum::protocol;
-using namespace service_wrappers;
 
-struct betting_matcher_fixture : public betting_common::betting_service_fixture_impl
+struct no_bets_fixture
 {
-    using cancel_ptr = void (betting_service_i::*)(utils::bidir_range<const pending_bet_object>, uuid_type);
+private:
+    db_mock db;
+    size_t _counter = 0;
 
-    betting_matcher_fixture()
-        : dba_factory(*mocks.Mock<dba::db_index>())
-        , matcher(*dbs_services, *virt_op_emitter, *betting_svc, dba_factory.get_dba<game_object>())
+public:
+    MockRepository mocks;
+    database_virtual_operations_emmiter_i* vops_emiter = mocks.Mock<database_virtual_operations_emmiter_i>();
+
+    dba::db_accessor<pending_bet_object> pending_dba;
+    dba::db_accessor<matched_bet_object> matched_dba;
+    dba::db_accessor<dynamic_global_property_object> dprops_dba;
+
+    betting_matcher matcher;
+
+    no_bets_fixture()
+        : pending_dba(dba::db_accessor<pending_bet_object>(db))
+        , matched_dba(dba::db_accessor<matched_bet_object>(db))
+        , dprops_dba(dba::db_accessor<dynamic_global_property_object>(db))
+        , matcher(*vops_emiter, pending_dba, matched_dba, dprops_dba)
     {
-        mocks.OnCallFunc((dba::detail::get_by<game_object, by_id, game_id_type>))
-            .Return(create_object<game_object>(shm, [](game_object& o) { o.uuid = { 0 }; }));
+        setup_db();
+        setup_mock();
     }
 
-    dba::db_accessor_factory dba_factory;
-    betting_matcher matcher;
+    void setup_db()
+    {
+        db.add_index<pending_bet_index>();
+        db.add_index<matched_bet_index>();
+        db.add_index<game_index>();
+        db.add_index<dynamic_global_property_index>();
+    }
+
+    void setup_mock()
+    {
+        mocks.OnCall(vops_emiter, database_virtual_operations_emmiter_i::push_virtual_operation).With(_);
+        dprops_dba.create([](auto&) {});
+    }
+
+    template <typename T> size_t count() const
+    {
+        return db.get_index<T, by_id>().size();
+    }
+
+    template <typename C> const pending_bet_object& create_bet(C&& constructor)
+    {
+        ++_counter;
+
+        return db.create<pending_bet_object>([&](pending_bet_object& bet) {
+            bet.data.uuid = gen_uuid(boost::lexical_cast<std::string>(_counter));
+
+            constructor(bet);
+        });
+    }
 };
 
-BOOST_FIXTURE_TEST_SUITE(betting_matcher_tests, betting_matcher_fixture)
+BOOST_AUTO_TEST_SUITE(betting_matcher_tests)
 
-SCORUM_TEST_CASE(matching_not_found_and_created_pending_check)
+BOOST_FIXTURE_TEST_CASE(add_bet_with_no_stake_to_the_close_list, no_bets_fixture)
 {
-    mocks.OnCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets);
-    const auto& new_bet = create_bet();
+    const auto& bet1 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(10);
+        bet.data.bet_odds = odds(3, 2);
+        bet.data.wincase = total::over({ 1 });
+    });
 
-    matcher.match(new_bet);
+    const auto& bet2 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(0);
+        bet.data.bet_odds = bet1.data.bet_odds.inverted();
+        bet.data.wincase = create_opposite(bet1.data.wincase);
+    });
 
-    BOOST_CHECK(!pending_bets.empty());
-    BOOST_CHECK(matched_bets.empty());
+    auto bets_to_cancel = matcher.match(bet2, fc::time_point_sec::maximum());
+
+    BOOST_CHECK_EQUAL(1u, bets_to_cancel.size());
 }
 
-SCORUM_TEST_CASE(matched_for_full_stake_check)
+BOOST_FIXTURE_TEST_CASE(dont_create_matched_bet_when_stake_is_zero, no_bets_fixture)
 {
-    mocks.OnCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets);
+    const auto& bet1 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(10);
+        bet.data.bet_odds = odds(3, 2);
+        bet.data.wincase = total::over({ 1 });
+    });
 
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1e+9));
+    const auto& bet2 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(0);
+        bet.data.bet_odds = bet1.data.bet_odds.inverted();
+        bet.data.wincase = create_opposite(bet1.data.wincase);
+    });
 
-    matcher.match(bet1);
+    matcher.match(bet2, fc::time_point_sec::maximum());
 
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(9e+9));
-
-    mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
-    mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
-            auto vec = bets | utils::adaptors::collect<std::vector>();
-            BOOST_REQUIRE_EQUAL(vec.size(), 2u);
-            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0u);
-            BOOST_CHECK_EQUAL(vec[1].data.stake.amount, 0u);
-        });
-
-    matcher.match(bet2);
-
-    BOOST_CHECK_EQUAL(matched_bets.get().bet1_data.stake.amount, 1e+9);
-    BOOST_CHECK_EQUAL(matched_bets.get().bet2_data.stake.amount, 9e+9);
+    BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
 
-SCORUM_TEST_CASE(matched_for_part_stake_check)
+BOOST_FIXTURE_TEST_CASE(dont_add_bet_with_no_stake_to_the_close_list, no_bets_fixture)
 {
-    mocks.OnCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets);
+    const auto& bet1 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(0);
+        bet.data.bet_odds = odds(3, 2);
+        bet.data.wincase = total::over({ 1 });
+    });
 
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1000));
+    auto bets_to_cancel = matcher.match(bet1, fc::time_point_sec::maximum());
 
-    matcher.match(bet1);
-
-    // set not enough stake to pay gain 'alice'
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(8000));
-
-    mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
-            auto vec = bets | utils::adaptors::collect<std::vector>();
-            BOOST_REQUIRE_EQUAL(vec.size(), 1u);
-            BOOST_CHECK_EQUAL(vec[0].data.better, "bob");
-            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0);
-        });
-
-    matcher.match(bet2);
-
-    BOOST_CHECK_EQUAL(matched_bets.get().bet1_data.better, "alice");
-    BOOST_CHECK_EQUAL(matched_bets.get().bet1_data.stake.amount, 888);
-    BOOST_CHECK_EQUAL(matched_bets.get().bet2_data.better, "bob");
-    BOOST_CHECK_EQUAL(matched_bets.get().bet2_data.stake.amount, 8000);
-    BOOST_CHECK_EQUAL(pending_bets.get().data.better, "alice");
-    BOOST_CHECK_EQUAL(pending_bets.get().data.stake.amount, 112);
+    BOOST_CHECK_EQUAL(0u, bets_to_cancel.size());
 }
 
-SCORUM_TEST_CASE(matched_for_full_stake_with_more_than_one_matching_check)
+BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_wincase, no_bets_fixture)
 {
-    mocks.OnCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets);
+    const auto& bet1 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(10);
+        bet.data.bet_odds = odds(3, 2);
+        bet.data.wincase = total::over({ 1 });
+    });
 
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1000));
+    const auto& bet2 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(10);
+        bet.data.bet_odds = bet1.data.bet_odds.inverted();
+        bet.data.wincase = bet1.data.wincase;
+    });
 
-    matcher.match(bet1);
+    matcher.match(bet2, fc::time_point_sec::maximum());
 
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(8000));
-
-    mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
-            auto vec = bets | utils::adaptors::collect<std::vector>();
-            BOOST_REQUIRE_EQUAL(vec.size(), 1u);
-            BOOST_CHECK_EQUAL(vec[0].data.better, "bob");
-            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0);
-        });
-
-    matcher.match(bet2);
-
-    BOOST_CHECK_EQUAL(matched_bets.get().bet1_data.stake.amount, 888);
-    BOOST_CHECK_EQUAL(matched_bets.get().bet2_data.stake.amount, 8000);
-    BOOST_CHECK_EQUAL(pending_bets.get(1).data.stake.amount, 112);
-
-    // in order to cover 112 bet with 10/1 odds we need to bet at least 1008:
-    // 112  | 10/1: r1 = 1120
-    //              p1 = 1008
-    // 1008 | 10/9: r2 = 1120               => r2 == r1 => b1 = 112
-    //              p2 = 112                               b2 = 1008
-    // 1009 | 10/9: r2 = 1121.(1) = 1121    => r2 > r1 => b1 = 112
-    //              p2 = 112.(1) = 112                    b2 = p1 = 1008
-    const auto& bet3 = create_bet("sam", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(1009));
-
-    mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
-            auto vec = bets | utils::adaptors::collect<std::vector>();
-            BOOST_REQUIRE_EQUAL(vec.size(), 2u);
-            BOOST_CHECK_EQUAL(vec[0].data.better, "alice");
-            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0);
-            BOOST_CHECK_EQUAL(vec[1].data.better, "sam");
-            BOOST_CHECK_EQUAL(vec[1].data.stake.amount, 1);
-        });
-
-    matcher.match(bet3);
-
-    BOOST_CHECK_EQUAL(matched_bets.get(2).bet1_data.better, "alice");
-    BOOST_CHECK_EQUAL(matched_bets.get(2).bet1_data.stake.amount, 112);
-    BOOST_CHECK_EQUAL(matched_bets.get(2).bet2_data.better, "sam");
-    BOOST_CHECK_EQUAL(matched_bets.get(2).bet2_data.stake.amount, 1008);
+    BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
 
-SCORUM_TEST_CASE(matched_from_larger_potential_result_check)
+BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_odds, no_bets_fixture)
 {
-    mocks.OnCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets);
+    const auto& bet1 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(10);
+        bet.data.bet_odds = odds(3, 2);
+        bet.data.wincase = total::over({ 1 });
+    });
 
-    const auto& bet1 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(8000));
+    const auto& bet2 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(10);
+        bet.data.bet_odds = bet1.data.bet_odds;
+        bet.data.wincase = create_opposite(bet1.data.wincase);
+    });
 
-    matcher.match(bet1);
+    matcher.match(bet2, fc::time_point_sec::maximum());
 
-    const auto& bet2 = create_bet("sam", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(1000));
-
-    matcher.match(bet2);
-
-    const auto& bet3 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1000));
-
-    mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
-            auto vec = bets | utils::adaptors::collect<std::vector>();
-            BOOST_REQUIRE_EQUAL(vec.size(), 2u);
-            BOOST_CHECK_EQUAL(vec[0].data.better, "bob");
-            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0);
-            BOOST_CHECK_EQUAL(vec[1].data.better, "sam");
-            BOOST_CHECK_EQUAL(vec[1].data.stake.amount, 0);
-        });
-
-    matcher.match(bet3);
-
-    BOOST_CHECK_EQUAL(matched_bets.get(1).bet1_data.better, "bob");
-    BOOST_CHECK_EQUAL(matched_bets.get(1).bet1_data.stake.amount, 8000);
-    BOOST_CHECK_EQUAL(matched_bets.get(1).bet2_data.better, "alice");
-    BOOST_CHECK_EQUAL(matched_bets.get(1).bet2_data.stake.amount, 888);
-    BOOST_CHECK_EQUAL(matched_bets.get(2).bet1_data.better, "sam");
-    BOOST_CHECK_EQUAL(matched_bets.get(2).bet1_data.stake.amount, 1000);
-    BOOST_CHECK_EQUAL(matched_bets.get(2).bet2_data.better, "alice");
-    BOOST_CHECK_EQUAL(matched_bets.get(2).bet2_data.stake.amount, 111);
-
-    // as we do not remove pending bets in tests, alice's pending bet is at index 3
-    BOOST_CHECK_EQUAL(pending_bets.get(3).data.stake.amount, 1);
+    BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
 
-SCORUM_TEST_CASE(virt_operation_should_be_emitted_check)
+BOOST_FIXTURE_TEST_CASE(match_with_two_bets, no_bets_fixture)
 {
-    mocks.OnCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets);
-    mocks.ExpectCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation)
-        .Do([](const operation& op) {
-            auto& typed_op = op.get<bets_matched_operation>();
-            BOOST_CHECK_EQUAL(typed_op.better1, "alice");
-            BOOST_CHECK_EQUAL(typed_op.better2, "bob");
-            BOOST_CHECK_EQUAL(typed_op.matched_stake1.amount, 888);
-            BOOST_CHECK_EQUAL(typed_op.matched_stake2.amount, 8000);
-        });
+    const auto one_point_five = odds(3, 2);
+    const auto total_over_1 = total::over({ 1 });
 
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home::yes(), "10/1", ASSET_SCR(1000));
-    matcher.match(bet1);
+    create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(10);
 
-    // set not enough stake to pay gain 'alice'
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/9", ASSET_SCR(8000));
-    matcher.match(bet2);
+        bet.data.bet_odds = one_point_five;
+        bet.data.wincase = total_over_1;
+    });
+
+    create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(10);
+
+        bet.data.bet_odds = one_point_five;
+        bet.data.wincase = total_over_1;
+    });
+
+    const auto& bet3 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(10);
+
+        bet.data.bet_odds = one_point_five.inverted();
+        bet.data.wincase = create_opposite(total_over_1);
+    });
+
+    matcher.match(bet3, fc::time_point_sec::maximum());
+
+    BOOST_CHECK_EQUAL(2u, count<matched_bet_index>());
 }
 
-SCORUM_TEST_CASE(extra_large_coefficient_big_gain_mismatch_test)
+struct two_bets_fixture : public no_bets_fixture
 {
-    mocks.OnCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets);
+public:
+    bet_data bet1;
+    bet_data bet2;
 
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home::yes(), "10000/1", ASSET_SCR(10000));
+    two_bets_fixture()
+    {
+        bet1 = create_bet([&](pending_bet_object& bet) {
+                   bet.data.stake = ASSET_SCR(10);
+                   bet.data.bet_odds = odds(3, 2);
+                   bet.data.wincase = total::over({ 1 });
+               }).data;
 
-    matcher.match(bet1);
+        bet2 = create_bet([&](pending_bet_object& bet) {
+                   bet.data.stake = ASSET_SCR(10);
+                   bet.data.bet_odds = bet1.bet_odds.inverted();
+                   bet.data.wincase = create_opposite(bet1.wincase);
+               }).data;
+    }
+};
 
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10000/9999", ASSET_SCR(90'000'000));
+BOOST_FIXTURE_TEST_CASE(add_fully_matched_bet_to_cancel_list, two_bets_fixture)
+{
+    auto bets_to_cancel = matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
 
-    mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
-            auto vec = bets | utils::adaptors::collect<std::vector>();
-            BOOST_REQUIRE_EQUAL(vec.size(), 1u);
-            BOOST_CHECK_EQUAL(vec[0].data.better, "bob");
-            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 0u);
-        });
+    BOOST_REQUIRE_EQUAL(1u, bets_to_cancel.size());
 
-    matcher.match(bet2);
-
-    BOOST_CHECK_EQUAL(matched_bets.get().bet1_data.stake.amount, 9000);
-    BOOST_CHECK_EQUAL(matched_bets.get().bet2_data.stake.amount, 90'000'000);
-
-    // NOTE:
-    // alice potential gain: 90'000'000; gain: 90'009'000 (gain extra 9'000 SCR)
-    // bob   potential gain: 90'009'000; gain: 90'009'000 [OK]
+    BOOST_CHECK(bets_to_cancel.front().get().data.uuid == bet1.uuid);
 }
 
-SCORUM_TEST_CASE(extra_small_bet_which_cannot_be_matched_test)
+BOOST_FIXTURE_TEST_CASE(expect_virtual_operation_call_on_bets_matching, two_bets_fixture)
 {
-    mocks.OnCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets);
+    auto check_virtual_operation = [&](const scorum::protocol::operation& o) {
+        o.visit([](const auto&) { BOOST_FAIL("expected 'bets_matched_operation' call"); },
+                [&](const scorum::protocol::bets_matched_operation& op) {
+                    BOOST_CHECK(op.bet1_uuid == bet1.uuid);
+                    BOOST_CHECK(op.bet2_uuid == bet2.uuid);
+                    BOOST_CHECK_EQUAL(op.better1, bet1.better);
+                    BOOST_CHECK_EQUAL(op.better2, bet2.better);
+                    BOOST_CHECK_EQUAL(op.matched_stake1.amount, 10u);
+                    BOOST_CHECK_EQUAL(op.matched_stake2.amount, 5u);
+                    BOOST_CHECK_EQUAL(op.matched_bet_id, 0);
+                });
+    };
 
-    const auto& bet1 = create_bet("alice", test_bet_game, goal_home::yes(), "10/8", ASSET_SCR(2));
+    mocks.ExpectCall(vops_emiter, database_virtual_operations_emmiter_i::push_virtual_operation)
+        .With(_)
+        .Do(check_virtual_operation);
 
-    matcher.match(bet1);
+    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
+}
 
-    const auto& bet2 = create_bet("bob", test_bet_game, goal_home::no(), "10/2", ASSET_SCR(1000));
+BOOST_FIXTURE_TEST_CASE(create_one_matched_bet, two_bets_fixture)
+{
+    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
 
-    mocks.ExpectCallOverload(betting_svc, (cancel_ptr)&betting_service_i::cancel_pending_bets)
-        .Do([](utils::bidir_range<const pending_bet_object> bets, const uuid_type&) {
-            auto vec = bets | utils::adaptors::collect<std::vector>();
-            BOOST_REQUIRE_EQUAL(vec.size(), 1u);
-            BOOST_CHECK_EQUAL(vec[0].data.better, "alice");
-            BOOST_CHECK_EQUAL(vec[0].data.stake.amount, 2u);
-        });
+    BOOST_CHECK_EQUAL(1u, count<matched_bet_index>());
+}
 
-    matcher.match(bet2);
+BOOST_FIXTURE_TEST_CASE(check_bets_matched_stake, two_bets_fixture)
+{
+    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
 
-    BOOST_CHECK(matched_bets.empty());
+    BOOST_CHECK_EQUAL(10u, matched_dba.get_by<by_id>(0u).bet1_data.stake.amount);
+    BOOST_CHECK_EQUAL(5u, matched_dba.get_by<by_id>(0u).bet2_data.stake.amount);
+}
+
+BOOST_FIXTURE_TEST_CASE(second_bet_matched_on_five_tockens, two_bets_fixture)
+{
+    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
+
+    BOOST_CHECK_EQUAL(5u, pending_dba.get_by<by_uuid>(bet2.uuid).data.stake.amount);
+}
+
+BOOST_FIXTURE_TEST_CASE(first_bet_matched_on_hole_stake, two_bets_fixture)
+{
+    matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
+
+    BOOST_CHECK_EQUAL(0u, pending_dba.get_by<by_uuid>(bet1.uuid).data.stake.amount);
+}
+
+struct three_bets_fixture : public no_bets_fixture
+{
+    bet_data bet1;
+    bet_data bet2;
+    bet_data bet3;
+
+    const odds one_point_five = odds(3, 2);
+    const total::over total_over_1 = total::over({ 1 });
+
+    three_bets_fixture()
+    {
+        setup_mock();
+
+        bet1 = create_bet([&](pending_bet_object& bet) {
+                   bet.data.stake = ASSET_SCR(10);
+
+                   bet.data.bet_odds = one_point_five;
+                   bet.data.wincase = total_over_1;
+               }).data;
+
+        bet2 = create_bet([&](pending_bet_object& bet) {
+                   bet.data.stake = ASSET_SCR(10);
+
+                   bet.data.bet_odds = one_point_five;
+                   bet.data.wincase = total_over_1;
+               }).data;
+
+        bet3 = create_bet([&](pending_bet_object& bet) {
+                   bet.data.stake = ASSET_SCR(10);
+
+                   bet.data.bet_odds = odds(2, 1);
+                   bet.data.wincase = create_opposite(total_over_1);
+               }).data;
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(dont_match_bets_when_odds_dont_match, three_bets_fixture)
+{
+    matcher.match(pending_dba.get_by<by_uuid>(bet3.uuid), fc::time_point_sec::maximum());
+
+    BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
+}
+
+BOOST_FIXTURE_TEST_CASE(dont_change_pending_bet_stake_when_matching_dont_occur, three_bets_fixture)
+{
+    matcher.match(pending_dba.get_by<by_uuid>(bet3.uuid), fc::time_point_sec::maximum());
+
+    BOOST_CHECK(compare_bet_data(bet1, pending_dba.get_by<by_uuid>(bet1.uuid).data));
+    BOOST_CHECK(compare_bet_data(bet2, pending_dba.get_by<by_uuid>(bet2.uuid).data));
+    BOOST_CHECK(compare_bet_data(bet3, pending_dba.get_by<by_uuid>(bet3.uuid).data));
+}
+
+BOOST_FIXTURE_TEST_CASE(stop_matching_when_stake_is_spent, three_bets_fixture)
+{
+    const auto& bet4 = create_bet([&](pending_bet_object& bet) {
+        bet.data.stake = ASSET_SCR(1);
+
+        bet.data.bet_odds = one_point_five.inverted();
+        bet.data.wincase = create_opposite(total_over_1);
+    });
+
+    matcher.match(bet4, fc::time_point_sec::maximum());
+
+    BOOST_REQUIRE_EQUAL(1u, count<matched_bet_index>());
+
+    BOOST_CHECK(matched_dba.get().bet1_data.uuid == bet1.uuid);
+    BOOST_CHECK(matched_dba.get().bet2_data.uuid == bet4.data.uuid);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -17,7 +17,7 @@ using namespace scorum::protocol;
 struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fixture_impl
 {
     post_bet_evaluator_fixture()
-        : evaluator_for_test(*dbs_services, *betting_service_moc, *betting_matcher_moc)
+        : evaluator_for_test(*dbs_services, *betting_matcher_moc, *betting_service_moc)
     {
         better.scorum(ASSET_SCR(1e+9));
         account_service.add_actor(better);

@@ -2,6 +2,8 @@
 
 #include <boost/range/adaptor/filtered.hpp>
 
+#include <scorum/chain/schema/bet_objects.hpp>
+
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/game.hpp>
 #include <scorum/chain/betting/betting_service.hpp>
@@ -33,7 +35,7 @@ void process_games_startup::on_apply(block_task_context& ctx)
         _betting_svc.cancel_pending_bets(game.get().id, pending_bet_kind::non_live);
 
         _virt_op_emitter.push_virtual_operation(
-            game_status_changed(game.get().uuid, game_status::created, game_status::started));
+            game_status_changed_operation(game.get().uuid, game_status::created, game_status::started));
     }
 
     debug_log(ctx.get_block_info(), "process_games_startup END");

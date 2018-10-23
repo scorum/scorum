@@ -917,6 +917,7 @@ struct post_game_results_operation : public base_operation
     }
     /// @endcond
 };
+
 /**
  * @brief This operation creates bet
  */
