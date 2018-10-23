@@ -16,6 +16,12 @@ template <typename TStaticVariant> struct static_variant_convertor
     {
         fc::if_enum<typename fc::reflector<TVariantItem>::is_enum>::from_variant(variant, obj);
     }
+    /**
+     * Customisation point for static_variant serialization. Transforms a particular variant's type to string
+     * @tparam TVariantItem one of variant's types
+     * @param obj object of a particular variant's type
+     * @return serialized type
+     */
     template <typename TVariantItem> std::string get_type_name(const TVariantItem& obj) const
     {
         std::string type_name = fc::get_typename<TVariantItem>::name();

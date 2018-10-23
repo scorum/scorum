@@ -3,7 +3,7 @@
 #include <boost/range/algorithm/set_algorithm.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <scorum/protocol/betting/invariants_validation.hpp>
-#include <scorum/protocol/betting/betting_serialization.hpp>
+#include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
 
 namespace scorum {

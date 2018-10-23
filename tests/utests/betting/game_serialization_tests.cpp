@@ -4,7 +4,6 @@
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/betting/wincase.hpp>
-#include <scorum/protocol/betting/betting_serialization.hpp>
 
 #include <boost/uuid/uuid_generators.hpp>
 

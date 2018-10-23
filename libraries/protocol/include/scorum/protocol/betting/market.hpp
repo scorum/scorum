@@ -136,6 +136,17 @@ bool match_wincases(const wincase_type& lhs, const wincase_type& rhs);
 #include <scorum/protocol/betting/wincase_comparison.hpp>
 #include <scorum/protocol/betting/market_comparison.hpp>
 
+namespace fc {
+using scorum::protocol::market_type;
+using scorum::protocol::wincase_type;
+
+template <> void to_variant(const wincase_type& wincase, fc::variant& variant);
+template <> void from_variant(const fc::variant& variant, wincase_type& wincase);
+
+template <> void to_variant(const market_type& market, fc::variant& var);
+template <> void from_variant(const fc::variant& var, market_type& market);
+}
+
 FC_REFLECT_EMPTY(scorum::protocol::result_home)
 FC_REFLECT_EMPTY(scorum::protocol::result_draw)
 FC_REFLECT_EMPTY(scorum::protocol::result_away)
