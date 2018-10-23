@@ -17,7 +17,11 @@
 namespace betting_api_tests {
 
 using namespace scorum;
+using namespace scorum::chain;
+using namespace scorum::protocol;
 using namespace scorum::app;
+
+using betting_api_impl = betting_api::impl;
 
 class fixture : public shared_memory_fixture
 {

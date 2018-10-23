@@ -3,6 +3,7 @@
 #include <chainbase/database_guard.hpp>
 #include <scorum/chain/database/database.hpp>
 
+#include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/game.hpp>
@@ -29,14 +30,17 @@
 namespace scorum {
 namespace app {
 
-class betting_api_impl
+using namespace scorum::chain;
+using namespace scorum::protocol;
+
+class betting_api::impl
 {
 public:
-    betting_api_impl(data_service_factory_i& service_factory,
-                     dba::db_accessor<game_object>& game_dba,
-                     dba::db_accessor<matched_bet_object>& matched_bet_dba,
-                     dba::db_accessor<pending_bet_object>& pending_bet_dba,
-                     uint32_t lookup_limit = LOOKUP_LIMIT)
+    impl(data_service_factory_i& service_factory,
+         dba::db_accessor<game_object>& game_dba,
+         dba::db_accessor<matched_bet_object>& matched_bet_dba,
+         dba::db_accessor<pending_bet_object>& pending_bet_dba,
+         uint32_t lookup_limit = LOOKUP_LIMIT)
         : _game_service(service_factory.game_service())
         , _pending_bet_service(service_factory.pending_bet_service())
         , _matched_bet_service(service_factory.matched_bet_service())
@@ -81,7 +85,7 @@ public:
         return winners;
     }
 
-    std::vector<game_api_object> get_games_by_status(const fc::flat_set<chain::game_status>& filter) const
+    std::vector<game_api_object> get_games_by_status(const fc::flat_set<game_status>& filter) const
     {
         auto games = _game_service.get_games();
         auto rng = games //
@@ -193,10 +197,10 @@ public:
     }
 
 private:
-    chain::game_service_i& _game_service;
-    chain::pending_bet_service_i& _pending_bet_service;
-    chain::matched_bet_service_i& _matched_bet_service;
-    chain::betting_property_service_i& _betting_property_service;
+    game_service_i& _game_service;
+    pending_bet_service_i& _pending_bet_service;
+    matched_bet_service_i& _matched_bet_service;
+    betting_property_service_i& _betting_property_service;
 
     dba::db_accessor<game_object>& _game_dba;
     dba::db_accessor<matched_bet_object>& _matched_bet_dba;
