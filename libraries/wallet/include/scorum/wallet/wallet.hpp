@@ -1531,6 +1531,7 @@ public:
      * @param wincase wincase for bet
      * @param odds rational coefficient that define potential result (p). p = odds * stake
      * @param stake amount in SCR to bet
+     * @param is_live specify is bet live or not
      * @param broadcast
      */
     annotated_signed_transaction post_bet(uuid_type uuid,
@@ -1539,6 +1540,7 @@ public:
                                           wincase_type wincase,
                                           odds_input odds,
                                           asset stake,
+                                          bool is_live,
                                           const bool broadcast);
 
     /**

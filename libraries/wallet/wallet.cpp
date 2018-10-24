@@ -3319,6 +3319,7 @@ annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
                                                   wincase_type wincase,
                                                   odds_input odds,
                                                   asset stake,
+                                                  bool is_live,
                                                   const bool broadcast)
 {
     FC_ASSERT(!is_locked());
@@ -3330,6 +3331,8 @@ annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
     op.game_uuid = game_uuid;
     op.odds = odds;
     op.stake = stake;
+    op.wincase = wincase;
+    op.live = is_live;
 
     signed_transaction tx;
     tx.operations.push_back(op);
