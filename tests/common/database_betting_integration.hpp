@@ -26,15 +26,18 @@ struct database_betting_integration_fixture : public database_trx_integration_fi
     virtual ~database_betting_integration_fixture() = default;
 
     void empower_moderator(const Actor& moderator);
+
     create_game_operation create_game(const scorum::uuid_type& uuid,
                                       const Actor& moderator,
-                                      fc::flat_set<market_type> markets,
+                                      std::vector<market_type> markets,
                                       uint32_t start_delay = start_delay_default,
                                       uint32_t auto_resolve_delay_sec = auto_resolve_delay_default);
+
     create_game_operation create_game(const Actor& moderator,
-                                      fc::flat_set<market_type> markets,
+                                      std::vector<market_type> markets,
                                       uint32_t start_delay = start_delay_default,
                                       uint32_t auto_resolve_delay_sec = auto_resolve_delay_default);
+
     post_bet_operation create_bet(const scorum::uuid_type& uuid,
                                   const Actor& better,
                                   const wincase_type& wincase,

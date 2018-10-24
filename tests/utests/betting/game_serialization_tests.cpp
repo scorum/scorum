@@ -8,7 +8,10 @@
 #include <boost/uuid/uuid_generators.hpp>
 
 #include <defines.hpp>
+#include <detail.hpp>
 #include <iostream>
+
+using details::to_hex;
 
 namespace {
 using namespace scorum;
@@ -27,17 +30,7 @@ struct game_serialization_test_fixture
         op.game = soccer_game{};
         op.start_time = time_point_sec{ 1461605400 };
         op.auto_resolve_delay_sec = 33;
-        op.markets = get_markets();
-
-        return op;
-    }
-
-    update_game_markets_operation get_update_game_markets_operation() const
-    {
-        update_game_markets_operation op;
-        op.uuid = game_uuid;
-        op.moderator = "moderator_name";
-        op.markets = get_markets();
+        op.markets = get_markets<std::vector<market_type>>();
 
         return op;
     }
@@ -73,7 +66,7 @@ struct game_serialization_test_fixture
                                                      "moderator": "moderator_name",
                                                      "markets": ${markets} })";
 
-    fc::flat_set<market_type> get_markets() const
+    template <typename T> T get_markets() const
     {
         // clang-format off
         return { result_home{},
@@ -94,6 +87,7 @@ struct game_serialization_test_fixture
                  total{0},
                  total{500},
                  total{1000} };
+
         // clang-format on
     }
 
@@ -104,14 +98,7 @@ struct game_serialization_test_fixture
         BOOST_CHECK(obj.start_time == time_point_sec{ 1461605400 });
         BOOST_CHECK_NO_THROW(obj.game.get<soccer_game>());
 
-        validate_markets(obj.markets);
-    }
-
-    void validate_update_game_markets_operation(const update_game_markets_operation& obj) const
-    {
-        BOOST_CHECK_EQUAL(obj.moderator, "moderator_name");
-
-        validate_markets(obj.markets);
+        validate_markets<std::vector<market_type>>(obj.markets);
     }
 
     market_kind get_market_kind(const market_type& var) const
@@ -121,8 +108,10 @@ struct game_serialization_test_fixture
         return result;
     }
 
-    void validate_markets(const fc::flat_set<market_type>& markets) const
+    template <typename T> void validate_markets(const T& m) const
     {
+        fc::flat_set<market_type> markets(m.begin(), m.end());
+
         BOOST_REQUIRE_EQUAL(markets.size(), 18u);
 
         auto pos = 0u;
@@ -168,32 +157,32 @@ BOOST_FIXTURE_TEST_SUITE(game_serialization_tests, game_serialization_test_fixtu
 
 SCORUM_TEST_CASE(serialize_markets)
 {
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(result_home()))), "00");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(result_draw()))), "01");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(result_away()))), "02");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(round_home()))), "03");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(handicap()))), "040000");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(correct_score_home()))), "05");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(correct_score_draw()))), "06");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(correct_score_away()))), "07");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(correct_score()))), "0800000000");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(goal_home()))), "09");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(goal_both()))), "0a");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(goal_away()))), "0b");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(total()))), "0c0000");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(total_goals_home()))), "0d0000");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(total_goals_away()))), "0e0000");
+    BOOST_CHECK_EQUAL(to_hex(market_type(result_home())), "00");
+    BOOST_CHECK_EQUAL(to_hex(market_type(result_draw())), "01");
+    BOOST_CHECK_EQUAL(to_hex(market_type(result_away())), "02");
+    BOOST_CHECK_EQUAL(to_hex(market_type(round_home())), "03");
+    BOOST_CHECK_EQUAL(to_hex(market_type(handicap())), "040000");
+    BOOST_CHECK_EQUAL(to_hex(market_type(correct_score_home())), "05");
+    BOOST_CHECK_EQUAL(to_hex(market_type(correct_score_draw())), "06");
+    BOOST_CHECK_EQUAL(to_hex(market_type(correct_score_away())), "07");
+    BOOST_CHECK_EQUAL(to_hex(market_type(correct_score())), "0800000000");
+    BOOST_CHECK_EQUAL(to_hex(market_type(goal_home())), "09");
+    BOOST_CHECK_EQUAL(to_hex(market_type(goal_both())), "0a");
+    BOOST_CHECK_EQUAL(to_hex(market_type(goal_away())), "0b");
+    BOOST_CHECK_EQUAL(to_hex(market_type(total())), "0c0000");
+    BOOST_CHECK_EQUAL(to_hex(market_type(total_goals_home())), "0d0000");
+    BOOST_CHECK_EQUAL(to_hex(market_type(total_goals_away())), "0e0000");
 }
 
 SCORUM_TEST_CASE(create_game_op_each_piece_serialization_test)
 {
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(game_uuid)), "e629f9aa6b2c46aa8fa836770e7a7a5f");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(account_name_type("admin"))), "0561646d696e");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(std::string("game name"))), "0967616d65206e616d65");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(time_point_sec::from_iso_string("2018-08-03T10:12:43"))), "9b2a645b");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack((uint32_t)33)), "21000000");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(game_type(soccer_game{}))), "00");
-    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(fc::flat_set<market_type>{})), "00");
+    BOOST_CHECK_EQUAL(to_hex(game_uuid), "e629f9aa6b2c46aa8fa836770e7a7a5f");
+    BOOST_CHECK_EQUAL(to_hex(account_name_type("admin")), "0561646d696e");
+    BOOST_CHECK_EQUAL(to_hex(std::string("game name")), "0967616d65206e616d65");
+    BOOST_CHECK_EQUAL(to_hex(time_point_sec::from_iso_string("2018-08-03T10:12:43")), "9b2a645b");
+    BOOST_CHECK_EQUAL(to_hex((uint32_t)33), "21000000");
+    BOOST_CHECK_EQUAL(to_hex(game_type(soccer_game{})), "00");
+    BOOST_CHECK_EQUAL(to_hex(std::vector<market_type>{}), "00");
 }
 
 SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
@@ -207,7 +196,7 @@ SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
     op.game = soccer_game{};
     op.markets = {};
 
-    auto hex = fc::to_hex(fc::raw::pack(op));
+    auto hex = to_hex(op);
 
     BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e0967616d65206e616d659b2a645b210000000000");
 }
@@ -223,22 +212,50 @@ SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
     op.game = soccer_game{};
     op.markets = { total{ 1000 } };
 
-    auto hex = fc::to_hex(fc::raw::pack(op));
+    auto hex = to_hex(op);
 
     BOOST_CHECK_EQUAL(hex,
                       "e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e0967616d65206e616d659b2a645b2100000000010ce803");
+}
+
+std::string flatten(const std::string& json)
+{
+    return fc::json::to_string(fc::json::from_string(json));
 }
 
 SCORUM_TEST_CASE(create_game_json_serialization_test)
 {
     auto op = get_soccer_create_game_operation();
 
-    auto json = fc::json::to_string(op);
-
-    auto json_comp = fc::format_string(create_markets_json_tpl, fc::mutable_variant_object()("markets", markets_json));
-    json_comp = fc::json::to_string(fc::json::from_string(json_comp));
-
-    BOOST_CHECK_EQUAL(json, json_comp);
+    BOOST_CHECK_EQUAL(flatten(R"({
+                                   "uuid": "e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f",
+                                   "moderator": "moderator_name",
+                                   "name": "game_name",
+                                   "start_time": "2016-04-25T17:30:00",
+                                   "auto_resolve_delay_sec": 33,
+                                   "game": [ "soccer_game", {} ],
+                                   "markets": [
+                                     [ "result_home", {} ],
+                                     [ "result_draw", {} ],
+                                     [ "result_away", {} ],
+                                     [ "round_home", {} ],
+                                     [ "handicap", { "threshold": 1000 } ],
+                                     [ "handicap", { "threshold": -500 } ],
+                                     [ "handicap", { "threshold": 0 } ],
+                                     [ "correct_score_home", {} ],
+                                     [ "correct_score_draw", {} ],
+                                     [ "correct_score_away", {} ],
+                                     [ "correct_score", { "home": 1, "away": 1 } ],
+                                     [ "correct_score", { "home": 1, "away": 0 } ],
+                                     [ "goal_home", {} ],
+                                     [ "goal_both", {} ],
+                                     [ "goal_away", {} ],
+                                     [ "total", { "threshold": 0 } ],
+                                     [ "total", { "threshold": 500 } ],
+                                     [ "total", { "threshold": 1000 } ]
+                                   ]
+                                 })"),
+                      fc::json::to_string(op));
 }
 
 SCORUM_TEST_CASE(create_game_json_deserialization_test)
@@ -249,7 +266,30 @@ SCORUM_TEST_CASE(create_game_json_deserialization_test)
     validate_soccer_create_game_operation(obj);
 }
 
-SCORUM_TEST_CASE(markets_duplicates_serialization_test)
+SCORUM_TEST_CASE(create_game_operation_allows_put_duplicate_markets)
+{
+    create_game_operation op;
+    op.uuid = game_uuid;
+    op.game = soccer_game{};
+    op.markets = { correct_score_home{}, correct_score_home{} };
+    op.auto_resolve_delay_sec = 33;
+
+    BOOST_CHECK_EQUAL(flatten(R"({
+                                   "uuid": "e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f",
+                                   "moderator": "",
+                                   "name": "",
+                                   "start_time": "1970-01-01T00:00:00",
+                                   "auto_resolve_delay_sec": 33,
+                                   "game": [ "soccer_game", {} ],
+                                   "markets": [
+                                     [ "correct_score_home", {} ],
+                                     [ "correct_score_home", {} ]
+                                   ]
+                                 })"),
+                      fc::json::to_string(op));
+}
+
+SCORUM_TEST_CASE(create_game_operation_validate_throws_exception_on_duplicate_markets)
 {
     create_game_operation op;
     op.uuid = game_uuid;
@@ -258,61 +298,26 @@ SCORUM_TEST_CASE(markets_duplicates_serialization_test)
     op.auto_resolve_delay_sec = 33;
 
     auto json = fc::json::to_string(op);
-    // clang-format off
-    auto json_comp = fc::json::to_string(fc::json::from_string(
-                                           R"(
-                                           {
-                                              "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f"
-                                              "moderator":"",
-                                              "name":"",
-                                              "start_time":"1970-01-01T00:00:00",
-                                              "auto_resolve_delay_sec": 33,
-                                              "game":[
-                                                 "soccer_game",
-                                                 {}
-                                              ],
-                                              "markets":[
-                                                 [
-                                                    "correct_score_home",
-                                                    {}
-                                                 ]
-                                              ]
-                                           }
-                                           )"));
-    // clang-format on
-    BOOST_CHECK_EQUAL(json, json_comp);
+
+    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
 }
 
-SCORUM_TEST_CASE(markets_duplicates_deserialization_test)
+SCORUM_TEST_CASE(deserialize_operation_with_duplicate_markets)
 {
-    // clang-format off
-    auto json_with_duplicates = fc::json::to_string(fc::json::from_string(
-                                           R"(
-                                           {
-                                              "moderator":"",
-                                              "name":"",
-                                              "start":"1970-01-01T00:00:00",
-                                              "game":[
-                                                 "soccer_game",
-                                                 {}
-                                              ],
-                                              "markets":[
-                                                 [
-                                                    "correct_score_home",
-                                                    {}
-                                                 ],
-                                                 [
-                                                    "correct_score_home",
-                                                    {}
-                                                 ]
-                                              ]
-                                           }
-                                           )"));
-    // clang-format on
+    auto json_with_duplicates = R"({
+                                     "moderator": "",
+                                     "name": "",
+                                     "start": "1970-01-01T00:00:00",
+                                     "game": [ "soccer_game", {} ],
+                                     "markets": [
+                                       [ "correct_score_home", {} ],
+                                       [ "correct_score_home", {} ]
+                                     ]
+                                   })";
 
     auto obj = fc::json::from_string(json_with_duplicates).as<create_game_operation>();
 
-    BOOST_REQUIRE_EQUAL(obj.markets.size(), 1u);
+    BOOST_REQUIRE_EQUAL(obj.markets.size(), 2u);
 }
 
 SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
@@ -323,83 +328,130 @@ SCORUM_TEST_CASE(wincases_duplicates_serialization_test)
     op.markets = { correct_score{ 1, 1 }, correct_score_home{} };
     op.auto_resolve_delay_sec = 33;
 
-    auto json = fc::json::to_string(op);
-    // clang-format off
-    auto json_comp = fc::json::to_string(fc::json::from_string(
-                                           R"(
-                                           {
-                                              "uuid":"e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f"
-                                              "moderator":"",
-                                              "name":"",
-                                              "start_time":"1970-01-01T00:00:00",
-                                              "auto_resolve_delay_sec":33,
-                                              "game":[
-                                                 "soccer_game",
-                                                 {}
-                                              ],
-                                              "markets":[
-                                                 [
-                                                    "correct_score_home",
-                                                    {}
-                                                 ],
-                                                 [
-                                                    "correct_score",
-                                                    {
-                                                       "home":1,
-                                                       "away":1
-                                                    }
-                                                 ]
-                                              ]
-                                           }
-                                           )"));
-    // clang-format on
-    BOOST_CHECK_EQUAL(json, json_comp);
+    BOOST_CHECK_EQUAL(flatten(R"({
+                                   "uuid": "e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f",
+                                   "moderator": "",
+                                   "name": "",
+                                   "start_time": "1970-01-01T00:00:00",
+                                   "auto_resolve_delay_sec": 33,
+                                   "game": [ "soccer_game", {} ],
+                                   "markets": [
+                                     [ "correct_score", { "home": 1, "away": 1 } ],
+                                     [ "correct_score_home", {} ]
+                                   ]
+                                 })"),
+                      fc::json::to_string(op));
+}
+
+SCORUM_TEST_CASE(no_sorting_for_markets)
+{
+    create_game_operation op;
+    op.markets = { correct_score{ 1, 1 }, correct_score_home{} };
+
+    op.markets.at(0).visit([](auto&) { BOOST_FAIL("expected 'correct_score'"); }, [](correct_score&) {});
+    op.markets.at(1).visit([](auto&) { BOOST_FAIL("expected 'correct_score_home'"); }, [](correct_score_home&) {});
+
+    op.markets = { correct_score_home{}, correct_score{ 1, 1 } };
+
+    op.markets.at(0).visit([](auto&) { BOOST_FAIL("expected 'correct_score_home'"); }, [](correct_score_home&) {});
+    op.markets.at(1).visit([](auto&) { BOOST_FAIL("expected 'correct_score'"); }, [](correct_score&) {});
 }
 
 SCORUM_TEST_CASE(wincases_duplicates_deserialization_test)
 {
-    // clang-format off
-    auto json_with_duplicates = fc::json::to_string(fc::json::from_string(
-                                           R"(
-                                           {
-                                              "moderator":"",
-                                              "name":"",
-                                              "start_time":"1970-01-01T00:00:00",
-                                              "game":[
-                                                 "soccer_game",
-                                                 {}
-                                              ],
-                                              "markets":[
-                                                  [
-                                                  "correct_score",
-                                                      {
-                                                        "home":1,
-                                                        "away":1
-                                                      }
-                                                   ],
-                                                   [
-                                                       "correct_score",
-                                                       {
-                                                         "home":1,
-                                                         "away":1
-                                                       }
-                                                   ],
-                                                   [
-                                                       "correct_score_home",
-                                                       {}
-                                                   ],
-                                                   [
-                                                       "correct_score_home",
-                                                       {}
-                                                   ]
-                                              ]
-                                           }
-                                           )"));
-    // clang-format on
+    auto json_with_duplicates = flatten(R"({
+                                             "moderator": "",
+                                             "name": "",
+                                             "start_time": "1970-01-01T00:00:00",
+                                             "game": [ "soccer_game", {} ],
+                                             "markets": [
+                                               [ "correct_score", { "home": 1, "away": 1 } ],
+                                               [ "correct_score", { "home": 1, "away": 1 } ],
+                                               [ "correct_score_home", {} ],
+                                               [ "correct_score_home", {} ]
+                                             ]
+                                           })");
 
     auto obj = fc::json::from_string(json_with_duplicates).as<create_game_operation>();
 
-    BOOST_REQUIRE_EQUAL(obj.markets.size(), 2u);
+    BOOST_REQUIRE_EQUAL(obj.markets.size(), 4u);
+}
+
+SCORUM_TEST_CASE(create_game_binary_serialization_test)
+{
+    auto op = get_soccer_create_game_operation();
+
+    auto hex = details::to_hex(op);
+
+    BOOST_CHECK_EQUAL(to_hex(op.uuid), "e629f9aa6b2c46aa8fa836770e7a7a5f");
+    BOOST_CHECK_EQUAL(to_hex(op.moderator), "0e6d6f64657261746f725f6e616d65");
+    BOOST_CHECK_EQUAL(to_hex(op.name), "0967616d655f6e616d65");
+    BOOST_CHECK_EQUAL(to_hex(op.start_time), "18541e57");
+    BOOST_CHECK_EQUAL(to_hex(op.auto_resolve_delay_sec), "21000000");
+    BOOST_CHECK_EQUAL(to_hex(op.game), "00");
+    BOOST_CHECK_EQUAL(to_hex(op.markets),
+                      "120001020304e803040cfe04000005060708010001000801000000090a0b0c00000cf4010ce803");
+
+    BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e572"
+                           "100000000120001020304e803040cfe04000005060708010001000801000000090a0b0c00000cf4010ce803");
+}
+
+SCORUM_TEST_CASE(create_game_binary_deserialization_test)
+{
+    auto hex = "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e572"
+               "1000000001200010203040cfe04000004e80305060708010000000801000100090a0b0c00000cf4010ce803";
+
+    char buffer[1000];
+    fc::from_hex(hex, buffer, sizeof(buffer));
+    auto obj = fc::raw::unpack<create_game_operation>(buffer, sizeof(buffer));
+
+    validate_soccer_create_game_operation(obj);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+struct update_game_markets_operation_fixture : game_serialization_test_fixture
+{
+    update_game_markets_operation get_update_game_markets_operation() const
+    {
+        update_game_markets_operation op;
+        op.uuid = game_uuid;
+        op.moderator = "moderator_name";
+        op.markets = get_markets<fc::flat_set<market_type>>();
+
+        return op;
+    }
+
+    void validate_update_game_markets_operation(const update_game_markets_operation& obj) const
+    {
+        BOOST_CHECK_EQUAL(obj.moderator, "moderator_name");
+
+        validate_markets<fc::flat_set<market_type>>(obj.markets);
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(update_game_markets_serialization_tests, update_game_markets_operation_fixture)
+
+SCORUM_TEST_CASE(update_game_markets_binary_serialization_test)
+{
+    auto op = get_update_game_markets_operation();
+
+    auto hex = to_hex(op);
+
+    BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d651200010203040cfe04000004e8030"
+                           "5060708010000000801000100090a0b0c00000cf4010ce803");
+}
+
+SCORUM_TEST_CASE(update_game_markets_binary_deserialization_test)
+{
+    auto hex = "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d651200010203040cfe04000004e8030"
+               "5060708010000000801000100090a0b0c00000cf4010ce803";
+
+    char buffer[1000];
+    fc::from_hex(hex, buffer, sizeof(buffer));
+    auto obj = fc::raw::unpack<update_game_markets_operation>(buffer, sizeof(buffer));
+
+    validate_update_game_markets_operation(obj);
 }
 
 SCORUM_TEST_CASE(update_game_markets_json_serialization_test)
@@ -418,50 +470,6 @@ SCORUM_TEST_CASE(update_game_markets_json_deserialization_test)
 {
     auto json = fc::format_string(update_markets_json_tpl, fc::mutable_variant_object()("markets", markets_json));
     auto obj = fc::json::from_string(json).as<update_game_markets_operation>();
-
-    validate_update_game_markets_operation(obj);
-}
-
-SCORUM_TEST_CASE(create_game_binary_serialization_test)
-{
-    auto op = get_soccer_create_game_operation();
-
-    auto hex = fc::to_hex(fc::raw::pack(op));
-
-    BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e572"
-                           "1000000001200010203040cfe04000004e80305060708010000000801000100090a0b0c00000cf4010ce803");
-}
-
-SCORUM_TEST_CASE(create_game_binary_deserialization_test)
-{
-    auto hex = "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d650967616d655f6e616d6518541e572"
-               "1000000001200010203040cfe04000004e80305060708010000000801000100090a0b0c00000cf4010ce803";
-
-    char buffer[1000];
-    fc::from_hex(hex, buffer, sizeof(buffer));
-    auto obj = fc::raw::unpack<create_game_operation>(buffer, sizeof(buffer));
-
-    validate_soccer_create_game_operation(obj);
-}
-
-SCORUM_TEST_CASE(update_game_markets_binary_serialization_test)
-{
-    auto op = get_update_game_markets_operation();
-
-    auto hex = fc::to_hex(fc::raw::pack(op));
-
-    BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d651200010203040cfe04000004e8030"
-                           "5060708010000000801000100090a0b0c00000cf4010ce803");
-}
-
-SCORUM_TEST_CASE(update_game_markets_binary_deserialization_test)
-{
-    auto hex = "e629f9aa6b2c46aa8fa836770e7a7a5f0e6d6f64657261746f725f6e616d651200010203040cfe04000004e8030"
-               "5060708010000000801000100090a0b0c00000cf4010ce803";
-
-    char buffer[1000];
-    fc::from_hex(hex, buffer, sizeof(buffer));
-    auto obj = fc::raw::unpack<update_game_markets_operation>(buffer, sizeof(buffer));
 
     validate_update_game_markets_operation(obj);
 }
