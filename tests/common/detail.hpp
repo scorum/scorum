@@ -17,7 +17,7 @@ boost::uuids::uuid gen_uuid(const std::string& seed);
 
 bool compare_bet_data(const scorum::chain::bet_data& lhs, const scorum::chain::bet_data& rhs);
 
-namespace details {
+namespace detail {
 
 template <typename T> std::string to_hex(const T& o)
 {

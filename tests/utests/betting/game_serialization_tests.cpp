@@ -11,7 +11,7 @@
 #include <detail.hpp>
 #include <iostream>
 
-using details::to_hex;
+using detail::to_hex;
 
 namespace {
 using namespace scorum;
@@ -381,7 +381,7 @@ SCORUM_TEST_CASE(create_game_binary_serialization_test)
 {
     auto op = get_soccer_create_game_operation();
 
-    auto hex = details::to_hex(op);
+    auto hex = to_hex(op);
 
     BOOST_CHECK_EQUAL(to_hex(op.uuid), "e629f9aa6b2c46aa8fa836770e7a7a5f");
     BOOST_CHECK_EQUAL(to_hex(op.moderator), "0e6d6f64657261746f725f6e616d65");

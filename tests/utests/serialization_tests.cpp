@@ -30,7 +30,7 @@
 
 #include <fc/io/json.hpp>
 
-#include "utils.hpp"
+#include "detail.hpp"
 #include "defines.hpp"
 
 using scorum::protocol::asset;
@@ -238,7 +238,7 @@ SCORUM_TEST_CASE(serialize_create_budget_operation_to_binary_test)
 
     BOOST_CHECK_EQUAL(
         "00000000000000000c696e697464656c6567617465027b7d00e40b54020000000953435200000000019b2a645bb92a645b",
-        utils::to_hex(op));
+        ::detail::to_hex(op));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
