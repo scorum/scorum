@@ -37,15 +37,15 @@ public:
 
     dba::db_accessor<pending_bet_object> pending_dba;
     dba::db_accessor<matched_bet_object> matched_dba;
-    dba::db_accessor<dynamic_global_property_object> dprops_dba;
+    dba::db_accessor<dynamic_global_property_object> dprop_dba;
 
     betting_matcher matcher;
 
     no_bets_fixture()
         : pending_dba(dba::db_accessor<pending_bet_object>(db))
         , matched_dba(dba::db_accessor<matched_bet_object>(db))
-        , dprops_dba(dba::db_accessor<dynamic_global_property_object>(db))
-        , matcher(*vops_emiter, pending_dba, matched_dba, dprops_dba)
+        , dprop_dba(dba::db_accessor<dynamic_global_property_object>(db))
+        , matcher(*vops_emiter, pending_dba, matched_dba, dprop_dba)
     {
         setup_db();
         setup_mock();
@@ -62,7 +62,7 @@ public:
     void setup_mock()
     {
         mocks.OnCall(vops_emiter, database_virtual_operations_emmiter_i::push_virtual_operation).With(_);
-        dprops_dba.create([](auto&) {});
+        dprop_dba.create([](auto&) {});
     }
 
     template <typename T> size_t count() const

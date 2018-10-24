@@ -16,7 +16,9 @@
 #include <scorum/chain/dba/db_accessor.hpp>
 
 #include <scorum/utils/range/unwrap_ref_wrapper_adaptor.hpp>
-#include <scorum/utils/algorithm/foreach.hpp>
+#include <scorum/utils/algorithm/foreach_mut.hpp>
+
+#include <scorum/utils/collect_range_adaptor.hpp>
 
 namespace scorum {
 namespace chain {
@@ -29,14 +31,14 @@ betting_service::betting_service(data_service_factory_i& db,
                                  dba::db_accessor<matched_bet_object>& matched_bet_dba,
                                  dba::db_accessor<pending_bet_object>& pending_bet_dba,
                                  dba::db_accessor<game_object>& game_dba,
-                                 dba::db_accessor<dynamic_global_property_object>& dprops_dba)
+                                 dba::db_accessor<dynamic_global_property_object>& dprop_dba)
     : _account_svc(db.account_service())
     , _virt_op_emitter(virt_op_emitter)
     , _betting_property_dba(betting_property_dba)
     , _matched_bet_dba(matched_bet_dba)
     , _pending_bet_dba(pending_bet_dba)
     , _game_dba(game_dba)
-    , _dprops_dba(dprops_dba)
+    , _dprop_dba(dprop_dba)
 {
 }
 
@@ -66,13 +68,13 @@ const pending_bet_object& betting_service::create_pending_bet(const account_name
         o.data.uuid = bet_uuid;
         o.data.stake = stake;
         o.data.bet_odds = odds;
-        o.data.created = _dprops_dba.get().time;
+        o.data.created = _dprop_dba.get().time;
         o.data.better = better;
         o.data.kind = kind;
         o.data.wincase = wincase;
     });
 
-    _dprops_dba.update([&](auto& obj) { obj.betting_stats.pending_bets_volume += stake; });
+    _dprop_dba.update([&](auto& obj) { obj.betting_stats.pending_bets_volume += stake; });
 
     _account_svc.decrease_balance(better_acc, stake);
 
@@ -181,7 +183,7 @@ void betting_service::cancel_pending_bets(game_id_type game_id, pending_bet_kind
 
 void betting_service::cancel_pending_bets(utils::bidir_range<const pending_bet_object> bets, uuid_type game_uuid)
 {
-    utils::foreach (bets, [&](const pending_bet_object& bet) { //
+    utils::foreach_mut(bets, [&](const pending_bet_object& bet) { //
         cancel_pending_bet(bet, game_uuid);
     });
 }
@@ -196,7 +198,7 @@ void betting_service::cancel_matched_bets(game_id_type game_id)
 
 void betting_service::cancel_matched_bets(utils::bidir_range<const matched_bet_object> bets, uuid_type game_uuid)
 {
-    utils::foreach (bets, [&](const matched_bet_object& bet) { //
+    utils::foreach_mut(bets, [&](const matched_bet_object& bet) { //
         cancel_matched_bet(bet, game_uuid);
     });
 }
@@ -207,7 +209,7 @@ void betting_service::cancel_pending_bet(const pending_bet_object& bet, uuid_typ
 
     push_pending_bet_cancelled_op(bet.data, game_uuid);
 
-    _dprops_dba.update([&](auto& o) { o.betting_stats.pending_bets_volume -= bet.data.stake; });
+    _dprop_dba.update([&](auto& o) { o.betting_stats.pending_bets_volume -= bet.data.stake; });
 
     _pending_bet_dba.remove(bet);
 }
@@ -226,7 +228,7 @@ void betting_service::return_bet(const bet_data& bet, uuid_type game_uuid)
 
     push_matched_bet_cancelled_op(bet, game_uuid);
 
-    _dprops_dba.update([&](auto& o) { o.betting_stats.matched_bets_volume -= bet.stake; });
+    _dprop_dba.update([&](auto& o) { o.betting_stats.matched_bets_volume -= bet.stake; });
 }
 
 void betting_service::restore_pending_bet(const bet_data& bet, uuid_type game_uuid)
@@ -257,7 +259,7 @@ void betting_service::restore_pending_bet(const bet_data& bet, uuid_type game_uu
         });
     }
 
-    _dprops_dba.update([&](auto& o) {
+    _dprop_dba.update([&](auto& o) {
         o.betting_stats.pending_bets_volume += bet.stake;
         o.betting_stats.matched_bets_volume -= bet.stake;
     });

@@ -1,5 +1,8 @@
 #include <boost/test/unit_test.hpp>
 
+#include <scorum/chain/database/block_tasks/process_bets_resolving.hpp>
+#include <scorum/chain/database/block_tasks/process_bets_auto_resolving.hpp>
+
 #include <scorum/chain/schema/betting_property_object.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
 #include <scorum/chain/schema/game_object.hpp>
@@ -7,6 +10,8 @@
 #include <scorum/chain/schema/account_objects.hpp>
 
 #include <scorum/chain/betting/betting_service.hpp>
+#include <scorum/chain/betting/betting_matcher.hpp>
+#include <scorum/chain/betting/betting_resolver.hpp>
 #include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/protocol/betting/market.hpp>
@@ -18,6 +23,7 @@ namespace {
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
+using namespace scorum::chain::database_ns;
 
 struct chain_capital_fixture
 {
@@ -29,7 +35,10 @@ struct chain_capital_fixture
         , dprop_dba(db)
         , account_dba(db)
     {
+        db.add_index<betting_property_index>();
         db.add_index<pending_bet_index>();
+        db.add_index<matched_bet_index>();
+        db.add_index<game_index>();
         db.add_index<account_index>();
         db.add_index<dynamic_global_property_index>();
 
@@ -60,15 +69,12 @@ SCORUM_TEST_CASE(pending_bet_creation_should_change_betting_capital)
     dprop_dba.create([&](auto& o) { o.time = fc::time_point_sec(42); });
     account_dba.create([&](auto& o) { o.name = "alice"; o.balance = ASSET_SCR(1000); });
     // clang-format on
-    // TODO: using db_mock in services. in this case we don't need to use mocks
+    // TODO: using db_mock in services. in this case we don't need to use mocks in such cases
     mocks.OnCall(account_svc, account_service_i::get_account).ReturnByRef(account_dba.get());
     mocks.OnCall(account_svc, account_service_i::decrease_balance);
 
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
                         dprop_dba);
-
-    BOOST_REQUIRE_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 0u);
-    BOOST_REQUIRE_EQUAL(dprop_dba.get().betting_stats.matched_bets_volume.amount, 0u);
 
     svc.create_pending_bet("alice", ASSET_SCR(1000), odds(10, 2), result_home::yes{}, 0, uuid_type{ 1 },
                            pending_bet_kind::live);
@@ -77,34 +83,177 @@ SCORUM_TEST_CASE(pending_bet_creation_should_change_betting_capital)
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.matched_bets_volume.amount, 0u);
 }
 
-SCORUM_TEST_CASE(matched_bet_should_change_betting_capital)
+SCORUM_TEST_CASE(bets_resolving_should_change_matched_betting_capital)
 {
-    pending_bet_dba.create([](pending_bet_object& o) {
+    // TODO: make services using chaindatabase. in this case we don't need to use mocks in such cases
+    using inc_balance_ptr = void (account_service_i::*)(account_name_type, const asset&);
+    mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
+
+    game_dba.create([](game_object& o) {});
+    matched_bet_dba.create([](matched_bet_object& o) {
         o.game = 0;
         o.market = result_home{};
-        o.data.stake = ASSET_SCR(1000);
-        o.data.bet_odds = odds(10, 2);
+        o.bet1_data.stake = ASSET_SCR(500);
+        o.bet1_data.wincase = result_home::yes{};
+        o.bet2_data.stake = ASSET_SCR(2000);
+        o.bet2_data.wincase = result_home::no{};
     });
-    // clang-format off
+    dprop_dba.create([&](dynamic_global_property_object& o) { o.betting_stats.matched_bets_volume = ASSET_SCR(2500); });
 
-    dprop_dba.create([&](auto& o) { o.time = fc::time_point_sec(42); });
-    account_dba.create([&](auto& o) { o.name = "alice"; o.balance = ASSET_SCR(1000); });
-    // clang-format on
-    // TODO: using db_mock in services. in this case we don't need to use mocks
-    mocks.OnCall(account_svc, account_service_i::get_account).ReturnByRef(account_dba.get());
-    mocks.OnCall(account_svc, account_service_i::decrease_balance);
+    betting_resolver resolver(*account_svc, *vop_emitter, matched_bet_dba, game_dba, dprop_dba);
+
+    resolver.resolve_matched_bets(0, { result_home::yes{} });
+
+    BOOST_CHECK_EQUAL(0u, dprop_dba.get().betting_stats.matched_bets_volume.amount);
+}
+
+SCORUM_TEST_CASE(cancel_all_bets_should_change_betting_capital)
+{
+    game_dba.create([](game_object& o) {});
+    pending_bet_dba.create([](pending_bet_object& o) {
+        o.game = 0;
+        o.data.stake = ASSET_SCR(1000);
+    });
+    matched_bet_dba.create([](matched_bet_object& o) {
+        o.game = 0;
+        o.market = result_home{};
+        o.bet1_data.stake = ASSET_SCR(500);
+        o.bet2_data.stake = ASSET_SCR(2000);
+    });
+    dprop_dba.create([&](dynamic_global_property_object& o) {
+        o.time = fc::time_point_sec(42);
+        o.betting_stats.pending_bets_volume = ASSET_SCR(1000);
+        o.betting_stats.matched_bets_volume = ASSET_SCR(2500);
+    });
+
+    using inc_balance_ptr = void (account_service_i::*)(account_name_type, const asset&);
+    mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
 
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
                         dprop_dba);
 
-    BOOST_REQUIRE_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 0u);
-    BOOST_REQUIRE_EQUAL(dprop_dba.get().betting_stats.matched_bets_volume.amount, 0u);
+    svc.cancel_bets(0);
 
-    svc.create_pending_bet("alice", ASSET_SCR(1000), odds(10, 2), result_home::yes{}, 0, uuid_type{ 1 },
-                           pending_bet_kind::live);
-
-    BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 1000u);
+    BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 0u);
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.matched_bets_volume.amount, 0u);
 }
+
+SCORUM_TEST_CASE(cancel_bets_all_bets_created_after_game_started_should_be_removed_from_betting_stats)
+{
+    const auto& g = game_dba.create([](game_object& o) { o.start_time = fc::time_point_sec(7); });
+    pending_bet_dba.create([](pending_bet_object& o) {
+        o.game = 0;
+        o.data.created = fc::time_point_sec(42);
+        o.data.stake = ASSET_SCR(1000);
+    });
+    matched_bet_dba.create([](matched_bet_object& o) {
+        o.game = 0;
+        o.market = result_home{};
+        o.created = fc::time_point_sec(42);
+        o.bet1_data.stake = ASSET_SCR(500);
+        o.bet1_data.created = fc::time_point_sec(42);
+        o.bet2_data.stake = ASSET_SCR(2000);
+        o.bet2_data.created = fc::time_point_sec(42);
+    });
+    dprop_dba.create([&](dynamic_global_property_object& o) {
+        o.time = fc::time_point_sec(99);
+        o.betting_stats.pending_bets_volume = ASSET_SCR(1000);
+        o.betting_stats.matched_bets_volume = ASSET_SCR(2500);
+    });
+
+    using inc_balance_ptr = void (account_service_i::*)(account_name_type, const asset&);
+    mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
+
+    betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
+                        dprop_dba);
+
+    svc.cancel_bets(0, g.start_time);
+
+    BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 0u);
+    BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.matched_bets_volume.amount, 0u);
+}
+
+SCORUM_TEST_CASE(cancel_bets_pending_bet_created_before_game_started_shouldnt_be_removed_from_betting_stats)
+{
+    const auto& g = game_dba.create([](game_object& o) { o.start_time = fc::time_point_sec(7); });
+    pending_bet_dba.create([](pending_bet_object& o) {
+        o.game = 0;
+        o.data.created = fc::time_point_sec(5);
+        o.data.stake = ASSET_SCR(1000);
+    });
+    dprop_dba.create([&](dynamic_global_property_object& o) {
+        o.time = fc::time_point_sec(99);
+        o.betting_stats.pending_bets_volume = ASSET_SCR(1000);
+    });
+
+    using inc_balance_ptr = void (account_service_i::*)(account_name_type, const asset&);
+    mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
+
+    betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
+                        dprop_dba);
+
+    svc.cancel_bets(0, g.start_time);
+
+    BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 1000u);
+}
+
+SCORUM_TEST_CASE(
+    cancel_bets_pending_bet_created_before_game_started_which_was_matched_after_game_started_shouldnt_be_removed_from_betting_stats)
+{
+    const auto& g = game_dba.create([](game_object& o) { o.start_time = fc::time_point_sec(42); });
+    matched_bet_dba.create([](matched_bet_object& o) {
+        o.game = 0;
+        o.market = result_home{};
+        o.created = fc::time_point_sec(42);
+        o.bet1_data.stake = ASSET_SCR(500);
+        o.bet1_data.created = fc::time_point_sec(42);
+        o.bet2_data.stake = ASSET_SCR(2000);
+        o.bet2_data.created = fc::time_point_sec(13);
+    });
+    dprop_dba.create([&](dynamic_global_property_object& o) {
+        o.time = fc::time_point_sec(99);
+        o.betting_stats.matched_bets_volume = ASSET_SCR(2500);
+    });
+
+    using inc_balance_ptr = void (account_service_i::*)(account_name_type, const asset&);
+    mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
+
+    betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
+                        dprop_dba);
+
+    svc.cancel_bets(0, g.start_time);
+
+    BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.matched_bets_volume.amount, 0u);
+    BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 2000u);
+}
+
+SCORUM_TEST_CASE(cancel_pending_bets_only_live_pending_bet_should_be_removed_from_betting_stats)
+{
+    game_dba.create([](game_object& o) {});
+    pending_bet_dba.create([](pending_bet_object& o) {
+        o.game = 0;
+        o.data.uuid = { 0 };
+        o.data.kind = pending_bet_kind::live;
+        o.data.stake = ASSET_SCR(500);
+    });
+    pending_bet_dba.create([](pending_bet_object& o) {
+        o.game = 0;
+        o.data.uuid = { 1 };
+        o.data.kind = pending_bet_kind::non_live;
+        o.data.stake = ASSET_SCR(1000);
+    });
+    dprop_dba.create([&](dynamic_global_property_object& o) { o.betting_stats.pending_bets_volume = ASSET_SCR(1500); });
+
+    using inc_balance_ptr = void (account_service_i::*)(account_name_type, const asset&);
+    mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
+
+    betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
+                        dprop_dba);
+
+    svc.cancel_pending_bets(0, pending_bet_kind::live);
+
+    BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 1000u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }

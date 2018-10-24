@@ -18,6 +18,7 @@
 
 #include <scorum/chain/database/database_virtual_operations.hpp>
 
+#include <scorum/chain/database/debug_log.hpp>
 #include <fc/signals.hpp>
 #include <fc/shared_string.hpp>
 #include <fc/log/logger.hpp>
@@ -409,5 +410,3 @@ private:
 };
 } // namespace chain
 } // namespace scorum
-
-#define debug_log(CTX, FORMAT, ...) fc_ctx_dlog(fc::logger::get("debug"), CTX, FORMAT, __VA_ARGS__)

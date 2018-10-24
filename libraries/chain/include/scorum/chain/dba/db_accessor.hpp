@@ -8,7 +8,7 @@
 #include <scorum/chain/dba/db_accessor_traits.hpp>
 #include <scorum/utils/function_view.hpp>
 #include <scorum/utils/any_range.hpp>
-#include <scorum/utils/algorithm/foreach.hpp>
+#include <scorum/utils/algorithm/foreach_mut.hpp>
 
 namespace scorum {
 namespace chain {
@@ -53,7 +53,7 @@ template <typename TObject> void remove(db_index& db_idx, const TObject& o)
 
 template <typename TObject> void remove_all(db_index& db_idx, utils::bidir_range<const TObject> items)
 {
-    utils::foreach (items, [&](const TObject& o) { //
+    utils::foreach_mut(items, [&](const TObject& o) { //
         db_idx.remove(o);
     });
 }

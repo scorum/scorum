@@ -107,7 +107,7 @@ private:
     dba::db_accessor<matched_bet_object>& _matched_bet_dba;
     dba::db_accessor<pending_bet_object>& _pending_bet_dba;
     dba::db_accessor<game_object>& _game_dba;
-    dba::db_accessor<dynamic_global_property_object>& _dprops_dba;
+    dba::db_accessor<dynamic_global_property_object>& _dprop_dba;
 };
 }
 }

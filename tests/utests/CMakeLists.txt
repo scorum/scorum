@@ -77,6 +77,7 @@ set(SOURCES
     betting/evaluators/update_game_markets_tests.cpp
     betting/evaluators/update_start_time_tests.cpp
     betting/evaluators/post_game_results_tests.cpp
+    betting/betting_chain_capital_tests.cpp
     db_accessors/db_accessors_tests.cpp
     odds_tests.cpp
 )

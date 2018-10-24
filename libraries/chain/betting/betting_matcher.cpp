@@ -22,11 +22,11 @@ betting_matcher_i::~betting_matcher_i()
 betting_matcher::betting_matcher(database_virtual_operations_emmiter_i& virt_op_emitter,
                                  dba::db_accessor<pending_bet_object>& pending_bet_dba,
                                  dba::db_accessor<matched_bet_object>& matched_bet_dba,
-                                 dba::db_accessor<dynamic_global_property_object>& dprops_dba)
+                                 dba::db_accessor<dynamic_global_property_object>& dprop_dba)
     : _virt_op_emitter(virt_op_emitter)
     , _pending_bet_dba(pending_bet_dba)
     , _matched_bet_dba(matched_bet_dba)
-    , _dprops_dba(dprops_dba)
+    , _dprop_dba(dprop_dba)
 {
 }
 
@@ -55,7 +55,7 @@ betting_matcher::match(const pending_bet_object& bet2, const fc::time_point_sec&
                 _pending_bet_dba.update(bet1, [&](pending_bet_object& o) { o.data.stake -= matched.bet1_matched; });
                 _pending_bet_dba.update(bet2, [&](pending_bet_object& o) { o.data.stake -= matched.bet2_matched; });
 
-                _dprops_dba.update([&](dynamic_global_property_object& obj) {
+                _dprop_dba.update([&](dynamic_global_property_object& obj) {
                     obj.betting_stats.matched_bets_volume += matched.bet1_matched + matched.bet2_matched;
                     obj.betting_stats.pending_bets_volume -= matched.bet1_matched + matched.bet2_matched;
                 });
