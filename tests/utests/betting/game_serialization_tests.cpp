@@ -166,28 +166,34 @@ struct game_serialization_test_fixture
 
 BOOST_FIXTURE_TEST_SUITE(game_serialization_tests, game_serialization_test_fixture)
 
-template <typename T> std::string to_hex(T t)
-{
-    return fc::to_hex(fc::raw::pack(market_type(t)));
-}
-
 SCORUM_TEST_CASE(serialize_markets)
 {
-    BOOST_CHECK_EQUAL(to_hex(result_home()), "00");
-    BOOST_CHECK_EQUAL(to_hex(result_draw()), "01");
-    BOOST_CHECK_EQUAL(to_hex(result_away()), "02");
-    BOOST_CHECK_EQUAL(to_hex(round_home()), "03");
-    BOOST_CHECK_EQUAL(to_hex(handicap()), "040000");
-    BOOST_CHECK_EQUAL(to_hex(correct_score_home()), "05");
-    BOOST_CHECK_EQUAL(to_hex(correct_score_draw()), "06");
-    BOOST_CHECK_EQUAL(to_hex(correct_score_away()), "07");
-    BOOST_CHECK_EQUAL(to_hex(correct_score()), "0800000000");
-    BOOST_CHECK_EQUAL(to_hex(goal_home()), "09");
-    BOOST_CHECK_EQUAL(to_hex(goal_both()), "0a");
-    BOOST_CHECK_EQUAL(to_hex(goal_away()), "0b");
-    BOOST_CHECK_EQUAL(to_hex(total()), "0c0000");
-    BOOST_CHECK_EQUAL(to_hex(total_goals_home()), "0d0000");
-    BOOST_CHECK_EQUAL(to_hex(total_goals_away()), "0e0000");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(result_home()))), "00");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(result_draw()))), "01");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(result_away()))), "02");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(round_home()))), "03");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(handicap()))), "040000");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(correct_score_home()))), "05");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(correct_score_draw()))), "06");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(correct_score_away()))), "07");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(correct_score()))), "0800000000");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(goal_home()))), "09");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(goal_both()))), "0a");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(goal_away()))), "0b");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(total()))), "0c0000");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(total_goals_home()))), "0d0000");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(market_type(total_goals_away()))), "0e0000");
+}
+
+SCORUM_TEST_CASE(create_game_op_each_piece_serialization_test)
+{
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(game_uuid)), "e629f9aa6b2c46aa8fa836770e7a7a5f");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(account_name_type("admin"))), "0561646d696e");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(std::string("game name"))), "0967616d65206e616d65");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(time_point_sec::from_iso_string("2018-08-03T10:12:43"))), "9b2a645b");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack((uint32_t)33)), "21000000");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(game_type(soccer_game{}))), "00");
+    BOOST_CHECK_EQUAL(fc::to_hex(fc::raw::pack(fc::flat_set<market_type>{})), "00");
 }
 
 SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
