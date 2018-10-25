@@ -66,6 +66,9 @@ using operation = fc::static_variant<vote_operation,
                                      post_bet_operation,
                                      cancel_pending_bets_operation,
 
+                                     account_create_by_committee_with_delegation_operation,
+                                     return_registration_bonus_operation,
+
                                      /// virtual operations
                                      author_reward_operation,
                                      comment_benefficiary_reward_operation,

@@ -1333,6 +1333,7 @@ void database::initialize_indexes()
     add_index<transaction_index>();
     add_index<scorumpower_delegation_expiration_index>();
     add_index<scorumpower_delegation_index>();
+    add_index<reg_pool_sp_delegation_index>();
     add_index<withdraw_scorumpower_route_index>();
     add_index<withdraw_scorumpower_route_statistic_index>();
     add_index<withdraw_scorumpower_index>();

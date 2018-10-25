@@ -71,6 +71,36 @@ struct account_create_by_committee_operation : public base_operation
     }
 };
 
+struct account_create_by_committee_with_delegation_operation : public base_operation
+{
+    asset delegation = asset(0, SP_SYMBOL);
+    account_name_type creator;
+    account_name_type new_account_name;
+    authority owner;
+    authority active;
+    authority posting;
+    public_key_type memo_key;
+    std::string json_metadata;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(creator);
+    }
+};
+
+struct return_registration_bonus_operation : public base_operation
+{
+    account_name_type reg_committee_member;
+    account_name_type account_name;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(reg_committee_member);
+    }
+};
+
 struct account_update_operation : public base_operation
 {
     account_name_type account;
@@ -1006,6 +1036,16 @@ FC_REFLECT( scorum::protocol::account_create_with_delegation_operation,
             (extensions) )
 
 FC_REFLECT( scorum::protocol::account_create_by_committee_operation,
+            (creator)
+            (new_account_name)
+            (owner)
+            (active)
+            (posting)
+            (memo_key)
+            (json_metadata) )
+
+FC_REFLECT( scorum::protocol::account_create_by_committee_with_delegation_operation,
+            (delegation)
             (creator)
             (new_account_name)
             (owner)

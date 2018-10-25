@@ -55,6 +55,27 @@ void account_create_by_committee_operation::validate() const
     validate_json_metadata(json_metadata);
 }
 
+void account_create_by_committee_with_delegation_operation::validate() const
+{
+    FC_ASSERT(is_asset_type(delegation, SP_SYMBOL), "Delegation must be SP");
+    FC_ASSERT(delegation >= asset(0, SP_SYMBOL), "Delegation cannot be negative");
+
+    validate_account_name(creator);
+    validate_account_name(new_account_name);
+
+    owner.validate();
+    active.validate();
+    posting.validate();
+
+    validate_json_metadata(json_metadata);
+}
+
+void return_registration_bonus_operation::validate() const
+{
+    validate_account_name(reg_committee_member);
+    validate_account_name(account_name);
+}
+
 void account_update_operation::validate() const
 {
     validate_account_name(account);

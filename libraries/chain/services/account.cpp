@@ -91,12 +91,44 @@ const account_object& dbs_account::create_initial_account(const account_name_typ
         owner.weight_threshold = 1;
     }
     const auto& new_account
-        = _create_account_objects(new_account_name, account_name_type(), memo_key, json_metadata, owner, owner, owner);
+        = create_account(new_account_name, account_name_type(), memo_key, json_metadata, owner, owner, owner);
 
     update(new_account, [&](account_object& acc) {
         acc.created_by_genesis = true;
         acc.balance = balance;
     });
+
+    return new_account;
+}
+
+const account_object& dbs_account::create_account(const account_name_type& new_account_name,
+                                                  const account_name_type& creator_name,
+                                                  const public_key_type& memo_key,
+                                                  const std::string& json_metadata,
+                                                  const authority& owner,
+                                                  const authority& active,
+                                                  const authority& posting)
+{
+    const auto& new_account = create([&](account_object& acc) {
+        acc.name = new_account_name;
+        acc.recovery_account = creator_name;
+        acc.memo_key = memo_key;
+        acc.created = _dgp_svc.head_block_time();
+#ifndef IS_LOW_MEM
+        fc::from_string(acc.json_metadata, json_metadata);
+#endif
+    });
+
+    if (memo_key != public_key_type())
+    {
+        db_impl().create<account_authority_object>([&](account_authority_object& auth) {
+            auth.account = new_account_name;
+            auth.owner = owner;
+            auth.active = active;
+            auth.posting = posting;
+            auth.last_owner_update = fc::time_point_sec::min();
+        });
+    }
 
     return new_account;
 }
@@ -116,7 +148,7 @@ const account_object& dbs_account::create_account(const account_name_type& new_a
         decrease_balance(get_account(creator_name), fee);
 
     const auto& new_account
-        = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
+        = create_account(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
 
     if (fee.amount > 0)
         create_scorumpower(new_account, fee);
@@ -144,7 +176,7 @@ const account_object& dbs_account::create_account_with_delegation(const account_
     decrease_balance(creator, fee);
 
     const auto& new_account
-        = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
+        = create_account(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
 
     update(new_account, [&](account_object& acc) { acc.received_scorumpower = delegation; });
 
@@ -178,7 +210,7 @@ const account_object& dbs_account::create_account_with_bonus(const account_name_
     FC_ASSERT(bonus.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
 
     const auto& new_account
-        = _create_account_objects(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
+        = create_account(new_account_name, creator_name, memo_key, json_metadata, owner, active, posting);
 
     if (bonus.amount > 0)
     {
@@ -334,6 +366,12 @@ void dbs_account::increase_received_scorumpower(const account_object& account, c
 {
     FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
     update(account, [&](account_object& a) { a.received_scorumpower += amount; });
+}
+
+void dbs_account::decrease_received_scorumpower(account_name_type account_name, const asset& amount)
+{
+    const auto& account = get_account(account_name);
+    decrease_received_scorumpower(account, amount);
 }
 
 void dbs_account::decrease_received_scorumpower(const account_object& account, const asset& amount)
@@ -626,38 +664,6 @@ void dbs_account::adjust_proxied_witness_votes(const account_object& account, co
     {
         _witness_svc.adjust_witness_votes(account, delta);
     }
-}
-
-const account_object& dbs_account::_create_account_objects(const account_name_type& new_account_name,
-                                                           const account_name_type& recovery_account,
-                                                           const public_key_type& memo_key,
-                                                           const std::string& json_metadata,
-                                                           const authority& owner,
-                                                           const authority& active,
-                                                           const authority& posting)
-{
-    const auto& new_account = create([&](account_object& acc) {
-        acc.name = new_account_name;
-        acc.recovery_account = recovery_account;
-        acc.memo_key = memo_key;
-        acc.created = _dgp_svc.head_block_time();
-#ifndef IS_LOW_MEM
-        fc::from_string(acc.json_metadata, json_metadata);
-#endif
-    });
-
-    if (memo_key != public_key_type())
-    {
-        db_impl().create<account_authority_object>([&](account_authority_object& auth) {
-            auth.account = new_account_name;
-            auth.owner = owner;
-            auth.active = active;
-            auth.posting = posting;
-            auth.last_owner_update = fc::time_point_sec::min();
-        });
-    }
-
-    return new_account;
 }
 
 dbs_account::account_refs_type dbs_account::get_active_sp_holders() const
