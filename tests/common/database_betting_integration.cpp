@@ -138,7 +138,7 @@ cancel_game_operation database_betting_integration_fixture::cancel_game(const Ac
 }
 
 update_game_markets_operation database_betting_integration_fixture::update_markets(const Actor& moderator,
-                                                                                   fc::flat_set<market_type> markets)
+                                                                                   std::vector<market_type> markets)
 {
     try
     {

@@ -854,7 +854,7 @@ struct update_game_markets_operation : public base_operation
     account_name_type moderator;
 
     /// list of markets
-    fc::flat_set<market_type> markets;
+    std::vector<market_type> markets;
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;
