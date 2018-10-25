@@ -23,4 +23,6 @@ template <typename T> std::string to_hex(const T& o)
 {
     return fc::to_hex(fc::raw::pack(o));
 }
+
+std::string flatten(const std::string& json);
 }
