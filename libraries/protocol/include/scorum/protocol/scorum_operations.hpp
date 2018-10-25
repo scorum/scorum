@@ -71,36 +71,6 @@ struct account_create_by_committee_operation : public base_operation
     }
 };
 
-struct account_create_by_committee_with_delegation_operation : public base_operation
-{
-    asset delegation = asset(0, SP_SYMBOL);
-    account_name_type creator;
-    account_name_type new_account_name;
-    authority owner;
-    authority active;
-    authority posting;
-    public_key_type memo_key;
-    std::string json_metadata;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(creator);
-    }
-};
-
-struct return_registration_bonus_operation : public base_operation
-{
-    account_name_type reg_committee_member;
-    account_name_type account_name;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(reg_committee_member);
-    }
-};
-
 struct account_update_operation : public base_operation
 {
     account_name_type account;
@@ -655,6 +625,28 @@ struct delegate_scorumpower_operation : public base_operation
     void validate() const;
 };
 
+/**
+ * Delegate scorumpower from registration pool to the other. The scorumpower are still owned
+ * by registration committee, but content voting rights and bandwidth allocation are transferred
+ * to the receiving account. This sets the delegation to `scorumpower`, increasing it or
+ * decreasing it as needed. (i.e. a delegation of 0 removes the delegation)
+ *
+ * When a delegation is removed the shares are placed in limbo for a week to prevent a satoshi
+ * of SP from voting on the same content twice.
+ */
+struct delegate_sp_from_reg_pool_operation : public base_operation
+{
+    account_name_type reg_committee_member;
+    account_name_type delegatee;
+    asset scorumpower = asset(0, SP_SYMBOL);
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(reg_committee_member);
+    }
+};
+
 struct create_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
@@ -1044,16 +1036,6 @@ FC_REFLECT( scorum::protocol::account_create_by_committee_operation,
             (memo_key)
             (json_metadata) )
 
-FC_REFLECT( scorum::protocol::account_create_by_committee_with_delegation_operation,
-            (delegation)
-            (creator)
-            (new_account_name)
-            (owner)
-            (active)
-            (posting)
-            (memo_key)
-            (json_metadata) )
-
 FC_REFLECT( scorum::protocol::account_update_operation,
             (account)
             (owner)
@@ -1086,6 +1068,7 @@ FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(ne
 FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) )
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
 FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
+FC_REFLECT( scorum::protocol::delegate_sp_from_reg_pool_operation, (reg_committee_member)(delegatee)(scorumpower) )
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (type)(owner)(json_metadata)(balance)(start)(deadline) )
 FC_REFLECT( scorum::protocol::update_budget_operation, (type)(budget_id)(owner)(json_metadata) )

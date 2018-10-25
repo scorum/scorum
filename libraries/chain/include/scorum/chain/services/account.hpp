@@ -116,6 +116,7 @@ struct account_service_i : public base_service_i<account_object>
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) = 0;
 
+    virtual void increase_received_scorumpower(account_name_type account_name, const asset& amount) = 0;
     virtual void increase_received_scorumpower(const account_object& account, const asset& amount) = 0;
     virtual void decrease_received_scorumpower(account_name_type account_name, const asset& amount) = 0;
     virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) = 0;
@@ -270,6 +271,7 @@ public:
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) override;
 
+    virtual void increase_received_scorumpower(account_name_type account_name, const asset& amount) override;
     virtual void increase_received_scorumpower(const account_object& account, const asset& amount) override;
     virtual void decrease_received_scorumpower(account_name_type account_name, const asset& amount) override;
     virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) override;

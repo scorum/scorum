@@ -362,6 +362,12 @@ void dbs_account::increase_delegated_scorumpower(const account_object& account, 
     update(account, [&](account_object& a) { a.delegated_scorumpower += amount; });
 }
 
+void dbs_account::increase_received_scorumpower(account_name_type account_name, const asset& amount)
+{
+    const auto& account = get_account(account_name);
+    increase_received_scorumpower(account, amount);
+}
+
 void dbs_account::increase_received_scorumpower(const account_object& account, const asset& amount)
 {
     FC_ASSERT(amount.symbol() == SP_SYMBOL, "invalid asset type (symbol)");
