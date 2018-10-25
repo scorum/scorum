@@ -35,7 +35,7 @@ struct game_serialization_test_fixture
         op.game = soccer_game{};
         op.start_time = time_point_sec{ 1461605400 };
         op.auto_resolve_delay_sec = 33;
-        op.markets = get_markets<std::vector<market_type>>();
+        op.markets = get_markets();
 
         return op;
     }
@@ -71,7 +71,7 @@ struct game_serialization_test_fixture
                                                      "moderator": "moderator_name",
                                                      "markets": ${markets} })";
 
-    template <typename T> T get_markets() const
+    std::vector<market_type> get_markets() const
     {
         // clang-format off
         return { result_home{},
@@ -103,7 +103,7 @@ struct game_serialization_test_fixture
         BOOST_CHECK(obj.start_time == time_point_sec{ 1461605400 });
         BOOST_CHECK_NO_THROW(obj.game.get<soccer_game>());
 
-        validate_markets<std::vector<market_type>>(obj.markets);
+        validate_markets(obj.markets);
     }
 
     market_kind get_market_kind(const market_type& var) const
@@ -113,9 +113,11 @@ struct game_serialization_test_fixture
         return result;
     }
 
-    template <typename T> void validate_markets(const T& m) const
+    void validate_markets(const std::vector<market_type>& m) const
     {
         fc::flat_set<market_type> markets(m.begin(), m.end());
+
+        FC_ASSERT(m.size() == markets.size());
 
         BOOST_REQUIRE_EQUAL(markets.size(), 18u);
 
@@ -348,13 +350,13 @@ SCORUM_TEST_CASE(no_sorting_for_markets)
     create_game_operation op;
     op.markets = { correct_score{ 1, 1 }, correct_score_home{} };
 
-    op.markets.at(0).visit([](auto&) { BOOST_FAIL("expected 'correct_score'"); }, [](correct_score&) {});
-    op.markets.at(1).visit([](auto&) { BOOST_FAIL("expected 'correct_score_home'"); }, [](correct_score_home&) {});
+    BOOST_CHECK(op.markets.at(0).which() == market_type::tag<correct_score>::value);
+    BOOST_CHECK(op.markets.at(1).which() == market_type::tag<correct_score_home>::value);
 
     op.markets = { correct_score_home{}, correct_score{ 1, 1 } };
 
-    op.markets.at(0).visit([](auto&) { BOOST_FAIL("expected 'correct_score_home'"); }, [](correct_score_home&) {});
-    op.markets.at(1).visit([](auto&) { BOOST_FAIL("expected 'correct_score'"); }, [](correct_score&) {});
+    BOOST_CHECK(op.markets.at(1).which() == market_type::tag<correct_score>::value);
+    BOOST_CHECK(op.markets.at(0).which() == market_type::tag<correct_score_home>::value);
 }
 
 SCORUM_TEST_CASE(wincases_duplicates_deserialization_test)
@@ -417,7 +419,7 @@ struct update_game_markets_operation_fixture : game_serialization_test_fixture
         update_game_markets_operation op;
         op.uuid = game_uuid;
         op.moderator = "moderator_name";
-        op.markets = get_markets<std::vector<market_type>>();
+        op.markets = get_markets();
 
         return op;
     }
@@ -426,7 +428,7 @@ struct update_game_markets_operation_fixture : game_serialization_test_fixture
     {
         BOOST_CHECK_EQUAL(obj.moderator, "moderator_name");
 
-        validate_markets<std::vector<market_type>>(obj.markets);
+        validate_markets(obj.markets);
     }
 };
 
@@ -493,6 +495,32 @@ SCORUM_TEST_CASE(update_game_markets_json_deserialization_test)
     auto obj = fc::json::from_string(json).as<update_game_markets_operation>();
 
     validate_update_game_markets_operation(obj);
+}
+
+SCORUM_TEST_CASE(no_sorting_for_markets)
+{
+    update_game_markets_operation op;
+    op.markets = { correct_score{ 1, 1 }, correct_score_home{} };
+
+    BOOST_CHECK(op.markets.at(0).which() == market_type::tag<correct_score>::value);
+    BOOST_CHECK(op.markets.at(1).which() == market_type::tag<correct_score_home>::value);
+
+    op.markets = { correct_score_home{}, correct_score{ 1, 1 } };
+
+    BOOST_CHECK(op.markets.at(1).which() == market_type::tag<correct_score>::value);
+    BOOST_CHECK(op.markets.at(0).which() == market_type::tag<correct_score_home>::value);
+}
+
+SCORUM_TEST_CASE(allow_duplicate_markets)
+{
+    update_game_markets_operation op;
+    op.markets = { correct_score_home{}, correct_score_home{}, correct_score_home{} };
+
+    BOOST_REQUIRE_EQUAL(3u, op.markets.size());
+
+    BOOST_CHECK(op.markets.at(0).which() == market_type::tag<correct_score_home>::value);
+    BOOST_CHECK(op.markets.at(1).which() == market_type::tag<correct_score_home>::value);
+    BOOST_CHECK(op.markets.at(2).which() == market_type::tag<correct_score_home>::value);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

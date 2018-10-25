@@ -1472,7 +1472,7 @@ public:
                                              fc::time_point_sec start_time,
                                              uint32_t auto_resolve_delay_sec,
                                              game_type game,
-                                             const fc::flat_set<market_type>& markets,
+                                             const std::vector<market_type>& markets,
                                              const bool broadcast);
 
     /**
@@ -1494,7 +1494,7 @@ public:
      */
     annotated_signed_transaction update_game_markets(uuid_type uuid,
                                                      account_name_type moderator,
-                                                     const fc::flat_set<market_type>& markets,
+                                                     const std::vector<market_type>& markets,
                                                      const bool broadcast);
 
     /**
