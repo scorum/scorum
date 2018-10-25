@@ -8,7 +8,9 @@
 #include <fc/io/json.hpp>
 
 #include "defines.hpp"
-#include "utils.hpp"
+#include "detail.hpp"
+
+using detail::to_hex;
 
 namespace signed_transaction_serialization_tests {
 
@@ -59,7 +61,7 @@ SCORUM_TEST_CASE(serialize_signed_transaction_with_transfer_operation_to_json)
 SCORUM_TEST_CASE(serialize_empty_signed_transaction_to_raw)
 {
     signed_transaction trx;
-    BOOST_CHECK_EQUAL("00000000000000000000000000", utils::to_hex(trx));
+    BOOST_CHECK_EQUAL("00000000000000000000000000", to_hex(trx));
 }
 
 SCORUM_TEST_CASE(serialize_not_empty_signed_transaction_to_raw)
@@ -67,12 +69,12 @@ SCORUM_TEST_CASE(serialize_not_empty_signed_transaction_to_raw)
     signed_transaction trx;
     trx.ref_block_num = 10;
     trx.ref_block_prefix = 100;
-    BOOST_CHECK_EQUAL("0a006400000000000000000000", utils::to_hex(trx));
+    BOOST_CHECK_EQUAL("0a006400000000000000000000", to_hex(trx));
 }
 
 BOOST_AUTO_TEST_CASE(serialize_transfer_to_raw)
 {
-    BOOST_CHECK_EQUAL("05616c69636503626f620100000000000000095343520000000000", utils::to_hex(op));
+    BOOST_CHECK_EQUAL("05616c69636503626f620100000000000000095343520000000000", to_hex(op));
 }
 
 SCORUM_TEST_CASE(serialize_signed_transaction_with_transfer_operation_to_raw)
@@ -83,7 +85,7 @@ SCORUM_TEST_CASE(serialize_signed_transaction_with_transfer_operation_to_raw)
     trx.operations.push_back(op);
 
     BOOST_CHECK_EQUAL("0a006400000000000000010205616c69636503626f6201000000000000000953435200000000000000",
-                      utils::to_hex(trx));
+                      to_hex(trx));
 }
 
 SCORUM_TEST_CASE(testing_transaction_raw_pack_and_unpack)
@@ -128,7 +130,7 @@ SCORUM_TEST_CASE(wincase_update_transaction_serialization_test)
 
     BOOST_CHECK_EQUAL("f328adb6fd102d4ec85b0109086c656f6e617264610c6c656f6e617264612e636f6d03987a5a967458c114c15091198c"
                       "06a822f54b494ea486204551a53f85effa314200e1f5050000000009534352000000000000020000",
-                      utils::to_hex(trx));
+                      to_hex(trx));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

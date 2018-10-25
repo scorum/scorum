@@ -50,7 +50,7 @@ void database_betting_integration_fixture::empower_moderator(const Actor& modera
 
 create_game_operation database_betting_integration_fixture::create_game(const scorum::uuid_type& uuid,
                                                                         const Actor& moderator,
-                                                                        fc::flat_set<market_type> markets,
+                                                                        std::vector<market_type> markets,
                                                                         uint32_t start_delay,
                                                                         uint32_t auto_resolve_delay_sec)
 {
@@ -73,7 +73,7 @@ create_game_operation database_betting_integration_fixture::create_game(const sc
 }
 
 create_game_operation database_betting_integration_fixture::create_game(const Actor& moderator,
-                                                                        fc::flat_set<market_type> markets,
+                                                                        std::vector<market_type> markets,
                                                                         uint32_t start_delay,
                                                                         uint32_t auto_resolve_delay_sec)
 {
@@ -138,7 +138,7 @@ cancel_game_operation database_betting_integration_fixture::cancel_game(const Ac
 }
 
 update_game_markets_operation database_betting_integration_fixture::update_markets(const Actor& moderator,
-                                                                                   fc::flat_set<market_type> markets)
+                                                                                   std::vector<market_type> markets)
 {
     try
     {

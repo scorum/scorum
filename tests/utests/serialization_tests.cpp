@@ -31,7 +31,7 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <fc/io/json.hpp>
 
-#include "utils.hpp"
+#include "detail.hpp"
 #include "defines.hpp"
 
 using scorum::protocol::asset;
