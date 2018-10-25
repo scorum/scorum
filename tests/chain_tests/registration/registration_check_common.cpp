@@ -107,65 +107,43 @@ const registration_pool_object& registration_check_fixture::create_pool(const ge
                                                  items);
 }
 
-genesis_state_type registration_check_fixture::create_registration_genesis(schedule_inputs_type& schedule_input)
+void create_schedule(schedule_inputs_type& schedule)
 {
-    committee_private_keys_type committee_private_keys;
-    schedule_input.clear();
-    return create_registration_genesis_impl(schedule_input, committee_private_keys);
+    schedule.clear();
+    schedule.reserve(4);
+
+    // Amount of users = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK to force
+    // selection the entire limit in the first step (due tests logic)
+    schedule.emplace_back(schedule_input_type{ 1, SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK, 100 });
+    schedule.emplace_back(schedule_input_type{ 2, 5, 75 });
+    schedule.emplace_back(schedule_input_type{ 3, 5, 50 });
+    schedule.emplace_back(schedule_input_type{ 4, 8, 25 });
 }
 
 genesis_state_type registration_check_fixture::create_registration_genesis()
-{
-    committee_private_keys_type committee_private_keys;
-    schedule_inputs_type schedule_input;
-    return create_registration_genesis_impl(schedule_input, committee_private_keys);
-}
-
-genesis_state_type
-registration_check_fixture::create_registration_genesis(committee_private_keys_type& committee_private_keys)
-{
-    schedule_inputs_type schedule_input;
-    committee_private_keys.clear();
-    return create_registration_genesis_impl(schedule_input, committee_private_keys);
-}
-
-genesis_state_type
-registration_check_fixture::create_registration_genesis_impl(schedule_inputs_type& schedule_input,
-                                                             committee_private_keys_type& committee_private_keys)
 {
     genesis_state_type genesis_state;
 
     for (const auto& item : _committee)
     {
-        genesis_state.registration_committee.emplace_back(item.first);
+        genesis_state.registration_committee.emplace_back(item.second.name);
+        genesis_state.accounts.push_back({ item.second.name, item.second.public_key, asset(0, SCORUM_SYMBOL) });
     }
-
-    committee_private_keys.clear();
-    for (const account_name_type& member : genesis_state.registration_committee)
-    {
-        fc::ecc::private_key private_key = database_integration_fixture::generate_private_key(member);
-        committee_private_keys.insert(committee_private_keys_type::value_type(member, private_key));
-        genesis_state.accounts.push_back({ member, private_key.get_public_key(), asset(0, SCORUM_SYMBOL) });
-    }
-
-    schedule_input.clear();
-    schedule_input.reserve(4);
-
-    // Amount of users = SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK to force
-    // selection the entire limit in the first step (due tests logic)
-    schedule_input.emplace_back(schedule_input_type{ 1, SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK, 100 });
-    schedule_input.emplace_back(schedule_input_type{ 2, 5, 75 });
-    schedule_input.emplace_back(schedule_input_type{ 3, 5, 50 });
-    schedule_input.emplace_back(schedule_input_type{ 4, 8, 25 });
 
     genesis_state.registration_bonus = registration_bonus();
 
-    genesis_state.registration_schedule = schedule_input;
+    create_schedule(genesis_state.registration_schedule);
 
-    _registration_supply = schedule_input_total_bonus(schedule_input, genesis_state.registration_bonus);
+    _registration_supply
+        = schedule_input_total_bonus(genesis_state.registration_schedule, genesis_state.registration_bonus);
     _registration_supply += rest_of_supply();
     genesis_state.registration_supply = _registration_supply;
 
     return genesis_state;
+}
+
+asset registration_check_fixture::registration_supply() const
+{
+    return _registration_supply;
 }
 }

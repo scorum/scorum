@@ -11,6 +11,8 @@
 #include <scorum/chain/schema/witness_objects.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/uuid/uuid.hpp>
 
 #include <numeric>
 
@@ -48,6 +50,8 @@ template <> struct budget_traits<budget_type::post>
     static constexpr uint16_t object_type_v = post_budget_object_type;
 };
 
+/// @addtogroup adv_api
+/// @{
 template <budget_type budget_type_v>
 class adv_budget_object : public object<budget_traits<budget_type_v>::object_type_v, adv_budget_object<budget_type_v>>
 {
@@ -57,6 +61,7 @@ public:
     using id_type = oid<adv_budget_object<budget_type_v>>;
 
     id_type id;
+    uuid_type uuid;
 
     account_name_type owner;
     fc::shared_string json_metadata;
@@ -77,6 +82,7 @@ public:
         return balance.amount != 0;
     }
 };
+/// @}
 
 struct by_owner_name;
 struct by_per_block;
@@ -93,6 +99,7 @@ using fund_budget_index
 
 struct by_cashout_time;
 struct by_balances;
+struct by_uuid;
 
 template <budget_type budget_type_v>
 using adv_budget_index
@@ -101,6 +108,10 @@ using adv_budget_index
                                                              member<adv_budget_object<budget_type_v>,
                                                                     id_t<adv_budget_object<budget_type_v>>,
                                                                     &adv_budget_object<budget_type_v>::id>>,
+                                              hashed_unique<tag<by_uuid>,
+                                                            member<adv_budget_object<budget_type_v>,
+                                                                   uuid_type,
+                                                                   &adv_budget_object<budget_type_v>::uuid>>,
                                               ordered_non_unique<tag<by_owner_name>,
                                                                  member<adv_budget_object<budget_type_v>,
                                                                         account_name_type,
@@ -149,6 +160,7 @@ using banner_budget_index = adv_budget_index<budget_type::banner>;
 FC_REFLECT(scorum::chain::fund_budget_object, (id)(created)(start)(deadline)(balance)(per_block))
 FC_REFLECT(scorum::chain::post_budget_object,
            (id)
+           (uuid)
            (owner)
            (json_metadata)
            (created)
@@ -161,6 +173,7 @@ FC_REFLECT(scorum::chain::post_budget_object,
            (budget_pending_outgo))
 FC_REFLECT(scorum::chain::banner_budget_object,
            (id)
+           (uuid)
            (owner)
            (json_metadata)
            (created)

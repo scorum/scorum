@@ -17,6 +17,8 @@
 
 #include <scorum/utils/fraction.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+
 #include "database_default_integration.hpp"
 
 #include <limits>
@@ -56,6 +58,9 @@ public:
     voters_reward_scr_service_i& voters_reward_scr_service;
 
     const asset NULL_BALANCE = asset(0, SCORUM_SYMBOL);
+
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 };
 }
 
@@ -93,12 +98,12 @@ SCORUM_TEST_CASE(check_advertising_budget_reward_distribution_deadline_before_ca
     auto advertising_budget = ASSET_SCR(2e+9);
     auto deadline_blocks_n = 4;
 
-    auto start = db.head_block_time();
-    auto deadline = db.head_block_time() + deadline_blocks_n * SCORUM_BLOCK_INTERVAL;
+    auto start = db.head_block_time() + SCORUM_BLOCK_INTERVAL; // start in following block
+    auto deadline = start + (deadline_blocks_n - 1) * SCORUM_BLOCK_INTERVAL;
 
     BOOST_REQUIRE_LT(deadline.sec_since_epoch(), start.sec_since_epoch() + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC);
 
-    auto budget = adv_budget_svc.create_budget(account.name, advertising_budget, start, deadline, "");
+    auto budget = adv_budget_svc.create_budget(uuid_gen("x"), account.name, advertising_budget, start, deadline, "");
 
     BOOST_REQUIRE_EQUAL(content_reward_scr_service.get().balance.amount, 0);
 
@@ -114,20 +119,20 @@ SCORUM_TEST_CASE(check_advertising_budget_reward_distribution_deadline_after_cas
 {
     const auto& account = account_service.get_account(TEST_INIT_DELEGATE_NAME);
     auto advertising_budget = ASSET_SCR(6e+8);
-    auto start = db.head_block_time();
-    auto deadline = start + fc::seconds(SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC + SCORUM_BLOCK_INTERVAL);
+    auto start = db.head_block_time() + SCORUM_BLOCK_INTERVAL; // start in following block
+    auto deadline = db.head_block_time() + fc::seconds(SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC + SCORUM_BLOCK_INTERVAL);
 
+    BOOST_REQUIRE_EQUAL(SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC % SCORUM_BLOCK_INTERVAL, 0);
     BOOST_REQUIRE_GT(deadline.sec_since_epoch(),
                      db.head_block_time().sec_since_epoch() + SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC);
 
-    auto budget = adv_budget_svc.create_budget(account.name, advertising_budget, start, deadline, "");
+    auto budget = adv_budget_svc.create_budget(uuid_gen("x"), account.name, advertising_budget, start, deadline, "");
 
     BOOST_REQUIRE_EQUAL(content_reward_scr_service.get().balance.amount, 0);
 
     {
         // no payments yet
-        generate_blocks(
-            db.head_block_time() + fc::seconds(SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC - SCORUM_BLOCK_INTERVAL), false);
+        generate_blocks(SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC / SCORUM_BLOCK_INTERVAL - 1);
         BOOST_CHECK_EQUAL(dev_service.get().scr_balance.amount, 0);
     }
     {
@@ -139,7 +144,7 @@ SCORUM_TEST_CASE(check_advertising_budget_reward_distribution_deadline_after_cas
     }
     {
         // advertising budget deadline
-        generate_blocks(deadline, false);
+        generate_block();
         auto dev_pool_reward
             = advertising_budget * utils::make_fraction(SCORUM_DEV_TEAM_PER_BLOCK_REWARD_PERCENT, SCORUM_100_PERCENT);
         BOOST_CHECK_EQUAL(dev_pool_reward, dev_service.get().scr_balance);

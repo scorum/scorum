@@ -36,10 +36,10 @@ template <protocol::budget_type budget_type_v>
 void update_budget_evaluator::update_budget(adv_budget_service_i<budget_type_v>& budget_svc, const operation_type& op)
 {
     _account_service.check_account_existence(op.owner);
-    FC_ASSERT(budget_svc.is_exists(op.budget_id), "Budget with id ${id} doesn't exist", ("id", op.budget_id));
+    FC_ASSERT(budget_svc.is_exists(op.uuid), "Budget with id ${id} doesn't exist", ("id", op.uuid));
 
-    const auto& budget = budget_svc.get(op.budget_id);
-    FC_ASSERT(budget.owner == op.owner, "These is not [${o}/${id}] budget", ("o", op.owner)("id", op.budget_id));
+    const auto& budget = budget_svc.get(op.uuid);
+    FC_ASSERT(budget.owner == op.owner, "These is not [${o}/${id}] budget", ("o", op.owner)("id", op.uuid));
 
 #ifndef IS_LOW_MEM
     budget_svc.update(budget, [&](auto& b) { fc::from_string(b.json_metadata, op.json_metadata); });

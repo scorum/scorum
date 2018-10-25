@@ -25,9 +25,9 @@ struct game_api_object
         , bets_resolve_time(obj.bets_resolve_time)
         , status(obj.status)
         , game(obj.game)
+        , markets(obj.markets.begin(), obj.markets.end())
+        , results(obj.results.begin(), obj.results.end())
     {
-        std::copy(obj.markets.begin(), obj.markets.end(), markets.begin());
-        std::copy(obj.results.begin(), obj.results.end(), results.begin());
     }
 
     chain::game_id_type id = 0;

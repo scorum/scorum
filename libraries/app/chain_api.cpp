@@ -176,6 +176,8 @@ chain_capital_api_obj chain_api::get_chain_capital() const
                  ("capital.circulating_sp", capital.circulating_sp));
         }
 
+        capital.advertising = dpo.advertising;
+
         // clang-format on
 
         return capital;
