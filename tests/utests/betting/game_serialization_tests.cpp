@@ -348,13 +348,13 @@ SCORUM_TEST_CASE(no_sorting_for_markets)
     create_game_operation op;
     op.markets = { correct_score{ 1, 1 }, correct_score_home{} };
 
-    op.markets.at(0).visit([](auto&) { BOOST_FAIL("expected 'correct_score'"); }, [](correct_score&) {});
-    op.markets.at(1).visit([](auto&) { BOOST_FAIL("expected 'correct_score_home'"); }, [](correct_score_home&) {});
+    BOOST_CHECK(op.markets.at(0).which() == market_type::tag<correct_score>::value);
+    BOOST_CHECK(op.markets.at(1).which() == market_type::tag<correct_score_home>::value);
 
     op.markets = { correct_score_home{}, correct_score{ 1, 1 } };
 
-    op.markets.at(0).visit([](auto&) { BOOST_FAIL("expected 'correct_score_home'"); }, [](correct_score_home&) {});
-    op.markets.at(1).visit([](auto&) { BOOST_FAIL("expected 'correct_score'"); }, [](correct_score&) {});
+    BOOST_CHECK(op.markets.at(1).which() == market_type::tag<correct_score>::value);
+    BOOST_CHECK(op.markets.at(0).which() == market_type::tag<correct_score_home>::value);
 }
 
 SCORUM_TEST_CASE(wincases_duplicates_deserialization_test)
