@@ -3,7 +3,7 @@ List of exception that could be raised on betting operations
 
 ## create_game_operation
 * Assert Exception "Account name is invalid" -- raises when op.moderator is invalid account name 
-* Assert Exception "Game name should be less than ${1}" -- raises when op.name lesser than SCORUM_MAX_GAME_NAME_LENGTH value 
+* Assert Exception "Game name should be less than ${1}" -- raises when op.name greater than SCORUM_MAX_GAME_NAME_LENGTH value 
 * Assert Exception "Markets ${m} cannot be used with specified game" -- raises when try to create game with unexpected market
 * Assert Exception "Account \"${1}\" must exist." -- raises when account with name op.moderator doens't exists
 * Assert Exception "Game should start after head block time" -- raises when operation arg start_time <= head_block_time
