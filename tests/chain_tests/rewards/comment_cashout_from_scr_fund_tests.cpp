@@ -11,6 +11,8 @@
 #include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+
 using namespace scorum::chain;
 
 namespace database_fixture {
@@ -42,9 +44,11 @@ struct comment_cashout_from_scr_fund_fixture : public database_blog_integration_
         const int deadline_block_count = 10;
         const auto& owner = account_service.get_account(alice.name);
 
+        auto start = db.head_block_time() + SCORUM_BLOCK_INTERVAL;
+        auto deadline = start + SCORUM_BLOCK_INTERVAL * (deadline_block_count - 1);
+
         BOOST_CHECK_NO_THROW(advertising_budget_service.create_budget(
-            owner.name, ASSET_SCR(deadline_block_count), db.head_block_time(),
-            db.head_block_time() + SCORUM_BLOCK_INTERVAL * deadline_block_count, ""));
+            uuid_gen("alice"), owner.name, ASSET_SCR(deadline_block_count), start, deadline, ""));
 
         generate_blocks(deadline_block_count);
         generate_blocks(2); // wait till SCR reward balancer become empty
@@ -69,6 +73,9 @@ struct comment_cashout_from_scr_fund_fixture : public database_blog_integration_
     asset activity_reward_balance = ASSET_NULL_SCR;
     Actor alice;
     Actor sam;
+
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 };
 }
 

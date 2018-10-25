@@ -277,17 +277,17 @@ struct get_impacted_account_visitor
         _impacted.insert(op.from_account);
     }
 
-    void operator()(const allocate_cash_from_advertising_budget_operation& op)
+    void operator()(const budget_outgo_operation& op)
     {
         _impacted.insert(op.owner);
     }
 
-    void operator()(const cash_back_from_advertising_budget_to_owner_operation& op)
+    void operator()(const budget_owner_income_operation& op)
     {
         _impacted.insert(op.owner);
     }
 
-    void operator()(const closing_budget_operation& op)
+    void operator()(const budget_closing_operation& op)
     {
         _impacted.insert(op.owner);
     }

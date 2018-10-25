@@ -33,6 +33,8 @@ config::config() /// production config
     , upvote_lockout(fc::minutes(30))
 
     , active_sp_holders_reward_period(fc::minutes(1))
+
+    , advertising_cashout_period_sec(60)
 #else
     , vesting_withdraw_interval_seconds(DAYS_TO_SECONDS(7)) // 1 week per interval
 
@@ -41,6 +43,8 @@ config::config() /// production config
     , upvote_lockout(fc::hours(12))
 
     , active_sp_holders_reward_period(fc::days(7))
+
+    , advertising_cashout_period_sec(DAYS_TO_SECONDS(7))
 #endif
 
     , reverse_auction_window_seconds(fc::minutes(30))
@@ -56,7 +60,7 @@ config::config() /// production config
     , guaranted_reward_supply_period_in_days(30)
     , reward_increase_threshold_in_days(100)
 
-    , budgets_limit_per_owner(10000)
+    , budgets_limit_per_owner(100)
 
     , atomicswap_initiator_refund_lock_secs(48 * 3600)
     , atomicswap_participant_refund_lock_secs(24 * 3600)
@@ -87,8 +91,6 @@ config::config() /// production config
     /// participation on all subsequent rounds.
     , scorum_hardfork_required_witnesses(17)
 
-    , advertising_cashout_period_sec(DAYS_TO_SECONDS(7))
-
     , min_bet_stake(share_type(10 ^ 7)) // 0.01 SCR
 {
     FC_ASSERT(blogging_start_date + cashout_window_seconds < fifa_world_cup_2018_bounty_cashout_date,
@@ -110,6 +112,8 @@ config::config(test_mode) /// test config
     , upvote_lockout(fc::minutes(5))
 
     , active_sp_holders_reward_period(fc::minutes(15))
+
+    , advertising_cashout_period_sec(15)
 
     , reverse_auction_window_seconds(fc::seconds(30))
 
@@ -152,8 +156,6 @@ config::config(test_mode) /// test config
     , scorum_max_voted_witnesses(2)
 
     , scorum_hardfork_required_witnesses(2)
-
-    , advertising_cashout_period_sec(15)
 
     , min_bet_stake(share_type(1))
 {

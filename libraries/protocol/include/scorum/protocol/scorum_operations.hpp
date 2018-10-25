@@ -15,6 +15,11 @@
 namespace scorum {
 namespace protocol {
 
+/**
+ * @ingroup operations
+ *
+ * @brief Creates new account.
+ */
 struct account_create_operation : public base_operation
 {
     asset fee = asset(0, SCORUM_SYMBOL);
@@ -33,6 +38,11 @@ struct account_create_operation : public base_operation
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Creates new account with delegation.
+ */
 struct account_create_with_delegation_operation : public base_operation
 {
     asset fee = asset(0, SCORUM_SYMBOL);
@@ -54,6 +64,13 @@ struct account_create_with_delegation_operation : public base_operation
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Creates new account by registration committee.
+ *
+ * Without paying fee and with empty balance. You need to delegate some scorumpower to activate this account
+ */
 struct account_create_by_committee_operation : public base_operation
 {
     account_name_type creator;
@@ -71,6 +88,11 @@ struct account_create_by_committee_operation : public base_operation
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Updates account keys or/and metadata.
+ */
 struct account_update_operation : public base_operation
 {
     account_name_type account;
@@ -95,6 +117,11 @@ struct account_update_operation : public base_operation
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Posts comment.
+ */
 struct comment_operation : public base_operation
 {
     account_name_type parent_author;
@@ -115,6 +142,10 @@ struct comment_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Updates comment options.
+ *
  *  Authors of posts may not want all of the benefits that come from creating a post. This
  *  operation allows authors to update properties associated with their post.
  *
@@ -139,6 +170,11 @@ struct comment_options_operation : public base_operation
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Proves authority to remove challenge.
+ */
 struct prove_authority_operation : public base_operation
 {
     account_name_type challenged;
@@ -158,6 +194,13 @@ struct prove_authority_operation : public base_operation
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Deletes comment.
+ *
+ * You cant do it if comment already has upvotes or child comments
+ */
 struct delete_comment_operation : public base_operation
 {
     account_name_type author;
@@ -170,6 +213,11 @@ struct delete_comment_operation : public base_operation
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Votes for content.
+ */
 struct vote_operation : public base_operation
 {
     account_name_type voter;
@@ -210,6 +258,10 @@ struct transfer_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Starts escrow transfer.
+ *
  *  The purpose of this operation is to enable someone to send money contingently to
  *  another individual. The funds leave the *from* account and go into a temporary balance
  *  where they are held until *from* releases it to *to* or *to* refunds it to *from*.
@@ -250,6 +302,10 @@ struct escrow_transfer_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Approves escrow transaction.
+ *
  *  The agent and to accounts must approve an escrow transaction for it to be valid on
  *  the blockchain. Once a part approves the escrow, the cannot revoke their approval.
  *  Subsequent escrow approve operations, regardless of the approval, will be rejected.
@@ -272,6 +328,10 @@ struct escrow_approve_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Starts escrow dispute.
+ *
  *  If either the sender or receiver of an escrow payment has an issue, they can
  *  raise it for dispute. Once a payment is in dispute, the agent has authority over
  *  who gets what.
@@ -293,6 +353,10 @@ struct escrow_dispute_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Releases escrow transaction.
+ *
  *  This operation can be used by anyone associated with the escrow transfer to
  *  release funds if they have permission.
  *
@@ -321,6 +385,10 @@ struct escrow_release_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Converts SCR to SP.
+ *
  *  This operation converts SCR into SP at
  *  the current exchange rate. With this operation it is possible to
  *  give another account scorumpower so that faucets can
@@ -340,6 +408,10 @@ struct transfer_to_scorumpower_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Starts vesting withdraw.
+ *
  * At any given point in time an account can be withdrawing from their
  * scorumpower. A user may change the number of shares they wish to
  * cash out at any time between 0 and their total scorumpower stake.
@@ -364,6 +436,10 @@ struct withdraw_scorumpower_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Setup a versting withdraw to another account.
+ *
  * Allows an account to setup a vesting withdraw but with the additional
  * request for the funds to be transferred directly to another account's
  * balance rather than the withdrawing account. In addition, those funds
@@ -384,6 +460,11 @@ struct set_withdraw_scorumpower_route_to_account_operation : public base_operati
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Setup a versting withdraw to development pool.
+ */
 struct set_withdraw_scorumpower_route_to_dev_pool_operation : public base_operation
 {
     account_name_type from_account;
@@ -398,15 +479,12 @@ struct set_withdraw_scorumpower_route_to_dev_pool_operation : public base_operat
 };
 
 /**
- *  Users who wish to become a witness must pay a fee acceptable to
- *  the current witnesses to apply for the position and allow voting
- *  to begin.
  *
- *  If the owner isn't a witness he will become a witness.  Witnesses
- *  are charged a fee equal to 1 weeks worth of witness pay which in
- *  turn is derived from the current share supply.  The fee is
- *  only applied if the owner is not already a witness.
+ * @ingroup operations
  *
+ * @brief Updates account to witness.
+ *
+ *  If the owner isn't a witness he will become a witness.
  *  If the block_signing_key is null then the witness is removed from
  *  contention.  The network will pick the top 21 witnesses for
  *  producing blocks.
@@ -426,8 +504,11 @@ struct witness_update_operation : public base_operation
 };
 
 /**
- * All accounts with a VFS can vote for or against any witness.
+ * @ingroup operations
  *
+ * @brief Votes for witness.
+ *
+ * All accounts with a VFS can vote for or against any witness.
  * If a proxy is specified then all existing votes are removed.
  */
 struct account_witness_vote_operation : public base_operation
@@ -443,6 +524,11 @@ struct account_witness_vote_operation : public base_operation
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Sets witness proxy for account.
+ */
 struct account_witness_proxy_operation : public base_operation
 {
     account_name_type account;
@@ -456,6 +542,10 @@ struct account_witness_proxy_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Requests account recovery.
+ *
  * All account recovery requests come from a listed recovery account. This
  * is secure based on the assumption that only a trusted account should be
  * a recovery account. It is the responsibility of the recovery account to
@@ -504,6 +594,10 @@ struct request_account_recovery_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Recovers an account to a new authority using a previous authority.
+ *
  * Recover an account to a new authority using a previous authority and verification
  * of the recovery account as proof of identity. This operation can only succeed
  * if there was a recovery request sent by the account's recover account.
@@ -561,6 +655,10 @@ struct recover_account_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
+ *
+ * @brief Changes recovery account. Will be changed in 30 days.
+ *
  * Each account lists another account as their recovery account.
  * The recovery account has the ability to create account_recovery_requests
  * for the account to recover. An account can change their recovery account
@@ -604,11 +702,14 @@ struct decline_voting_rights_operation : public base_operation
 };
 
 /**
- * Delegate scorumpower from one account to the other. The scorumpower are still owned
+ * @ingroup operations
+ *
+ * @brief Delegates scorumpower from one account to the other.
+ *
+ * The scorumpower are still owned
  * by the original account, but content voting rights and bandwidth allocation are transferred
  * to the receiving account. This sets the delegation to `scorumpower`, increasing it or
  * decreasing it as needed. (i.e. a delegation of 0 removes the delegation)
- *
  * When a delegation is removed the shares are placed in limbo for a week to prevent a satoshi
  * of SP from voting on the same content twice.
  */
@@ -625,16 +726,27 @@ struct delegate_scorumpower_operation : public base_operation
     void validate() const;
 };
 
+/// @defgroup advertising Advertising operations
+/// @brief Operations to work with advertising budgets
+/// @ingroup operations
+/// @{
+/**
+ * @brief Creates advertising budget.
+ * @ingroup operations
+ *
+ * @details See [advertising details](@ref advdetails) for detailed information about how budgets work.
+ */
 struct create_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
+    uuid_type uuid;
     account_name_type owner;
     std::string json_metadata;
 
     asset balance = asset(0, SCORUM_SYMBOL);
-    fc::optional<time_point_sec> start;
-    time_point_sec deadline;
+    fc::time_point_sec start;
+    fc::time_point_sec deadline;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -643,11 +755,15 @@ struct create_budget_operation : public base_operation
     }
 };
 
+/**
+ * @brief Updates advertising budget metadata.
+ * @ingroup operations
+ */
 struct update_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    int64_t budget_id;
+    uuid_type uuid;
     account_name_type owner;
     std::string json_metadata;
 
@@ -658,11 +774,15 @@ struct update_budget_operation : public base_operation
     }
 };
 
+/**
+ * @brief Closes advertising budget, remaining funds will be returned to creator.
+ * @ingroup operations
+ */
 struct close_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    int64_t budget_id;
+    uuid_type uuid;
     account_name_type owner;
 
     void validate() const;
@@ -672,6 +792,32 @@ struct close_budget_operation : public base_operation
     }
 };
 
+/**
+ * @brief Closes advertising budget by moderator, remaining funds will be returned to creator.
+ * @ingroup operations
+ */
+struct close_budget_by_advertising_moderator_operation : public base_operation
+{
+    budget_type type = budget_type::post;
+
+    uuid_type uuid;
+    account_name_type moderator;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+};
+
+/// @}
+
+
+/**
+ * @ingroup operations
+ *
+ * @brief Creates new committee proposal.
+ */
 struct proposal_create_operation : public base_operation
 {
     account_name_type creator;
@@ -687,6 +833,11 @@ struct proposal_create_operation : public base_operation
     void validate() const;
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Votes for committee proposal.
+ */
 struct proposal_vote_operation : public base_operation
 {
     account_name_type voting_account;
@@ -700,6 +851,11 @@ struct proposal_vote_operation : public base_operation
     void validate() const;
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Initiates atomicswap operation.
+ */
 struct atomicswap_initiate_operation : public base_operation
 {
     enum operation_type : bool
@@ -726,6 +882,11 @@ struct atomicswap_initiate_operation : public base_operation
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Redeems atomicswap operation.
+ */
 struct atomicswap_redeem_operation : public base_operation
 {
     account_name_type from;
@@ -740,6 +901,11 @@ struct atomicswap_redeem_operation : public base_operation
     }
 };
 
+/**
+ * @ingroup operations
+ *
+ * @brief Refunds atomicswap operation.
+ */
 struct atomicswap_refund_operation : public base_operation
 {
     account_name_type participant;
@@ -753,20 +919,6 @@ struct atomicswap_refund_operation : public base_operation
     }
 };
 
-struct close_budget_by_advertising_moderator_operation : public base_operation
-{
-    budget_type type = budget_type::post;
-
-    int64_t budget_id;
-    account_name_type moderator;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
 /// rational number
 struct odds_input
 {
@@ -775,11 +927,12 @@ struct odds_input
 };
 
 /// @defgroup betting_operations Betting operations
-///
 /// This is a set of betting operations
+/// @ingroup operations
 /// @{
 
 /**
+ * @ingroup operations
  * @brief This operation creates game object
  *
  * Game will have status 'created' until start_time < head_block_time. Game status changed to 'started' when
@@ -818,6 +971,7 @@ struct create_game_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief This operation canceling game.
  *
  * Moderator could cancel game any time. All accepted bets would be canceled and returned back.
@@ -840,6 +994,7 @@ struct cancel_game_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief This operation updates game markets list
  *
  * Before game started moderator could add or remove markets. All accepted bets would be canceled and returned back when
@@ -866,6 +1021,7 @@ struct update_game_markets_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief This operation updates game start time.
  *
  * After game started moderator could update start_time only in 12 hours range.
@@ -891,6 +1047,7 @@ struct update_game_start_time_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief With this operation moderator provides game results(wincases)
  *
  * This operation changes game status to 'finished'. Stop accepting bets. All unmatched bets returned back. This
@@ -919,6 +1076,7 @@ struct post_game_results_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief This operation creates bet
  */
 struct post_bet_operation : public base_operation
@@ -954,6 +1112,7 @@ struct post_bet_operation : public base_operation
 };
 
 /**
+ * @ingroup operations
  * @brief This operation cancel unmatched bets by id
  */
 struct cancel_pending_bets_operation : public base_operation
@@ -1047,20 +1206,22 @@ FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_rec
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
 FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
 
-FC_REFLECT( scorum::protocol::create_budget_operation, (type)(owner)(json_metadata)(balance)(start)(deadline) )
-FC_REFLECT( scorum::protocol::update_budget_operation, (type)(budget_id)(owner)(json_metadata) )
-FC_REFLECT( scorum::protocol::close_budget_operation, (type)(budget_id)(owner) )
+FC_REFLECT( scorum::protocol::create_budget_operation, (type)(uuid)(owner)(json_metadata)(balance)(start)(deadline) )
+FC_REFLECT( scorum::protocol::update_budget_operation, (type)(uuid)(owner)(json_metadata) )
+FC_REFLECT( scorum::protocol::close_budget_operation, (type)(uuid)(owner) )
+FC_REFLECT( scorum::protocol::close_budget_by_advertising_moderator_operation, (type)(uuid)(moderator) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
 FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,(by_initiator)(by_participant))
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
-FC_REFLECT( scorum::protocol::close_budget_by_advertising_moderator_operation, (type)(budget_id)(moderator) )
+
 FC_REFLECT( scorum::protocol::create_game_operation, (uuid)(moderator)(name)(start_time)(auto_resolve_delay_sec)(game)(markets) )
 FC_REFLECT( scorum::protocol::cancel_game_operation, (uuid)(moderator) )
 FC_REFLECT( scorum::protocol::update_game_markets_operation, (uuid)(moderator)(markets) )
 FC_REFLECT( scorum::protocol::update_game_start_time_operation, (uuid)(moderator)(start_time) )
 FC_REFLECT( scorum::protocol::post_game_results_operation, (uuid)(moderator)(wincases) )
+
 
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)

@@ -36,12 +36,17 @@ public:
     /**
      * @brief Get advertising budget
      */
-    fc::optional<budget_api_obj> get_budget(int64_t id, budget_type type) const;
+    fc::optional<budget_api_obj> get_budget(uuid_type uuid, budget_type type) const;
 
     /**
      * @brief Get winners for particular budget type
      */
     std::vector<budget_api_obj> get_current_winners(budget_type type) const;
+
+    /**
+     * @brief Get winners for particular budget type
+     */
+    std::vector<percent_type> get_auction_coefficients(budget_type type) const;
 
     /// @}
 
@@ -55,4 +60,5 @@ private:
 }
 }
 
-FC_API(scorum::app::advertising_api, (get_moderator)(get_user_budgets)(get_budget)(get_current_winners))
+FC_API(scorum::app::advertising_api,
+       (get_moderator)(get_user_budgets)(get_budget)(get_current_winners)(get_auction_coefficients))

@@ -21,6 +21,8 @@
 
 BOOST_AUTO_TEST_SUITE(genesis_db_tests)
 
+#undef SRC_DIR
+
 #ifdef SRC_DIR
 BOOST_FIXTURE_TEST_CASE(validate_src_json_test, database_fixture::database_integration_fixture)
 {
