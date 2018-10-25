@@ -1282,10 +1282,8 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<withdraw_scorumpower_evaluator>();
     _my->_evaluator_registry.register_evaluator<registration_pool_evaluator>();
     _my->_evaluator_registry.register_evaluator<create_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>(
-        static_cast<database_virtual_operations_emmiter_i&>(_my->_self));
-    _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>(
-        static_cast<database_virtual_operations_emmiter_i&>(_my->_self));
+    _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator(new create_game_evaluator(*this, _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->get_betting_service(), *this));

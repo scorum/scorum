@@ -42,14 +42,11 @@ public:
     void create_registration_objects(const genesis_state_type&);
     const registration_pool_object& create_pool(const genesis_state_type& genesis_state);
 
-    genesis_state_type create_registration_genesis(schedule_inputs_type& schedule_input);
     genesis_state_type create_registration_genesis();
-    genesis_state_type create_registration_genesis(committee_private_keys_type& committee_private_keys);
+
+    asset registration_supply() const;
 
 private:
-    genesis_state_type create_registration_genesis_impl(schedule_inputs_type& schedule_input,
-                                                        committee_private_keys_type& committee_private_keys);
-
     data_service_factory_i& _services;
     asset _registration_supply = asset(0, SCORUM_SYMBOL);
     const asset _registration_bonus = ASSET_SCR(100);

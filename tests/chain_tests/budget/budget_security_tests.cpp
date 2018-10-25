@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-
+#include <boost/uuid/uuid_generators.hpp>
 #include "budget_check_common.hpp"
 
 namespace budget_security_tests {
@@ -23,9 +23,10 @@ struct budget_security_check_fixture : public budget_check_fixture
         skip_flags() &= ~database::skip_authority_check;
     }
 
-    template <typename Object, typename Service> void test_close_alien_budget(Service& service, const budget_type type)
+    template <typename Object, typename Service> void test_close_alice_budget(Service& service, const budget_type type)
     {
-        create_budget(alice, type);
+        auto uuid = uuid_gen("alice");
+        create_budget(uuid, alice, type);
 
         const Object& alice_budget = service.get(0);
 
@@ -36,7 +37,7 @@ struct budget_security_check_fixture : public budget_check_fixture
         close_budget_operation op;
         op.owner = eva.name;
         op.type = type;
-        op.budget_id = alice_budget.id._id;
+        op.uuid = uuid;
 
         BOOST_CHECK_NO_THROW(op.validate());
 
@@ -49,20 +50,17 @@ struct budget_security_check_fixture : public budget_check_fixture
         BOOST_REQUIRE_NO_THROW(push_operation_only(op, alice.private_key));
     }
 
-    template <typename Object, typename Service> void test_update_alien_budget(Service& service, const budget_type type)
+    template <typename Object, typename Service> void test_update_alice_budget(Service& service, const budget_type type)
     {
-        create_budget(alice, type);
-
-        const Object& alice_budget = service.get(0);
-
-        BOOST_REQUIRE_EQUAL(alice_budget.owner, alice.name);
+        auto uuid = uuid_gen("alice");
+        create_budget(uuid, alice, type);
 
         BOOST_TEST_MESSAGE("Eva try to update alien budget with valid authority");
 
         update_budget_operation op;
         op.owner = eva.name;
         op.type = type;
-        op.budget_id = alice_budget.id._id;
+        op.uuid = uuid;
         op.json_metadata = R"j({"valid": false})j";
 
         BOOST_CHECK_NO_THROW(op.validate());
@@ -80,15 +78,17 @@ struct budget_security_check_fixture : public budget_check_fixture
     Actor alice;
     Actor bob;
     Actor eva;
+
+    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
+    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
 };
 
 BOOST_FIXTURE_TEST_SUITE(budget_security_check, budget_security_check_fixture)
 
 SCORUM_TEST_CASE(invalid_key_check)
 {
-    create_budget(alice, budget_type::post);
-
-    const post_budget_object& alice_budget = post_budget_service.get(0);
+    auto uuid = uuid_gen("alice");
+    create_budget(uuid, alice, budget_type::post);
 
     {
         BOOST_TEST_MESSAGE("Eva try to reset json metada in budget with invalid authority");
@@ -96,7 +96,7 @@ SCORUM_TEST_CASE(invalid_key_check)
         update_budget_operation op;
         op.owner = alice.name;
         op.type = budget_type::post;
-        op.budget_id = alice_budget.id._id;
+        op.uuid = uuid;
         op.json_metadata = "{}";
 
         BOOST_CHECK_NO_THROW(op.validate());
@@ -110,7 +110,7 @@ SCORUM_TEST_CASE(invalid_key_check)
         close_budget_operation op;
         op.owner = alice.name;
         op.type = budget_type::post;
-        op.budget_id = alice_budget.id._id;
+        op.uuid = uuid;
 
         BOOST_CHECK_NO_THROW(op.validate());
 
@@ -120,11 +120,11 @@ SCORUM_TEST_CASE(invalid_key_check)
 
 SCORUM_TEST_CASE(miss_close_alien_budget_check)
 {
-    create_budget(alice, budget_type::post);
-    create_budget(bob, budget_type::banner);
+    auto alice_uuid = uuid_gen("alice");
+    create_budget(alice_uuid, alice, budget_type::post);
 
-    const post_budget_object& alice_budget = post_budget_service.get(0);
-    const banner_budget_object& bob_budget = banner_budget_service.get(0);
+    auto bob_uuid = uuid_gen("bob");
+    create_budget(bob_uuid, bob, budget_type::banner);
 
     {
         BOOST_TEST_MESSAGE("Alice use invalid budget type with valid authority");
@@ -132,7 +132,7 @@ SCORUM_TEST_CASE(miss_close_alien_budget_check)
         close_budget_operation op;
         op.owner = alice.name;
         op.type = budget_type::banner;
-        op.budget_id = alice_budget.id._id;
+        op.uuid = alice_uuid;
 
         BOOST_CHECK_NO_THROW(op.validate());
 
@@ -149,7 +149,7 @@ SCORUM_TEST_CASE(miss_close_alien_budget_check)
         close_budget_operation op;
         op.owner = bob.name;
         op.type = budget_type::post;
-        op.budget_id = bob_budget.id._id;
+        op.uuid = bob_uuid;
 
         BOOST_CHECK_NO_THROW(op.validate());
 
@@ -163,14 +163,14 @@ SCORUM_TEST_CASE(miss_close_alien_budget_check)
 
 SCORUM_TEST_CASE(try_close_alien_budget_check)
 {
-    test_close_alien_budget<post_budget_object>(post_budget_service, budget_type::post);
-    test_close_alien_budget<banner_budget_object>(banner_budget_service, budget_type::banner);
+    test_close_alice_budget<post_budget_object>(post_budget_service, budget_type::post);
+    test_close_alice_budget<banner_budget_object>(banner_budget_service, budget_type::banner);
 }
 
 SCORUM_TEST_CASE(try_update_alien_budget_check)
 {
-    test_update_alien_budget<post_budget_object>(post_budget_service, budget_type::post);
-    test_update_alien_budget<banner_budget_object>(banner_budget_service, budget_type::banner);
+    test_update_alice_budget<post_budget_object>(post_budget_service, budget_type::post);
+    test_update_alice_budget<banner_budget_object>(banner_budget_service, budget_type::banner);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
