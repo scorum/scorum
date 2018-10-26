@@ -288,7 +288,7 @@ struct post_operation_visitor
 
     void create_tag(const std::string& tag, const comment_object& comment, double hot, double trending) const
     {
-        account_id_type author = _db.obtain_service<dbs_account>().get_account(comment.author).id;
+        account_id_type author = _db.account_service().get_account(comment.author).id;
 
         const auto& tag_obj = _db.create<tag_object>([&](tag_object& obj) {
             obj.tag = tag;
@@ -489,7 +489,7 @@ struct post_operation_visitor
     {
         const auto& idx = _db.get_index<scorum::tags::tag_index, by_author_comment>();
 
-        const auto& auth = _db.obtain_service<dbs_account>().get_account(op.author);
+        const auto& auth = _db.account_service().get_account(op.author);
 
         auto tags_rng = idx.equal_range(auth.id)
             | boost::adaptors::filtered([&](const tag_object& t) { return !_db.find(t.comment); });

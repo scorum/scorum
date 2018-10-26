@@ -71,14 +71,14 @@ SCORUM_TEST_CASE(account_transfers_stat_test)
     BOOST_REQUIRE(stat_map.find(maugli) != stat_map.end());
 
     {
-        const auto& buratino_acc = db.obtain_service<chain::dbs_account>().get_account(buratino);
+        const auto& buratino_acc = db.account_service().get_account(buratino);
         const auto& buratino_stat = stat_map.find(buratino)->second;
 
         BOOST_REQUIRE_EQUAL(buratino_stat.transfers_from, 1u);
         BOOST_REQUIRE_EQUAL(buratino_stat.scorum_sent, SCORUM_MIN_PRODUCER_REWARD / 2);
         BOOST_REQUIRE_EQUAL(buratino_stat.scorum_received - buratino_stat.scorum_sent, buratino_acc.balance);
 
-        const auto& maugli_acc = db.obtain_service<chain::dbs_account>().get_account(maugli);
+        const auto& maugli_acc = db.account_service().get_account(maugli);
         const auto& maugli_stat = stat_map.find(maugli)->second;
 
         BOOST_REQUIRE_EQUAL(maugli_stat.transfers_to, 1u);

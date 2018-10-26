@@ -2,6 +2,7 @@
 
 #include <scorum/chain/services/service_base.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/dba/dba.hpp>
 
 namespace scorum {
 namespace chain {
@@ -182,10 +183,9 @@ class dbs_account : public dbs_service_base<account_service_i>
 {
     friend class dbservice_dbs_factory;
 
-protected:
-    explicit dbs_account(database& db);
-
 public:
+    explicit dbs_account(dba::db_index&, dynamic_global_property_service_i&, witness_service_i&);
+
     using base_service_i<account_object>::get;
     using base_service_i<account_object>::is_exists;
 

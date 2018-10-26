@@ -1,7 +1,7 @@
 #pragma once
-
 #include <scorum/chain/services/service_base.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
+
 namespace scorum {
 namespace chain {
 
@@ -17,10 +17,9 @@ class dbs_dynamic_global_property : public dbs_service_base<dynamic_global_prope
 {
     friend class dbservice_dbs_factory;
 
-protected:
-    explicit dbs_dynamic_global_property(database& db);
-
 public:
+    explicit dbs_dynamic_global_property(dba::db_index& db);
+
     virtual fc::time_point_sec get_genesis_time() const override;
 
     virtual fc::time_point_sec head_block_time() const override;

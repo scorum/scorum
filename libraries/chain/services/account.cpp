@@ -14,10 +14,10 @@
 namespace scorum {
 namespace chain {
 
-dbs_account::dbs_account(database& db)
+dbs_account::dbs_account(dba::db_index& db, dynamic_global_property_service_i& dgp_svc, witness_service_i& witness_svc)
     : base_service_type(db)
-    , _dgp_svc(db.dynamic_global_property_service())
-    , _witness_svc(db.witness_service())
+    , _dgp_svc(dgp_svc)
+    , _witness_svc(witness_svc)
 {
 }
 
@@ -182,7 +182,7 @@ const account_object& dbs_account::create_account_with_delegation(const account_
 
     if (delegation.amount > 0)
     {
-        time_point_sec t = db_impl().head_block_time();
+        time_point_sec t = _dgp_svc.head_block_time();
 
         db_impl().create<scorumpower_delegation_object>([&](scorumpower_delegation_object& vdo) {
             vdo.delegator = creator_name;
@@ -228,7 +228,7 @@ void dbs_account::update_acount(const account_object& account,
                                 const optional<authority>& active,
                                 const optional<authority>& posting)
 {
-    time_point_sec t = db_impl().head_block_time();
+    time_point_sec t = _dgp_svc.head_block_time();
 
     update(account, [&](account_object& acc) {
         if (memo_key != public_key_type())
@@ -261,7 +261,7 @@ void dbs_account::update_acount(const account_object& account,
 
 void dbs_account::update_owner_authority(const account_object& account, const authority& owner_authority)
 {
-    time_point_sec t = db_impl().head_block_time();
+    time_point_sec t = _dgp_svc.head_block_time();
 
     db_impl().create<owner_authority_history_object>([&](owner_authority_history_object& hist) {
         hist.account = account.name;
@@ -387,7 +387,7 @@ void dbs_account::decrease_received_scorumpower(const account_object& account, c
 
 void dbs_account::drop_challenged(const account_object& account)
 {
-    time_point_sec t = db_impl().head_block_time();
+    time_point_sec t = _dgp_svc.head_block_time();
 
     if (account.active_challenged)
     {
@@ -400,7 +400,7 @@ void dbs_account::drop_challenged(const account_object& account)
 
 void dbs_account::prove_authority(const account_object& account, bool require_owner)
 {
-    time_point_sec t = db_impl().head_block_time();
+    time_point_sec t = _dgp_svc.head_block_time();
 
     update(account, [&](account_object& a) {
         a.active_challenged = false;
@@ -425,7 +425,7 @@ void dbs_account::decrease_witnesses_voted_for(const account_object& account)
 
 void dbs_account::add_post(const account_object& author_account, const account_name_type& parent_author_name)
 {
-    time_point_sec t = db_impl().head_block_time();
+    time_point_sec t = _dgp_svc.head_block_time();
 
     update(author_account, [&](account_object& a) {
         if (parent_author_name == SCORUM_ROOT_POST_PARENT_ACCOUNT)
@@ -443,7 +443,7 @@ void dbs_account::update_voting_power(const account_object& account, uint16_t vo
         update_active_sp_holders_cashout_time(account);
     }
 
-    time_point_sec t = db_impl().head_block_time();
+    time_point_sec t = _dgp_svc.head_block_time();
 
     update(account, [&](account_object& a) {
         a.voting_power = voting_power;
@@ -459,7 +459,7 @@ void dbs_account::update_active_sp_holders_cashout_time(const account_object& ac
     if (account.active_sp_holders_cashout_time == fc::time_point_sec::maximum())
     {
         update(account, [&](account_object& a) {
-            fc::time_point_sec cashout_time = db_impl().head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD;
+            fc::time_point_sec cashout_time = _dgp_svc.head_block_time() + SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD;
             a.active_sp_holders_cashout_time = cashout_time;
         });
     }
@@ -468,7 +468,7 @@ void dbs_account::update_active_sp_holders_cashout_time(const account_object& ac
 void dbs_account::create_account_recovery(const account_name_type& account_to_recover,
                                           const authority& new_owner_authority)
 {
-    time_point_sec t = db_impl().head_block_time();
+    time_point_sec t = _dgp_svc.head_block_time();
 
     const auto& recovery_request_idx
         = db_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
@@ -508,7 +508,7 @@ void dbs_account::submit_account_recovery(const account_object& account_to_recov
                                           const authority& new_owner_authority,
                                           const authority& recent_owner_authority)
 {
-    time_point_sec t = db_impl().head_block_time();
+    time_point_sec t = _dgp_svc.head_block_time();
 
     const auto& recovery_request_idx
         = db_impl().get_index<account_recovery_request_index>().indices().get<by_account>();
@@ -540,7 +540,7 @@ void dbs_account::submit_account_recovery(const account_object& account_to_recov
 void dbs_account::change_recovery_account(const account_object& account_to_recover,
                                           const account_name_type& new_recovery_account_name)
 {
-    time_point_sec t = db_impl().head_block_time();
+    time_point_sec t = _dgp_svc.head_block_time();
 
     const auto& change_recovery_idx
         = db_impl().get_index<change_recovery_account_request_index>().indices().get<by_account>();

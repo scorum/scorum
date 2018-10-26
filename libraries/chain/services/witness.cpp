@@ -11,10 +11,12 @@
 namespace scorum {
 namespace chain {
 
-dbs_witness::dbs_witness(database& db)
+dbs_witness::dbs_witness(dba::db_index& db,
+                         witness_schedule_service_i& witness_schedule_svc,
+                         dynamic_global_property_service_i& dgp_svc)
     : base_service_type(db)
-    , _dgp_svc(db.dynamic_global_property_service())
-    , _witness_schedule_svc(db.witness_schedule_service())
+    , _dgp_svc(dgp_svc)
+    , _witness_schedule_svc(witness_schedule_svc)
 {
 }
 
@@ -73,7 +75,7 @@ const witness_object& dbs_witness::create_internal(const account_name_type& owne
     return create([&](witness_object& w) {
         w.owner = owner;
         w.signing_key = block_signing_key;
-        w.hardfork_time_vote = db_impl().get_genesis_time();
+        w.hardfork_time_vote = _dgp_svc.get_genesis_time();
     });
 }
 
@@ -102,7 +104,7 @@ void dbs_witness::adjust_witness_votes(const account_object& account, const shar
 
 void dbs_witness::adjust_witness_vote(const witness_object& witness, const share_type& delta)
 {
-    block_info ctx = db_impl().head_block_context();
+    block_info ctx = get_head_block_context();
 
     const auto& props = _dgp_svc.get();
     const auto& wso = _witness_schedule_svc.get();
@@ -131,6 +133,14 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, const share
 
         debug_log(ctx, "new_votes=${v}", ("v", w.votes));
     });
+}
+
+block_info dbs_witness::get_head_block_context()
+{
+    const auto& dprop = _dgp_svc.get();
+    block_info ctx(dprop.head_block_number, dprop.head_block_id.str(), dprop.time, dprop.current_witness);
+
+    return ctx;
 }
 } // namespace chain
 } // namespace scorum

@@ -12,15 +12,15 @@ class create_account_with_data_service_fixture : public database_default_integra
 {
 public:
     create_account_with_data_service_fixture()
-        : data_service(db.obtain_service<dbs_account>())
+        : account_svc(db.account_service())
         , user("user")
     {
     }
 
     void create_account()
     {
-        data_service.create_account(user.name, initdelegate.name, user.public_key, "", authority(), authority(),
-                                    authority(), asset(0, SCORUM_SYMBOL));
+        account_svc.create_account(user.name, initdelegate.name, user.public_key, "", authority(), authority(),
+                                   authority(), asset(0, SCORUM_SYMBOL));
     }
 
     share_type calc_fee()
@@ -31,7 +31,7 @@ public:
                         share_type(100));
     }
 
-    dbs_account& data_service;
+    account_service_i& account_svc;
 
     const Actor user;
 };
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(check_account_name)
     {
         create_account();
 
-        const account_object& acount = db.obtain_service<dbs_account>().get_account("user");
+        const account_object& acount = db.account_service().get_account("user");
 
         BOOST_CHECK(acount.name == user.name);
     }
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(check_recovery_account_name)
     {
         create_account();
 
-        const account_object& acount = db.obtain_service<dbs_account>().get_account("user");
+        const account_object& acount = db.account_service().get_account("user");
 
         BOOST_CHECK(acount.recovery_account == initdelegate.name);
     }
@@ -70,8 +70,8 @@ BOOST_AUTO_TEST_CASE(fail_on_second_creation)
     {
         create_account();
 
-        BOOST_CHECK_THROW(data_service.create_account(user.name, initdelegate.name, user.public_key, "", authority(),
-                                                      authority(), authority(), asset(0, SCORUM_SYMBOL)),
+        BOOST_CHECK_THROW(account_svc.create_account(user.name, initdelegate.name, user.public_key, "", authority(),
+                                                     authority(), authority(), asset(0, SCORUM_SYMBOL)),
                           std::logic_error);
     }
     FC_LOG_AND_RETHROW()
@@ -81,11 +81,11 @@ BOOST_AUTO_TEST_CASE(create_without_fee)
 {
     try
     {
-        const asset balance_before_creation = db.obtain_service<dbs_account>().get_account(initdelegate.name).balance;
+        const asset balance_before_creation = db.account_service().get_account(initdelegate.name).balance;
 
         create_account();
 
-        BOOST_CHECK(db.obtain_service<dbs_account>().get_account(initdelegate.name).balance == balance_before_creation);
+        BOOST_CHECK(db.account_service().get_account(initdelegate.name).balance == balance_before_creation);
     }
     FC_LOG_AND_RETHROW()
 }
@@ -94,14 +94,14 @@ BOOST_AUTO_TEST_CASE(check_fee_after_creation)
 {
     try
     {
-        const asset balance_before_creation = db.obtain_service<dbs_account>().get_account(initdelegate.name).balance;
+        const asset balance_before_creation = db.account_service().get_account(initdelegate.name).balance;
 
         const share_type fee = calc_fee();
 
-        data_service.create_account(user.name, initdelegate.name, user.public_key, "", authority(), authority(),
-                                    authority(), asset(fee, SCORUM_SYMBOL));
+        account_svc.create_account(user.name, initdelegate.name, user.public_key, "", authority(), authority(),
+                                   authority(), asset(fee, SCORUM_SYMBOL));
 
-        BOOST_CHECK(db.obtain_service<dbs_account>().get_account(initdelegate.name).balance
+        BOOST_CHECK(db.account_service().get_account(initdelegate.name).balance
                     == asset(balance_before_creation.amount - fee, SCORUM_SYMBOL));
     }
     FC_LOG_AND_RETHROW()

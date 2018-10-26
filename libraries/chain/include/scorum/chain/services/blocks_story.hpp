@@ -26,6 +26,10 @@ protected:
 
     virtual optional<signed_block> fetch_block_by_id(const block_id_type& id) const override;
     virtual optional<signed_block> fetch_block_by_number(uint32_t num) const override;
+
+private:
+    // TODO: tech dept: remove this dependency if possible
+    database& _db;
 };
 
 } // namespace scorum
