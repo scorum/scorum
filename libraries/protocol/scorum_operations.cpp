@@ -339,7 +339,8 @@ void create_game_operation::validate() const
     fc::flat_set<market_type> set_of_markets(markets.begin(), markets.end());
 
     FC_ASSERT(set_of_markets.size() == markets.size(), "You provided duplicates in market list.",
-              ("input_markets", markets)("set_of_markets", set_of_markets));
+              ("input_markets", markets) //
+              ("set_of_markets", set_of_markets));
 
     validate_game(game, set_of_markets);
 }
@@ -364,6 +365,10 @@ void post_game_results_operation::validate() const
     validate_account_name(moderator);
 
     const fc::flat_set<wincase_type> set_of_wincases(wincases.begin(), wincases.end());
+
+    FC_ASSERT(set_of_wincases.size() == wincases.size(), "You provided duplicates in wincases list.",
+              ("input_markets", wincases) //
+              ("set_of_markets", set_of_wincases));
 
     validate_wincases(set_of_wincases);
 }
