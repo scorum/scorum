@@ -25,6 +25,7 @@
 #include <scorum/app/database_api.hpp>
 #include <scorum/app/chain_api.hpp>
 #include <scorum/app/advertising_api.hpp>
+#include <scorum/app/betting_api.hpp>
 #include <scorum/app/api_access.hpp>
 #include <scorum/app/application.hpp>
 #include <scorum/app/plugin.hpp>
@@ -294,6 +295,7 @@ public:
         _self->register_api_factory<database_api>(API_DATABASE);
         _self->register_api_factory<chain_api>(API_CHAIN);
         _self->register_api_factory<advertising_api>(ADVERTISING_API_NAME);
+        _self->register_api_factory<betting_api>(API_BETTING);
         _self->register_api_factory<network_node_api>("network_node_api");
         _self->register_api_factory<network_broadcast_api>("network_broadcast_api");
     }

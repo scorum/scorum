@@ -2580,15 +2580,49 @@ annotated_signed_transaction wallet_api::create_budget_for_banner(const std::str
     return my->sign_transaction(tx, broadcast);
 }
 
+template <budget_type budget_type_v>
+signed_transaction update_budget(const std::string& owner, uuid_type uuid, const std::string& json_metadata)
+{
+    update_budget_operation op;
+    op.owner = owner;
+    op.uuid = uuid;
+    op.json_metadata = json_metadata;
+    op.type = budget_type_v;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return tx;
+}
+
+annotated_signed_transaction wallet_api::update_budget_for_banner(const std::string& owner,
+                                                                  const uuid_type& uuid,
+                                                                  const std::string& json_metadata,
+                                                                  const bool broadcast)
+{
+    auto tx = update_budget<budget_type::banner>(owner, uuid, json_metadata);
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::update_budget_for_post(const std::string& owner,
+                                                                const uuid_type& uuid,
+                                                                const std::string& json_metadata,
+                                                                const bool broadcast)
+{
+    auto tx = update_budget<budget_type::post>(owner, uuid, json_metadata);
+    return my->sign_transaction(tx, broadcast);
+}
+
 annotated_signed_transaction
-wallet_api::close_budget_for_post(const int64_t id, const std::string& owner, const bool broadcast)
+wallet_api::close_budget_for_post(const uuid_type& uuid, const std::string& owner, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     close_budget_operation op;
 
     op.type = budget_type::post;
-    op.budget_id = id;
+    op.uuid = uuid;
     op.owner = owner;
 
     signed_transaction tx;
@@ -2599,14 +2633,14 @@ wallet_api::close_budget_for_post(const int64_t id, const std::string& owner, co
 }
 
 annotated_signed_transaction
-wallet_api::close_budget_for_banner(const int64_t id, const std::string& owner, const bool broadcast)
+wallet_api::close_budget_for_banner(const uuid_type& uuid, const std::string& owner, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     close_budget_operation op;
 
     op.type = budget_type::banner;
-    op.budget_id = id;
+    op.uuid = uuid;
     op.owner = owner;
 
     signed_transaction tx;
@@ -2616,15 +2650,16 @@ wallet_api::close_budget_for_banner(const int64_t id, const std::string& owner, 
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::close_budget_for_post_by_moderator(const int64_t id, const std::string& moderator, const bool broadcast)
+annotated_signed_transaction wallet_api::close_budget_for_post_by_moderator(const uuid_type& uuid,
+                                                                            const std::string& moderator,
+                                                                            const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     close_budget_by_advertising_moderator_operation op;
 
     op.type = budget_type::post;
-    op.budget_id = id;
+    op.uuid = uuid;
     op.moderator = moderator;
 
     signed_transaction tx;
@@ -2634,15 +2669,16 @@ wallet_api::close_budget_for_post_by_moderator(const int64_t id, const std::stri
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction
-wallet_api::close_budget_for_banner_by_moderator(const int64_t id, const std::string& moderator, const bool broadcast)
+annotated_signed_transaction wallet_api::close_budget_for_banner_by_moderator(const uuid_type& uuid,
+                                                                              const std::string& moderator,
+                                                                              const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
     close_budget_by_advertising_moderator_operation op;
 
     op.type = budget_type::banner;
-    op.budget_id = id;
+    op.uuid = uuid;
     op.moderator = moderator;
 
     signed_transaction tx;
@@ -3180,7 +3216,7 @@ annotated_signed_transaction wallet_api::create_game(uuid_type uuid,
                                                      fc::time_point_sec start_time,
                                                      uint32_t auto_resolve_delay_sec,
                                                      game_type game,
-                                                     const fc::flat_set<market_type>& markets,
+                                                     const std::vector<market_type>& markets,
                                                      const bool broadcast)
 {
     try
@@ -3234,7 +3270,7 @@ annotated_signed_transaction wallet_api::cancel_game(uuid_type uuid, account_nam
 
 annotated_signed_transaction wallet_api::update_game_markets(uuid_type uuid,
                                                              account_name_type moderator,
-                                                             const fc::flat_set<market_type>& markets,
+                                                             const std::vector<market_type>& markets,
                                                              const bool broadcast)
 {
     try
@@ -3319,6 +3355,7 @@ annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
                                                   wincase_type wincase,
                                                   odds_input odds,
                                                   asset stake,
+                                                  bool is_live,
                                                   const bool broadcast)
 {
     FC_ASSERT(!is_locked());
@@ -3330,6 +3367,8 @@ annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
     op.game_uuid = game_uuid;
     op.odds = odds;
     op.stake = stake;
+    op.wincase = wincase;
+    op.live = is_live;
 
     signed_transaction tx;
     tx.operations.push_back(op);

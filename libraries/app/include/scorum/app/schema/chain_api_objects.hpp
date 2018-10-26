@@ -8,6 +8,8 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/witness/witness_objects.hpp>
 
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+
 namespace scorum {
 namespace app {
 
@@ -133,6 +135,7 @@ struct chain_capital_api_obj
     /// Total amount of pending SP (planned rewards for account)
     asset total_pending_sp = asset(0, SP_SYMBOL);
 
+    scorum::chain::adv_total_stats advertising;
     scorum::chain::betting_total_stats betting_stats;
 };
 }
@@ -189,5 +192,6 @@ FC_REFLECT(scorum::app::chain_capital_api_obj,
            (witness_reward_in_sp_migration_fund)
            (total_pending_scr)
            (total_pending_sp)
+           (advertising)
            (betting_stats))
 // clang-format on

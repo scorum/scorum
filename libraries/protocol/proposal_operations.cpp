@@ -129,7 +129,7 @@ percent_type registration_committee_add_member_operation::get_required_quorum(co
 
 void base_development_committee_change_budgets_auction_properties_operation::validate() const
 {
-    FC_ASSERT(auction_coefficients.size() > 1u, "Invalid coefficient's list");
+    FC_ASSERT(auction_coefficients.size() >= 1u, "Invalid coefficient's list");
     FC_ASSERT((*auction_coefficients.begin()) <= 100, "Invalid coefficient's list");
     FC_ASSERT((*auction_coefficients.rbegin()) > 0, "Invalid coefficient's list");
     FC_ASSERT(std::is_sorted(auction_coefficients.rbegin(), auction_coefficients.rend()), "Invalid coefficient's list");

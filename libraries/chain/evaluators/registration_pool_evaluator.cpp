@@ -7,13 +7,11 @@
 #include <scorum/chain/services/registration_committee.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/account_registration_bonus.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
-
-#include <fc/exception/exception.hpp>
-#include <fc/log/logger.hpp>
 
 namespace scorum {
 namespace chain {
@@ -24,11 +22,11 @@ class registration_pool_evaluator_impl
 {
 public:
     registration_pool_evaluator_impl(data_service_factory_i& services)
-        : _account_service(services.account_service())
+        : _account_registration_bonus_service(services.account_registration_bonus_service())
+        , _dprops_service(services.dynamic_global_property_service())
+        , _account_service(services.account_service())
         , _registration_pool_service(services.registration_pool_service())
         , _registration_committee_service(services.registration_committee_service())
-        , _dprops_service(services.dynamic_global_property_service())
-        , _account_registration_bonus_service(services.account_registration_bonus_service())
     {
     }
 
@@ -191,11 +189,13 @@ private:
         _registration_committee_service.update_member_info(member, modifier);
     }
 
+    account_registration_bonus_service_i& _account_registration_bonus_service;
+    dynamic_global_property_service_i& _dprops_service;
+
+public:
     account_service_i& _account_service;
     registration_pool_service_i& _registration_pool_service;
     registration_committee_service_i& _registration_committee_service;
-    dynamic_global_property_service_i& _dprops_service;
-    account_registration_bonus_service_i& _account_registration_bonus_service;
 };
 
 //
@@ -203,10 +203,7 @@ private:
 registration_pool_evaluator::registration_pool_evaluator(data_service_factory_i& services)
     : evaluator_impl<data_service_factory_i, registration_pool_evaluator>(services)
     , _impl(new registration_pool_evaluator_impl(services))
-    , _account_service(services.account_service())
-    , _registration_pool_service(services.registration_pool_service())
-    , _registration_committee_service(services.registration_committee_service())
-    , _dprops_service(services.dynamic_global_property_service())
+    , _hardfork_svc(services.hardfork_property_service())
 {
 }
 
@@ -216,26 +213,36 @@ registration_pool_evaluator::~registration_pool_evaluator()
 
 void registration_pool_evaluator::do_apply(const registration_pool_evaluator::operation_type& o)
 {
-    _account_service.check_account_existence(o.creator);
+    _impl->_account_service.check_account_existence(o.creator);
 
-    _account_service.check_account_existence(o.owner.account_auths);
+    _impl->_account_service.check_account_existence(o.owner.account_auths);
 
-    _account_service.check_account_existence(o.active.account_auths);
+    _impl->_account_service.check_account_existence(o.active.account_auths);
 
-    _account_service.check_account_existence(o.posting.account_auths);
+    _impl->_account_service.check_account_existence(o.posting.account_auths);
 
-    FC_ASSERT(_registration_pool_service.is_exists(), "Registration pool is not initialized.");
-
-    FC_ASSERT(_registration_pool_service.get().balance.amount > 0, "Registration pool is exhausted.");
-
-    FC_ASSERT(_registration_committee_service.is_exists(o.creator), "Account '${1}' is not committee member.",
+    FC_ASSERT(_impl->_registration_committee_service.is_exists(o.creator), "Account '${1}' is not committee member.",
               ("1", o.creator));
 
-    asset bonus = _impl->allocate_cash(o.creator);
+    if (_hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3))
+    {
+        // This is temporary solution until we implement new registration algorithm in the next hardfork
+        // Required SP for making transactions would be delegated manualy offchain
+        _impl->_account_service.create_account(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
+                                               o.active, o.posting, asset(0, SCORUM_SYMBOL));
+    }
+    else
+    {
+        FC_ASSERT(_impl->_registration_pool_service.is_exists(), "Registration pool is not initialized.");
 
-    _account_service.create_account_with_bonus(o.new_account_name, o.creator, o.memo_key, o.json_metadata, o.owner,
-                                               o.active, o.posting, bonus);
-    _impl->register_account_bonus(o.new_account_name, bonus);
+        FC_ASSERT(_impl->_registration_pool_service.get().balance.amount > 0, "Registration pool is exhausted.");
+
+        asset bonus = _impl->allocate_cash(o.creator);
+
+        _impl->_account_service.create_account_with_bonus(o.new_account_name, o.creator, o.memo_key, o.json_metadata,
+                                                          o.owner, o.active, o.posting, bonus);
+        _impl->register_account_bonus(o.new_account_name, bonus);
+    }
 }
 
 //

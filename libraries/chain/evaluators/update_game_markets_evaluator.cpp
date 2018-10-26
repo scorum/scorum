@@ -34,17 +34,22 @@ void update_game_markets_evaluator::do_apply(const operation_type& op)
     const auto& game = _game_service.get_game(op.uuid);
     FC_ASSERT(game.status != game_status::finished, "Cannot change the markets when game is finished");
 
-    validate_game(game.game, op.markets);
+    const fc::flat_set<market_type> set_of_markets(op.markets.begin(), op.markets.end());
+
+    FC_ASSERT(set_of_markets.size() == op.markets.size(), "You provided duplicates in market list.",
+              ("input_markets", op.markets)("set_of_markets", set_of_markets));
+
+    validate_game(game.game, set_of_markets);
 
     fc::flat_set<market_type> cancelled_markets;
-    boost::set_difference(game.markets, op.markets, std::inserter(cancelled_markets, cancelled_markets.end()));
+    boost::set_difference(game.markets, set_of_markets, std::inserter(cancelled_markets, cancelled_markets.end()));
 
     FC_ASSERT(game.status == game_status::created || cancelled_markets.empty(),
               "Cannot cancel markets after game was started");
 
     _betting_service.cancel_bets(game.id, cancelled_markets);
 
-    _game_service.update_markets(game, op.markets);
+    _game_service.update_markets(game, set_of_markets);
 }
 }
 }

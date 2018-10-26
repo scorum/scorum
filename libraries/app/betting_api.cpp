@@ -4,14 +4,19 @@
 namespace scorum {
 namespace app {
 
+using namespace scorum::chain;
+using namespace scorum::protocol;
+
 betting_api::betting_api(const api_context& ctx)
-    : _impl(std::make_unique<betting_api_impl>(*ctx.app.chain_database(),
-                                               ctx.app.chain_database()->get_dba<game_object>(),
-                                               ctx.app.chain_database()->get_dba<matched_bet_object>(),
-                                               ctx.app.chain_database()->get_dba<pending_bet_object>()))
+    : _impl(std::make_unique<impl>(*ctx.app.chain_database(),
+                                   ctx.app.chain_database()->get_dba<game_object>(),
+                                   ctx.app.chain_database()->get_dba<matched_bet_object>(),
+                                   ctx.app.chain_database()->get_dba<pending_bet_object>()))
     , _guard(ctx.app.chain_database())
 {
 }
+
+betting_api::~betting_api() = default;
 
 void betting_api::on_api_startup()
 {

@@ -6,6 +6,8 @@
 
 #include <scorum/chain/betting/betting_service.hpp>
 
+#include <scorum/utils/collect_range_adaptor.hpp>
+
 namespace scorum {
 namespace chain {
 create_game_evaluator::create_game_evaluator(data_service_factory_i& services, betting_service_i& betting_service)
@@ -20,8 +22,6 @@ create_game_evaluator::create_game_evaluator(data_service_factory_i& services, b
 void create_game_evaluator::do_apply(const operation_type& op)
 {
     FC_ASSERT(op.start_time > _dprops_service.head_block_time(), "Game should start after head block time");
-    FC_ASSERT(_dprops_service.head_block_time() + op.auto_resolve_delay_sec > op.start_time,
-              "Game can only be resolved after is has been started");
     FC_ASSERT(!_game_service.is_exists(op.name), "Game with name '${g}' already exists", ("g", op.name));
     FC_ASSERT(!_game_service.is_exists(op.uuid), "Game with uuid '${g}' already exists", ("g", op.uuid));
 
@@ -29,8 +29,10 @@ void create_game_evaluator::do_apply(const operation_type& op)
     FC_ASSERT(_betting_service.is_betting_moderator(op.moderator), "User ${u} isn't a betting moderator",
               ("u", op.moderator));
 
+    fc::flat_set<market_type> markets(op.markets.begin(), op.markets.end());
+
     _game_service.create_game(op.uuid, op.moderator, op.name, op.start_time, op.auto_resolve_delay_sec, op.game,
-                              op.markets);
+                              markets);
 }
 }
 }

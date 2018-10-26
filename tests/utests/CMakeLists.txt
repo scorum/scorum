@@ -50,11 +50,14 @@ set(SOURCES
     utils/join_range_tests.cpp
     utils/static_variant_comparison_tests.cpp
     fc/static_variant_visitor_tests.cpp
+    utils/math_tests.cpp
     tasks_base_tests.cpp
     app_tests.cpp
     budgets/evaluators_tests.cpp
     budgets/auction_calculation_tests.cpp
     budgets/advertising_api_tests.cpp
+    budgets/per_block_evaluation_tests.cpp
+    budgets/serialization_tests.cpp
     fraction_tests.cpp
     config_api_tests.cpp
     vote_evaluator_tests.cpp
@@ -80,6 +83,7 @@ set(SOURCES
     betting/betting_chain_capital_tests.cpp
     db_accessors/db_accessors_tests.cpp
     odds_tests.cpp
+    create_account_by_committee_evaluator_tests.cpp
 )
 
 add_executable(utests

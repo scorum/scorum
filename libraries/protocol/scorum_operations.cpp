@@ -274,7 +274,7 @@ void create_budget_operation::validate() const
     validate_json_metadata(json_metadata);
     FC_ASSERT(is_asset_type(balance, SCORUM_SYMBOL), "Balance must be SCR");
     FC_ASSERT(balance > asset(0, SCORUM_SYMBOL), "Balance must be positive");
-    FC_ASSERT(!start || start.value() < deadline, "Deadline time must be greater then start time");
+    FC_ASSERT(start <= deadline, "Deadline time must be greater or equal then start time");
 }
 
 void update_budget_operation::validate() const
@@ -336,7 +336,12 @@ void create_game_operation::validate() const
     FC_ASSERT(name.size() < SCORUM_MAX_GAME_NAME_LENGTH, "Game name should be less than ${1}",
               ("1", SCORUM_MAX_GAME_NAME_LENGTH));
 
-    validate_game(game, markets);
+    fc::flat_set<market_type> set_of_markets(markets.begin(), markets.end());
+
+    FC_ASSERT(set_of_markets.size() == markets.size(), "You provided duplicates in market list.",
+              ("input_markets", markets)("set_of_markets", set_of_markets));
+
+    validate_game(game, set_of_markets);
 }
 
 void cancel_game_operation::validate() const
