@@ -22,10 +22,7 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
         better.scorum(ASSET_SCR(1e+9));
         account_service.add_actor(better);
 
-        games.create([&](game_object& obj) {
-            obj.uuid = uuid_gen("game");
-            fc::from_string(obj.name, "test_ok");
-        });
+        games.create([&](game_object& obj) { obj.uuid = uuid_gen("game"); });
 
         test_op.better = better.name;
         test_op.uuid = uuid_gen("game");

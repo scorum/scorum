@@ -1485,7 +1485,7 @@ public:
      * Create betting game
      * @param uuid game UUID
      * @param moderator betting moderator
-     * @param name unique name for game
+     * @param json_metadata JSON metadata
      * @param start_time time when game should start
      * @param auto_resolve_delay_sec delay starting from @p start_time after expiration of which (if game results
      * weren't posted) game will be cancelled
@@ -1496,7 +1496,7 @@ public:
      */
     annotated_signed_transaction create_game(uuid_type uuid,
                                              account_name_type moderator,
-                                             const std::string& name,
+                                             const std::string& json_metadata,
                                              fc::time_point_sec start_time,
                                              uint32_t auto_resolve_delay_sec,
                                              game_type game,

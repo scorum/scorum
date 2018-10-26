@@ -946,8 +946,8 @@ struct create_game_operation : public base_operation
     /// moderator account name
     account_name_type moderator;
 
-    /// game title
-    std::string name;
+    /// JSON metadata
+    std::string json_metadata;
 
     /// game start time
     time_point_sec start_time;
@@ -1216,7 +1216,7 @@ FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
 
-FC_REFLECT( scorum::protocol::create_game_operation, (uuid)(moderator)(name)(start_time)(auto_resolve_delay_sec)(game)(markets) )
+FC_REFLECT( scorum::protocol::create_game_operation, (uuid)(moderator)(json_metadata)(start_time)(auto_resolve_delay_sec)(game)(markets) )
 FC_REFLECT( scorum::protocol::cancel_game_operation, (uuid)(moderator) )
 FC_REFLECT( scorum::protocol::update_game_markets_operation, (uuid)(moderator)(markets) )
 FC_REFLECT( scorum::protocol::update_game_start_time_operation, (uuid)(moderator)(start_time) )

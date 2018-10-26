@@ -3212,7 +3212,7 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
 
 annotated_signed_transaction wallet_api::create_game(uuid_type uuid,
                                                      account_name_type moderator,
-                                                     const std::string& name,
+                                                     const std::string& json_metadata,
                                                      fc::time_point_sec start_time,
                                                      uint32_t auto_resolve_delay_sec,
                                                      game_type game,
@@ -3228,7 +3228,7 @@ annotated_signed_transaction wallet_api::create_game(uuid_type uuid,
         op.uuid = uuid;
         op.moderator = moderator;
         op.game = game;
-        op.name = name;
+        op.json_metadata = json_metadata;
         op.start_time = start_time;
         op.auto_resolve_delay_sec = auto_resolve_delay_sec;
         op.markets = markets;
@@ -3242,7 +3242,7 @@ annotated_signed_transaction wallet_api::create_game(uuid_type uuid,
 
         return ret;
     }
-    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(name)(start_time)(auto_resolve_delay_sec)(game)(broadcast))
+    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(json_metadata)(start_time)(auto_resolve_delay_sec)(game)(broadcast))
 }
 
 annotated_signed_transaction wallet_api::cancel_game(uuid_type uuid, account_name_type moderator, const bool broadcast)

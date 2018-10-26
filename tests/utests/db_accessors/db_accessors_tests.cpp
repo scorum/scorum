@@ -7,10 +7,12 @@
 #include <scorum/chain/database/database.hpp>
 #include <scorum/utils/any_range.hpp>
 
-#include <hippomocks.h>
-
 #include "defines.hpp"
 #include "object_wrapper.hpp"
+
+#include <boost/uuid/uuid_io.hpp>
+
+#include <hippomocks.h>
 
 namespace {
 using namespace std::string_literals;
@@ -24,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(db_accessors_tests, shared_memory_fixture)
 BOOST_AUTO_TEST_CASE(db_accessors_mock_tests)
 {
     MockRepository mocks;
-    auto obj = create_object<game_object>(shm, [](game_object& o) { fc::from_string(o.name, "name"); });
+    auto obj = create_object<game_object>(shm, [](game_object& o) { o.uuid = { 1 }; });
     std::vector<std::reference_wrapper<game_object>> vec = { obj };
 
     bool get_was_mocked = false;
@@ -69,33 +71,31 @@ BOOST_AUTO_TEST_CASE(db_accessors_mock_tests)
     });
 
     bool get_by_was_mocked = false;
-    mocks.OnCallFunc((dba::detail::get_by<game_object, by_name, fc::shared_string>))
-        .Do([&](db_index&, const fc::shared_string&) -> const game_object& {
+    mocks.OnCallFunc((dba::detail::get_by<game_object, by_id, int>))
+        .Do([&](db_index&, const int&) -> const game_object& {
             get_by_was_mocked = true;
             return obj;
         });
 
     bool find_by_was_mocked = false;
-    mocks.OnCallFunc((dba::detail::find_by<game_object, by_name, fc::shared_string>))
-        .Do([&](db_index&, const fc::shared_string&) {
-            find_by_was_mocked = true;
-            return &obj;
-        });
+    mocks.OnCallFunc((dba::detail::find_by<game_object, by_id, game_id_type>)).Do([&](db_index&, const game_id_type&) {
+        find_by_was_mocked = true;
+        return &obj;
+    });
 
     bool get_range_by_was_mocked1 = false;
-    using by_name_key = dba::index_key_type<game_object, by_name>;
-    mocks.OnCallFunc((get_range_by<game_object, by_name, by_name_key>))
-        .Do([&](db_index&, const bound<by_name_key>&, const bound<by_name_key>&) {
+    using by_id_key = dba::index_key_type<game_object, by_id>;
+    mocks.OnCallFunc((get_range_by<game_object, by_id, by_id_key>))
+        .Do([&](db_index&, const bound<by_id_key>&, const bound<by_id_key>&) {
             get_range_by_was_mocked1 = true;
             return utils::bidir_range<game_object>{ vec };
         });
 
     bool get_range_by_was_mocked2 = false;
-    mocks.OnCallFunc((get_range_by<game_object, by_name, std::string>))
-        .Do([&](db_index&, const bound<std::string>&, const bound<std::string>&) {
-            get_range_by_was_mocked2 = true;
-            return utils::bidir_range<game_object>{ vec };
-        });
+    mocks.OnCallFunc((get_range_by<game_object, by_id, int>)).Do([&](db_index&, const bound<int>&, const bound<int>&) {
+        get_range_by_was_mocked2 = true;
+        return utils::bidir_range<game_object>{ vec };
+    });
 
     db_accessor<game_object> dba{ *mocks.Mock<database>() };
 
@@ -106,11 +106,11 @@ BOOST_AUTO_TEST_CASE(db_accessors_mock_tests)
     dba.remove(obj);
     dba.is_empty();
     const auto& o2 = dba.get();
-    fc::shared_string s("", shm.get_allocator<fc::shared_string>());
-    const auto& o3 = dba.get_by<by_name>(s);
-    const auto* o4 = dba.find_by<by_name>(s);
-    auto os5 = dba.get_range_by<by_name>(dba::unbounded, dba::unbounded);
-    auto os6 = dba.get_range_by<by_name>("test"s <= _x, dba::unbounded);
+    const auto& o3 = dba.get_by<by_id>(0);
+    game_id_type id = 0;
+    const auto* o4 = dba.find_by<by_id>(id);
+    auto os5 = dba.get_range_by<by_id>(dba::unbounded, dba::unbounded);
+    auto os6 = dba.get_range_by<by_id>(0 <= _x, dba::unbounded);
 
     BOOST_CHECK(create_was_mocked);
     BOOST_CHECK(update1_was_mocked);
@@ -124,12 +124,12 @@ BOOST_AUTO_TEST_CASE(db_accessors_mock_tests)
     BOOST_CHECK(get_range_by_was_mocked1);
     BOOST_CHECK(get_range_by_was_mocked2);
 
-    BOOST_CHECK_EQUAL(o1.name, "name");
-    BOOST_CHECK_EQUAL(o2.name, "name");
-    BOOST_CHECK_EQUAL(o3.name, "name");
-    BOOST_CHECK_EQUAL(o4->name, "name");
-    BOOST_CHECK_EQUAL(os5.begin()->name, "name");
-    BOOST_CHECK_EQUAL(os6.begin()->name, "name");
+    BOOST_CHECK_EQUAL(o1.uuid, uuid_type{ 1 });
+    BOOST_CHECK_EQUAL(o2.uuid, uuid_type{ 1 });
+    BOOST_CHECK_EQUAL(o3.uuid, uuid_type{ 1 });
+    BOOST_CHECK_EQUAL(o4->uuid, uuid_type{ 1 });
+    BOOST_CHECK_EQUAL(os5.begin()->uuid, uuid_type{ 1 });
+    BOOST_CHECK_EQUAL(os6.begin()->uuid, uuid_type{ 1 });
 }
 
 BOOST_AUTO_TEST_SUITE_END()
