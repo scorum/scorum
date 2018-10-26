@@ -812,7 +812,6 @@ struct close_budget_by_advertising_moderator_operation : public base_operation
 
 /// @}
 
-
 /**
  * @ingroup operations
  *
@@ -1063,7 +1062,7 @@ struct post_game_results_operation : public base_operation
     account_name_type moderator;
 
     /// list of wincases
-    fc::flat_set<wincase_type> wincases;
+    std::vector<wincase_type> wincases;
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;

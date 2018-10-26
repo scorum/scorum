@@ -3324,7 +3324,7 @@ annotated_signed_transaction wallet_api::update_game_start_time(uuid_type uuid,
 
 annotated_signed_transaction wallet_api::post_game_results(uuid_type uuid,
                                                            account_name_type moderator,
-                                                           const fc::flat_set<wincase_type>& wincases,
+                                                           const std::vector<wincase_type>& wincases,
                                                            const bool broadcast)
 {
     try

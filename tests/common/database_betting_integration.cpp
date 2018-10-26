@@ -171,8 +171,8 @@ update_game_start_time_operation database_betting_integration_fixture::update_st
     FC_CAPTURE_LOG_AND_RETHROW(())
 }
 
-post_game_results_operation
-database_betting_integration_fixture::post_results(const Actor& moderator, const fc::flat_set<wincase_type>& winners)
+post_game_results_operation database_betting_integration_fixture::post_results(const Actor& moderator,
+                                                                               const std::vector<wincase_type>& winners)
 {
     try
     {

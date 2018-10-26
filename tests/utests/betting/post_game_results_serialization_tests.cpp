@@ -36,8 +36,9 @@ struct post_game_results_serialization_test_fixture
         validate_wincases(op.wincases);
     }
 
-    void validate_wincases(const fc::flat_set<wincase_type>& wincases) const
+    void validate_wincases(const std::vector<wincase_type>& w) const
     {
+        const fc::flat_set<wincase_type> wincases(w.begin(), w.end());
         BOOST_REQUIRE_EQUAL(wincases.size(), 17u);
 
         BOOST_CHECK_NO_THROW(wincases.nth(0)->get<result_home::yes>());
@@ -73,7 +74,7 @@ struct post_game_results_serialization_test_fixture
     }
 
     // clang-format off
-    const fc::flat_set<wincase_type> wincases = { result_home::yes{},
+    const std::vector<wincase_type> wincases = { result_home::yes{},
                                                   result_draw::no{},
                                                   result_away::yes{},
                                                   round_home::no{},

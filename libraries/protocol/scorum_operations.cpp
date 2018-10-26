@@ -363,7 +363,9 @@ void post_game_results_operation::validate() const
 {
     validate_account_name(moderator);
 
-    validate_wincases(wincases);
+    const fc::flat_set<wincase_type> set_of_wincases(wincases.begin(), wincases.end());
+
+    validate_wincases(set_of_wincases);
 }
 
 void post_bet_operation::validate() const

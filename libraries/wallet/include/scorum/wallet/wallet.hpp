@@ -1548,7 +1548,7 @@ public:
      */
     annotated_signed_transaction post_game_results(uuid_type uuid,
                                                    account_name_type moderator,
-                                                   const fc::flat_set<wincase_type>& wincases,
+                                                   const std::vector<wincase_type>& wincases,
                                                    const bool broadcast);
 
     /**

@@ -49,7 +49,7 @@ struct database_betting_integration_fixture : public database_trx_integration_fi
     cancel_game_operation cancel_game(const Actor& moderator);
     update_game_markets_operation update_markets(const Actor& moderator, std::vector<market_type> markets);
     update_game_start_time_operation update_start_time(const Actor& moderator, uint32_t start_delay);
-    post_game_results_operation post_results(const Actor& moderator, const fc::flat_set<wincase_type>& winners);
+    post_game_results_operation post_results(const Actor& moderator, const std::vector<wincase_type>& winners);
 
     proposal_id_type get_last_proposal_id();
 
