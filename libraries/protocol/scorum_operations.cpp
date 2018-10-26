@@ -14,6 +14,14 @@ bool inline is_asset_type(asset asset, asset_symbol_type symbol)
     return asset.symbol() == symbol;
 }
 
+template <class T> bool is_unique(const std::vector<T>& input)
+{
+    std::vector<T> data(input);
+
+    sort(data.begin(), data.end());
+    return adjacent_find(data.begin(), data.end()) == data.end();
+}
+
 void account_create_operation::validate() const
 {
     validate_account_name(new_account_name);
@@ -387,6 +395,9 @@ void post_bet_operation::validate() const
 
 void cancel_pending_bets_operation::validate() const
 {
+    FC_ASSERT(bet_uuids.size() > 0, "List of bets is empty.");
+    FC_ASSERT(is_unique<uuid_type>(bet_uuids), "You provided duplicates in bets list.", ("bets", bet_uuids));
+
     validate_account_name(better);
 }
 } // namespace protocol

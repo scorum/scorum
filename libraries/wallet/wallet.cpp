@@ -3387,9 +3387,8 @@ annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
     return ret;
 }
 
-annotated_signed_transaction wallet_api::cancel_pending_bets(account_name_type better,
-                                                             const fc::flat_set<uuid_type>& bet_uuids,
-                                                             const bool broadcast)
+annotated_signed_transaction
+wallet_api::cancel_pending_bets(account_name_type better, const std::vector<uuid_type>& bet_uuids, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 

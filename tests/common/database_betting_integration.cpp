@@ -107,7 +107,7 @@ post_bet_operation database_betting_integration_fixture::create_bet(const scorum
 
 cancel_pending_bets_operation
 database_betting_integration_fixture::cancel_pending_bet(const Actor& better,
-                                                         const fc::flat_set<scorum::uuid_type>& bet_uuids)
+                                                         const std::vector<scorum::uuid_type>& bet_uuids)
 {
     try
     {

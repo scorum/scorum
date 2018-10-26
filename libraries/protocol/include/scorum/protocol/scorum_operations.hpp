@@ -1117,7 +1117,7 @@ struct post_bet_operation : public base_operation
 struct cancel_pending_bets_operation : public base_operation
 {
     /// bets list that is being canceling
-    fc::flat_set<uuid_type> bet_uuids;
+    std::vector<uuid_type> bet_uuids;
 
     /// owner
     account_name_type better;
