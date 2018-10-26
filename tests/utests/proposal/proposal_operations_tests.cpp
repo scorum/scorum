@@ -4,7 +4,9 @@
 
 #include <scorum/protocol/operations.hpp>
 
-#include "utils.hpp"
+#include <detail.hpp>
+
+using detail::to_hex;
 
 namespace proposal_operations_tests {
 
@@ -49,7 +51,7 @@ BOOST_AUTO_TEST_CASE(serialize_proposal_create_operation_to_hex)
 
     scorum::protocol::operation op = proposal_create_op;
 
-    BOOST_CHECK_EQUAL("1d00000000000005616c696365", utils::to_hex(op));
+    BOOST_CHECK_EQUAL("1d00000000000005616c696365", to_hex(op));
 }
 
 BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)

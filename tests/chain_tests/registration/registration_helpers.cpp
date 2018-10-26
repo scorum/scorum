@@ -185,8 +185,7 @@ struct predictor_fixture : public database_fixture::registration_check_fixture, 
 {
     predictor_fixture()
     {
-        database_fixture::schedule_inputs_type schedule_input;
-        create_registration_genesis(schedule_input);
+        database_fixture::schedule_inputs_type schedule_input = create_registration_genesis().registration_schedule;
         initialize(registration_supply(), registration_bonus(), schedule_input);
     }
 };

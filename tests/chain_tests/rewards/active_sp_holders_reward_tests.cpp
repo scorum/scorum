@@ -56,24 +56,6 @@ public:
         return total * SCORUM_ACTIVE_SP_HOLDERS_PER_BLOCK_REWARD_PERCENT / SCORUM_100_PERCENT;
     }
 
-    asset create_advertising_budget(uint32_t number_of_block)
-    {
-        const auto& account = account_service.get_account(initdelegate.name);
-        auto advertising_budget = ASSET_SCR(2e+9);
-        auto deadline = db.get_slot_time(number_of_block);
-
-        banner_budget_service_i& custom_budget_service = db.banner_budget_service();
-
-        const auto& ret = custom_budget_service.create_budget(account.name, advertising_budget, db.head_block_time(),
-                                                              deadline, "{}");
-
-        auto& reward_service = db.obtain_service<dbs_content_reward_scr>();
-        reward_service.update(
-            [&](content_reward_balancer_scr_object& rp) { rp.current_per_block_reward = advertising_budget; });
-
-        return ret.per_block;
-    }
-
     fund_budget_service_i& budget_service;
     account_service_i& account_service;
     dynamic_global_property_service_i& dprops_service;

@@ -14,6 +14,27 @@ using scorum::protocol::asset;
 using scorum::protocol::chain_properties;
 using scorum::protocol::version;
 
+struct adv_total_stats
+{
+    struct budget_type_stat
+    {
+        /// sum of all budgets' balance
+        asset volume = asset(0, SCORUM_SYMBOL);
+
+        /// pending volume which will go to the activity pool
+        asset budget_pending_outgo = asset(0, SCORUM_SYMBOL);
+
+        /// pending volume which will be returned to budget owners
+        asset owner_pending_income = asset(0, SCORUM_SYMBOL);
+    };
+
+    /// total's statistic for advertising banner budgets
+    budget_type_stat banner_budgets;
+
+    /// total's statistic for advertising post budgets
+    budget_type_stat post_budgets;
+};
+
 /**
  * @class dynamic_global_property_object
  * @brief Maintains global state information
@@ -90,6 +111,9 @@ public:
 
     /// last irreversible block num
     uint32_t last_irreversible_block_num = 0;
+
+    /// this section display information about advertising totals
+    adv_total_stats advertising;
 };
 
 typedef shared_multi_index_container<dynamic_global_property_object,
@@ -121,7 +145,11 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (current_aslot)
           (recent_slots_filled)
           (participation_count)
-          (last_irreversible_block_num))
+          (last_irreversible_block_num)
+          (advertising))
+
+FC_REFLECT(scorum::chain::adv_total_stats::budget_type_stat, (volume)(budget_pending_outgo)(owner_pending_income))
+FC_REFLECT(scorum::chain::adv_total_stats, (post_budgets)(banner_budgets))
 // clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dynamic_global_property_object, scorum::chain::dynamic_global_property_index)
