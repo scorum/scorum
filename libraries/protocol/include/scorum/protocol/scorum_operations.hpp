@@ -812,7 +812,6 @@ struct close_budget_by_advertising_moderator_operation : public base_operation
 
 /// @}
 
-
 /**
  * @ingroup operations
  *
@@ -1063,7 +1062,7 @@ struct post_game_results_operation : public base_operation
     account_name_type moderator;
 
     /// list of wincases
-    fc::flat_set<wincase_type> wincases;
+    std::vector<wincase_type> wincases;
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;
@@ -1118,7 +1117,7 @@ struct post_bet_operation : public base_operation
 struct cancel_pending_bets_operation : public base_operation
 {
     /// bets list that is being canceling
-    fc::flat_set<uuid_type> bet_uuids;
+    std::vector<uuid_type> bet_uuids;
 
     /// owner
     account_name_type better;

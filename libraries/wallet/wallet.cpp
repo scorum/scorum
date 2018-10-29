@@ -3324,7 +3324,7 @@ annotated_signed_transaction wallet_api::update_game_start_time(uuid_type uuid,
 
 annotated_signed_transaction wallet_api::post_game_results(uuid_type uuid,
                                                            account_name_type moderator,
-                                                           const fc::flat_set<wincase_type>& wincases,
+                                                           const std::vector<wincase_type>& wincases,
                                                            const bool broadcast)
 {
     try
@@ -3387,9 +3387,8 @@ annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
     return ret;
 }
 
-annotated_signed_transaction wallet_api::cancel_pending_bets(account_name_type better,
-                                                             const fc::flat_set<uuid_type>& bet_uuids,
-                                                             const bool broadcast)
+annotated_signed_transaction
+wallet_api::cancel_pending_bets(account_name_type better, const std::vector<uuid_type>& bet_uuids, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 
