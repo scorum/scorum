@@ -61,7 +61,7 @@ create_game_operation database_betting_integration_fixture::create_game(const sc
         op.moderator = moderator.name;
         op.start_time = dgp_service.head_block_time() + start_delay;
         op.auto_resolve_delay_sec = auto_resolve_delay_sec;
-        op.name = "test";
+        op.json_metadata = "{}";
         op.game = soccer_game{};
         op.markets = markets;
 
@@ -92,7 +92,7 @@ post_bet_operation database_betting_integration_fixture::create_bet(const scorum
         post_bet_operation op;
         op.uuid = uuid;
         op.better = better.name;
-        op.game_uuid = game_service.get_game("test").uuid;
+        op.game_uuid = game_service.get_game(0).uuid;
         op.wincase = wincase;
         op.odds = odds_value;
         op.stake = stake;
@@ -128,7 +128,7 @@ cancel_game_operation database_betting_integration_fixture::cancel_game(const Ac
     {
         cancel_game_operation op;
         op.moderator = moderator.name;
-        op.uuid = game_service.get_game("test").uuid;
+        op.uuid = game_service.get_game(0).uuid;
 
         push_operation_only(op, moderator.private_key);
 
@@ -144,7 +144,7 @@ update_game_markets_operation database_betting_integration_fixture::update_marke
     {
         update_game_markets_operation op;
         op.moderator = moderator.name;
-        op.uuid = game_service.get_game("test").uuid;
+        op.uuid = game_service.get_game(0).uuid;
         op.markets = markets;
 
         push_operation_only(op, moderator.private_key);
@@ -161,7 +161,7 @@ update_game_start_time_operation database_betting_integration_fixture::update_st
     {
         update_game_start_time_operation op;
         op.moderator = moderator.name;
-        op.uuid = game_service.get_game("test").uuid;
+        op.uuid = game_service.get_game(0).uuid;
         op.start_time = dgp_service.head_block_time() + start_delay;
 
         push_operation_only(op, moderator.private_key);
@@ -178,7 +178,7 @@ post_game_results_operation database_betting_integration_fixture::post_results(c
     {
         post_game_results_operation op;
         op.moderator = moderator.name;
-        op.uuid = game_service.get_game("test").uuid;
+        op.uuid = game_service.get_game(0).uuid;
         op.wincases = winners;
 
         push_operation_only(op, moderator.private_key);

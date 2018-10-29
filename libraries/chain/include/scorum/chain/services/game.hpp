@@ -17,7 +17,7 @@ struct game_service_i : public base_service_i<game_object>
 
     virtual const game_object& create_game(const uuid_type& uuid,
                                            const account_name_type& moderator,
-                                           const std::string& game_name,
+                                           const std::string& json_metadata,
                                            fc::time_point_sec start,
                                            uint32_t auto_resolve_delay_sec,
                                            const game_type& game,
@@ -27,11 +27,9 @@ struct game_service_i : public base_service_i<game_object>
     virtual void finish(const game_object& game, const fc::flat_set<wincase_type>& wincases) = 0;
     virtual void update_markets(const game_object& game, const fc::flat_set<market_type>& markets) = 0;
 
-    virtual bool is_exists(const std::string& game_name) const = 0;
     virtual bool is_exists(int64_t game_id) const = 0;
     virtual bool is_exists(const uuid_type& uuid) const = 0;
 
-    virtual const game_object& get_game(const std::string& game_name) const = 0;
     virtual const game_object& get_game(int64_t game_id) const = 0;
     virtual const game_object& get_game(const uuid_type& uuid) const = 0;
 
@@ -54,7 +52,7 @@ public:
 
     virtual const game_object& create_game(const uuid_type& uuid,
                                            const account_name_type& moderator,
-                                           const std::string& game_name,
+                                           const std::string& json_metadata,
                                            fc::time_point_sec start,
                                            uint32_t auto_resolve_delay_sec,
                                            const game_type& game,
@@ -62,11 +60,9 @@ public:
     virtual void finish(const game_object& game, const fc::flat_set<wincase_type>& wincases) override;
     virtual void update_markets(const game_object& game, const fc::flat_set<market_type>& markets) override;
 
-    virtual bool is_exists(const std::string& game_name) const override;
     virtual bool is_exists(int64_t game_id) const override;
     bool is_exists(const uuid_type& uuid) const override;
 
-    virtual const game_object& get_game(const std::string& game_name) const override;
     virtual const game_object& get_game(int64_t game_id) const override;
     virtual const game_object& get_game(const uuid_type& uuid) const override;
     virtual std::vector<object_cref_type> get_games(fc::time_point_sec start) const override;
