@@ -21,7 +21,7 @@ class active_sp_holders_reward_fixture : public database_blog_integration_fixtur
 public:
     active_sp_holders_reward_fixture()
         : budget_service(db.fund_budget_service())
-        , account_service(db.obtain_service<dbs_account>())
+        , account_service(db.account_service())
         , dprops_service(db.obtain_service<dbs_dynamic_global_property>())
         , voters_reward_sp_service(db.obtain_service<dbs_voters_reward_sp>())
         , voters_reward_scr_service(db.obtain_service<dbs_voters_reward_scr>())
@@ -57,10 +57,10 @@ public:
     }
 
     fund_budget_service_i& budget_service;
-    dbs_account& account_service;
-    dbs_dynamic_global_property& dprops_service;
-    dbs_voters_reward_sp& voters_reward_sp_service;
-    dbs_voters_reward_scr& voters_reward_scr_service;
+    account_service_i& account_service;
+    dynamic_global_property_service_i& dprops_service;
+    voters_reward_sp_service_i& voters_reward_sp_service;
+    voters_reward_scr_service_i& voters_reward_scr_service;
 
     Actor alice;
     Actor bob;

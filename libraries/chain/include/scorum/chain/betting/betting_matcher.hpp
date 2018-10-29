@@ -16,6 +16,7 @@ template <typename> class db_accessor;
 
 struct database_virtual_operations_emmiter_i;
 
+struct dynamic_global_property_object;
 struct pending_bet_object;
 struct matched_bet_object;
 struct matched_stake_type;
@@ -39,7 +40,8 @@ class betting_matcher : public betting_matcher_i
 public:
     betting_matcher(database_virtual_operations_emmiter_i&,
                     dba::db_accessor<pending_bet_object>&,
-                    dba::db_accessor<matched_bet_object>&);
+                    dba::db_accessor<matched_bet_object>&,
+                    dba::db_accessor<dynamic_global_property_object>&);
 
     std::vector<std::reference_wrapper<const pending_bet_object>>
     match(const pending_bet_object& bet2, const fc::time_point_sec& head_block_time) override;
@@ -51,6 +53,7 @@ private:
 
     dba::db_accessor<pending_bet_object>& _pending_bet_dba;
     dba::db_accessor<matched_bet_object>& _matched_bet_dba;
+    dba::db_accessor<dynamic_global_property_object>& _dprop_dba;
 };
 }
 }

@@ -37,13 +37,15 @@ void post_game_results_evaluator::do_apply(const operation_type& op)
     FC_ASSERT(game.bets_resolve_time > _dprops_service.head_block_time(),
               "Unable to post game results after bets were resolved");
 
-    validate_all_winners_present(game.markets, op.wincases);
-    validate_opposite_winners_absent(op.wincases);
+    const fc::flat_set<wincase_type> wincases(op.wincases.begin(), op.wincases.end());
+
+    validate_all_winners_present(game.markets, wincases);
+    validate_opposite_winners_absent(wincases);
 
     _betting_service.cancel_pending_bets(game.id);
 
     auto old_status = game.status;
-    _game_service.finish(game, op.wincases);
+    _game_service.finish(game, wincases);
 
     if (old_status == game_status::started)
         _virt_op_emitter.push_virtual_operation(

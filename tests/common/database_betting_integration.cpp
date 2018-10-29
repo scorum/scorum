@@ -107,7 +107,7 @@ post_bet_operation database_betting_integration_fixture::create_bet(const scorum
 
 cancel_pending_bets_operation
 database_betting_integration_fixture::cancel_pending_bet(const Actor& better,
-                                                         const fc::flat_set<scorum::uuid_type>& bet_uuids)
+                                                         const std::vector<scorum::uuid_type>& bet_uuids)
 {
     try
     {
@@ -171,8 +171,8 @@ update_game_start_time_operation database_betting_integration_fixture::update_st
     FC_CAPTURE_LOG_AND_RETHROW(())
 }
 
-post_game_results_operation
-database_betting_integration_fixture::post_results(const Actor& moderator, const fc::flat_set<wincase_type>& winners)
+post_game_results_operation database_betting_integration_fixture::post_results(const Actor& moderator,
+                                                                               const std::vector<wincase_type>& winners)
 {
     try
     {

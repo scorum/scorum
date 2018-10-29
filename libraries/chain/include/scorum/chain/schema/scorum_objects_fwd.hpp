@@ -27,6 +27,7 @@ class registration_pool_object;
 class transaction_object;
 class scorumpower_delegation_expiration_object;
 class scorumpower_delegation_object;
+class reg_pool_sp_delegation_object;
 class withdraw_scorumpower_route_object;
 class withdraw_scorumpower_route_statistic_object;
 class withdraw_scorumpower_object;

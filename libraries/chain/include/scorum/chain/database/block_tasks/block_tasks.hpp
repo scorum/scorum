@@ -3,7 +3,7 @@
 #include <scorum/chain/tasks_base.hpp>
 
 #include <scorum/chain/database/database_virtual_operations.hpp>
-
+#include <scorum/chain/database/debug_log.hpp>
 #include <fc/exception/exception.hpp>
 #include <scorum/protocol/block.hpp>
 

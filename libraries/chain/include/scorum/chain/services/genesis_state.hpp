@@ -19,6 +19,10 @@ protected:
 
 public:
     const fc::time_point_sec& get_lock_withdraw_sp_until_timestamp() const override;
+
+private:
+    // TODO: tech dept: remove this dependency if possible
+    database& _db;
 };
 } // namespace chain
 } // namespace scorum

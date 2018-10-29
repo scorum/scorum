@@ -7,14 +7,9 @@
 namespace scorum {
 namespace chain {
 
-dbs_dynamic_global_property::dbs_dynamic_global_property(database& db)
+dbs_dynamic_global_property::dbs_dynamic_global_property(dba::db_index& db)
     : base_service_type(db)
 {
-}
-
-fc::time_point_sec dbs_dynamic_global_property::get_genesis_time() const
-{
-    return db_impl().get_genesis_time();
 }
 
 fc::time_point_sec dbs_dynamic_global_property::head_block_time() const

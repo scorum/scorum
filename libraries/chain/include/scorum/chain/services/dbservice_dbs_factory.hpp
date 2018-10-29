@@ -28,11 +28,17 @@ protected:
 public:
     template <typename ConcreteService> ConcreteService& obtain_service() const
     {
+        return obtain_service_explicit<ConcreteService>();
+    }
+
+    template <typename ConcreteService, typename... TDependencies>
+    ConcreteService& obtain_service_explicit(TDependencies&... dependencies) const
+    {
         auto it = _dbs.find(boost::typeindex::type_id<ConcreteService>());
         if (it == _dbs.end())
         {
             it = _dbs.insert(std::make_pair(boost::typeindex::type_id<ConcreteService>(),
-                                            BaseServicePtr(new ConcreteService(_db_core))))
+                                            BaseServicePtr(new ConcreteService(_db_core, dependencies...))))
                      .first;
         }
 

@@ -18,6 +18,7 @@ dbs_proposal_executor::dbs_proposal_executor(database& s)
     , services(s)
     , proposal_service(services.proposal_service())
     , evaluators(services)
+    , _db(s)
 {
     evaluators.register_evaluator<registration_committee::proposal_add_member_evaluator>();
     evaluators.register_evaluator<registration_committee::proposal_change_quorum_evaluator>();
@@ -61,11 +62,11 @@ void dbs_proposal_executor::execute_proposal(const proposal_object& proposal)
     {
         auto& evaluator = evaluators.get_evaluator(proposal.operation);
 
-        auto note = db_impl().create_notification(proposal_virtual_operation(proposal.operation));
+        auto note = _db.create_notification(proposal_virtual_operation(proposal.operation));
 
-        db_impl().notify_pre_apply_operation(note);
+        _db.notify_pre_apply_operation(note);
         evaluator.apply(proposal.operation);
-        db_impl().notify_post_apply_operation(note);
+        _db.notify_post_apply_operation(note);
 
         proposal_service.remove(proposal);
     }

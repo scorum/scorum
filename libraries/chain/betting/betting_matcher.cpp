@@ -2,6 +2,7 @@
 
 #include <scorum/chain/database/database_virtual_operations.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/betting/betting_math.hpp>
 #include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/protocol/betting/market.hpp>
@@ -20,10 +21,12 @@ betting_matcher_i::~betting_matcher_i()
 
 betting_matcher::betting_matcher(database_virtual_operations_emmiter_i& virt_op_emitter,
                                  dba::db_accessor<pending_bet_object>& pending_bet_dba,
-                                 dba::db_accessor<matched_bet_object>& matched_bet_dba)
+                                 dba::db_accessor<matched_bet_object>& matched_bet_dba,
+                                 dba::db_accessor<dynamic_global_property_object>& dprop_dba)
     : _virt_op_emitter(virt_op_emitter)
     , _pending_bet_dba(pending_bet_dba)
     , _matched_bet_dba(matched_bet_dba)
+    , _dprop_dba(dprop_dba)
 {
 }
 
@@ -51,6 +54,11 @@ betting_matcher::match(const pending_bet_object& bet2, const fc::time_point_sec&
 
                 _pending_bet_dba.update(bet1, [&](pending_bet_object& o) { o.data.stake -= matched.bet1_matched; });
                 _pending_bet_dba.update(bet2, [&](pending_bet_object& o) { o.data.stake -= matched.bet2_matched; });
+
+                _dprop_dba.update([&](dynamic_global_property_object& obj) {
+                    obj.betting_stats.matched_bets_volume += matched.bet1_matched + matched.bet2_matched;
+                    obj.betting_stats.pending_bets_volume -= matched.bet1_matched + matched.bet2_matched;
+                });
 
                 _virt_op_emitter.push_virtual_operation(protocol::bets_matched_operation(
                     bet1.data.better, bet2.data.better, bet1.get_uuid(), bet2.get_uuid(), matched.bet1_matched,

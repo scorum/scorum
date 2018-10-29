@@ -48,6 +48,7 @@ public:
 
 private:
     data_service_factory_i& _services;
+    dba::db_accessor_factory& _dba_factory;
     asset _registration_supply = asset(0, SCORUM_SYMBOL);
     const asset _registration_bonus = ASSET_SCR(100);
     Actors _committee;

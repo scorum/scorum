@@ -616,6 +616,19 @@ public:
                                                       bool broadcast);
 
     /**
+     * This method delegates SP from registration pool to account.
+     *
+     * @param reg_committee_member Registration committee member
+     * @param delegatee The name of the account receiving SP
+     * @param scorumpower The amount of SP to delegate
+     * @param broadcast true if you wish to broadcast the transaction
+     */
+    annotated_signed_transaction delegate_scorumpower_from_reg_pool(const std::string& reg_committee_member,
+                                                                    const std::string& delegatee,
+                                                                    const asset& scorumpower,
+                                                                    bool broadcast);
+
+    /**
      *  This method is used to convert a JSON transaction to its transaction ID.
      */
     transaction_id_type get_transaction_id(const signed_transaction& trx) const
@@ -1548,7 +1561,7 @@ public:
      */
     annotated_signed_transaction post_game_results(uuid_type uuid,
                                                    account_name_type moderator,
-                                                   const fc::flat_set<wincase_type>& wincases,
+                                                   const std::vector<wincase_type>& wincases,
                                                    const bool broadcast);
 
     /**
@@ -1578,7 +1591,7 @@ public:
      * @param broadcast
      */
     annotated_signed_transaction
-    cancel_pending_bets(account_name_type better, const fc::flat_set<uuid_type>& bet_uuids, const bool broadcast);
+    cancel_pending_bets(account_name_type better, const std::vector<uuid_type>& bet_uuids, const bool broadcast);
 
     /**
      * @brief Returns games
@@ -1708,6 +1721,7 @@ FC_API( scorum::wallet::wallet_api,
         (update_account_meta)
         (update_account_memo_key)
         (delegate_scorumpower)
+        (delegate_scorumpower_from_reg_pool)
         (update_witness)
         (set_voting_proxy)
         (vote_for_witness)
