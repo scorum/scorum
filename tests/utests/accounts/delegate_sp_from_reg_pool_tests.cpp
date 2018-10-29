@@ -57,7 +57,7 @@ struct delegate_sp_fixture
     data_service_factory_i* factory = mocks.Mock<data_service_factory_i>();
 };
 
-BOOST_FIXTURE_TEST_SUITE(delegate_sp_from_reg_pool_tests, delegate_sp_fixture)
+BOOST_FIXTURE_TEST_SUITE(delegate_sp_from_reg_pool_evaluator_tests, delegate_sp_fixture)
 
 SCORUM_TEST_CASE(non_existing_reg_committee_account_should_throw)
 {
@@ -271,6 +271,33 @@ SCORUM_TEST_CASE(remove_existing_delegation_with_zero_delegation)
     BOOST_CHECK_EQUAL(delegatee.received_scorumpower.amount, 0u);
     BOOST_CHECK_EQUAL(pool.balance.amount, 50u);
     BOOST_CHECK(reg_pool_delegation_dba.is_empty());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(delegate_sp_from_reg_pool_operation_tests, delegate_sp_fixture)
+
+SCORUM_TEST_CASE(delegatee_and_reg_committee_member_should_be_different_accounts)
+{
+    delegate_sp_from_reg_pool_operation op;
+    op.delegatee = "sam";
+    op.reg_committee_member = "sam";
+
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "You cannot delegate SP to yourself");
+}
+
+SCORUM_TEST_CASE(delegated_sp_upper_bound_test)
+{
+    delegate_sp_from_reg_pool_operation op;
+    op.delegatee = "sam";
+    op.reg_committee_member = "alice";
+    op.scorumpower = ASSET_SP(10);
+
+    BOOST_CHECK_NO_THROW(op.validate());
+
+    op.scorumpower = ASSET_SP(11);
+
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Delegation cannot be more than {0}SP");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -224,6 +224,7 @@ namespace detail {
 
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO     5
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME      fc::days(30)
+#define SCORUM_CREATE_ACCOUNT_REG_COMMITTEE_DELEGATION_MAX      10
 
 #define SCORUM_RECENT_RSHARES_DECAY_RATE       (scorum::protocol::detail::get_config().recent_rshares_decay_rate)
 // note, if redefining these constants make sure calculate_claims doesn't overflow
