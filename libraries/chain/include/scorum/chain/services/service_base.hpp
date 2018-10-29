@@ -3,6 +3,7 @@
 #include <functional>
 
 #include <scorum/chain/services/dbs_base.hpp>
+#include <scorum/chain/dba/dba.hpp>
 
 #include <limits>
 
@@ -51,15 +52,14 @@ template <class service_interface> class dbs_service_base : public dbs_base, pub
 {
     friend class dbservice_dbs_factory;
 
-protected:
-    explicit dbs_service_base(database& db)
+public:
+    explicit dbs_service_base(dba::db_index& db)
         : _base_type(db)
     {
     }
 
     using base_service_type = dbs_service_base;
 
-public:
     using service_interface::get;
     using service_interface::is_exists;
 

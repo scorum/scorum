@@ -82,7 +82,8 @@ enum object_type
     bet_object_type,
     pending_bet_object_type,
     matched_bet_object_type,
-    game_object_type
+    game_object_type,
+    reg_pool_sp_delegation_object_type
 };
 
 class account_authority_object;
@@ -110,6 +111,7 @@ class registration_pool_object;
 class transaction_object;
 class scorumpower_delegation_expiration_object;
 class scorumpower_delegation_object;
+class reg_pool_sp_delegation_object;
 class withdraw_scorumpower_route_object;
 class withdraw_scorumpower_route_statistic_object;
 class withdraw_scorumpower_object;
@@ -150,6 +152,7 @@ using registration_pool_id_type = oid<registration_pool_object>;
 using transaction_object_id_type = oid<transaction_object>;
 using scorumpower_delegation_expiration_id_type = oid<scorumpower_delegation_expiration_object>;
 using scorumpower_delegation_id_type = oid<scorumpower_delegation_object>;
+using reg_pool_sp_delegation_id_type = oid<reg_pool_sp_delegation_object>;
 using withdraw_scorumpower_route_id_type = oid<withdraw_scorumpower_route_object>;
 using withdraw_scorumpower_route_statistic_id_type = oid<withdraw_scorumpower_route_statistic_object>;
 using withdraw_scorumpower_id_type = oid<withdraw_scorumpower_object>;
@@ -229,6 +232,7 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (pending_bet_object_type)
                 (matched_bet_object_type)
                 (game_object_type)
+                (reg_pool_sp_delegation_object_type)
                )
 
 FC_REFLECT_ENUM( scorum::chain::bandwidth_type, (post)(forum)(market) )

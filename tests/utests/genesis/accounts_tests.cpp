@@ -21,7 +21,7 @@ struct genesis_initiate_accounts_fixture
     MockRepository mocks;
 
     data_service_factory_i* pservices = mocks.Mock<data_service_factory_i>();
-
+    dba::db_accessor_factory* dba_factory = mocks.Mock<dba::db_accessor_factory>();
     account_service_i* paccount_service = mocks.Mock<account_service_i>();
 
     genesis_initiate_accounts_fixture()
@@ -37,14 +37,14 @@ BOOST_AUTO_TEST_SUITE(accounts_initializator_tests)
 BOOST_FIXTURE_TEST_CASE(check_empty_genesis, genesis_initiate_accounts_fixture)
 {
     genesis_state_type input_genesis = Genesis::create().generate();
-    initializator_context ctx(*pservices, input_genesis);
+    initializator_context ctx(*pservices, *dba_factory, input_genesis);
     BOOST_REQUIRE_NO_THROW(test_it.apply(ctx));
 }
 
 BOOST_FIXTURE_TEST_CASE(check_empty_account_list, genesis_initiate_accounts_fixture)
 {
     genesis_state_type input_genesis = Genesis::create().accounts_supply(ASSET_SCR(1e+6)).generate();
-    initializator_context ctx(*pservices, input_genesis);
+    initializator_context ctx(*pservices, *dba_factory, input_genesis);
     SCORUM_REQUIRE_THROW(test_it.apply(ctx), fc::assert_exception);
 }
 

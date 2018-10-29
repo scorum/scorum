@@ -144,6 +144,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.delegatee);
     }
 
+    void operator()(const delegate_sp_from_reg_pool_operation& op)
+    {
+        _impacted.insert(op.delegatee);
+    }
+
     void operator()(const create_budget_operation& op)
     {
         _impacted.insert(op.owner);

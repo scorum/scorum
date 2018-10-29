@@ -4,7 +4,6 @@
 
 // clang-format off
 DATA_SERVICE_FACTORY_DECLARE(
-        (account)
         (account_blogging_statistic)
         (account_registration_bonus)
         (atomicswap)
@@ -34,7 +33,6 @@ DATA_SERVICE_FACTORY_DECLARE(
         (withdraw_scorumpower_route)
         (withdraw_scorumpower_route_statistic)
         (withdraw_scorumpower)
-        (witness)
         (witness_schedule)
         (witness_vote)
         (dev_pool)

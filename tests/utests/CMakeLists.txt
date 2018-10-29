@@ -29,6 +29,7 @@ set(SOURCES
     logger/logger_config_tests.cpp
     signed_transaction_serialization_tests.cpp
     serialization_tests.cpp
+    accounts/delegate_sp_from_reg_pool_tests.cpp
     proposal/proposal_operations_tests.cpp
     proposal/proposal_evaluator_register_tests.cpp
     proposal/proposal_create_evaluator_tests.cpp

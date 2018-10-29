@@ -75,7 +75,7 @@ const account_object& database_trx_integration_fixture::account_create(const std
         trx.operations.clear();
         trx.signatures.clear();
 
-        const account_object& acct = db.obtain_service<dbs_account>().get_account(name);
+        const account_object& acct = db.account_service().get_account(name);
 
         return acct;
     }
@@ -128,7 +128,7 @@ const witness_object& database_trx_integration_fixture::witness_create(const std
         trx.operations.clear();
         trx.signatures.clear();
 
-        return db.obtain_service<dbs_witness>().get(owner);
+        return db.witness_service().get(owner);
     }
     FC_CAPTURE_AND_RETHROW((owner)(url))
 }
@@ -230,7 +230,7 @@ void database_trx_integration_fixture::proxy(const std::string& account, const s
 
 const asset& database_trx_integration_fixture::get_balance(const std::string& account_name) const
 {
-    return db.obtain_service<dbs_account>().get_account(account_name).balance;
+    return db.account_service().get_account(account_name).balance;
 }
 
 void database_trx_integration_fixture::sign(signed_transaction& trx, const fc::ecc::private_key& key)

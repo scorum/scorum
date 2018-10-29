@@ -57,7 +57,7 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
         auto acc_name = "alice";
         auto tags = { "a", "b", "c", "d", "e", "f", "g", "h", "" };
 
-        auto& acc_service = db.obtain_service<dbs_account>();
+        auto& acc_service = db.account_service();
         auto alice_id = acc_service.get_account(acc_name).id;
 
         std::random_device device;

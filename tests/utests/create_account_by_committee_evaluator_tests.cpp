@@ -106,7 +106,11 @@ SCORUM_TEST_CASE(create_account_with_zero_fee_on_hf_0_3_0)
 
     mocks.ExpectCall(hardfork_svc, hardfork_property_service_i::has_hardfork).With(SCORUM_HARDFORK_0_3).Return(true);
 
-    mocks.ExpectCall(account_svc, account_service_i::create_account)
+    using create_acc_ptr = const account_object& (
+        account_service_i::*)(const account_name_type&, const account_name_type&, const public_key_type&,
+                              const std::string&, const authority&, const authority&, const authority&, const asset&);
+
+    mocks.ExpectCallOverload(account_svc, (create_acc_ptr)&account_service_i::create_account)
         .With(op.new_account_name, op.creator, _, _, _, _, _, asset(0, SCORUM_SYMBOL))
         .ReturnByRef(account);
 

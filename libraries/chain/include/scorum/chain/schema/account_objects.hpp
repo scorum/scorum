@@ -10,6 +10,7 @@
 #include <scorum/chain/schema/shared_authority.hpp>
 
 #include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/hashed_index.hpp>
 
 #include <numeric>
 
@@ -136,6 +137,16 @@ public:
     account_name_type delegatee;
     asset scorumpower = asset(0, SP_SYMBOL);
     time_point_sec min_delegation_time;
+};
+
+class reg_pool_sp_delegation_object : public object<reg_pool_sp_delegation_object_type, reg_pool_sp_delegation_object>
+{
+public:
+    CHAINBASE_DEFAULT_CONSTRUCTOR(reg_pool_sp_delegation_object)
+
+    id_type id;
+    account_name_type delegatee;
+    asset sp = asset(0, SP_SYMBOL);
 };
 
 class scorumpower_delegation_expiration_object
@@ -406,6 +417,19 @@ typedef shared_multi_index_container<scorumpower_delegation_object,
                                                                                      std::less<account_name_type>>>>>
     scorumpower_delegation_index;
 
+struct by_delegatee;
+
+typedef shared_multi_index_container<reg_pool_sp_delegation_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<reg_pool_sp_delegation_object,
+                                                                      reg_pool_sp_delegation_id_type,
+                                                                      &reg_pool_sp_delegation_object::id>>,
+                                                hashed_unique<tag<by_delegatee>,
+                                                              member<reg_pool_sp_delegation_object,
+                                                                     account_name_type,
+                                                                     &reg_pool_sp_delegation_object::delegatee>>>>
+    reg_pool_sp_delegation_index;
+
 struct by_expiration;
 struct by_account_expiration;
 
@@ -571,6 +595,10 @@ CHAINBASE_SET_INDEX_TYPE( scorum::chain::account_authority_object, scorum::chain
 FC_REFLECT( scorum::chain::scorumpower_delegation_object,
             (id)(delegator)(delegatee)(scorumpower)(min_delegation_time) )
 CHAINBASE_SET_INDEX_TYPE( scorum::chain::scorumpower_delegation_object, scorum::chain::scorumpower_delegation_index )
+
+FC_REFLECT( scorum::chain::reg_pool_sp_delegation_object,
+            (id)(delegatee)(sp) )
+CHAINBASE_SET_INDEX_TYPE( scorum::chain::reg_pool_sp_delegation_object, scorum::chain::reg_pool_sp_delegation_index )
 
 FC_REFLECT( scorum::chain::scorumpower_delegation_expiration_object,
             (id)(delegator)(scorumpower)(expiration) )

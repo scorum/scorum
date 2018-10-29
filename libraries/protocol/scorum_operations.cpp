@@ -276,6 +276,17 @@ void delegate_scorumpower_operation::validate() const
     FC_ASSERT(scorumpower >= asset(0, SP_SYMBOL), "Delegation cannot be negative");
 }
 
+void delegate_sp_from_reg_pool_operation::validate() const
+{
+    validate_account_name(reg_committee_member);
+    validate_account_name(delegatee);
+    FC_ASSERT(reg_committee_member != delegatee, "You cannot delegate SP to yourself");
+    FC_ASSERT(is_asset_type(scorumpower, SP_SYMBOL), "Delegation must be SP");
+    FC_ASSERT(scorumpower.amount >= 0u, "Delegation cannot be negative");
+    auto max_delegation = SCORUM_CREATE_ACCOUNT_REG_COMMITTEE_DELEGATION_MAX;
+    FC_ASSERT(scorumpower.amount <= max_delegation, "Delegation cannot be more than {0}SP", ("0", max_delegation));
+}
+
 void create_budget_operation::validate() const
 {
     validate_account_name(owner);

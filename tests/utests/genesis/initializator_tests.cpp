@@ -2,6 +2,7 @@
 
 #include <scorum/chain/genesis/initializators/initializators.hpp>
 #include <scorum/chain/data_service_factory.hpp>
+#include <scorum/chain/dba/db_accessor_factory.hpp>
 #include <scorum/chain/genesis/genesis_state.hpp>
 
 #include <hippomocks.h>
@@ -10,6 +11,7 @@ using scorum::chain::genesis::initializator;
 using scorum::chain::genesis::initializator_context;
 using scorum::chain::data_service_factory_i;
 using scorum::chain::genesis_state_type;
+using scorum::chain::dba::db_accessor_factory;
 
 struct test_initializator : public initializator
 {
@@ -30,7 +32,7 @@ private:
 struct genesis_initializator_fixture
 {
     genesis_initializator_fixture()
-        : ctx(*pservices, gs)
+        : ctx(*pservices, *dba_factory, gs)
     {
     }
 
@@ -38,6 +40,7 @@ private:
     MockRepository mocks;
 
     data_service_factory_i* pservices = mocks.Mock<data_service_factory_i>();
+    db_accessor_factory* dba_factory = mocks.Mock<db_accessor_factory>();
     genesis_state_type gs;
 
 public:
