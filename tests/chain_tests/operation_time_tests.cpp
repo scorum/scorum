@@ -136,22 +136,22 @@ BOOST_AUTO_TEST_CASE(comment_payout_equalize)
         /*
         for( const auto& author : authors )
         {
-           const account_object& a = db.obtain_service<dbs_account>().get_account(author.name);
+           const account_object& a = db.account_service().get_account(author.name);
            ilog( "${n} : ${scorum} ${sbd}", ("n", author.name)("scorum", a.reward_scorum_balance)("sbd",
         a.reward_sbd_balance) );
         }
         for( const auto& voter : voters )
         {
-           const account_object& a = db.obtain_service<dbs_account>().get_account(voter.name);
+           const account_object& a = db.account_service().get_account(voter.name);
            ilog( "${n} : ${scorum} ${sbd}", ("n", voter.name)("scorum", a.reward_scorum_balance)("sbd",
         a.reward_sbd_balance) );
         }
         */
 
         // SCORUM: rewrite to check SCR reward
-        //        const account_object& alice_account = db.obtain_service<dbs_account>().get_account("alice");
-        //        const account_object& bob_account = db.obtain_service<dbs_account>().get_account("bob");
-        //        const account_object& dave_account = db.obtain_service<dbs_account>().get_account("dave");
+        //        const account_object& alice_account = db.account_service().get_account("alice");
+        //        const account_object& bob_account = db.account_service().get_account("bob");
+        //        const account_object& dave_account = db.account_service().get_account("dave");
 
         //        BOOST_CHECK( alice_account.reward_sbd_balance == ASSET( "14288.000 TBD" ) );
         //        BOOST_CHECK( alice_account.reward_sbd_balance == ASSET( "13967.000 TBD" ) );
@@ -274,8 +274,8 @@ BOOST_AUTO_TEST_CASE(reward_fund)
 
         generate_block();
 
-        auto& alice_acc = db.obtain_service<dbs_account>().get_account("alice");
-        auto& bob_acc = db.obtain_service<dbs_account>().get_account("bob");
+        auto& alice_acc = db.account_service().get_account("alice");
+        auto& bob_acc = db.account_service().get_account("bob");
 
         BOOST_REQUIRE_EQUAL(alice_acc.balance, asset(0, SCORUM_SYMBOL));
         BOOST_REQUIRE_EQUAL(bob_acc.balance, asset(0, SCORUM_SYMBOL));

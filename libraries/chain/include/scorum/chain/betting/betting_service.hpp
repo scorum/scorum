@@ -1,11 +1,12 @@
 #pragma once
-#include <vector>
-#include <functional>
-
 #include <scorum/protocol/betting/market.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
-
 #include <scorum/utils/any_range.hpp>
+
+#include <scorum/protocol/types.hpp>
+
+#include <vector>
+#include <functional>
 
 namespace scorum {
 namespace chain {
@@ -20,6 +21,7 @@ struct data_service_factory_i;
 struct account_service_i;
 struct database_virtual_operations_emmiter_i;
 
+class dynamic_global_property_object;
 class betting_property_object;
 class pending_bet_object;
 class matched_bet_object;
@@ -34,9 +36,18 @@ struct betting_service_i
 
     virtual bool is_betting_moderator(const account_name_type& account_name) const = 0;
 
+    virtual const pending_bet_object& create_pending_bet(const account_name_type& better,
+                                                         const protocol::asset& stake,
+                                                         protocol::odds odds,
+                                                         const protocol::wincase_type& wincase,
+                                                         game_id_type game,
+                                                         uuid_type bet_uuid,
+                                                         pending_bet_kind kind)
+        = 0;
+
     virtual void cancel_game(game_id_type game_id) = 0;
     virtual void cancel_bets(game_id_type game_id) = 0;
-    virtual void cancel_bets(game_id_type game_id, fc::time_point_sec created_from) = 0;
+    virtual void cancel_bets(game_id_type game_id, fc::time_point_sec created_after) = 0;
     virtual void cancel_bets(game_id_type game_id, const fc::flat_set<market_type>& cancelled_markets) = 0;
 
     virtual void cancel_pending_bet(pending_bet_id_type id) = 0;
@@ -56,13 +67,22 @@ public:
                     dba::db_accessor<betting_property_object>&,
                     dba::db_accessor<matched_bet_object>&,
                     dba::db_accessor<pending_bet_object>&,
-                    dba::db_accessor<game_object>&);
+                    dba::db_accessor<game_object>&,
+                    dba::db_accessor<dynamic_global_property_object>&);
 
     bool is_betting_moderator(const account_name_type& account_name) const override;
 
+    const pending_bet_object& create_pending_bet(const account_name_type& better,
+                                                 const protocol::asset& stake,
+                                                 protocol::odds odds,
+                                                 const protocol::wincase_type& wincase,
+                                                 game_id_type game,
+                                                 uuid_type bet_uuid,
+                                                 pending_bet_kind kind) override;
+
     void cancel_game(game_id_type game_id) override;
     void cancel_bets(game_id_type game_id) override;
-    void cancel_bets(game_id_type game_id, fc::time_point_sec created_from) override;
+    void cancel_bets(game_id_type game_id, fc::time_point_sec created_after) override;
     void cancel_bets(game_id_type game_id, const fc::flat_set<market_type>& cancelled_markets) override;
 
     void cancel_pending_bet(pending_bet_id_type id) override;
@@ -74,8 +94,10 @@ public:
     void cancel_matched_bets(utils::bidir_range<const matched_bet_object> bets, uuid_type game_uuid) override;
 
 private:
-    void
-    return_or_restore_bet(const bet_data& bet, game_id_type game_id, uuid_type game_uuid, fc::time_point_sec threshold);
+    void cancel_pending_bet(const pending_bet_object& bet, uuid_type game_uuid);
+    void cancel_matched_bet(const matched_bet_object& bet, uuid_type game_uuid);
+    void return_bet(const bet_data& bet, uuid_type game_uuid);
+    void restore_pending_bet(const bet_data& bet, uuid_type game_uuid);
     void push_matched_bet_cancelled_op(const bet_data& bet, uuid_type game_uuid);
     void push_pending_bet_cancelled_op(const bet_data& bet, uuid_type game_uuid);
 
@@ -85,6 +107,7 @@ private:
     dba::db_accessor<matched_bet_object>& _matched_bet_dba;
     dba::db_accessor<pending_bet_object>& _pending_bet_dba;
     dba::db_accessor<game_object>& _game_dba;
+    dba::db_accessor<dynamic_global_property_object>& _dprop_dba;
 };
 }
 }

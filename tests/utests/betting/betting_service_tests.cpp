@@ -42,7 +42,7 @@ SCORUM_TEST_CASE(budget_service_is_betting_moderator_check)
 {
     betting_service service(*dbs_services, *virt_op_emitter, dba_factory.get_dba<betting_property_object>(),
                             dba_factory.get_dba<matched_bet_object>(), dba_factory.get_dba<pending_bet_object>(),
-                            dba_factory.get_dba<game_object>());
+                            dba_factory.get_dba<game_object>(), dba_factory.get_dba<dynamic_global_property_object>());
 
     BOOST_CHECK(!service.is_betting_moderator("jack"));
     BOOST_CHECK(service.is_betting_moderator(moderator));

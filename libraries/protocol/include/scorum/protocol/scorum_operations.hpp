@@ -726,6 +726,28 @@ struct delegate_scorumpower_operation : public base_operation
     void validate() const;
 };
 
+/**
+ * Delegate scorumpower from registration pool to the other. The scorumpower are still owned
+ * by registration committee, but content voting rights and bandwidth allocation are transferred
+ * to the receiving account. This sets the delegation to `scorumpower`, increasing it or
+ * decreasing it as needed. (i.e. a delegation of 0 removes the delegation)
+ *
+ * When a delegation is removed the shares are placed in limbo for a week to prevent a satoshi
+ * of SP from voting on the same content twice.
+ */
+struct delegate_sp_from_reg_pool_operation : public base_operation
+{
+    account_name_type reg_committee_member;
+    account_name_type delegatee;
+    asset scorumpower = asset(0, SP_SYMBOL);
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(reg_committee_member);
+    }
+};
+
 /// @defgroup advertising Advertising operations
 /// @brief Operations to work with advertising budgets
 /// @ingroup operations
@@ -811,7 +833,6 @@ struct close_budget_by_advertising_moderator_operation : public base_operation
 };
 
 /// @}
-
 
 /**
  * @ingroup operations
@@ -1063,7 +1084,7 @@ struct post_game_results_operation : public base_operation
     account_name_type moderator;
 
     /// list of wincases
-    fc::flat_set<wincase_type> wincases;
+    std::vector<wincase_type> wincases;
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;
@@ -1118,7 +1139,7 @@ struct post_bet_operation : public base_operation
 struct cancel_pending_bets_operation : public base_operation
 {
     /// bets list that is being canceling
-    fc::flat_set<uuid_type> bet_uuids;
+    std::vector<uuid_type> bet_uuids;
 
     /// owner
     account_name_type better;
@@ -1205,6 +1226,7 @@ FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(ne
 FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) )
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
 FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
+FC_REFLECT( scorum::protocol::delegate_sp_from_reg_pool_operation, (reg_committee_member)(delegatee)(scorumpower) )
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (type)(uuid)(owner)(json_metadata)(balance)(start)(deadline) )
 FC_REFLECT( scorum::protocol::update_budget_operation, (type)(uuid)(owner)(json_metadata) )

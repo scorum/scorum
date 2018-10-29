@@ -172,14 +172,6 @@ public:
 
     void init_extension()
     {
-        _mocks.OnCall(_service, dynamic_global_property_service_i::get_genesis_time).Do([this]() -> fc::time_point_sec {
-            if (genesis_time == fc::time_point_sec())
-            {
-                FC_ASSERT(!this->_objects_by_id.empty());
-                return this->_objects_by_id.begin()->second.time;
-            }
-            return genesis_time;
-        });
         _mocks.OnCall(_service, dynamic_global_property_service_i::head_block_time).Do([this]() -> fc::time_point_sec {
             FC_ASSERT(!this->_objects_by_id.empty());
             return this->_objects_by_id.begin()->second.time;

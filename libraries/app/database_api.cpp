@@ -468,7 +468,7 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
     return my->_db.with_read_lock([&]() {
         std::vector<withdraw_route> result;
 
-        const auto& acc = my->_db.obtain_service<chain::dbs_account>().get_account(account);
+        const auto& acc = my->_db.account_service().get_account(account);
 
         if (type == outgoing || type == all)
         {
@@ -867,7 +867,7 @@ std::vector<account_vote> database_api::get_account_votes(const std::string& vot
     return my->_db.with_read_lock([&]() {
         std::vector<account_vote> result;
 
-        const auto& voter_acnt = my->_db.obtain_service<chain::dbs_account>().get_account(voter);
+        const auto& voter_acnt = my->_db.account_service().get_account(voter);
         const auto& idx = my->_db.get_index<comment_vote_index>().indices().get<by_voter_comment>();
 
         account_id_type aid(voter_acnt.id);
@@ -939,8 +939,8 @@ std::vector<atomicswap_contract_api_obj> database_api_impl::get_atomicswap_contr
 {
     std::vector<atomicswap_contract_api_obj> results;
 
-    chain::dbs_account& account_service = _db.obtain_service<chain::dbs_account>();
-    const chain::account_object& owner_obj = account_service.get_account(owner);
+    auto& account_svc = _db.account_service();
+    const chain::account_object& owner_obj = account_svc.get_account(owner);
 
     chain::dbs_atomicswap& atomicswap_service = _db.obtain_service<chain::dbs_atomicswap>();
 
@@ -966,9 +966,9 @@ atomicswap_contract_info_api_obj database_api_impl::get_atomicswap_contract(cons
 {
     atomicswap_contract_info_api_obj result;
 
-    chain::dbs_account& account_service = _db.obtain_service<chain::dbs_account>();
-    const chain::account_object& from_obj = account_service.get_account(from);
-    const chain::account_object& to_obj = account_service.get_account(to);
+    auto& account_svc = _db.account_service();
+    const chain::account_object& from_obj = account_svc.get_account(from);
+    const chain::account_object& to_obj = account_svc.get_account(to);
 
     chain::dbs_atomicswap& atomicswap_service = _db.obtain_service<chain::dbs_atomicswap>();
 

@@ -2,6 +2,7 @@
 
 #include <scorum/chain/services/service_base.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/dba/dba.hpp>
 
 namespace scorum {
 namespace chain {
@@ -48,6 +49,15 @@ struct account_service_i : public base_service_i<account_object>
                                                          const public_key_type& memo_key,
                                                          const asset& balance_in_scorums,
                                                          const std::string& json_metadata)
+        = 0;
+
+    virtual const account_object& create_account(const account_name_type& new_account_name,
+                                                 const account_name_type& creator_name,
+                                                 const public_key_type& memo_key,
+                                                 const std::string& json_metadata,
+                                                 const authority& owner,
+                                                 const authority& active,
+                                                 const authority& posting)
         = 0;
 
     virtual const account_object& create_account(const account_name_type& new_account_name,
@@ -107,7 +117,9 @@ struct account_service_i : public base_service_i<account_object>
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) = 0;
 
+    virtual void increase_received_scorumpower(account_name_type account_name, const asset& amount) = 0;
     virtual void increase_received_scorumpower(const account_object& account, const asset& amount) = 0;
+    virtual void decrease_received_scorumpower(account_name_type account_name, const asset& amount) = 0;
     virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) = 0;
 
     virtual void drop_challenged(const account_object& account) = 0;
@@ -171,10 +183,9 @@ class dbs_account : public dbs_service_base<account_service_i>
 {
     friend class dbservice_dbs_factory;
 
-protected:
-    explicit dbs_account(database& db);
-
 public:
+    explicit dbs_account(dba::db_index&, dynamic_global_property_service_i&, witness_service_i&);
+
     using base_service_i<account_object>::get;
     using base_service_i<account_object>::is_exists;
 
@@ -198,6 +209,14 @@ public:
                                                          const public_key_type& memo_key,
                                                          const asset& balance_in_scorums,
                                                          const std::string& json_metadata) override;
+
+    const account_object& create_account(const account_name_type& new_account_name,
+                                         const account_name_type& creator_name,
+                                         const public_key_type& memo_key,
+                                         const std::string& json_metadata,
+                                         const authority& owner,
+                                         const authority& active,
+                                         const authority& posting) override;
 
     virtual const account_object& create_account(const account_name_type& new_account_name,
                                                  const account_name_type& creator_name,
@@ -252,7 +271,9 @@ public:
 
     virtual void increase_delegated_scorumpower(const account_object& account, const asset& amount) override;
 
+    virtual void increase_received_scorumpower(account_name_type account_name, const asset& amount) override;
     virtual void increase_received_scorumpower(const account_object& account, const asset& amount) override;
+    virtual void decrease_received_scorumpower(account_name_type account_name, const asset& amount) override;
     virtual void decrease_received_scorumpower(const account_object& account, const asset& amount) override;
 
     virtual void drop_challenged(const account_object& account) override;
@@ -307,14 +328,6 @@ public:
     virtual account_refs_type get_by_cashout_time(const fc::time_point_sec& until) const override;
 
 private:
-    const account_object& _create_account_objects(const account_name_type& new_account_name,
-                                                  const account_name_type& recovery_account,
-                                                  const public_key_type& memo_key,
-                                                  const std::string& json_metadata,
-                                                  const authority& owner,
-                                                  const authority& active,
-                                                  const authority& posting);
-
     dynamic_global_property_service_i& _dgp_svc;
     witness_service_i& _witness_svc;
 };

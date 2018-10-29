@@ -160,7 +160,7 @@ public:
         _db.modify(_bucket, [&](bucket_object& b) {
             const auto& cv_idx = _db.get_index<comment_vote_index>().indices().get<by_comment_voter>();
             const auto& comment = _db.obtain_service<dbs_comment>().get(op.author, op.permlink);
-            const auto& voter = _db.obtain_service<chain::dbs_account>().get_account(op.voter);
+            const auto& voter = _db.account_service().get_account(op.voter);
             const auto itr = cv_idx.find(boost::make_tuple(comment.id, voter.id));
 
             if (itr->num_changes)

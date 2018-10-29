@@ -19,7 +19,7 @@ class atomicswap_service_check_fixture : public database_default_integration_fix
 public:
     atomicswap_service_check_fixture()
         : atomicswap_service(db.obtain_service<dbs_atomicswap>())
-        , account_service(db.obtain_service<dbs_account>())
+        , account_service(db.account_service())
         , public_key(database_integration_fixture::generate_private_key("user private key").get_public_key())
         , alice(account_service.create_account(
               "alice", "initdelegate", public_key, "", authority(), authority(), authority(), ASSET_NULL_SCR))
@@ -43,8 +43,8 @@ public:
         alice_secret_hash = atomicswap::get_secret_hash(ALICE_SECRET);
     }
 
-    dbs_atomicswap& atomicswap_service;
-    dbs_account& account_service;
+    atomicswap_service_i& atomicswap_service;
+    account_service_i& account_service;
 
     const public_key_type public_key;
     const account_object& alice;

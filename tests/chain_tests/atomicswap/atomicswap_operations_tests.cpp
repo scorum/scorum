@@ -84,7 +84,7 @@ class atomicswap_operation_create_contract_fixture : public atomicswap_operation
 public:
     atomicswap_operation_create_contract_fixture()
         : atomicswap_service(db.obtain_service<dbs_atomicswap>())
-        , account_service(db.obtain_service<dbs_account>())
+        , account_service(db.account_service())
     {
         ACTORS((alice)(bob));
 
@@ -96,8 +96,8 @@ public:
         fund("bob", BOB_BALANCE);
     }
 
-    dbs_atomicswap& atomicswap_service;
-    dbs_account& account_service;
+    atomicswap_service_i& atomicswap_service;
+    account_service_i& account_service;
 
     private_key_type m_alice_private_key;
     private_key_type m_bob_private_key;
@@ -363,8 +363,8 @@ SCORUM_TEST_CASE(check_expired_contracts_refund)
     expired_contract_refund_visitor visitor(db);
     db.post_apply_operation.connect([&](const operation_notification& note) { note.op.visit(visitor); });
 
-    auto alice_balance_before_refund = db.obtain_service<dbs_account>().get_account("alice").balance;
-    auto bob_balance_before_refund = db.obtain_service<dbs_account>().get_account("bob").balance;
+    auto alice_balance_before_refund = db.account_service().get_account("alice").balance;
+    auto bob_balance_before_refund = db.account_service().get_account("bob").balance;
 
     generate_blocks(db.head_block_time() + std::max(SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS,
                                                     SCORUM_ATOMICSWAP_PARTICIPANT_REFUND_LOCK_SECS));

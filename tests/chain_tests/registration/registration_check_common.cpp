@@ -29,6 +29,7 @@ asset schedule_input_total_bonus(const schedule_inputs_type& schedule_input, con
 
 registration_check_fixture::registration_check_fixture()
     : _services(static_cast<data_service_factory_i&>(db))
+    , _dba_factory(static_cast<dba::db_accessor_factory&>(db))
     , account_service(db.account_service())
     , registration_pool_service(db.registration_pool_service())
     , registration_committee_service(db.registration_committee_service())
@@ -77,7 +78,7 @@ void registration_check_fixture::create_registration_objects(const genesis_state
         [&](database&) {
 
             genesis::registration_initializator_impl creator;
-            genesis::initializator_context ctx(_services, genesis);
+            genesis::initializator_context ctx(_services, _dba_factory, genesis);
             creator.apply(ctx);
 
             dynamic_global_property_service_i& dgp_service = _services.dynamic_global_property_service();

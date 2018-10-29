@@ -17,7 +17,6 @@ struct hardfork_property_service_i;
 class account_object;
 class registration_pool_evaluator_impl;
 
-
 class registration_pool_evaluator : public evaluator_impl<data_service_factory_i, registration_pool_evaluator>
 {
 public:

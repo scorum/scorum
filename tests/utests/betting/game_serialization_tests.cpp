@@ -11,16 +11,12 @@
 #include <detail.hpp>
 #include <iostream>
 
-using detail::to_hex;
+using ::detail::to_hex;
+using ::detail::flatten;
 
 namespace {
 using namespace scorum;
 using namespace scorum::protocol;
-
-std::string flatten(const std::string& json)
-{
-    return fc::json::to_string(fc::json::from_string(json));
-}
 
 struct game_serialization_test_fixture
 {
@@ -359,6 +355,18 @@ SCORUM_TEST_CASE(no_sorting_for_markets)
     BOOST_CHECK(op.markets.at(0).which() == market_type::tag<correct_score_home>::value);
 }
 
+SCORUM_TEST_CASE(allow_duplicate_markets)
+{
+    create_game_operation op;
+    op.markets = { correct_score_home{}, correct_score_home{}, correct_score_home{} };
+
+    BOOST_REQUIRE_EQUAL(3u, op.markets.size());
+
+    BOOST_CHECK(op.markets.at(0).which() == market_type::tag<correct_score_home>::value);
+    BOOST_CHECK(op.markets.at(1).which() == market_type::tag<correct_score_home>::value);
+    BOOST_CHECK(op.markets.at(2).which() == market_type::tag<correct_score_home>::value);
+}
+
 SCORUM_TEST_CASE(wincases_duplicates_deserialization_test)
 {
     auto json_with_duplicates = flatten(R"({
@@ -521,6 +529,15 @@ SCORUM_TEST_CASE(allow_duplicate_markets)
     BOOST_CHECK(op.markets.at(0).which() == market_type::tag<correct_score_home>::value);
     BOOST_CHECK(op.markets.at(1).which() == market_type::tag<correct_score_home>::value);
     BOOST_CHECK(op.markets.at(2).which() == market_type::tag<correct_score_home>::value);
+}
+
+SCORUM_TEST_CASE(validate_dont_throw_exception_on_duplicate_markets)
+{
+    update_game_markets_operation op;
+    op.moderator = "alice";
+    op.markets = { correct_score_home{}, correct_score_home{} };
+
+    BOOST_CHECK_NO_THROW(op.validate());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -28,7 +28,7 @@ protected:
     dbs_base() = delete;
     dbs_base(dbs_base&&) = delete;
 
-    explicit dbs_base(database&);
+    explicit dbs_base(dba::db_index&);
 
     typedef dbs_base _base_type;
 
@@ -36,15 +36,13 @@ public:
     virtual ~dbs_base();
 
 protected:
-    dbservice_dbs_factory& db();
-
     time_point_sec head_block_time();
 
-    database& db_impl();
-    const database& db_impl() const;
+    dba::db_index& db_impl();
+    const dba::db_index& db_impl() const;
 
 private:
-    database& _db_core;
+    dba::db_index& _db_core;
 };
 
 } // namespace chain

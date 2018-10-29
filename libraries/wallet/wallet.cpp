@@ -1819,10 +1819,34 @@ annotated_signed_transaction wallet_api::delegate_scorumpower(const std::string&
     auto accounts = my->_remote_db->get_accounts({ delegator, delegatee });
     FC_ASSERT(accounts.size() == 2, "One or more of the accounts specified do not exist.");
     FC_ASSERT(delegator == accounts[0].name, "Delegator account is not right?");
-    FC_ASSERT(delegatee == accounts[1].name, "Delegator account is not right?");
+    FC_ASSERT(delegatee == accounts[1].name, "Delegatee account is not right?");
 
     delegate_scorumpower_operation op;
     op.delegator = delegator;
+    op.delegatee = delegatee;
+    op.scorumpower = scorumpower;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::delegate_scorumpower_from_reg_pool(const std::string& reg_committee_member,
+                                                                            const std::string& delegatee,
+                                                                            const asset& scorumpower,
+                                                                            bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    auto accounts = my->_remote_db->get_accounts({ reg_committee_member, delegatee });
+    FC_ASSERT(accounts.size() == 2, "One or more of the accounts specified do not exist.");
+    FC_ASSERT(reg_committee_member == accounts[0].name, "Registration committee member account is not right?");
+    FC_ASSERT(delegatee == accounts[1].name, "Delegatee account is not right?");
+
+    delegate_sp_from_reg_pool_operation op;
+    op.reg_committee_member = reg_committee_member;
     op.delegatee = delegatee;
     op.scorumpower = scorumpower;
 
@@ -3324,7 +3348,7 @@ annotated_signed_transaction wallet_api::update_game_start_time(uuid_type uuid,
 
 annotated_signed_transaction wallet_api::post_game_results(uuid_type uuid,
                                                            account_name_type moderator,
-                                                           const fc::flat_set<wincase_type>& wincases,
+                                                           const std::vector<wincase_type>& wincases,
                                                            const bool broadcast)
 {
     try
@@ -3387,9 +3411,8 @@ annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
     return ret;
 }
 
-annotated_signed_transaction wallet_api::cancel_pending_bets(account_name_type better,
-                                                             const fc::flat_set<uuid_type>& bet_uuids,
-                                                             const bool broadcast)
+annotated_signed_transaction
+wallet_api::cancel_pending_bets(account_name_type better, const std::vector<uuid_type>& bet_uuids, const bool broadcast)
 {
     FC_ASSERT(!is_locked());
 

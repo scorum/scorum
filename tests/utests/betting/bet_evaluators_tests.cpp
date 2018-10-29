@@ -3,10 +3,10 @@
 #include <scorum/chain/evaluators/post_bet_evalulator.hpp>
 #include <scorum/chain/evaluators/cancel_pending_bets_evaluator.hpp>
 
-#include <boost/uuid/uuid_generators.hpp>
-
 #include "betting_common.hpp"
 #include "object_wrapper.hpp"
+
+#include "detail.hpp"
 
 namespace {
 
@@ -22,10 +22,10 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
         better.scorum(ASSET_SCR(1e+9));
         account_service.add_actor(better);
 
-        games.create([&](game_object& obj) { obj.uuid = uuid_gen("game"); });
+        games.create([&](game_object& obj) { obj.uuid = gen_uuid("game"); });
 
         test_op.better = better.name;
-        test_op.uuid = uuid_gen("game");
+        test_op.uuid = gen_uuid("game");
         test_op.wincase = correct_score_home::yes();
         test_op.odds = { 3, 1 };
         test_op.stake = better.scr_amount;
@@ -36,7 +36,7 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
         return create_object<pending_bet_object>(shm, [&](pending_bet_object& obj) {
             obj.data.better = test_op.better;
             obj.game = 0;
-            obj.data.uuid = uuid_gen("bet");
+            obj.data.uuid = gen_uuid("bet");
             obj.data.wincase = test_op.wincase;
             obj.data.bet_odds = odds(test_op.odds.numerator, test_op.odds.denominator);
             obj.data.stake = test_op.stake;
@@ -49,9 +49,6 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
     post_bet_operation test_op;
 
     Actor better = "alice";
-
-    uuid_type uuid_ns = boost::uuids::string_generator()("e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f");
-    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(uuid_ns);
 };
 
 BOOST_FIXTURE_TEST_SUITE(post_bet_evaluator_tests, post_bet_evaluator_fixture)
@@ -105,9 +102,6 @@ struct cancel_pending_bets_evaluator_fixture : public shared_memory_fixture
     account_service_i* acc_svc = mocks.Mock<account_service_i>();
     pending_bet_service_i* pending_bet_svc = mocks.Mock<pending_bet_service_i>();
 
-    uuid_type uuid_ns = boost::uuids::string_generator()("e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f");
-    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(uuid_ns);
-
     cancel_pending_bets_evaluator_fixture()
     {
         mocks.OnCall(dbs_factory, data_service_factory_i::account_service).ReturnByRef(*acc_svc);
@@ -117,28 +111,17 @@ struct cancel_pending_bets_evaluator_fixture : public shared_memory_fixture
 
 BOOST_FIXTURE_TEST_SUITE(cancel_pending_bets_evaluator_tests, cancel_pending_bets_evaluator_fixture)
 
-SCORUM_TEST_CASE(cancel_pending_bets_operation_validate_check)
-{
-    cancel_pending_bets_operation op;
-    op.better = "better";
-
-    BOOST_CHECK_NO_THROW(op.validate());
-
-    op.better = "";
-    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
-}
-
 SCORUM_TEST_CASE(bet_id_existance_check_should_throw)
 {
     cancel_pending_bets_operation op;
     op.better = "better";
-    op.bet_uuids = { uuid_gen("0") };
+    op.bet_uuids = { gen_uuid("0") };
 
     cancel_pending_bets_evaluator ev(*dbs_factory, *betting_svc);
 
     mocks.ExpectCallOverload(acc_svc, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.ExpectCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists)
-        .With(uuid_gen("0"))
+        .With(gen_uuid("0"))
         .Return(false);
 
     BOOST_CHECK_THROW(ev.do_apply(op), fc::assert_exception);
@@ -148,16 +131,16 @@ SCORUM_TEST_CASE(better_mismatch_should_throw)
 {
     cancel_pending_bets_operation op;
     op.better = "better";
-    op.bet_uuids = { uuid_gen("0") };
+    op.bet_uuids = { gen_uuid("0") };
 
     auto obj = create_object<pending_bet_object>(shm, [](pending_bet_object& o) { o.data.better = "cartman"; });
 
     mocks.OnCallOverload(acc_svc, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists)
-        .With(uuid_gen("0"))
+        .With(gen_uuid("0"))
         .Return(true);
     mocks.ExpectCallOverload(pending_bet_svc, (get_ptr)&pending_bet_service_i::get_pending_bet)
-        .With(uuid_gen("0"))
+        .With(gen_uuid("0"))
         .ReturnByRef(obj);
 
     cancel_pending_bets_evaluator ev(*dbs_factory, *betting_svc);
@@ -168,23 +151,63 @@ SCORUM_TEST_CASE(should_cancel_bets)
 {
     cancel_pending_bets_operation op;
     op.better = "better";
-    op.bet_uuids = { uuid_gen("0"), uuid_gen("1") };
+    op.bet_uuids = { gen_uuid("0"), gen_uuid("1") };
 
     // clang-format off
-    auto obj1 = create_object<pending_bet_object>(shm, [&](pending_bet_object& o){ o.data.better = "better"; o.id = 0; o.data.uuid = uuid_gen("0"); });
-    auto obj2 = create_object<pending_bet_object>(shm, [&](pending_bet_object& o){ o.data.better = "better"; o.id = 1; o.data.uuid = uuid_gen("1"); });
+    auto obj1 = create_object<pending_bet_object>(shm, [&](pending_bet_object& o){ o.data.better = "better"; o.id = 0; o.data.uuid = gen_uuid("0"); });
+    auto obj2 = create_object<pending_bet_object>(shm, [&](pending_bet_object& o){ o.data.better = "better"; o.id = 1; o.data.uuid = gen_uuid("1"); });
 
     mocks.OnCallOverload(acc_svc, (check_account_existence_ptr)&account_service_i::check_account_existence);
-    mocks.OnCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists).With(uuid_gen("0")).Return(true);
-    mocks.OnCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists).With(uuid_gen("1")).Return(true);
-    mocks.OnCallOverload(pending_bet_svc, (get_ptr)&pending_bet_service_i::get_pending_bet).With(uuid_gen("0")).ReturnByRef(obj1);
-    mocks.OnCallOverload(pending_bet_svc, (get_ptr)&pending_bet_service_i::get_pending_bet).With(uuid_gen("1")).ReturnByRef(obj2);
+    mocks.OnCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists).With(gen_uuid("0")).Return(true);
+    mocks.OnCallOverload(pending_bet_svc, (is_exists_ptr)&pending_bet_service_i::is_exists).With(gen_uuid("1")).Return(true);
+    mocks.OnCallOverload(pending_bet_svc, (get_ptr)&pending_bet_service_i::get_pending_bet).With(gen_uuid("0")).ReturnByRef(obj1);
+    mocks.OnCallOverload(pending_bet_svc, (get_ptr)&pending_bet_service_i::get_pending_bet).With(gen_uuid("1")).ReturnByRef(obj2);
     mocks.ExpectCall(betting_svc, betting_service_i::cancel_pending_bet).With(0);
     mocks.ExpectCall(betting_svc, betting_service_i::cancel_pending_bet).With(1);
     // clang-format on
 
     cancel_pending_bets_evaluator ev(*dbs_factory, *betting_svc);
     BOOST_CHECK_NO_THROW(ev.do_apply(op));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(cancel_pending_bets_operation_validate_tests)
+
+SCORUM_TEST_CASE(throw_exception_when_bet_uuids_is_empty)
+{
+    cancel_pending_bets_operation op;
+    op.better = "better";
+    op.bet_uuids = {};
+
+    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(dont_throw_exception_when_bet_uuids_set)
+{
+    cancel_pending_bets_operation op;
+    op.better = "better";
+    op.bet_uuids = { gen_uuid("1") };
+
+    BOOST_CHECK_NO_THROW(op.validate());
+}
+
+SCORUM_TEST_CASE(throw_exception_when_better_is_empty)
+{
+    cancel_pending_bets_operation op;
+    op.better = "";
+    op.bet_uuids = { gen_uuid("1") };
+
+    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(throw_exception_when_bets_not_unique)
+{
+    cancel_pending_bets_operation op;
+    op.better = "better";
+    op.bet_uuids = { gen_uuid("1"), gen_uuid("1") };
+
+    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

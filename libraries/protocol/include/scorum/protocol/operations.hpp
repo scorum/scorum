@@ -66,6 +66,8 @@ using operation = fc::static_variant<vote_operation,
                                      post_bet_operation,
                                      cancel_pending_bets_operation,
 
+                                     delegate_sp_from_reg_pool_operation,
+
                                      /// virtual operations
                                      author_reward_operation,
                                      comment_benefficiary_reward_operation,
@@ -95,7 +97,8 @@ using operation = fc::static_variant<vote_operation,
                                      bets_matched_operation,
                                      game_status_changed_operation,
                                      bet_resolved_operation,
-                                     bet_cancelled_operation>;
+                                     bet_cancelled_operation,
+                                     bet_restored_operation>;
 
 /*void operation_get_required_authorities( const operation& op,
                                          flat_set<string>& active,

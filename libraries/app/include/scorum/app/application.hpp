@@ -70,7 +70,6 @@
  * ```
  */
 
-
 /**
  * @defgroup operations Operations
  * @brief List if operations
@@ -78,7 +77,6 @@
  * Operations to push in network_broadcast_api
  *
  */
-
 
 namespace scorum {
 namespace chain {

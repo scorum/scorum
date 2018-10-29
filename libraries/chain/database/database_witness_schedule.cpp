@@ -1,4 +1,5 @@
 #include <scorum/chain/database/database.hpp>
+#include <scorum/chain/database/debug_log.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
@@ -63,7 +64,7 @@ void database::update_witness_schedule()
         debug_log(ctx, "update_witness_schedule");
 
         auto& schedule_service = _db.obtain_service<dbs_witness_schedule>();
-        auto& witness_service = _db.obtain_service<dbs_witness>();
+        auto& witness_service = _db.witness_service();
 
         const witness_schedule_object& wso = schedule_service.get();
 
@@ -225,7 +226,7 @@ void database::_update_witness_median_props()
     database& _db = (*this);
 
     const witness_schedule_object& wso = _db.obtain_service<dbs_witness_schedule>().get();
-    auto& witness_service = _db.obtain_service<dbs_witness>();
+    auto& witness_service = _db.witness_service();
 
     /// fetch all witness objects
     std::vector<const witness_object*> active;
@@ -260,7 +261,7 @@ void database::_update_witness_majority_version()
     database& _db = (*this);
 
     const witness_schedule_object& wso = _db.obtain_service<dbs_witness_schedule>().get();
-    auto& witness_service = _db.obtain_service<dbs_witness>();
+    auto& witness_service = _db.witness_service();
 
     flat_map<version, uint32_t, std::greater<version>> witness_versions;
     for (uint32_t i = 0; i < wso.num_scheduled_witnesses; i++)
@@ -299,7 +300,7 @@ void database::_update_witness_hardfork_version_votes()
     database& _db = (*this);
 
     const witness_schedule_object& wso = _db.obtain_service<dbs_witness_schedule>().get();
-    auto& witness_service = _db.obtain_service<dbs_witness>();
+    auto& witness_service = _db.witness_service();
 
     flat_map<std::tuple<hardfork_version, time_point_sec>, uint32_t> hardfork_version_votes;
 
