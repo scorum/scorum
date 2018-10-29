@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(serialize_devpool_proposal_create_operation_to_hex)
 
     scorum::protocol::operation op = proposal_create_op;
 
-    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000600e40b54020000000953500000000000", utils::to_hex(op));
+    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000600e40b54020000000953500000000000", to_hex(op));
 }
 
 BOOST_AUTO_TEST_CASE(serialize_development_committee_empower_advertising_moderator_operation_to_hex)
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(serialize_development_committee_empower_advertising_moderat
 
     scorum::protocol::operation op = proposal_create_op;
 
-    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000805616c696365", utils::to_hex(op));
+    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000805616c696365", to_hex(op));
 }
 
 BOOST_AUTO_TEST_CASE(serialize_development_committee_empower_betting_moderator_operation_to_hex)
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(serialize_development_committee_empower_betting_moderator_o
 
     scorum::protocol::operation op = proposal_create_op;
 
-    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000b05616c696365", utils::to_hex(op));
+    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000b05616c696365", to_hex(op));
 }
 
 BOOST_AUTO_TEST_CASE(serialize_development_committee_change_betting_resolve_delay_operation_to_hex)
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(serialize_development_committee_change_betting_resolve_dela
 
     scorum::protocol::operation op = proposal_create_op;
 
-    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000c0a000000", utils::to_hex(op));
+    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000c0a000000", to_hex(op));
 }
 
 BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)

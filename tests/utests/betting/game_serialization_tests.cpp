@@ -211,7 +211,7 @@ SCORUM_TEST_CASE(serialize_cancel_game)
     op.moderator = "admin";
 
     scorum::protocol::operation ops = op;
-    auto hex = fc::to_hex(fc::raw::pack(ops));
+    auto hex = to_hex(ops);
 
     BOOST_CHECK_EQUAL(hex, "24e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e");
 }
@@ -224,7 +224,7 @@ SCORUM_TEST_CASE(serialize_update_game_start_time)
     op.start_time = time_point_sec::from_iso_string("2018-08-03T10:12:43");
 
     scorum::protocol::operation ops = op;
-    auto hex = fc::to_hex(fc::raw::pack(ops));
+    auto hex = to_hex(ops);
 
     BOOST_CHECK_EQUAL(hex, "26e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e9b2a645b");
 }
@@ -237,7 +237,7 @@ SCORUM_TEST_CASE(serialize_update_game_markets)
     op.markets = { total{ 1000 } };
 
     scorum::protocol::operation ops = op;
-    auto hex = fc::to_hex(fc::raw::pack(ops));
+    auto hex = to_hex(ops);
 
     BOOST_CHECK_EQUAL(hex, "25e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e010ce803");
 SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
@@ -264,7 +264,7 @@ SCORUM_TEST_CASE(serialize_post_game_results_to_hex)
     op.wincases = { correct_score::yes{ 17, 23 } };
 
     scorum::protocol::operation ops = op;
-    auto hex = fc::to_hex(fc::raw::pack(ops));
+    auto hex = to_hex(ops);
 
     BOOST_CHECK_EQUAL(hex, "27e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e011011001700");
 }
@@ -282,10 +282,10 @@ SCORUM_TEST_CASE(serialize_post_bet_to_hex)
     op.live = true;
 
     scorum::protocol::operation ops = op;
-    auto hex = fc::to_hex(fc::raw::pack(ops));
+    auto hex = to_hex(ops);
 
     BOOST_CHECK_EQUAL(hex, "28e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696ee629f9aa6b2c46aa8fa836770e7a7a5f10110017000"
-                                                                          "100020000e40b5402000000095343520000000001");
+                                                                           "100020000e40b5402000000095343520000000001");
 }
 
 SCORUM_TEST_CASE(serialize_cancel_pending_bet_to_hex)
@@ -295,7 +295,7 @@ SCORUM_TEST_CASE(serialize_cancel_pending_bet_to_hex)
     op.better = "admin";
 
     scorum::protocol::operation ops = op;
-    auto hex = fc::to_hex(fc::raw::pack(ops));
+    auto hex = to_hex(ops);
 
     BOOST_CHECK_EQUAL(hex, "2901e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e");
 }
