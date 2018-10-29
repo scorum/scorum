@@ -292,6 +292,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.owner);
     }
 
+    void operator()(const post_bet_operation& op)
+    {
+        _impacted.insert(op.better);
+    }
+
     void operator()(const bets_matched_operation& op)
     {
         _impacted.insert(op.better1);
@@ -304,6 +309,11 @@ struct get_impacted_account_visitor
     }
 
     void operator()(const bet_cancelled_operation& op)
+    {
+        _impacted.insert(op.better);
+    }
+
+    void operator()(const bet_restored_operation& op)
     {
         _impacted.insert(op.better);
     }

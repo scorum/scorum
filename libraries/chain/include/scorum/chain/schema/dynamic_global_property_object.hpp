@@ -35,6 +35,12 @@ struct adv_total_stats
     budget_type_stat post_budgets;
 };
 
+struct betting_total_stats
+{
+    asset pending_bets_volume = asset(0, SCORUM_SYMBOL);
+    asset matched_bets_volume = asset(0, SCORUM_SYMBOL);
+};
+
 /**
  * @class dynamic_global_property_object
  * @brief Maintains global state information
@@ -111,6 +117,9 @@ public:
 
     /// this section display information about advertising totals
     adv_total_stats advertising;
+
+    /// this section display information about betting totals
+    betting_total_stats betting_stats;
 };
 
 typedef shared_multi_index_container<dynamic_global_property_object,
@@ -142,10 +151,12 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (recent_slots_filled)
           (participation_count)
           (last_irreversible_block_num)
-          (advertising))
+          (advertising)
+          (betting_stats))
 
 FC_REFLECT(scorum::chain::adv_total_stats::budget_type_stat, (volume)(budget_pending_outgo)(owner_pending_income))
 FC_REFLECT(scorum::chain::adv_total_stats, (post_budgets)(banner_budgets))
+FC_REFLECT(scorum::chain::betting_total_stats, (pending_bets_volume)(matched_bets_volume))
 // clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::dynamic_global_property_object, scorum::chain::dynamic_global_property_index)

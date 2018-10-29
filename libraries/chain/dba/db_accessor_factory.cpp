@@ -5,6 +5,8 @@
 #include <scorum/chain/schema/proposal_object.hpp>
 #include <scorum/chain/schema/betting_property_object.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
 
 // clang-format off
@@ -14,6 +16,8 @@
     (betting_property_object)                                                                                          \
     (pending_bet_object)                                                                                               \
     (matched_bet_object)                                                                                               \
+    (dynamic_global_property_object)                                                                                   \
+    (account_object)                                                                                                   \
     (comment_object)
 // clang-format on
 

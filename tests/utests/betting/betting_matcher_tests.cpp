@@ -9,6 +9,7 @@
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
 #include <scorum/chain/schema/game_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
 #include <scorum/chain/dba/db_accessor.hpp>
 
@@ -36,13 +37,15 @@ public:
 
     dba::db_accessor<pending_bet_object> pending_dba;
     dba::db_accessor<matched_bet_object> matched_dba;
+    dba::db_accessor<dynamic_global_property_object> dprop_dba;
 
     betting_matcher matcher;
 
     no_bets_fixture()
-        : pending_dba(dba::db_accessor_factory(db).get_dba<pending_bet_object>())
-        , matched_dba(dba::db_accessor_factory(db).get_dba<matched_bet_object>())
-        , matcher(*vops_emiter, pending_dba, matched_dba)
+        : pending_dba(dba::db_accessor<pending_bet_object>(db))
+        , matched_dba(dba::db_accessor<matched_bet_object>(db))
+        , dprop_dba(dba::db_accessor<dynamic_global_property_object>(db))
+        , matcher(*vops_emiter, pending_dba, matched_dba, dprop_dba)
     {
         setup_db();
         setup_mock();
@@ -53,11 +56,13 @@ public:
         db.add_index<pending_bet_index>();
         db.add_index<matched_bet_index>();
         db.add_index<game_index>();
+        db.add_index<dynamic_global_property_index>();
     }
 
     void setup_mock()
     {
         mocks.OnCall(vops_emiter, database_virtual_operations_emmiter_i::push_virtual_operation).With(_);
+        dprop_dba.create([](auto&) {});
     }
 
     template <typename T> size_t count() const

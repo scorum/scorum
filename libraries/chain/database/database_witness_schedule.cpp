@@ -1,4 +1,5 @@
 #include <scorum/chain/database/database.hpp>
+#include <scorum/chain/database/debug_log.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>

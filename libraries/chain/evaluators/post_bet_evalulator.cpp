@@ -43,30 +43,15 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     _account_service.check_account_existence(op.better);
 
-    const auto& better = _account_service.get_account(op.better);
-
-    FC_ASSERT(better.balance >= op.stake, "Insufficient funds");
-
+    auto bet_odds = odds(op.odds.numerator, op.odds.denominator);
     const auto kind = op.live //
         ? pending_bet_kind::live
         : pending_bet_kind::non_live;
 
-    const auto& pending_bet = _pending_bet_svc.create([&](pending_bet_object& o) {
-        o.game = game_obj.id;
-        o.market = create_market(op.wincase);
-        o.data.uuid = op.uuid;
-        o.data.stake = op.stake;
-        o.data.bet_odds = odds(op.odds.numerator, op.odds.denominator);
-        o.data.created = _dgp_svc.head_block_time();
-        o.data.better = op.better;
-        o.data.kind = kind;
-        o.data.wincase = op.wincase;
-    });
+    const auto& bet
+        = _betting_svc.create_pending_bet(op.better, op.stake, bet_odds, op.wincase, game_obj.id, op.uuid, kind);
 
-    _account_service.decrease_balance(better, op.stake);
-
-    std::vector<std::reference_wrapper<const pending_bet_object>> bets_to_cancel
-        = _betting_matcher.match(pending_bet, _dgp_svc.head_block_time());
+    auto bets_to_cancel = _betting_matcher.match(bet, _dgp_svc.head_block_time());
 
     _betting_svc.cancel_pending_bets(utils::unwrap_ref_wrapper(bets_to_cancel), game_obj.uuid);
 }

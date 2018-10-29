@@ -162,6 +162,7 @@ SCORUM_TEST_CASE(update_after_game_started_should_cancel_bets)
 {
     create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL);
     generate_block(); // game started
+    generate_block(); // generate one more block in order to make bets creation time diff from start_time
 
     create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 250 matched, 750 pending
     create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
