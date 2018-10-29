@@ -291,11 +291,11 @@ SCORUM_TEST_CASE(delegated_sp_upper_bound_test)
     delegate_sp_from_reg_pool_operation op;
     op.delegatee = "sam";
     op.reg_committee_member = "alice";
-    op.scorumpower = ASSET_SP(10);
+    op.scorumpower = ASSET_SP(10'000'000'000);
 
     BOOST_CHECK_NO_THROW(op.validate());
 
-    op.scorumpower = ASSET_SP(11);
+    op.scorumpower.amount += 1;
 
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Delegation cannot be more than {0}SP");
 }
