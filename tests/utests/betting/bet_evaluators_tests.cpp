@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
+#include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/evaluators/post_bet_evalulator.hpp>
 #include <scorum/chain/evaluators/cancel_pending_bets_evaluator.hpp>
 
@@ -17,7 +18,8 @@ using namespace scorum::protocol;
 struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fixture_impl
 {
     post_bet_evaluator_fixture()
-        : evaluator_for_test(*dbs_services, *betting_matcher_moc, *betting_service_moc)
+        : uuid_hist_dba(*mocks.Mock<dba::db_index>())
+        , evaluator_for_test(*dbs_services, *betting_matcher_moc, *betting_service_moc, uuid_hist_dba)
     {
         better.scorum(ASSET_SCR(1e+9));
         account_service.add_actor(better);
@@ -46,6 +48,8 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
             obj.market = create_market(test_op.wincase);
         });
     }
+
+    dba::db_accessor<bet_uuid_history_object> uuid_hist_dba;
 
     post_bet_evaluator evaluator_for_test;
 
@@ -85,6 +89,7 @@ SCORUM_TEST_CASE(post_bet_evaluator_operation_validate_check)
 SCORUM_TEST_CASE(post_bet_evaluator_negative_check)
 {
     // TODO: implement when db_accessors will be introduced
+    // mocks.OnCallFunc((dba::detail::is_exists_by<bet_uuid_history_object, by_uuid, uuid_type>));
 }
 
 SCORUM_TEST_CASE(post_bet_evaluator_positive_check)

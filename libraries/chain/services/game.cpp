@@ -2,6 +2,7 @@
 #include <scorum/chain/database/database.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/betting_property.hpp>
+#include <scorum/chain/dba/db_accessor.hpp>
 #include <boost/lambda/lambda.hpp>
 
 namespace scorum {
@@ -11,6 +12,7 @@ dbs_game::dbs_game(database& db)
     : base_service_type(db)
     , _dprops_service(db.dynamic_global_property_service())
     , _betting_props_service(db.betting_property_service())
+    , _uuid_hist_dba(db.get_dba<game_uuid_history_object>())
 {
 }
 
@@ -22,6 +24,8 @@ const game_object& dbs_game::create_game(const uuid_type& uuid,
                                          const game_type& game,
                                          const fc::flat_set<market_type>& markets)
 {
+    _uuid_hist_dba.create([&](game_uuid_history_object& o) { o.uuid = uuid; });
+
     return dbs_service_base<game_service_i>::create([&](game_object& obj) {
         obj.uuid = uuid;
         fc::from_string(obj.name, game_name);

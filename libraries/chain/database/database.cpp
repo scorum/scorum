@@ -1285,15 +1285,16 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator(new create_game_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(
+        new create_game_evaluator(*this, _my->get_betting_service(), get_dba<game_uuid_history_object>()));
     _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(new update_game_markets_evaluator(*this, _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(
         new update_game_start_time_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(
         new post_game_results_evaluator(*this, _my->get_betting_service(), *this));
-    _my->_evaluator_registry.register_evaluator(
-        new post_bet_evaluator(*this, _my->get_betting_matcher(), _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(new post_bet_evaluator(
+        *this, _my->get_betting_matcher(), _my->get_betting_service(), get_dba<bet_uuid_history_object>()));
     _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->get_betting_service()));
 }
 
@@ -1350,6 +1351,9 @@ void database::initialize_indexes()
     add_index<betting_property_index>();
     add_index<pending_bet_index>();
     add_index<matched_bet_index>();
+
+    add_index<bet_uuid_history_index>();
+    add_index<game_uuid_history_index>();
 
     _plugin_index_signal();
 }

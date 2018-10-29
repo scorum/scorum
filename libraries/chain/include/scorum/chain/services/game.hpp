@@ -4,6 +4,7 @@
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/betting/wincase.hpp>
+#include <scorum/chain/dba/db_accessor_fwd.hpp>
 
 namespace scorum {
 namespace chain {
@@ -79,6 +80,7 @@ public:
 private:
     dynamic_global_property_service_i& _dprops_service;
     betting_property_service_i& _betting_props_service;
+    dba::db_accessor<game_uuid_history_object>& _uuid_hist_dba;
 };
 }
 }

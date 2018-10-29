@@ -10,10 +10,12 @@
 // clang-format off
 #define DB_TYPES                                                                                                       \
     (game_object)                                                                                                      \
+    (game_uuid_history_object)                                                                                         \
     (proposal_object)                                                                                                  \
     (betting_property_object)                                                                                          \
     (pending_bet_object)                                                                                               \
     (matched_bet_object)                                                                                               \
+    (bet_uuid_history_object)                                                                                          \
     (comment_object)
 // clang-format on
 
