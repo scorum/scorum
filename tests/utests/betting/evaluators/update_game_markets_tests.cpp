@@ -193,5 +193,27 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
 }
 
+SCORUM_TEST_CASE(throw_exception_on_duplicate_markets)
+{
+    update_game_markets_evaluator ev(*dbs_services, *betting_service);
+
+    update_game_markets_operation op;
+    op.markets = { total{ 1 }, total{ 1 } };
+
+    auto game_obj = create_object<game_object>(shm, [](game_object& o) {
+        o.status = game_status::started;
+        o.markets = { total{ 1000 } };
+    });
+
+    mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
+    mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
+    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
+    mocks.OnCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_bets);
+    mocks.OnCall(game_service, game_service_i::update_markets);
+
+    BOOST_CHECK_THROW(ev.do_apply(op), fc::assert_exception);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }

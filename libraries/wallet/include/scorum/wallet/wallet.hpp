@@ -1561,7 +1561,7 @@ public:
      */
     annotated_signed_transaction post_game_results(uuid_type uuid,
                                                    account_name_type moderator,
-                                                   const fc::flat_set<wincase_type>& wincases,
+                                                   const std::vector<wincase_type>& wincases,
                                                    const bool broadcast);
 
     /**
@@ -1591,7 +1591,7 @@ public:
      * @param broadcast
      */
     annotated_signed_transaction
-    cancel_pending_bets(account_name_type better, const fc::flat_set<uuid_type>& bet_uuids, const bool broadcast);
+    cancel_pending_bets(account_name_type better, const std::vector<uuid_type>& bet_uuids, const bool broadcast);
 
     /**
      * @brief Returns games

@@ -75,11 +75,13 @@ set(SOURCES
     betting/wincase_type_tests.cpp
     betting/market_type_tests.cpp
     betting/create_matched_bet_tests.cpp
+    betting/betting_chain_capital_tests.cpp
     betting/evaluators/create_game_tests.cpp
     betting/evaluators/cancel_game_tests.cpp
     betting/evaluators/update_game_markets_tests.cpp
     betting/evaluators/update_start_time_tests.cpp
     betting/evaluators/post_game_results_tests.cpp
+    betting/betting_chain_capital_tests.cpp
     db_accessors/db_accessors_tests.cpp
     odds_tests.cpp
     create_account_by_committee_evaluator_tests.cpp

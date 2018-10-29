@@ -143,14 +143,17 @@ database_impl::database_impl(database& self)
                        _self.get_dba<betting_property_object>(),
                        _self.get_dba<matched_bet_object>(),
                        _self.get_dba<pending_bet_object>(),
-                       _self.get_dba<game_object>())
+                       _self.get_dba<game_object>(),
+                       _self.get_dba<dynamic_global_property_object>())
     , _betting_matcher(static_cast<database_virtual_operations_emmiter_i&>(_self),
-                       static_cast<dba::db_accessor_factory&>(_self).get_dba<pending_bet_object>(),
-                       static_cast<dba::db_accessor_factory&>(_self).get_dba<matched_bet_object>())
+                       _self.get_dba<pending_bet_object>(),
+                       _self.get_dba<matched_bet_object>(),
+                       _self.get_dba<dynamic_global_property_object>())
     , _betting_resolver(_self.account_service(),
                         static_cast<database_virtual_operations_emmiter_i&>(_self),
                         _self.get_dba<matched_bet_object>(),
-                        _self.get_dba<game_object>())
+                        _self.get_dba<game_object>(),
+                        _self.get_dba<dynamic_global_property_object>())
 {
 }
 
@@ -1587,10 +1590,13 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
         database_ns::process_active_sp_holders_cashout().apply(task_ctx);
         database_ns::process_games_startup(_my->get_betting_service(), *this).apply(task_ctx);
-        database_ns::process_bets_resolving(_my->get_betting_service(), _my->get_betting_resolver(), *this)
+        database_ns::process_bets_resolving(_my->get_betting_service(), _my->get_betting_resolver(), *this,
+                                            get_dba<game_object>(), get_dba<dynamic_global_property_object>())
             .apply(task_ctx);
         // TODO: using boost::di to avoid these explicit calls
-        database_ns::process_bets_auto_resolving(_my->get_betting_service(), *this).apply(task_ctx);
+        database_ns::process_bets_auto_resolving(_my->get_betting_service(), *this, get_dba<game_object>(),
+                                                 get_dba<dynamic_global_property_object>())
+            .apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();

@@ -14,6 +14,14 @@ bool inline is_asset_type(asset asset, asset_symbol_type symbol)
     return asset.symbol() == symbol;
 }
 
+template <class T> bool is_unique(const std::vector<T>& input)
+{
+    std::vector<T> data(input);
+
+    sort(data.begin(), data.end());
+    return adjacent_find(data.begin(), data.end()) == data.end();
+}
+
 void account_create_operation::validate() const
 {
     validate_account_name(new_account_name);
@@ -350,7 +358,8 @@ void create_game_operation::validate() const
     fc::flat_set<market_type> set_of_markets(markets.begin(), markets.end());
 
     FC_ASSERT(set_of_markets.size() == markets.size(), "You provided duplicates in market list.",
-              ("input_markets", markets)("set_of_markets", set_of_markets));
+              ("input_markets", markets) //
+              ("set_of_markets", set_of_markets));
 
     validate_game(game, set_of_markets);
 }
@@ -374,7 +383,13 @@ void post_game_results_operation::validate() const
 {
     validate_account_name(moderator);
 
-    validate_wincases(wincases);
+    const fc::flat_set<wincase_type> set_of_wincases(wincases.begin(), wincases.end());
+
+    FC_ASSERT(set_of_wincases.size() == wincases.size(), "You provided duplicates in wincases list.",
+              ("input_markets", wincases) //
+              ("set_of_markets", set_of_wincases));
+
+    validate_wincases(set_of_wincases);
 }
 
 void post_bet_operation::validate() const
@@ -391,6 +406,9 @@ void post_bet_operation::validate() const
 
 void cancel_pending_bets_operation::validate() const
 {
+    FC_ASSERT(bet_uuids.size() > 0, "List of bets is empty.");
+    FC_ASSERT(is_unique<uuid_type>(bet_uuids), "You provided duplicates in bets list.", ("bets", bet_uuids));
+
     validate_account_name(better);
 }
 } // namespace protocol

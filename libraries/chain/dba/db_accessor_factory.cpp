@@ -6,8 +6,9 @@
 #include <scorum/chain/schema/betting_property_object.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
-#include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/chain_property_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
 
 // clang-format off
@@ -21,6 +22,8 @@
     (registration_committee_member_object)                                                                             \
     (reg_pool_sp_delegation_object)                                                                                    \
     (chain_property_object)                                                                                            \
+    (dynamic_global_property_object)                                                                                   \
+    (account_object)                                                                                                   \
     (comment_object)
 // clang-format on
 
