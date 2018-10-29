@@ -6,8 +6,6 @@
 #include <scorum/protocol/betting/game.hpp>
 #include <scorum/protocol/betting/market.hpp>
 
-#include <boost/range.hpp>
-
 namespace scorum {
 namespace protocol {
 
