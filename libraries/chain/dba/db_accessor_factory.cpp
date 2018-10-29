@@ -7,6 +7,7 @@
 #include <scorum/chain/schema/bet_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
 
 // clang-format off
@@ -19,6 +20,7 @@
     (registration_pool_object)                                                                                         \
     (registration_committee_member_object)                                                                             \
     (reg_pool_sp_delegation_object)                                                                                    \
+    (chain_property_object)                                                                                            \
     (comment_object)
 // clang-format on
 

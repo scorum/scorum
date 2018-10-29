@@ -12,6 +12,7 @@
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/registration_objects.hpp>
+#include <scorum/chain/schema/chain_property_object.hpp>
 
 #include <hippomocks.h>
 
@@ -28,9 +29,10 @@ struct delegate_sp_fixture
         : reg_pool_dba(db)
         , reg_committee_dba(db)
         , reg_pool_delegation_dba(db)
+        , chain_dba(db)
         , dprop_svc(db)
         , witness_schedule_svc(db)
-        , witness_svc(db, witness_schedule_svc, dprop_svc)
+        , witness_svc(db, witness_schedule_svc, dprop_svc, chain_dba)
         , account_svc(db, dprop_svc, witness_svc)
 
     {
@@ -44,6 +46,7 @@ struct delegate_sp_fixture
     dba::db_accessor<registration_pool_object> reg_pool_dba;
     dba::db_accessor<registration_committee_member_object> reg_committee_dba;
     dba::db_accessor<reg_pool_sp_delegation_object> reg_pool_delegation_dba;
+    dba::db_accessor<chain_property_object> chain_dba;
 
     dbs_dynamic_global_property dprop_svc;
     dbs_witness_schedule witness_schedule_svc;

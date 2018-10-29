@@ -9,6 +9,10 @@ struct chain_properties;
 }
 namespace chain {
 
+namespace dba {
+template <typename> class db_accessor;
+}
+
 class account_object;
 
 using chain_properties = scorum::protocol::chain_properties;
@@ -52,7 +56,10 @@ class dbs_witness : public dbs_service_base<witness_service_i>
     friend class dbservice_dbs_factory;
 
 public:
-    explicit dbs_witness(dba::db_index& db, witness_schedule_service_i&, dynamic_global_property_service_i&);
+    explicit dbs_witness(dba::db_index& db,
+                         witness_schedule_service_i&,
+                         dynamic_global_property_service_i&,
+                         dba::db_accessor<chain_property_object>&);
 
     using base_service_i<witness_object>::get;
     using base_service_i<witness_object>::is_exists;
@@ -88,6 +95,7 @@ private:
 
     dynamic_global_property_service_i& _dgp_svc;
     witness_schedule_service_i& _witness_schedule_svc;
+    dba::db_accessor<chain_property_object>& _chain_dba;
 };
 } // namespace chain
 } // namespace scorum

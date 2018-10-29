@@ -424,10 +424,10 @@ typedef shared_multi_index_container<reg_pool_sp_delegation_object,
                                                                member<reg_pool_sp_delegation_object,
                                                                       reg_pool_sp_delegation_id_type,
                                                                       &reg_pool_sp_delegation_object::id>>,
-                                                hashed_non_unique<tag<by_delegatee>,
-                                                                  member<reg_pool_sp_delegation_object,
-                                                                         account_name_type,
-                                                                         &reg_pool_sp_delegation_object::delegatee>>>>
+                                                hashed_unique<tag<by_delegatee>,
+                                                              member<reg_pool_sp_delegation_object,
+                                                                     account_name_type,
+                                                                     &reg_pool_sp_delegation_object::delegatee>>>>
     reg_pool_sp_delegation_index;
 
 struct by_expiration;

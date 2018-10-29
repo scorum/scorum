@@ -2,6 +2,14 @@
 
 #include <boost/preprocessor/seq/for_each.hpp>
 
+namespace scorum {
+namespace chain {
+namespace dba {
+struct db_accessor_factory;
+}
+}
+}
+
 #define DECLARE_SERVICE_FUNCT_NAME(service) BOOST_PP_CAT(service, _service)
 
 #define DECLARE_SERVICE_INTERFACE_NAME(service) BOOST_PP_CAT(DECLARE_SERVICE_FUNCT_NAME(service), _i)
@@ -50,6 +58,7 @@
                                                                                                                        \
     private:                                                                                                           \
         scorum::chain::dbservice_dbs_factory& factory;                                                                 \
+        scorum::chain::dba::db_accessor_factory& dba_factory;                                                          \
     };                                                                                                                 \
     }                                                                                                                  \
     }
@@ -66,6 +75,7 @@
     namespace chain {                                                                                                  \
     data_service_factory::data_service_factory(scorum::chain::database& db)                                            \
         : factory(db)                                                                                                  \
+        , dba_factory(db)                                                                                              \
     {                                                                                                                  \
     }                                                                                                                  \
                                                                                                                        \
@@ -80,7 +90,8 @@
     witness_service_i& data_service_factory::witness_service() const                                                   \
     {                                                                                                                  \
         return factory.obtain_service_explicit<dbs_witness>(witness_schedule_service(),                                \
-                                                            dynamic_global_property_service());                        \
+                                                            dynamic_global_property_service(),                         \
+                                                            dba_factory.get_dba<chain_property_object>());             \
     }                                                                                                                  \
     }                                                                                                                  \
     }

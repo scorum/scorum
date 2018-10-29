@@ -2,6 +2,8 @@
 
 #include <scorum/chain/database/database.hpp>
 
+#include <scorum/chain/dba/db_accessor.hpp>
+
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -37,6 +39,8 @@
 #include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
 #include <scorum/chain/services/game.hpp>
+
+#include <scorum/chain/schema/chain_property_object.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(

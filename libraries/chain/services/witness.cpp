@@ -1,10 +1,12 @@
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
+#include <scorum/chain/schema/chain_property_object.hpp>
 
 #include <scorum/protocol/scorum_operations.hpp>
 
@@ -13,10 +15,12 @@ namespace chain {
 
 dbs_witness::dbs_witness(dba::db_index& db,
                          witness_schedule_service_i& witness_schedule_svc,
-                         dynamic_global_property_service_i& dgp_svc)
+                         dynamic_global_property_service_i& dgp_svc,
+                         dba::db_accessor<chain_property_object>& chain_dba)
     : base_service_type(db)
     , _dgp_svc(dgp_svc)
     , _witness_schedule_svc(witness_schedule_svc)
+    , _chain_dba(chain_dba)
 {
 }
 
@@ -75,7 +79,7 @@ const witness_object& dbs_witness::create_internal(const account_name_type& owne
     return create([&](witness_object& w) {
         w.owner = owner;
         w.signing_key = block_signing_key;
-        w.hardfork_time_vote = _dgp_svc.get_genesis_time();
+        w.hardfork_time_vote = _chain_dba.get().genesis_time;
     });
 }
 

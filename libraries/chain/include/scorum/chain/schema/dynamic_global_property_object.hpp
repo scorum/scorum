@@ -61,9 +61,6 @@ public:
     /// Current head block time
     time_point_sec time;
 
-    // Blockchain genesis time
-    time_point_sec genesis_time;
-
     /// Head block signed by current witness
     account_name_type current_witness;
 
@@ -131,7 +128,6 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (head_block_number)
           (head_block_id)
           (time)
-          (genesis_time)
           (current_witness)
           (total_supply)
           (circulating_capital)
