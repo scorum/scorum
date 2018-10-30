@@ -3079,19 +3079,9 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::st
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret;
-    try
-    {
-        ret = my->sign_transaction(tx, broadcast);
+    auto ret = my->sign_transaction(tx, broadcast);
 
-        return atomicswap_contract_result_api_obj(ret, op, secret);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't initiate Atomic Swap.");
-    }
-
-    return atomicswap_contract_result_api_obj(ret);
+    return atomicswap_contract_result_api_obj(ret, op, secret);
 }
 
 atomicswap_contract_result_api_obj wallet_api::atomicswap_participate(const std::string& secret_hash,
@@ -3116,19 +3106,9 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_participate(const std:
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret;
-    try
-    {
-        ret = my->sign_transaction(tx, broadcast);
+    auto ret = my->sign_transaction(tx, broadcast);
 
-        return atomicswap_contract_result_api_obj(ret, op);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't participate Atomic Swap.");
-    }
-
-    return atomicswap_contract_result_api_obj(ret);
+    return atomicswap_contract_result_api_obj(ret, op);
 }
 
 annotated_signed_transaction wallet_api::atomicswap_redeem(const std::string& from,
@@ -3148,51 +3128,24 @@ annotated_signed_transaction wallet_api::atomicswap_redeem(const std::string& fr
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret;
-    try
-    {
-        ret = my->sign_transaction(tx, broadcast);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't redeem Atomic Swap contract.");
-    }
-
-    return ret;
+    return my->sign_transaction(tx, broadcast);
 }
 
 atomicswap_contract_info_api_obj
 wallet_api::atomicswap_auditcontract(const std::string& from, const std::string& to, const std::string& secret_hash)
 {
-    atomicswap_contract_info_api_obj ret;
-    try
-    {
-        ret = my->_remote_db->get_atomicswap_contract(from, to, secret_hash);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't access to Atomic Swap contract.");
-    }
-    return ret;
+    return my->_remote_db->get_atomicswap_contract(from, to, secret_hash);
 }
 
 std::string
 wallet_api::atomicswap_extractsecret(const std::string& from, const std::string& to, const std::string& secret_hash)
 {
-    try
-    {
-        atomicswap_contract_info_api_obj contract_info = atomicswap_auditcontract(from, to, secret_hash);
 
-        FC_ASSERT(!contract_info.secret.empty(), "Contract is not redeemed.");
+    atomicswap_contract_info_api_obj contract_info = atomicswap_auditcontract(from, to, secret_hash);
 
-        return contract_info.secret;
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't access to Atomic Swap contract secret.");
-    }
+    FC_ASSERT(!contract_info.secret.empty(), "Contract is not redeemed.");
 
-    return "";
+    return contract_info.secret;
 }
 
 annotated_signed_transaction wallet_api::atomicswap_refund(const std::string& participant,
@@ -3212,17 +3165,7 @@ annotated_signed_transaction wallet_api::atomicswap_refund(const std::string& pa
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret;
-    try
-    {
-        ret = my->sign_transaction(tx, broadcast);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't refund Atomic Swap contract.");
-    }
-
-    return ret;
+    return my->sign_transaction(tx, broadcast);
 }
 
 std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(const std::string& owner)
@@ -3243,53 +3186,45 @@ annotated_signed_transaction wallet_api::create_game(uuid_type uuid,
                                                      const std::vector<market_type>& markets,
                                                      const bool broadcast)
 {
-    try
-    {
-        FC_ASSERT(!is_locked());
+    FC_ASSERT(!is_locked());
 
-        create_game_operation op;
+    create_game_operation op;
 
-        op.uuid = uuid;
-        op.moderator = moderator;
-        op.game = game;
-        op.json_metadata = json_metadata;
-        op.start_time = start_time;
-        op.auto_resolve_delay_sec = auto_resolve_delay_sec;
-        op.markets = markets;
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.game = game;
+    op.json_metadata = json_metadata;
+    op.start_time = start_time;
+    op.auto_resolve_delay_sec = auto_resolve_delay_sec;
+    op.markets = markets;
 
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.validate();
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
 
-        annotated_signed_transaction ret;
-        ret = my->sign_transaction(tx, broadcast);
+    annotated_signed_transaction ret;
+    ret = my->sign_transaction(tx, broadcast);
 
-        return ret;
-    }
-    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(json_metadata)(start_time)(auto_resolve_delay_sec)(game)(broadcast))
+    return ret;
 }
 
 annotated_signed_transaction wallet_api::cancel_game(uuid_type uuid, account_name_type moderator, const bool broadcast)
 {
-    try
-    {
-        FC_ASSERT(!is_locked());
+    FC_ASSERT(!is_locked());
 
-        cancel_game_operation op;
+    cancel_game_operation op;
 
-        op.uuid = uuid;
-        op.moderator = moderator;
+    op.uuid = uuid;
+    op.moderator = moderator;
 
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.validate();
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
 
-        annotated_signed_transaction ret;
-        ret = my->sign_transaction(tx, broadcast);
+    annotated_signed_transaction ret;
+    ret = my->sign_transaction(tx, broadcast);
 
-        return ret;
-    }
-    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(broadcast))
+    return ret;
 }
 
 annotated_signed_transaction wallet_api::update_game_markets(uuid_type uuid,
@@ -3297,26 +3232,22 @@ annotated_signed_transaction wallet_api::update_game_markets(uuid_type uuid,
                                                              const std::vector<market_type>& markets,
                                                              const bool broadcast)
 {
-    try
-    {
-        FC_ASSERT(!is_locked());
+    FC_ASSERT(!is_locked());
 
-        update_game_markets_operation op;
+    update_game_markets_operation op;
 
-        op.uuid = uuid;
-        op.moderator = moderator;
-        op.markets = markets;
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.markets = markets;
 
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.validate();
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
 
-        annotated_signed_transaction ret;
-        ret = my->sign_transaction(tx, broadcast);
+    annotated_signed_transaction ret;
+    ret = my->sign_transaction(tx, broadcast);
 
-        return ret;
-    }
-    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(broadcast))
+    return ret;
 }
 
 annotated_signed_transaction wallet_api::update_game_start_time(uuid_type uuid,
@@ -3324,26 +3255,22 @@ annotated_signed_transaction wallet_api::update_game_start_time(uuid_type uuid,
                                                                 fc::time_point_sec start_time,
                                                                 const bool broadcast)
 {
-    try
-    {
-        FC_ASSERT(!is_locked());
+    FC_ASSERT(!is_locked());
 
-        update_game_start_time_operation op;
+    update_game_start_time_operation op;
 
-        op.uuid = uuid;
-        op.moderator = moderator;
-        op.start_time = start_time;
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.start_time = start_time;
 
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.validate();
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
 
-        annotated_signed_transaction ret;
-        ret = my->sign_transaction(tx, broadcast);
+    annotated_signed_transaction ret;
+    ret = my->sign_transaction(tx, broadcast);
 
-        return ret;
-    }
-    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(start_time)(broadcast))
+    return ret;
 }
 
 annotated_signed_transaction wallet_api::post_game_results(uuid_type uuid,
@@ -3351,26 +3278,22 @@ annotated_signed_transaction wallet_api::post_game_results(uuid_type uuid,
                                                            const std::vector<wincase_type>& wincases,
                                                            const bool broadcast)
 {
-    try
-    {
-        FC_ASSERT(!is_locked());
+    FC_ASSERT(!is_locked());
 
-        post_game_results_operation op;
+    post_game_results_operation op;
 
-        op.uuid = uuid;
-        op.moderator = moderator;
-        op.wincases = wincases;
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.wincases = wincases;
 
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.validate();
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
 
-        annotated_signed_transaction ret;
-        ret = my->sign_transaction(tx, broadcast);
+    annotated_signed_transaction ret;
+    ret = my->sign_transaction(tx, broadcast);
 
-        return ret;
-    }
-    FC_CAPTURE_AND_RETHROW((uuid)(moderator)(broadcast))
+    return ret;
 }
 
 annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
@@ -3398,17 +3321,7 @@ annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret;
-    try
-    {
-        ret = my->sign_transaction(tx, broadcast);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't post bet.");
-    }
-
-    return ret;
+    return my->sign_transaction(tx, broadcast);
 }
 
 annotated_signed_transaction
@@ -3425,17 +3338,7 @@ wallet_api::cancel_pending_bets(account_name_type better, const std::vector<uuid
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret;
-    try
-    {
-        ret = my->sign_transaction(tx, broadcast);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't cancel pending bets.");
-    }
-
-    return ret;
+    return my->sign_transaction(tx, broadcast);
 }
 
 void wallet_api::exit()
