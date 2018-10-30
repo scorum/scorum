@@ -1,7 +1,5 @@
 #include <boost/test/unit_test.hpp>
 
-#include <boost/range/adaptor/reversed.hpp>
-
 #include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/dba/db_accessor_factory.hpp>
 #include <scorum/chain/schema/game_object.hpp>
@@ -10,6 +8,9 @@
 
 #include "defines.hpp"
 #include "database_default_integration.hpp"
+
+#include <boost/range/adaptor/reversed.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 namespace {
 using namespace std::string_literals;
@@ -26,42 +27,31 @@ BOOST_AUTO_TEST_CASE(db_accessors_tests)
 
     BOOST_CHECK(dba.is_empty());
 
-    const auto& o1 = dba.create([](game_object& o) {
-        o.name = "name1";
-        o.uuid = { 1 };
-    });
-    BOOST_CHECK_EQUAL(o1.name, "name1");
+    const auto& o1 = dba.create([](game_object& o) { o.uuid = { 1 }; });
+    BOOST_CHECK_EQUAL(o1.uuid, uuid_type{ 1 });
 
-    dba.update([](game_object& o) { fc::from_string(o.name, "name2"); });
-    BOOST_CHECK_EQUAL(o1.name, "name2");
+    dba.update([](game_object& o) { o.uuid = { 2 }; });
+    BOOST_CHECK_EQUAL(o1.uuid, uuid_type{ 2 });
 
-    dba.update(o1, [](game_object& o) { fc::from_string(o.name, "name1"); });
-    BOOST_CHECK_EQUAL(o1.name, "name1");
+    dba.update(o1, [](game_object& o) { o.uuid = { 1 }; });
+    BOOST_CHECK_EQUAL(o1.uuid, uuid_type{ 1 });
 
     BOOST_CHECK(!dba.is_empty());
 
-    const auto& o3 = dba.get_by<by_name>(o1.name);
-    BOOST_CHECK_EQUAL(o3.name, "name1");
+    const auto& o3 = dba.get_by<by_uuid>(o1.uuid);
+    BOOST_CHECK_EQUAL(o3.uuid, uuid_type{ 1 });
 
-    const auto* o4 = dba.find_by<by_name>(o1.name);
-    BOOST_CHECK_EQUAL(o4->name, "name1");
+    const auto* o4 = dba.find_by<by_uuid>(o1.uuid);
+    BOOST_CHECK_EQUAL(o4->uuid, uuid_type{ 1 });
 
-    const auto* o5 = dba.find_by<by_name>(std::string("name2"));
+    const auto* o5 = dba.find_by<by_uuid>(uuid_type{ 2 });
     BOOST_CHECK(o5 == nullptr);
 
-    const auto& o6 = dba.create([](game_object& o) { o.name = "name2"; });
-    {
-        auto rng = dba.get_range_by<by_name>(dba::unbounded, dba::unbounded);
-        BOOST_CHECK(rng.begin()->name == "name1");
-        BOOST_CHECK((rng | boost::adaptors::reversed).begin()->name == "name2");
-    }
-    {
-        dba.remove();
-        auto rng = dba.get_range_by<by_name>(dba::unbounded, dba::unbounded);
-        BOOST_CHECK(rng.begin()->name == "name2");
-    }
+    const auto& o6 = dba.create([](game_object& o) { o.uuid = { 2 }; });
 
+    dba.remove();
     dba.remove(o6);
+
     BOOST_CHECK(dba.is_empty());
 }
 

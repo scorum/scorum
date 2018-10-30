@@ -37,7 +37,7 @@ class game_object : public object<game_object_type, game_object>
 {
 public:
     /// @cond DO_NOT_DOCUMENT
-    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(game_object, (name)(markets)(results))
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(game_object, (json_metadata)(markets)(results))
     /// @endcond
 
     typedef typename object<game_object_type, game_object>::id_type id_type;
@@ -45,7 +45,7 @@ public:
     id_type id;
     uuid_type uuid;
 
-    fc::shared_string name;
+    fc::shared_string json_metadata;
     time_point_sec start_time = time_point_sec::min();
     time_point_sec original_start_time = time_point_sec::min();
     time_point_sec last_update = time_point_sec::min();
@@ -86,9 +86,6 @@ using game_index
                                                                  member<game_object,
                                                                         time_point_sec,
                                                                         &game_object::bets_resolve_time>>,
-                                              ordered_unique<tag<by_name>,
-                                                             member<game_object, fc::shared_string, &game_object::name>,
-                                                             fc::strcmp_less>,
                                               ordered_non_unique<tag<by_start_time>,
                                                                  member<game_object,
                                                                         fc::time_point_sec,
@@ -101,7 +98,7 @@ FC_REFLECT(scorum::chain::game_uuid_history_object, (id)(uuid))
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_uuid_history_object, scorum::chain::game_uuid_history_index)
 
 FC_REFLECT(scorum::chain::game_object,
-           (id)(uuid)(name)(start_time)(original_start_time)(last_update)(bets_resolve_time)(auto_resolve_time)(status)(
-               game)(markets)(results))
+           (id)(uuid)(json_metadata)(start_time)(original_start_time)(last_update)(bets_resolve_time)(
+               auto_resolve_time)(status)(game)(markets)(results))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_object, scorum::chain::game_index)

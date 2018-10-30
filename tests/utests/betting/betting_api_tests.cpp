@@ -622,9 +622,7 @@ BOOST_FIXTURE_TEST_SUITE(get_games_betting_api_tests, betting_api_fixture)
 
 BOOST_AUTO_TEST_CASE(empty_uuids_list_should_return_empty)
 {
-    // clang-format off
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
-    // clang-format on
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
 
@@ -635,9 +633,7 @@ BOOST_AUTO_TEST_CASE(empty_uuids_list_should_return_empty)
 
 BOOST_AUTO_TEST_CASE(non_exists_uuid_should_return_empty)
 {
-    // clang-format off
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
-    // clang-format on
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
 
@@ -648,10 +644,8 @@ BOOST_AUTO_TEST_CASE(non_exists_uuid_should_return_empty)
 
 BOOST_AUTO_TEST_CASE(passed_uuids_is_superset_should_return_in_correct_order)
 {
-    // clang-format off
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
-    // clang-format on
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
 
@@ -664,11 +658,9 @@ BOOST_AUTO_TEST_CASE(passed_uuids_is_superset_should_return_in_correct_order)
 
 BOOST_AUTO_TEST_CASE(passed_uuids_is_subset_should_return_in_correct_order)
 {
-    // clang-format off
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); fc::from_string(o.name, "2"); });
-    // clang-format on
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
 
@@ -690,10 +682,8 @@ BOOST_AUTO_TEST_CASE(get_by_uuids_empty_db_should_return_empty)
 
 BOOST_AUTO_TEST_CASE(return_all_starting_from_the_beginning)
 {
-    // clang-format off
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
-    // clang-format on
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
 
@@ -704,13 +694,11 @@ BOOST_AUTO_TEST_CASE(return_all_starting_from_the_beginning)
 
 BOOST_AUTO_TEST_CASE(return_the_tail_starting_from_the_middle)
 {
-    // clang-format off
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); fc::from_string(o.name, "2"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); fc::from_string(o.name, "3"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); fc::from_string(o.name, "4"); });
-    // clang-format on
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
 
@@ -724,13 +712,11 @@ BOOST_AUTO_TEST_CASE(return_the_tail_starting_from_the_middle)
 
 BOOST_AUTO_TEST_CASE(limit_test)
 {
-    // clang-format off
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); fc::from_string(o.name, "2"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); fc::from_string(o.name, "3"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); fc::from_string(o.name, "4"); });
-    // clang-format on
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
 
@@ -743,13 +729,11 @@ BOOST_AUTO_TEST_CASE(limit_test)
 
 BOOST_AUTO_TEST_CASE(api_lookup_limit_is_less_than_limit)
 {
-    // clang-format off
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); fc::from_string(o.name, "0"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); fc::from_string(o.name, "1"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); fc::from_string(o.name, "2"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); fc::from_string(o.name, "3"); });
-    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); fc::from_string(o.name, "4"); });
-    // clang-format on
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); });
+    db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); });
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba, 2);
 

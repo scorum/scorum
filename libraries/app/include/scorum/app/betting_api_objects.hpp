@@ -19,7 +19,7 @@ struct game_api_object
     game_api_object(const chain::game_object& obj)
         : id(obj.id)
         , uuid(obj.uuid)
-        , name(fc::to_string(obj.name))
+        , json_metadata(fc::to_string(obj.json_metadata))
         , start_time(obj.start_time)
         , last_update(obj.last_update)
         , bets_resolve_time(obj.bets_resolve_time)
@@ -34,7 +34,7 @@ struct game_api_object
     uuid_type uuid;
 
     std::string moderator;
-    std::string name;
+    std::string json_metadata;
 
     fc::time_point_sec start_time = fc::time_point_sec::min();
     fc::time_point_sec last_update = fc::time_point_sec::min();
@@ -96,7 +96,7 @@ FC_REFLECT(scorum::app::game_api_object,
            (id)
            (uuid)
            (moderator)
-           (name)
+           (json_metadata)
            (start_time)
            (last_update)
            (bets_resolve_time)

@@ -28,7 +28,6 @@ struct game_evaluator_fixture : public shared_memory_fixture
     using check_account_existence_ptr
         = void (account_service_i::*)(const account_name_type&, const optional<const char*>&) const;
 
-    using exists_by_name_ptr = bool (game_service_i::*)(const std::string&) const;
     using exists_by_id_ptr = bool (game_service_i::*)(const scorum::uuid_type&) const;
     using create_game_ptr = const game_object& (game_service_i::*)(const scorum::uuid_type&,
                                                                    const account_name_type&,
@@ -82,7 +81,6 @@ SCORUM_TEST_CASE(create_with_already_existing_uuid_throw)
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {});
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(1));
-    mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
     mocks.ExpectCallFunc((dba::detail::is_exists_by<game_uuid_history_object, by_uuid, uuid_type>)).Return(true);
 
     BOOST_REQUIRE_THROW(ev.do_apply(op), fc::assert_exception);
@@ -96,7 +94,6 @@ SCORUM_TEST_CASE(create_by_no_moderator_throw)
     op.start_time = fc::time_point_sec(1);
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
-    mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
     mocks.OnCallFunc((dba::detail::is_exists_by<game_uuid_history_object, by_uuid, uuid_type>)).Return(false);
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(false);
@@ -109,14 +106,13 @@ SCORUM_TEST_CASE(game_should_be_created)
     create_game_evaluator ev(*dbs_services, *betting_service, uuid_hist_dba);
 
     create_game_operation op;
-    op.name = "game";
+    op.json_metadata = "{}";
     op.moderator = "cartman";
     op.game = soccer_game{};
     op.start_time = fc::time_point_sec(1);
     op.auto_resolve_delay_sec = 42;
 
     mocks.OnCall(dynprop_service, dynamic_global_property_service_i::head_block_time).Return(fc::time_point_sec(0));
-    mocks.OnCallOverload(game_service, (exists_by_name_ptr)&game_service_i::is_exists).Return(false);
     mocks.OnCallFunc((dba::detail::is_exists_by<game_uuid_history_object, by_uuid, uuid_type>)).Return(false);
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
@@ -124,7 +120,7 @@ SCORUM_TEST_CASE(game_should_be_created)
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {});
 
     mocks.ExpectCallOverload(game_service, (create_game_ptr)&game_service_i::create_game)
-        .With(_, "cartman", "game", _, _, _)
+        .With(_, "cartman", "{}", _, _, _)
         .ReturnByRef(game_obj);
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
