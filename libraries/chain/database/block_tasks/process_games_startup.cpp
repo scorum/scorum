@@ -32,7 +32,7 @@ void process_games_startup::on_apply(block_task_context& ctx)
     {
         game_service.update(game, [](game_object& o) { o.status = game_status::started; });
 
-        _betting_svc.cancel_pending_bets(game.get().id, pending_bet_kind::non_live);
+        _betting_svc.cancel_pending_bets(game.get().uuid, pending_bet_kind::non_live);
 
         _virt_op_emitter.push_virtual_operation(
             game_status_changed_operation(game.get().uuid, game_status::created, game_status::started));

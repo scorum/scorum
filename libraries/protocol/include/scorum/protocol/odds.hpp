@@ -86,18 +86,9 @@ template <typename Stream> Stream& operator>>(Stream& stream, scorum::protocol::
 } // namespace protocol
 } // namespace scorum
 
-namespace fc {
-
-inline void to_variant(const scorum::protocol::odds& var, fc::variant& vo)
-{
-    vo = var.to_string();
-}
-
-inline void from_variant(const fc::variant& var, scorum::protocol::odds& vo)
-{
-    vo = scorum::protocol::odds::from_string(var.as_string());
-}
-
-} // namespace fc
-
 FC_REFLECT_EMPTY(scorum::protocol::odds)
+
+namespace fc {
+void to_variant(const scorum::protocol::odds& var, fc::variant& vo);
+void from_variant(const fc::variant& var, scorum::protocol::odds& vo);
+}

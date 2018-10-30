@@ -30,7 +30,7 @@ struct bet_data
     wincase_type wincase;
     asset stake = asset(0, SCORUM_SYMBOL);
 
-    odds bet_odds;
+    class odds odds;
     pending_bet_kind kind = pending_bet_kind::live;
 };
 
@@ -53,7 +53,7 @@ public:
     /// @endcond
 
     id_type id;
-    game_id_type game;
+    uuid_type game_uuid;
     market_type market;
 
     bet_data data;
@@ -76,7 +76,7 @@ public:
     /// @endcond
 
     id_type id;
-    game_id_type game;
+    uuid_type game_uuid;
     market_type market;
     fc::time_point_sec created;
 
@@ -90,11 +90,11 @@ public:
 };
 
 struct by_uuid;
-struct by_game_id_kind;
-struct by_game_id_market;
-struct by_game_id_better;
-struct by_game_id_created;
-struct by_game_id_wincase;
+struct by_game_uuid_kind;
+struct by_game_uuid_market;
+struct by_game_uuid_better;
+struct by_game_uuid_created;
+struct by_game_uuid_wincase;
 
 typedef shared_multi_index_container<bet_uuid_history_object,
                                      indexed_by<ordered_unique<tag<by_id>,
@@ -117,47 +117,47 @@ typedef shared_multi_index_container<pending_bet_object,
                                                                             uuid_type,
                                                                             &pending_bet_object::get_uuid>>,
 
-                                                ordered_non_unique<tag<by_game_id_wincase>,
+                                                ordered_non_unique<tag<by_game_uuid_wincase>,
                                                                    composite_key<pending_bet_object,
                                                                                  member<pending_bet_object,
-                                                                                        game_id_type,
-                                                                                        &pending_bet_object::game>,
+                                                                                        uuid_type,
+                                                                                        &pending_bet_object::game_uuid>,
                                                                                  const_mem_fun<pending_bet_object,
                                                                                                wincase_type,
                                                                                                &pending_bet_object::
                                                                                                    get_wincase>>>,
 
-                                                ordered_non_unique<tag<by_game_id_kind>,
+                                                ordered_non_unique<tag<by_game_uuid_kind>,
                                                                    composite_key<pending_bet_object,
                                                                                  member<pending_bet_object,
-                                                                                        game_id_type,
-                                                                                        &pending_bet_object::game>,
+                                                                                        uuid_type,
+                                                                                        &pending_bet_object::game_uuid>,
                                                                                  const_mem_fun<pending_bet_object,
                                                                                                pending_bet_kind,
                                                                                                &pending_bet_object::
                                                                                                    get_kind>>>,
-                                                ordered_non_unique<tag<by_game_id_market>,
+                                                ordered_non_unique<tag<by_game_uuid_market>,
                                                                    composite_key<pending_bet_object,
                                                                                  member<pending_bet_object,
-                                                                                        game_id_type,
-                                                                                        &pending_bet_object::game>,
+                                                                                        uuid_type,
+                                                                                        &pending_bet_object::game_uuid>,
                                                                                  member<pending_bet_object,
                                                                                         market_type,
                                                                                         &pending_bet_object::market>>>,
-                                                ordered_non_unique<tag<by_game_id_better>,
+                                                ordered_non_unique<tag<by_game_uuid_better>,
                                                                    composite_key<pending_bet_object,
                                                                                  member<pending_bet_object,
-                                                                                        game_id_type,
-                                                                                        &pending_bet_object::game>,
+                                                                                        uuid_type,
+                                                                                        &pending_bet_object::game_uuid>,
                                                                                  const_mem_fun<pending_bet_object,
                                                                                                account_name_type,
                                                                                                &pending_bet_object::
                                                                                                    get_better>>>,
-                                                ordered_non_unique<tag<by_game_id_created>,
+                                                ordered_non_unique<tag<by_game_uuid_created>,
                                                                    composite_key<pending_bet_object,
                                                                                  member<pending_bet_object,
-                                                                                        game_id_type,
-                                                                                        &pending_bet_object::game>,
+                                                                                        uuid_type,
+                                                                                        &pending_bet_object::game_uuid>,
                                                                                  const_mem_fun<pending_bet_object,
                                                                                                fc::time_point_sec,
                                                                                                &pending_bet_object::
@@ -180,19 +180,19 @@ typedef shared_multi_index_container<matched_bet_object,
                                                                    const_mem_fun<matched_bet_object,
                                                                                  uuid_type,
                                                                                  &matched_bet_object::get_bet2_uuid>>,
-                                                ordered_non_unique<tag<by_game_id_market>,
+                                                ordered_non_unique<tag<by_game_uuid_market>,
                                                                    composite_key<matched_bet_object,
                                                                                  member<matched_bet_object,
-                                                                                        game_id_type,
-                                                                                        &matched_bet_object::game>,
+                                                                                        uuid_type,
+                                                                                        &matched_bet_object::game_uuid>,
                                                                                  member<matched_bet_object,
                                                                                         market_type,
                                                                                         &matched_bet_object::market>>>,
-                                                ordered_non_unique<tag<by_game_id_created>,
+                                                ordered_non_unique<tag<by_game_uuid_created>,
                                                                    composite_key<matched_bet_object,
                                                                                  member<matched_bet_object,
-                                                                                        game_id_type,
-                                                                                        &matched_bet_object::game>,
+                                                                                        uuid_type,
+                                                                                        &matched_bet_object::game_uuid>,
                                                                                  member<matched_bet_object,
                                                                                         fc::time_point_sec,
                                                                                         &matched_bet_object::
@@ -220,12 +220,12 @@ FC_REFLECT(scorum::chain::bet_data,
            (better)
            (wincase)
            (stake)
-           (bet_odds)
+           (odds)
            (kind))
 
 FC_REFLECT(scorum::chain::pending_bet_object,
            (id)
-           (game)
+           (game_uuid)
            (market)
            (data)
            )
@@ -234,7 +234,7 @@ CHAINBASE_SET_INDEX_TYPE(scorum::chain::pending_bet_object, scorum::chain::pendi
 
 FC_REFLECT(scorum::chain::matched_bet_object,
            (id)
-           (game)
+           (game_uuid)
            (market)
            (created)
            (bet1_data)

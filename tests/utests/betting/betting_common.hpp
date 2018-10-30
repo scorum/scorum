@@ -16,6 +16,7 @@
 
 namespace betting_common {
 
+using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
@@ -55,7 +56,7 @@ protected:
     }
 
     const account_name_type test_bet_better = "alice";
-    const game_id_type test_bet_game = 15;
+    const uuid_type test_bet_game = uuid_type{ 15 };
     const wincase_type test_bet_wincase = goal_home::yes();
     const std::string test_bet_k = "100/1";
     const asset test_bet_stake = ASSET_SCR(1e+9);
@@ -66,7 +67,7 @@ protected:
     }
 
     const pending_bet_object& create_bet(const account_name_type& better,
-                                         const game_id_type game,
+                                         const uuid_type game,
                                          const wincase_type& wincase,
                                          const std::string& odds_value,
                                          const asset& stake)
@@ -74,9 +75,9 @@ protected:
         return pending_bets.create([&](pending_bet_object& obj) {
             obj.data.created = dgp_service.service().head_block_time();
             obj.data.better = better;
-            obj.game = game;
+            obj.game_uuid = game;
             obj.data.wincase = wincase;
-            obj.data.bet_odds = odds::from_string(odds_value);
+            obj.data.odds = odds::from_string(odds_value);
             obj.data.stake = stake;
             obj.market = create_market(wincase);
         });

@@ -41,7 +41,7 @@ void update_game_start_time_evaluator::do_apply(const operation_type& op)
               "Cannot change start time more than ${1} seconds",
               ("1", SCORUM_BETTING_START_TIME_DIFF_MAX.to_seconds()));
 
-    _betting_service.cancel_bets(game.id, game.start_time);
+    _betting_service.cancel_bets(op.uuid, game.start_time);
 
     _game_service.update(game, [&](game_object& g) {
         auto delta = op.start_time - g.start_time;
@@ -52,7 +52,7 @@ void update_game_start_time_evaluator::do_apply(const operation_type& op)
 
     if (old_status == game_status::started)
         _virt_op_emitter.push_virtual_operation(
-            game_status_changed_operation(game.uuid, old_status, game_status::created));
+            game_status_changed_operation(op.uuid, old_status, game_status::created));
 }
 }
 }

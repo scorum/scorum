@@ -42,7 +42,7 @@ void post_game_results_evaluator::do_apply(const operation_type& op)
     validate_all_winners_present(game.markets, wincases);
     validate_opposite_winners_absent(wincases);
 
-    _betting_service.cancel_pending_bets(game.id);
+    _betting_service.cancel_pending_bets(game.uuid);
 
     auto old_status = game.status;
     _game_service.finish(game, wincases);

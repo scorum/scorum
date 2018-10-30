@@ -12,7 +12,7 @@ namespace chain {
 
 bool can_be_matched(const pending_bet_object& bet)
 {
-    return bet.data.stake * bet.data.bet_odds > bet.data.stake;
+    return bet.data.stake * bet.data.odds > bet.data.stake;
 }
 
 betting_matcher_i::~betting_matcher_i()
@@ -37,16 +37,15 @@ betting_matcher::match(const pending_bet_object& bet2, const fc::time_point_sec&
     {
         std::vector<std::reference_wrapper<const pending_bet_object>> bets_to_cancel;
 
-        auto key = std::make_tuple(bet2.game, create_opposite(bet2.get_wincase()));
-        auto pending_bets = _pending_bet_dba.get_range_by<by_game_id_wincase>(key);
+        auto key = std::make_tuple(bet2.game_uuid, create_opposite(bet2.get_wincase()));
+        auto pending_bets = _pending_bet_dba.get_range_by<by_game_uuid_wincase>(key);
 
         for (const auto& bet1 : pending_bets)
         {
             if (!is_bets_matched(bet1, bet2))
                 continue;
 
-            auto matched
-                = calculate_matched_stake(bet1.data.stake, bet2.data.stake, bet1.data.bet_odds, bet2.data.bet_odds);
+            auto matched = calculate_matched_stake(bet1.data.stake, bet2.data.stake, bet1.data.odds, bet2.data.odds);
 
             if (matched.bet1_matched.amount > 0 && matched.bet2_matched.amount > 0)
             {
@@ -84,7 +83,7 @@ betting_matcher::match(const pending_bet_object& bet2, const fc::time_point_sec&
 
 bool betting_matcher::is_bets_matched(const pending_bet_object& bet1, const pending_bet_object& bet2) const
 {
-    return bet1.data.bet_odds.inverted() == bet2.data.bet_odds;
+    return bet1.data.odds.inverted() == bet2.data.odds;
 }
 
 int64_t create_matched_bet(dba::db_accessor<matched_bet_object>& matched_bet_dba,
@@ -93,7 +92,7 @@ int64_t create_matched_bet(dba::db_accessor<matched_bet_object>& matched_bet_dba
                            const matched_stake_type& matched,
                            fc::time_point_sec head_block_time)
 {
-    FC_ASSERT(bet1.game == bet2.game, "bets game id is not equal.");
+    FC_ASSERT(bet1.game_uuid == bet2.game_uuid, "bets game id is not equal.");
     FC_ASSERT(bet1.get_wincase() == create_opposite(bet2.get_wincase()));
 
     return matched_bet_dba
@@ -103,7 +102,7 @@ int64_t create_matched_bet(dba::db_accessor<matched_bet_object>& matched_bet_dba
             obj.bet1_data.stake = matched.bet1_matched;
             obj.bet2_data.stake = matched.bet2_matched;
             obj.market = bet1.market;
-            obj.game = bet1.game;
+            obj.game_uuid = bet1.game_uuid;
             obj.created = head_block_time;
         })
         .id._id;

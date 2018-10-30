@@ -17,7 +17,7 @@
 #include <scorum/protocol/betting/market.hpp>
 
 namespace {
-
+using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
@@ -30,7 +30,7 @@ struct game_evaluator_fixture : public shared_memory_fixture
 
     using get_by_id_ptr = const game_object& (game_service_i::*)(const scorum::uuid_type&)const;
     using exists_by_id_ptr = bool (game_service_i::*)(const scorum::uuid_type&) const;
-    using cancel_bets = void (betting_service_i::*)(game_id_type, fc::time_point_sec);
+    using cancel_bets = void (betting_service_i::*)(uuid_type, fc::time_point_sec);
     using game_update_ptr = void (game_service_i::*)(const game_object&, const game_service_i::modifier_type&);
 
     MockRepository mocks;

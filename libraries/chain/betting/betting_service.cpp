@@ -57,7 +57,7 @@ const pending_bet_object& betting_service::create_pending_bet(const account_name
                                                               const asset& stake,
                                                               odds odds,
                                                               const wincase_type& wincase,
-                                                              game_id_type game,
+                                                              uuid_type game_uuid,
                                                               uuid_type bet_uuid,
                                                               pending_bet_kind kind)
 {
@@ -67,11 +67,11 @@ const pending_bet_object& betting_service::create_pending_bet(const account_name
     _uuid_hist_dba.create([&](bet_uuid_history_object& o) { o.uuid = bet_uuid; });
 
     const auto& bet = _pending_bet_dba.create([&](pending_bet_object& o) {
-        o.game = game;
+        o.game_uuid = game_uuid;
         o.market = create_market(wincase);
         o.data.uuid = bet_uuid;
         o.data.stake = stake;
-        o.data.bet_odds = odds;
+        o.data.odds = odds;
         o.data.created = _dprop_dba.get().time;
         o.data.better = better;
         o.data.kind = kind;
@@ -85,54 +85,52 @@ const pending_bet_object& betting_service::create_pending_bet(const account_name
     return bet;
 }
 
-void betting_service::cancel_game(game_id_type game_id)
+void betting_service::cancel_game(uuid_type game_uuid)
 {
-    auto matched_bets = _matched_bet_dba.get_range_by<by_game_id_market>(game_id);
+    auto matched_bets = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
     FC_ASSERT(matched_bets.empty(), "Cannot cancel game which has associated bets");
 
-    auto pending_bets = _matched_bet_dba.get_range_by<by_game_id_market>(game_id);
+    auto pending_bets = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
     FC_ASSERT(pending_bets.empty(), "Cannot cancel game which has associated bets");
 
-    const auto& game = _game_dba.get_by<by_id>(game_id);
+    const auto& game = _game_dba.get_by<by_uuid>(game_uuid);
     _game_dba.remove(game);
 }
 
-void betting_service::cancel_bets(game_id_type game_id)
+void betting_service::cancel_bets(uuid_type game_uuid)
 {
-    cancel_pending_bets(game_id);
-    cancel_matched_bets(game_id);
+    cancel_pending_bets(game_uuid);
+    cancel_matched_bets(game_uuid);
 }
 
-void betting_service::cancel_bets(game_id_type game_id, fc::time_point_sec created_after)
+void betting_service::cancel_bets(uuid_type game_uuid, fc::time_point_sec created_after)
 {
     using namespace dba;
 
-    auto lower = std::make_tuple(game_id, created_after);
-    auto upper = game_id;
-    auto matched_bets = _matched_bet_dba.get_range_by<by_game_id_created>(lower <= _x, _x <= upper);
-    auto pending_bets = _pending_bet_dba.get_range_by<by_game_id_created>(lower <= _x, _x <= upper);
+    auto lower = std::make_tuple(game_uuid, created_after);
+    auto upper = game_uuid;
+    auto matched_bets = _matched_bet_dba.get_range_by<by_game_uuid_created>(lower <= _x, _x <= upper);
+    auto pending_bets = _pending_bet_dba.get_range_by<by_game_uuid_created>(lower <= _x, _x <= upper);
 
-    const auto& game = _game_dba.get_by<by_id>(game_id);
-
-    cancel_pending_bets(pending_bets, game.uuid);
+    cancel_pending_bets(pending_bets, game_uuid);
 
     for (const matched_bet_object& matched_bet : matched_bets)
     {
         if (matched_bet.bet1_data.created >= created_after)
-            return_bet(matched_bet.bet1_data, game.uuid);
+            return_bet(matched_bet.bet1_data, game_uuid);
         else
-            restore_pending_bet(matched_bet.bet1_data, game.uuid);
+            restore_pending_bet(matched_bet.bet1_data, game_uuid);
 
         if (matched_bet.bet2_data.created >= created_after)
-            return_bet(matched_bet.bet2_data, game.uuid);
+            return_bet(matched_bet.bet2_data, game_uuid);
         else
-            restore_pending_bet(matched_bet.bet2_data, game.uuid);
+            restore_pending_bet(matched_bet.bet2_data, game_uuid);
     }
 
     _matched_bet_dba.remove_all(matched_bets);
 }
 
-void betting_service::cancel_bets(game_id_type game_id, const fc::flat_set<market_type>& cancelled_markets)
+void betting_service::cancel_bets(uuid_type game_uuid, const fc::flat_set<market_type>& cancelled_markets)
 {
     // clang-format off
     struct less
@@ -144,45 +142,40 @@ void betting_service::cancel_bets(game_id_type game_id, const fc::flat_set<marke
     };
     // clang-format on
 
-    const auto& game = _game_dba.get_by<by_id>(game_id);
-
-    auto pending_bets = _pending_bet_dba.get_range_by<by_game_id_market>(game_id);
+    auto pending_bets = _pending_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
     std::vector<std::reference_wrapper<const pending_bet_object>> filtered_pending_bets;
     boost::set_intersection(pending_bets, cancelled_markets, std::back_inserter(filtered_pending_bets), less{});
 
-    cancel_pending_bets(utils::unwrap_ref_wrapper(filtered_pending_bets), game.uuid);
+    cancel_pending_bets(utils::unwrap_ref_wrapper(filtered_pending_bets), game_uuid);
 
-    auto matched_bets = _matched_bet_dba.get_range_by<by_game_id_market>(game_id);
+    auto matched_bets = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
     std::vector<std::reference_wrapper<const matched_bet_object>> filtered_matched_bets;
     boost::set_intersection(matched_bets, cancelled_markets, std::back_inserter(filtered_matched_bets), less{});
 
-    cancel_matched_bets(utils::unwrap_ref_wrapper(filtered_matched_bets), game.uuid);
+    cancel_matched_bets(utils::unwrap_ref_wrapper(filtered_matched_bets), game_uuid);
 }
 
 void betting_service::cancel_pending_bet(pending_bet_id_type id)
 {
     const auto& pending_bet = _pending_bet_dba.get_by<by_id>(id);
-    const auto& game = _game_dba.get_by<by_id>(pending_bet.game);
 
-    cancel_pending_bet(pending_bet, game.uuid);
+    cancel_pending_bet(pending_bet, pending_bet.game_uuid);
 }
 
-void betting_service::cancel_pending_bets(game_id_type game_id)
+void betting_service::cancel_pending_bets(uuid_type game_uuid)
 {
-    auto pending_bets = _pending_bet_dba.get_range_by<by_game_id_market>(game_id);
-    const auto& game = _game_dba.get_by<by_id>(game_id);
+    auto pending_bets = _pending_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
-    cancel_pending_bets(pending_bets, game.uuid);
+    cancel_pending_bets(pending_bets, game_uuid);
 }
 
-void betting_service::cancel_pending_bets(game_id_type game_id, pending_bet_kind kind)
+void betting_service::cancel_pending_bets(uuid_type game_uuid, pending_bet_kind kind)
 {
-    auto pending_bets = _pending_bet_dba.get_range_by<by_game_id_kind>(std::make_tuple(game_id, kind));
-    const auto& game = _game_dba.get_by<by_id>(game_id);
+    auto pending_bets = _pending_bet_dba.get_range_by<by_game_uuid_kind>(std::make_tuple(game_uuid, kind));
 
-    cancel_pending_bets(pending_bets, game.uuid);
+    cancel_pending_bets(pending_bets, game_uuid);
 }
 
 void betting_service::cancel_pending_bets(utils::bidir_range<const pending_bet_object> bets, uuid_type game_uuid)
@@ -192,12 +185,11 @@ void betting_service::cancel_pending_bets(utils::bidir_range<const pending_bet_o
     });
 }
 
-void betting_service::cancel_matched_bets(game_id_type game_id)
+void betting_service::cancel_matched_bets(uuid_type game_uuid)
 {
-    auto matched_bets = _matched_bet_dba.get_range_by<by_game_id_market>(game_id);
-    const auto& game = _game_dba.get_by<by_id>(game_id);
+    auto matched_bets = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
-    cancel_matched_bets(matched_bets, game.uuid);
+    cancel_matched_bets(matched_bets, game_uuid);
 }
 
 void betting_service::cancel_matched_bets(utils::bidir_range<const matched_bet_object> bets, uuid_type game_uuid)
@@ -237,13 +229,12 @@ void betting_service::return_bet(const bet_data& bet, uuid_type game_uuid)
 
 void betting_service::restore_pending_bet(const bet_data& bet, uuid_type game_uuid)
 {
-    const auto& game = _game_dba.get_by<by_uuid>(game_uuid);
-    auto bets = _pending_bet_dba.get_range_by<by_game_id_better>(std::make_tuple(game.id, bet.better));
+    auto bets = _pending_bet_dba.get_range_by<by_game_uuid_better>(std::make_tuple(game_uuid, bet.better));
 
     // clang-format off
     auto found_it = boost::find_if(bets, [&](const pending_bet_object& o) {
         return o.data.created == bet.created
-            && o.data.bet_odds == bet.bet_odds
+            && o.data.odds == bet.odds
             && o.data.kind == bet.kind
             && !(o.data.wincase < bet.wincase)
             && !(bet.wincase < o.data.wincase);
@@ -257,7 +248,7 @@ void betting_service::restore_pending_bet(const bet_data& bet, uuid_type game_uu
     else
     {
         _pending_bet_dba.create([&](pending_bet_object& o) {
-            o.game = game.id;
+            o.game_uuid = game_uuid;
             o.market = create_market(bet.wincase);
             o.data = bet;
         });

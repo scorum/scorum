@@ -30,14 +30,13 @@ void cancel_game_evaluator::do_apply(const operation_type& op)
 
     FC_ASSERT(game.status != game_status::finished, "Cannot cancel the game after it is finished");
 
-    _betting_service.cancel_pending_bets(game.id);
-    _betting_service.cancel_matched_bets(game.id);
+    _betting_service.cancel_pending_bets(op.uuid);
+    _betting_service.cancel_matched_bets(op.uuid);
 
     auto status = game.status;
-    auto uuid = game.uuid;
-    _betting_service.cancel_game(game.id);
+    _betting_service.cancel_game(op.uuid);
 
-    _virt_op_emitter.push_virtual_operation(game_status_changed_operation(uuid, status, game_status::cancelled));
+    _virt_op_emitter.push_virtual_operation(game_status_changed_operation(op.uuid, status, game_status::cancelled));
 }
 }
 }

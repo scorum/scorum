@@ -27,7 +27,7 @@ struct bet_data;
 
 struct betting_resolver_i
 {
-    virtual void resolve_matched_bets(const chainbase::oid<game_object>& game_id,
+    virtual void resolve_matched_bets(uuid_type game_uuid,
                                       const fc::flat_set<protocol::wincase_type>& results) const = 0;
 };
 
@@ -40,8 +40,7 @@ public:
                      dba::db_accessor<game_object>&,
                      dba::db_accessor<dynamic_global_property_object>&);
 
-    void resolve_matched_bets(const chainbase::oid<game_object>& game_id,
-                              const fc::flat_set<protocol::wincase_type>& results) const override;
+    void resolve_matched_bets(uuid_type game_uuid, const fc::flat_set<protocol::wincase_type>& results) const override;
 
 private:
     account_service_i& _account_svc;

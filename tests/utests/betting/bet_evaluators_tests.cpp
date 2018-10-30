@@ -37,10 +37,10 @@ struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fix
     {
         return create_object<pending_bet_object>(shm, [&](pending_bet_object& obj) {
             obj.data.better = test_op.better;
-            obj.game = 0;
+            obj.game_uuid = { 0 };
             obj.data.uuid = gen_uuid("bet");
             obj.data.wincase = test_op.wincase;
-            obj.data.bet_odds = odds(test_op.odds.numerator, test_op.odds.denominator);
+            obj.data.odds = odds(test_op.odds.numerator, test_op.odds.denominator);
             obj.data.stake = test_op.stake;
             obj.market = create_market(test_op.wincase);
         });

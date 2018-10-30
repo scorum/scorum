@@ -453,14 +453,6 @@ public:
 
     void init_extension()
     {
-        _mocks.OnCall(_service, pending_bet_service_i::foreach_pending_bets)
-            .Do([this](const game_id_type&, pending_bet_service_i::pending_bet_call_type call) {
-                for (const auto& p : _objects_by_id)
-                {
-                    if (!call(p.second))
-                        break;
-                }
-            });
         _mocks
             .OnCallOverload(_service,
                             (const pending_bet_object& (pending_bet_service_i::*)(const pending_bet_id_type&)const)

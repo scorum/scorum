@@ -47,7 +47,7 @@ void update_game_markets_evaluator::do_apply(const operation_type& op)
     FC_ASSERT(game.status == game_status::created || cancelled_markets.empty(),
               "Cannot cancel markets after game was started");
 
-    _betting_service.cancel_bets(game.id, cancelled_markets);
+    _betting_service.cancel_bets(game.uuid, cancelled_markets);
 
     _game_service.update_markets(game, set_of_markets);
 }

@@ -40,8 +40,8 @@ void process_bets_auto_resolving::on_apply(block_task_context& ctx)
         auto uuid = game.uuid;
         auto old_status = game.status;
 
-        _betting_svc.cancel_bets(game.id);
-        _betting_svc.cancel_game(game.id);
+        _betting_svc.cancel_bets(uuid);
+        _betting_svc.cancel_game(uuid);
 
         _vop_emitter.push_virtual_operation(game_status_changed_operation{ uuid, old_status, game_status::expired });
     });

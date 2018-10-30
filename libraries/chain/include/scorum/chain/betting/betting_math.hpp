@@ -9,7 +9,7 @@ namespace chain {
 using scorum::protocol::asset;
 using scorum::protocol::odds;
 
-asset calculate_gain(const asset& bet_stake, const odds& bet_odds);
+asset calculate_gain(const asset& bet_stake, const odds& odds);
 
 struct matched_stake_type
 {

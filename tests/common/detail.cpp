@@ -14,7 +14,7 @@ boost::uuids::uuid gen_uuid(const std::string& seed)
 bool compare_bet_data(const scorum::chain::bet_data& lhs, const scorum::chain::bet_data& rhs)
 {
     // clang-format off
-    return lhs.bet_odds == rhs.bet_odds
+    return lhs.odds == rhs.odds
             && lhs.better == rhs.better
             && lhs.created == rhs.created
             && lhs.kind == rhs.kind

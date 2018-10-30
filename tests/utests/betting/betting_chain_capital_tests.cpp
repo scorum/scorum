@@ -79,7 +79,7 @@ SCORUM_TEST_CASE(pending_bet_creation_should_change_betting_capital)
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
                         dprop_dba, uuid_hist_dba);
 
-    svc.create_pending_bet("alice", ASSET_SCR(1000), odds(10, 2), result_home::yes{}, 0, uuid_type{ 1 },
+    svc.create_pending_bet("alice", ASSET_SCR(1000), odds(10, 2), result_home::yes{}, { 0 }, uuid_type{ 1 },
                            pending_bet_kind::live);
 
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 1000u);
@@ -94,7 +94,7 @@ SCORUM_TEST_CASE(bets_resolving_should_change_matched_betting_capital)
 
     game_dba.create([](game_object& o) {});
     matched_bet_dba.create([](matched_bet_object& o) {
-        o.game = 0;
+        o.game_uuid = { 0 };
         o.market = result_home{};
         o.bet1_data.stake = ASSET_SCR(500);
         o.bet1_data.wincase = result_home::yes{};
@@ -105,7 +105,7 @@ SCORUM_TEST_CASE(bets_resolving_should_change_matched_betting_capital)
 
     betting_resolver resolver(*account_svc, *vop_emitter, matched_bet_dba, game_dba, dprop_dba);
 
-    resolver.resolve_matched_bets(0, { result_home::yes{} });
+    resolver.resolve_matched_bets({ 0 }, { result_home::yes{} });
 
     BOOST_CHECK_EQUAL(0u, dprop_dba.get().betting_stats.matched_bets_volume.amount);
 }
@@ -114,11 +114,11 @@ SCORUM_TEST_CASE(cancel_all_bets_should_change_betting_capital)
 {
     game_dba.create([](game_object& o) {});
     pending_bet_dba.create([](pending_bet_object& o) {
-        o.game = 0;
+        o.game_uuid = { 0 };
         o.data.stake = ASSET_SCR(1000);
     });
     matched_bet_dba.create([](matched_bet_object& o) {
-        o.game = 0;
+        o.game_uuid = { 0 };
         o.market = result_home{};
         o.bet1_data.stake = ASSET_SCR(500);
         o.bet2_data.stake = ASSET_SCR(2000);
@@ -135,7 +135,7 @@ SCORUM_TEST_CASE(cancel_all_bets_should_change_betting_capital)
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
                         dprop_dba, uuid_hist_dba);
 
-    svc.cancel_bets(0);
+    svc.cancel_bets({ 0 });
 
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 0u);
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.matched_bets_volume.amount, 0u);
@@ -145,12 +145,12 @@ SCORUM_TEST_CASE(cancel_bets_all_bets_created_after_game_started_should_be_remov
 {
     const auto& g = game_dba.create([](game_object& o) { o.start_time = fc::time_point_sec(7); });
     pending_bet_dba.create([](pending_bet_object& o) {
-        o.game = 0;
+        o.game_uuid = { 0 };
         o.data.created = fc::time_point_sec(42);
         o.data.stake = ASSET_SCR(1000);
     });
     matched_bet_dba.create([](matched_bet_object& o) {
-        o.game = 0;
+        o.game_uuid = { 0 };
         o.market = result_home{};
         o.created = fc::time_point_sec(42);
         o.bet1_data.stake = ASSET_SCR(500);
@@ -170,7 +170,7 @@ SCORUM_TEST_CASE(cancel_bets_all_bets_created_after_game_started_should_be_remov
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
                         dprop_dba, uuid_hist_dba);
 
-    svc.cancel_bets(0, g.start_time);
+    svc.cancel_bets({ 0 }, g.start_time);
 
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 0u);
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.matched_bets_volume.amount, 0u);
@@ -180,7 +180,7 @@ SCORUM_TEST_CASE(cancel_bets_pending_bet_created_before_game_started_shouldnt_be
 {
     const auto& g = game_dba.create([](game_object& o) { o.start_time = fc::time_point_sec(7); });
     pending_bet_dba.create([](pending_bet_object& o) {
-        o.game = 0;
+        o.game_uuid = { 0 };
         o.data.created = fc::time_point_sec(5);
         o.data.stake = ASSET_SCR(1000);
     });
@@ -195,7 +195,7 @@ SCORUM_TEST_CASE(cancel_bets_pending_bet_created_before_game_started_shouldnt_be
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
                         dprop_dba, uuid_hist_dba);
 
-    svc.cancel_bets(0, g.start_time);
+    svc.cancel_bets({ 0 }, g.start_time);
 
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 1000u);
 }
@@ -205,7 +205,7 @@ SCORUM_TEST_CASE(
 {
     const auto& g = game_dba.create([](game_object& o) { o.start_time = fc::time_point_sec(42); });
     matched_bet_dba.create([](matched_bet_object& o) {
-        o.game = 0;
+        o.game_uuid = { 0 };
         o.market = result_home{};
         o.created = fc::time_point_sec(42);
         o.bet1_data.stake = ASSET_SCR(500);
@@ -224,7 +224,7 @@ SCORUM_TEST_CASE(
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
                         dprop_dba, uuid_hist_dba);
 
-    svc.cancel_bets(0, g.start_time);
+    svc.cancel_bets({ 0 }, g.start_time);
 
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.matched_bets_volume.amount, 0u);
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 2000u);
@@ -234,13 +234,13 @@ SCORUM_TEST_CASE(cancel_pending_bets_only_live_pending_bet_should_be_removed_fro
 {
     game_dba.create([](game_object& o) {});
     pending_bet_dba.create([](pending_bet_object& o) {
-        o.game = 0;
+        o.game_uuid = { 0 };
         o.data.uuid = { 0 };
         o.data.kind = pending_bet_kind::live;
         o.data.stake = ASSET_SCR(500);
     });
     pending_bet_dba.create([](pending_bet_object& o) {
-        o.game = 0;
+        o.game_uuid = { 0 };
         o.data.uuid = { 1 };
         o.data.kind = pending_bet_kind::non_live;
         o.data.stake = ASSET_SCR(1000);
@@ -253,7 +253,7 @@ SCORUM_TEST_CASE(cancel_pending_bets_only_live_pending_bet_should_be_removed_fro
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
                         dprop_dba, uuid_hist_dba);
 
-    svc.cancel_pending_bets(0, pending_bet_kind::live);
+    svc.cancel_pending_bets({ 0 }, pending_bet_kind::live);
 
     BOOST_CHECK_EQUAL(dprop_dba.get().betting_stats.pending_bets_volume.amount, 1000u);
 }
