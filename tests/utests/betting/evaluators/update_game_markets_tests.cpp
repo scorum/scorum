@@ -18,7 +18,7 @@
 #include <scorum/protocol/betting/market.hpp>
 
 namespace {
-
+using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
@@ -31,7 +31,7 @@ struct game_evaluator_fixture : public shared_memory_fixture
 
     using get_by_id_ptr = const game_object& (game_service_i::*)(const scorum::uuid_type&)const;
     using exists_by_id_ptr = bool (game_service_i::*)(const scorum::uuid_type&) const;
-    using cancel_bets_ptr = void (betting_service_i::*)(game_id_type, const fc::flat_set<market_type>&);
+    using cancel_bets_ptr = void (betting_service_i::*)(uuid_type, const fc::flat_set<market_type>&);
 
     MockRepository mocks;
 
@@ -122,7 +122,7 @@ SCORUM_TEST_CASE(update_game_new_markets_is_overset_no_cancelled_bets)
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks.ExpectCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_bets)
-        .Do([](const game_id_type&, const fc::flat_set<market_type>& cancelled_markets) {
+        .Do([](uuid_type, const fc::flat_set<market_type>& cancelled_markets) {
             BOOST_CHECK_EQUAL(cancelled_markets.size(), 0u);
         });
     mocks.OnCall(game_service, game_service_i::update_markets);
@@ -147,7 +147,7 @@ SCORUM_TEST_CASE(update_game_new_markets_is_subset_some_bets_cancelled)
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks.ExpectCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_bets)
-        .Do([](const game_id_type&, const fc::flat_set<market_type>& cancelled_markets) {
+        .Do([](uuid_type, const fc::flat_set<market_type>& cancelled_markets) {
             BOOST_REQUIRE_EQUAL(cancelled_markets.size(), 2u);
             auto cancelled_wincases_0 = create_wincases(*cancelled_markets.nth(0));
             auto cancelled_wincases_1 = create_wincases(*cancelled_markets.nth(1));
@@ -179,7 +179,7 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
     mocks.ExpectCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_bets)
-        .Do([](const game_id_type&, const fc::flat_set<market_type>& cancelled_markets) {
+        .Do([](uuid_type, const fc::flat_set<market_type>& cancelled_markets) {
             BOOST_REQUIRE_EQUAL(cancelled_markets.size(), 2u);
             auto cancelled_wincases_0 = create_wincases(*cancelled_markets.nth(0));
             auto cancelled_wincases_1 = create_wincases(*cancelled_markets.nth(1));

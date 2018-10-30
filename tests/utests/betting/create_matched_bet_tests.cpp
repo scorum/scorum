@@ -55,13 +55,13 @@ private:
     size_t _counter;
 };
 
-BOOST_FIXTURE_TEST_SUITE(pending_bet_index_by_game_id_wincase_tests, fixture)
+BOOST_FIXTURE_TEST_SUITE(pending_bet_index_by_game_uuid_wincase_tests, fixture)
 
 template <typename Wincase>
-auto get_range(const dba::db_accessor<pending_bet_object>& accessor, game_id_type id, Wincase w)
+auto get_range(const dba::db_accessor<pending_bet_object>& accessor, scorum::uuid_type id, Wincase w)
 {
     auto key = std::make_tuple(id, w);
-    return accessor.get_range_by<by_game_id_wincase>(key);
+    return accessor.get_range_by<by_game_uuid_wincase>(key);
 }
 
 SCORUM_TEST_CASE(check_order_in_range_of_bets_with_equal_game_id_and_wincase)
@@ -69,16 +69,16 @@ SCORUM_TEST_CASE(check_order_in_range_of_bets_with_equal_game_id_and_wincase)
     dba::db_accessor<pending_bet_object> pending_dba(db);
 
     auto bet1 = create_bet([](pending_bet_object& bet) {
-        bet.game = 1;
+        bet.game_uuid = { 1 };
         bet.data.wincase = total::over({ 1 });
     });
 
     auto bet2 = create_bet([&](pending_bet_object& bet) {
-        bet.game = 1;
+        bet.game_uuid = { 1 };
         bet.data.wincase = total::over({ 1 });
     });
 
-    auto range = get_range(pending_dba, bet1.game, total::over({ 1 }));
+    auto range = get_range(pending_dba, bet1.game_uuid, total::over({ 1 }));
 
     auto pending_bets = range | collect<std::vector>();
 
@@ -93,19 +93,19 @@ SCORUM_TEST_CASE(dont_return_bet_if_game_id_is_different)
     dba::db_accessor<pending_bet_object> pending_dba(db);
 
     auto bet1 = create_bet([](pending_bet_object& bet) {
-        bet.game = 1;
+        bet.game_uuid = { 1 };
         bet.data.wincase = total::over({ 1 });
     });
 
     create_bet([&](pending_bet_object& bet) {
-        bet.game = 2;
+        bet.game_uuid = { 2 };
         bet.data.wincase = total::over({ 1 });
     });
 
-    auto range = get_range(pending_dba, bet1.game, total::over({ 1 }));
+    auto range = get_range(pending_dba, bet1.game_uuid, total::over({ 1 }));
 
     BOOST_CHECK_EQUAL(1u, boost::distance(range));
-    BOOST_CHECK_EQUAL(1u, range.front().game._id);
+    BOOST_CHECK(scorum::uuid_type{ 1 } == range.front().game_uuid);
 }
 
 SCORUM_TEST_CASE(dont_return_bet_if_wincase_is_different)
@@ -113,16 +113,16 @@ SCORUM_TEST_CASE(dont_return_bet_if_wincase_is_different)
     dba::db_accessor<pending_bet_object> pending_dba(db);
 
     auto bet1 = create_bet([](pending_bet_object& bet) {
-        bet.game = 1;
+        bet.game_uuid = { 1 };
         bet.data.wincase = total::over({ 1 });
     });
 
     create_bet([&](pending_bet_object& bet) {
-        bet.game = 1;
+        bet.game_uuid = { 1 };
         bet.data.wincase = total::over({ 2 });
     });
 
-    auto range = get_range(pending_dba, bet1.game, total::over({ 1 }));
+    auto range = get_range(pending_dba, bet1.game_uuid, total::over({ 1 }));
 
     BOOST_CHECK_EQUAL(1u, boost::distance(range));
 
@@ -228,10 +228,10 @@ SCORUM_TEST_CASE(check_ids_for_two_matched_bets)
 
 SCORUM_TEST_CASE(throw_exception_when_bets_have_different_game)
 {
-    auto bet1 = create_bet([](auto& bet) { bet.game = 1; });
+    auto bet1 = create_bet([](auto& bet) { bet.game_uuid = { 1 }; });
 
     auto bet2 = create_bet([&](auto& bet) {
-        bet.game = 2;
+        bet.game_uuid = { 2 };
         bet.data.wincase = create_opposite(bet1.data.wincase);
     });
 

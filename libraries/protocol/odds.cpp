@@ -61,3 +61,22 @@ std::string odds::to_string() const
 }
 }
 }
+
+namespace fc {
+void to_variant(const scorum::protocol::odds& var, fc::variant& vo)
+{
+    auto base = var.base();
+    vo = fc::mutable_variant_object()("numerator", base.numerator)("denominator", base.denominator);
+}
+
+void from_variant(const fc::variant& var, scorum::protocol::odds& vo)
+{
+    using namespace scorum::protocol;
+
+    const auto& variant_obj = var.get_object();
+    auto numerator = variant_obj["numerator"].as<odds_value_type>();
+    auto denominator = variant_obj["denominator"].as<odds_value_type>();
+
+    vo = scorum::protocol::odds{ numerator, denominator };
+}
+} // namespace fc

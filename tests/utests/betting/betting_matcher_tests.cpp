@@ -88,13 +88,13 @@ BOOST_FIXTURE_TEST_CASE(add_bet_with_no_stake_to_the_close_list, no_bets_fixture
 {
     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
-        bet.data.bet_odds = odds(3, 2);
+        bet.data.odds = odds(3, 2);
         bet.data.wincase = total::over({ 1 });
     });
 
     const auto& bet2 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(0);
-        bet.data.bet_odds = bet1.data.bet_odds.inverted();
+        bet.data.odds = bet1.data.odds.inverted();
         bet.data.wincase = create_opposite(bet1.data.wincase);
     });
 
@@ -107,13 +107,13 @@ BOOST_FIXTURE_TEST_CASE(dont_create_matched_bet_when_stake_is_zero, no_bets_fixt
 {
     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
-        bet.data.bet_odds = odds(3, 2);
+        bet.data.odds = odds(3, 2);
         bet.data.wincase = total::over({ 1 });
     });
 
     const auto& bet2 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(0);
-        bet.data.bet_odds = bet1.data.bet_odds.inverted();
+        bet.data.odds = bet1.data.odds.inverted();
         bet.data.wincase = create_opposite(bet1.data.wincase);
     });
 
@@ -126,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(dont_add_bet_with_no_stake_to_the_close_list, no_bets_fi
 {
     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(0);
-        bet.data.bet_odds = odds(3, 2);
+        bet.data.odds = odds(3, 2);
         bet.data.wincase = total::over({ 1 });
     });
 
@@ -139,13 +139,13 @@ BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_wincase, no_bets_fixture)
 {
     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
-        bet.data.bet_odds = odds(3, 2);
+        bet.data.odds = odds(3, 2);
         bet.data.wincase = total::over({ 1 });
     });
 
     const auto& bet2 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
-        bet.data.bet_odds = bet1.data.bet_odds.inverted();
+        bet.data.odds = bet1.data.odds.inverted();
         bet.data.wincase = bet1.data.wincase;
     });
 
@@ -158,13 +158,13 @@ BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_odds, no_bets_fixture)
 {
     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
-        bet.data.bet_odds = odds(3, 2);
+        bet.data.odds = odds(3, 2);
         bet.data.wincase = total::over({ 1 });
     });
 
     const auto& bet2 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
-        bet.data.bet_odds = bet1.data.bet_odds;
+        bet.data.odds = bet1.data.odds;
         bet.data.wincase = create_opposite(bet1.data.wincase);
     });
 
@@ -181,21 +181,21 @@ BOOST_FIXTURE_TEST_CASE(match_with_two_bets, no_bets_fixture)
     create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
 
-        bet.data.bet_odds = one_point_five;
+        bet.data.odds = one_point_five;
         bet.data.wincase = total_over_1;
     });
 
     create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
 
-        bet.data.bet_odds = one_point_five;
+        bet.data.odds = one_point_five;
         bet.data.wincase = total_over_1;
     });
 
     const auto& bet3 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
 
-        bet.data.bet_odds = one_point_five.inverted();
+        bet.data.odds = one_point_five.inverted();
         bet.data.wincase = create_opposite(total_over_1);
     });
 
@@ -214,13 +214,13 @@ public:
     {
         bet1 = create_bet([&](pending_bet_object& bet) {
                    bet.data.stake = ASSET_SCR(10);
-                   bet.data.bet_odds = odds(3, 2);
+                   bet.data.odds = odds(3, 2);
                    bet.data.wincase = total::over({ 1 });
                }).data;
 
         bet2 = create_bet([&](pending_bet_object& bet) {
                    bet.data.stake = ASSET_SCR(10);
-                   bet.data.bet_odds = bet1.bet_odds.inverted();
+                   bet.data.odds = bet1.odds.inverted();
                    bet.data.wincase = create_opposite(bet1.wincase);
                }).data;
     }
@@ -302,21 +302,21 @@ struct three_bets_fixture : public no_bets_fixture
         bet1 = create_bet([&](pending_bet_object& bet) {
                    bet.data.stake = ASSET_SCR(10);
 
-                   bet.data.bet_odds = one_point_five;
+                   bet.data.odds = one_point_five;
                    bet.data.wincase = total_over_1;
                }).data;
 
         bet2 = create_bet([&](pending_bet_object& bet) {
                    bet.data.stake = ASSET_SCR(10);
 
-                   bet.data.bet_odds = one_point_five;
+                   bet.data.odds = one_point_five;
                    bet.data.wincase = total_over_1;
                }).data;
 
         bet3 = create_bet([&](pending_bet_object& bet) {
                    bet.data.stake = ASSET_SCR(10);
 
-                   bet.data.bet_odds = odds(2, 1);
+                   bet.data.odds = odds(2, 1);
                    bet.data.wincase = create_opposite(total_over_1);
                }).data;
     }
@@ -343,7 +343,7 @@ BOOST_FIXTURE_TEST_CASE(stop_matching_when_stake_is_spent, three_bets_fixture)
     const auto& bet4 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(1);
 
-        bet.data.bet_odds = one_point_five.inverted();
+        bet.data.odds = one_point_five.inverted();
         bet.data.wincase = create_opposite(total_over_1);
     });
 

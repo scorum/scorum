@@ -47,13 +47,13 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     _account_service.check_account_existence(op.better);
 
-    auto bet_odds = odds(op.odds.numerator, op.odds.denominator);
+    odds odds(op.odds.numerator, op.odds.denominator);
     const auto kind = op.live //
         ? pending_bet_kind::live
         : pending_bet_kind::non_live;
 
     const auto& bet
-        = _betting_svc.create_pending_bet(op.better, op.stake, bet_odds, op.wincase, game_obj.id, op.uuid, kind);
+        = _betting_svc.create_pending_bet(op.better, op.stake, odds, op.wincase, game_obj.uuid, op.uuid, kind);
 
     auto bets_to_cancel = _betting_matcher.match(bet, _dgp_svc.head_block_time());
 

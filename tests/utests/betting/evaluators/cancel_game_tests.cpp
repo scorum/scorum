@@ -13,7 +13,7 @@
 #include <scorum/protocol/betting/market.hpp>
 
 namespace {
-
+using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
@@ -26,7 +26,7 @@ struct game_evaluator_fixture : public shared_memory_fixture
 
     using get_by_id_ptr = const game_object& (game_service_i::*)(const scorum::uuid_type&)const;
     using exists_by_id_ptr = bool (game_service_i::*)(const scorum::uuid_type&) const;
-    using cancel_bets_ptr = void (betting_service_i::*)(game_id_type);
+    using cancel_bets_ptr = void (betting_service_i::*)(scorum::uuid_type);
 
     MockRepository mocks;
 
@@ -82,17 +82,23 @@ SCORUM_TEST_CASE(should_cancel_bets_while_cancelling_game)
     cancel_game_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     cancel_game_operation op;
+    op.uuid = { 0 };
 
-    auto game_obj = create_object<game_object>(shm, [](game_object& o) { o.status = game_status::started; });
+    auto game_obj = create_object<game_object>(shm, [](game_object& o) {
+        o.status = game_status::started;
+        o.uuid = { 0 };
+    });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
 
-    mocks.ExpectCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_pending_bets).With(0);
-    mocks.ExpectCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_matched_bets).With(0);
-    mocks.ExpectCall(betting_service, betting_service_i::cancel_game).With(0);
+    mocks.ExpectCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_pending_bets)
+        .With(uuid_type{ 0 });
+    mocks.ExpectCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_matched_bets)
+        .With(uuid_type{ 0 });
+    mocks.ExpectCall(betting_service, betting_service_i::cancel_game).With(uuid_type{ 0 });
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
 }
@@ -102,16 +108,22 @@ SCORUM_TEST_CASE(should_raise_game_status_changed_virtual_operation)
     cancel_game_evaluator ev(*dbs_services, *betting_service, *virt_op_emitter);
 
     cancel_game_operation op;
+    op.uuid = { 0 };
 
-    auto game_obj = create_object<game_object>(shm, [](game_object& o) { o.status = game_status::started; });
+    auto game_obj = create_object<game_object>(shm, [](game_object& o) {
+        o.status = game_status::started;
+        o.uuid = { 0 };
+    });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
     mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
     mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
     mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
-    mocks.OnCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_pending_bets).With(0);
-    mocks.OnCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_matched_bets).With(0);
-    mocks.OnCall(betting_service, betting_service_i::cancel_game).With(0);
+    mocks.OnCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_pending_bets)
+        .With(uuid_type{ 0 });
+    mocks.OnCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_matched_bets)
+        .With(uuid_type{ 0 });
+    mocks.OnCall(betting_service, betting_service_i::cancel_game).With(uuid_type{ 0 });
 
     mocks.ExpectCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation)
         .Do([](const operation& op) {

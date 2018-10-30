@@ -43,9 +43,9 @@ void process_bets_resolving::on_apply(block_task_context& ctx)
 
         fc::flat_set<wincase_type> results(game.results.begin(), game.results.end());
 
-        _resolver.resolve_matched_bets(game.id, results);
-        _betting_svc.cancel_pending_bets(game.id);
-        _betting_svc.cancel_game(game.id);
+        _resolver.resolve_matched_bets(uuid, results);
+        _betting_svc.cancel_pending_bets(uuid);
+        _betting_svc.cancel_game(uuid);
 
         _vop_emitter.push_virtual_operation(game_status_changed_operation(uuid, old_status, game_status::resolved));
     });

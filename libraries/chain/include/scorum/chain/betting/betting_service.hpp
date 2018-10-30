@@ -40,22 +40,22 @@ struct betting_service_i
                                                          const protocol::asset& stake,
                                                          protocol::odds odds,
                                                          const protocol::wincase_type& wincase,
-                                                         game_id_type game,
+                                                         uuid_type game_uuid,
                                                          uuid_type bet_uuid,
                                                          pending_bet_kind kind)
         = 0;
 
-    virtual void cancel_game(game_id_type game_id) = 0;
-    virtual void cancel_bets(game_id_type game_id) = 0;
-    virtual void cancel_bets(game_id_type game_id, fc::time_point_sec created_after) = 0;
-    virtual void cancel_bets(game_id_type game_id, const fc::flat_set<market_type>& cancelled_markets) = 0;
+    virtual void cancel_game(uuid_type game_uuid) = 0;
+    virtual void cancel_bets(uuid_type game_uuid) = 0;
+    virtual void cancel_bets(uuid_type game_uuid, fc::time_point_sec created_after) = 0;
+    virtual void cancel_bets(uuid_type game_uuid, const fc::flat_set<market_type>& cancelled_markets) = 0;
 
     virtual void cancel_pending_bet(pending_bet_id_type id) = 0;
-    virtual void cancel_pending_bets(game_id_type game_id) = 0;
-    virtual void cancel_pending_bets(game_id_type game_id, pending_bet_kind kind) = 0;
+    virtual void cancel_pending_bets(uuid_type game_uuid) = 0;
+    virtual void cancel_pending_bets(uuid_type game_uuid, pending_bet_kind kind) = 0;
     virtual void cancel_pending_bets(utils::bidir_range<const pending_bet_object> bets, uuid_type game_uuid) = 0;
 
-    virtual void cancel_matched_bets(game_id_type game_id) = 0;
+    virtual void cancel_matched_bets(uuid_type game_uuid) = 0;
     virtual void cancel_matched_bets(utils::bidir_range<const matched_bet_object> bets, uuid_type game_uuid) = 0;
 };
 
@@ -77,21 +77,21 @@ public:
                                                  const protocol::asset& stake,
                                                  protocol::odds odds,
                                                  const protocol::wincase_type& wincase,
-                                                 game_id_type game,
+                                                 uuid_type game_uuid,
                                                  uuid_type bet_uuid,
                                                  pending_bet_kind kind) override;
 
-    void cancel_game(game_id_type game_id) override;
-    void cancel_bets(game_id_type game_id) override;
-    void cancel_bets(game_id_type game_id, fc::time_point_sec created_after) override;
-    void cancel_bets(game_id_type game_id, const fc::flat_set<market_type>& cancelled_markets) override;
+    void cancel_game(uuid_type game_uuid) override;
+    void cancel_bets(uuid_type game_uuid) override;
+    void cancel_bets(uuid_type game_uuid, fc::time_point_sec created_after) override;
+    void cancel_bets(uuid_type game_uuid, const fc::flat_set<market_type>& cancelled_markets) override;
 
     void cancel_pending_bet(pending_bet_id_type id) override;
-    void cancel_pending_bets(game_id_type game_id) override;
-    void cancel_pending_bets(game_id_type game_id, pending_bet_kind kind) override;
+    void cancel_pending_bets(uuid_type game_uuid) override;
+    void cancel_pending_bets(uuid_type game_uuid, pending_bet_kind kind) override;
     void cancel_pending_bets(utils::bidir_range<const pending_bet_object> bets, uuid_type game_uuid) override;
 
-    void cancel_matched_bets(game_id_type game_id) override;
+    void cancel_matched_bets(uuid_type game_uuid) override;
     void cancel_matched_bets(utils::bidir_range<const matched_bet_object> bets, uuid_type game_uuid) override;
 
 private:

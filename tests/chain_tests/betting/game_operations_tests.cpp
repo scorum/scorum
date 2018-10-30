@@ -7,6 +7,7 @@
 
 #include <scorum/protocol/proposal_operations.hpp>
 
+#include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/proposal.hpp>
 #include <scorum/chain/services/betting_property.hpp>
@@ -17,8 +18,10 @@
 
 #include <scorum/protocol/betting/market_kind.hpp>
 
-namespace {
+#include <scorum/utils/collect_range_adaptor.hpp>
 
+namespace {
+using namespace scorum::utils::adaptors;
 using namespace scorum::protocol;
 using namespace scorum::chain;
 using namespace database_fixture;
@@ -32,6 +35,8 @@ struct game_operations_fixture : public database_fixture::database_betting_integ
         , game_service(db.game_service())
         , matched_bet_service(db.matched_bet_service())
         , pending_bet_service(db.pending_bet_service())
+        , matched_bet_dba(db.get_dba<matched_bet_object>())
+        , pending_bet_dba(db.get_dba<pending_bet_object>())
     {
         open_database();
 
@@ -65,6 +70,22 @@ struct game_operations_fixture : public database_fixture::database_betting_integ
     game_service_i& game_service;
     matched_bet_service_i& matched_bet_service;
     pending_bet_service_i& pending_bet_service;
+    dba::db_accessor<matched_bet_object>& matched_bet_dba;
+    dba::db_accessor<pending_bet_object>& pending_bet_dba;
+
+    std::vector<matched_bet_object> get_matched_bets()
+    {
+        auto matched_bets
+            = matched_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test")) | collect<std::vector>();
+        return matched_bets;
+    }
+
+    std::vector<pending_bet_object> get_pending_bets()
+    {
+        auto pending_bets
+            = pending_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test")) | collect<std::vector>();
+        return pending_bets;
+    }
 };
 
 BOOST_FIXTURE_TEST_SUITE(post_game_results_operation_tests, game_operations_fixture)
@@ -170,8 +191,8 @@ SCORUM_TEST_CASE(update_after_game_started_should_cancel_bets)
     generate_block();
 
     {
-        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
-        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        auto matched_bets = get_matched_bets();
+        auto pending_bets = get_pending_bets();
         BOOST_REQUIRE_EQUAL(matched_bets.size(), 1u);
         BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
     }
@@ -179,8 +200,8 @@ SCORUM_TEST_CASE(update_after_game_started_should_cancel_bets)
     update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
 
     {
-        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
-        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        auto matched_bets = get_matched_bets();
+        auto pending_bets = get_pending_bets();
         BOOST_REQUIRE_EQUAL(matched_bets.size(), 0u);
         BOOST_REQUIRE_EQUAL(pending_bets.size(), 0u);
     }
@@ -197,8 +218,8 @@ SCORUM_TEST_CASE(update_after_game_started_should_keep_bets)
     generate_block(); // game started
 
     {
-        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
-        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        auto matched_bets = get_matched_bets();
+        auto pending_bets = get_pending_bets();
         BOOST_REQUIRE_EQUAL(matched_bets.size(), 1u);
         BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
     }
@@ -206,8 +227,8 @@ SCORUM_TEST_CASE(update_after_game_started_should_keep_bets)
     update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
 
     {
-        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
-        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        auto matched_bets = get_matched_bets();
+        auto pending_bets = get_pending_bets();
         BOOST_REQUIRE_EQUAL(matched_bets.size(), 1u);
         BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
     }
@@ -224,23 +245,23 @@ SCORUM_TEST_CASE(update_after_game_started_should_increase_existing_pending_bet)
 
     create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
 
-    auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
-    auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
-    BOOST_REQUIRE_EQUAL(matched_bets.size(), 1u);
-    BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
+    auto matched_bets = matched_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test"));
+    auto pending_bets = pending_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test"));
+    BOOST_REQUIRE_EQUAL(boost::size(matched_bets), 1u);
+    BOOST_REQUIRE_EQUAL(boost::size(pending_bets), 1u);
 
-    const pending_bet_object* pending_bet_address = std::addressof(pending_bets[0].get());
+    const pending_bet_object* pending_bet_address = std::addressof(*pending_bets.begin());
 
     update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
 
     {
-        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
-        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
-        BOOST_REQUIRE_EQUAL(matched_bets.size(), 0u);
-        BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
-        BOOST_REQUIRE_EQUAL(pending_bets[0].get().data.stake.amount, 1000u);
+        auto matched_bets = matched_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test"));
+        auto pending_bets = pending_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test"));
+        BOOST_REQUIRE_EQUAL(boost::size(matched_bets), 0u);
+        BOOST_REQUIRE_EQUAL(boost::size(pending_bets), 1u);
+        BOOST_REQUIRE_EQUAL(pending_bets.begin()->data.stake.amount, 1000u);
         BOOST_REQUIRE_EQUAL(pending_bet_address,
-                            std::addressof(pending_bets[0].get())); // check this is the same object
+                            std::addressof(*pending_bets.begin())); // check this is the same object
     }
 }
 
@@ -257,23 +278,24 @@ SCORUM_TEST_CASE(update_after_game_started_should_restore_missing_pending_bet)
 
     create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(4000)); // 4000 matched
 
-    auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
-    auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+    auto matched_bets = get_matched_bets();
+    auto pending_bets = get_pending_bets();
     BOOST_REQUIRE_EQUAL(matched_bets.size(), 1u);
     BOOST_REQUIRE_EQUAL(pending_bets.size(), 0u);
 
     update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
 
     {
-        auto matched_bets = matched_bet_service.get_bets(game_id_type(0));
-        auto pending_bets = pending_bet_service.get_bets(game_id_type(0));
+        auto matched_bets = get_matched_bets();
+        auto pending_bets = get_pending_bets();
         BOOST_REQUIRE_EQUAL(matched_bets.size(), 0u);
         BOOST_REQUIRE_EQUAL(pending_bets.size(), 1u);
-        BOOST_CHECK_EQUAL(pending_bets[0].get().data.better, "alice");
-        BOOST_CHECK_EQUAL(pending_bets[0].get().data.stake.amount, 1000);
-        BOOST_CHECK_EQUAL(pending_bets[0].get().data.created.to_iso_string(), original_create_time.to_iso_string());
-        BOOST_CHECK_EQUAL(pending_bets[0].get().data.bet_odds, (odds{ 10, 2 }));
-        BOOST_CHECK_EQUAL(pending_bets[0].get().data.wincase.get<total::under>().threshold, 2000);
+        const auto& fst_pbet = *pending_bets.begin();
+        BOOST_CHECK_EQUAL(fst_pbet.data.better, "alice");
+        BOOST_CHECK_EQUAL(fst_pbet.data.stake.amount, 1000);
+        BOOST_CHECK_EQUAL(fst_pbet.data.created.to_iso_string(), original_create_time.to_iso_string());
+        BOOST_CHECK_EQUAL(fst_pbet.data.odds, (odds{ 10, 2 }));
+        BOOST_CHECK_EQUAL(fst_pbet.data.wincase.get<total::under>().threshold, 2000);
     }
 }
 

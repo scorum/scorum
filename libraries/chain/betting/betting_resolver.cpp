@@ -23,11 +23,9 @@ betting_resolver::betting_resolver(account_service_i& account_svc,
 {
 }
 
-void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
-                                            const fc::flat_set<wincase_type>& results) const
+void betting_resolver::resolve_matched_bets(uuid_type game_uuid, const fc::flat_set<wincase_type>& results) const
 {
-    auto matched_bets = _matched_bet_dba.get_range_by<by_game_id_market>(game_id);
-    const auto& game = _game_dba.get_by<by_id>(game_id);
+    auto matched_bets = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
     for (const matched_bet_object& bet : matched_bets)
     {
@@ -40,7 +38,7 @@ void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
             _account_svc.increase_balance(bet.bet1_data.better, income);
 
             _virt_op_emitter.push_virtual_operation(bet_resolved_operation(
-                game.uuid, bet.bet1_data.better, bet.bet1_data.uuid, income, bet_resolve_kind::win));
+                game_uuid, bet.bet1_data.better, bet.bet1_data.uuid, income, bet_resolve_kind::win));
         }
         else if (snd_won)
         {
@@ -48,7 +46,7 @@ void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
             _account_svc.increase_balance(bet.bet2_data.better, income);
 
             _virt_op_emitter.push_virtual_operation(bet_resolved_operation(
-                game.uuid, bet.bet2_data.better, bet.bet2_data.uuid, income, bet_resolve_kind::win));
+                game_uuid, bet.bet2_data.better, bet.bet2_data.uuid, income, bet_resolve_kind::win));
         }
         else
         {
@@ -56,9 +54,9 @@ void betting_resolver::resolve_matched_bets(const game_id_type& game_id,
             _account_svc.increase_balance(bet.bet2_data.better, bet.bet2_data.stake);
 
             _virt_op_emitter.push_virtual_operation(bet_resolved_operation(
-                game.uuid, bet.bet1_data.better, bet.bet1_data.uuid, bet.bet1_data.stake, bet_resolve_kind::draw));
+                game_uuid, bet.bet1_data.better, bet.bet1_data.uuid, bet.bet1_data.stake, bet_resolve_kind::draw));
             _virt_op_emitter.push_virtual_operation(bet_resolved_operation(
-                game.uuid, bet.bet1_data.better, bet.bet1_data.uuid, bet.bet1_data.stake, bet_resolve_kind::draw));
+                game_uuid, bet.bet1_data.better, bet.bet1_data.uuid, bet.bet1_data.stake, bet_resolve_kind::draw));
         }
 
         _dprop_dba.update([&](dynamic_global_property_object& o) {

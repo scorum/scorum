@@ -120,7 +120,7 @@ BOOST_FIXTURE_TEST_CASE(non_finished_game_should_return_empty_result, get_game_w
 
     mocks.ExpectCallFunc((dd::is_exists_by<game_object, by_uuid, uuid_type>)).Return(true);
     mocks.ExpectCallFunc((dd::get_by<game_object, by_uuid, uuid_type>)).With(_, game_uuid).ReturnByRef(game);
-    mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_id_market, game_id_type>)).Return({});
+    mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_uuid_market, uuid_type>)).Return({});
 
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
 
@@ -147,7 +147,7 @@ BOOST_FIXTURE_TEST_CASE(check_first_better_is_winner, get_game_winners_fixture)
 
     mocks.OnCallFunc((dd::is_exists_by<game_object, by_uuid, uuid_type>)).Return(true);
     mocks.ExpectCallFunc((dd::get_by<game_object, by_uuid, uuid_type>)).With(_, game_uuid).ReturnByRef(game);
-    mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_id_market, game_id_type>)).Return(matched_bets);
+    mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_uuid_market, uuid_type>)).Return(matched_bets);
 
     // Run
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
@@ -182,7 +182,7 @@ BOOST_FIXTURE_TEST_CASE(check_second_better_is_winner, get_game_winners_fixture)
 
     mocks.OnCallFunc((dd::is_exists_by<game_object, by_uuid, uuid_type>)).Return(true);
     mocks.ExpectCallFunc((dd::get_by<game_object, by_uuid, uuid_type>)).With(_, game_uuid).ReturnByRef(game);
-    mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_id_market, game_id_type>)).Return(matched_bets);
+    mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_uuid_market, uuid_type>)).Return(matched_bets);
 
     // Run
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
@@ -257,7 +257,7 @@ BOOST_FIXTURE_TEST_CASE(trd_state_markets_without_winner_are_not_returned, get_g
 
     mocks.OnCallFunc((dd::is_exists_by<game_object, by_uuid, uuid_type>)).Return(true);
     mocks.ExpectCallFunc((dd::get_by<game_object, by_uuid, uuid_type>)).With(_, game_uuid).ReturnByRef(game);
-    mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_id_market, game_id_type>)).Return(matched_bets);
+    mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_uuid_market, uuid_type>)).Return(matched_bets);
 
     // Run
     betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
@@ -415,58 +415,6 @@ BOOST_FIXTURE_TEST_CASE(throw_exception_when_limit_gt_than_max_limit, get_games_
     BOOST_REQUIRE_THROW(api.lookup_matched_bets(0, max_limit + 1), fc::assert_exception);
 }
 
-BOOST_FIXTURE_TEST_CASE(dont_throw_when_limit_is_zero, get_games_fixture)
-{
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-
-    std::vector<pending_bet_object> pbets;
-    std::vector<matched_bet_object> mbets;
-
-    mocks
-        .OnCallOverload(pending_bet_service,
-                        (pending_bet_service_i::view_type(pending_bet_service_i::*)(pending_bet_id_type) const)
-                            & pending_bet_service_i::get_bets)
-        .With(_)
-        .ReturnByRef({ pbets.begin(), pbets.end() });
-
-    mocks
-        .OnCallOverload(matched_bet_service,
-                        (matched_bet_service_i::view_type(matched_bet_service_i::*)(matched_bet_id_type) const)
-                            & matched_bet_service_i::get_bets)
-        .With(_)
-        .ReturnByRef({ mbets.begin(), mbets.end() });
-
-    BOOST_REQUIRE_NO_THROW(api.lookup_pending_bets(0, 0));
-    BOOST_REQUIRE_NO_THROW(api.lookup_matched_bets(0, 0));
-}
-
-BOOST_FIXTURE_TEST_CASE(dont_throw_when_limit_eq_max, get_games_fixture)
-{
-    const auto max_limit = 100;
-
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba, max_limit);
-
-    std::vector<pending_bet_object> pbets;
-    std::vector<matched_bet_object> mbets;
-
-    mocks
-        .OnCallOverload(pending_bet_service,
-                        (pending_bet_service_i::view_type(pending_bet_service_i::*)(pending_bet_id_type) const)
-                            & pending_bet_service_i::get_bets)
-        .With(_)
-        .ReturnByRef({ pbets.begin(), pbets.end() });
-
-    mocks
-        .OnCallOverload(matched_bet_service,
-                        (matched_bet_service_i::view_type(matched_bet_service_i::*)(matched_bet_id_type) const)
-                            & matched_bet_service_i::get_bets)
-        .With(_)
-        .ReturnByRef({ mbets.begin(), mbets.end() });
-
-    BOOST_REQUIRE_NO_THROW(api.lookup_pending_bets(0, max_limit));
-    BOOST_REQUIRE_NO_THROW(api.lookup_matched_bets(0, max_limit));
-}
-
 template <typename T> struct get_bets_fixture : public fixture
 {
     get_bets_fixture()
@@ -480,106 +428,6 @@ template <typename T> struct get_bets_fixture : public fixture
 
     std::vector<T> objects;
 };
-
-BOOST_FIXTURE_TEST_CASE(check_get_pending_bets_from_arg, get_bets_fixture<pending_bet_object>)
-{
-    pending_bet_id_type from = 0;
-    mocks
-        .ExpectCallOverload(pending_bet_service,
-                            (pending_bet_service_i::view_type(pending_bet_service_i::*)(pending_bet_id_type) const)
-                                & pending_bet_service_i::get_bets)
-        .With(from)
-        .Return({ objects.begin(), objects.end() });
-
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-    api.lookup_pending_bets(from, 1);
-}
-
-BOOST_FIXTURE_TEST_CASE(get_one_pending_bet, get_bets_fixture<pending_bet_object>)
-{
-    mocks
-        .ExpectCallOverload(pending_bet_service,
-                            (pending_bet_service_i::view_type(pending_bet_service_i::*)(pending_bet_id_type) const)
-                                & pending_bet_service_i::get_bets)
-        .With(_)
-        .Return({ objects.begin(), objects.end() });
-
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-    auto bets = api.lookup_pending_bets(0, 1);
-
-    BOOST_REQUIRE_EQUAL(bets.size(), 1);
-
-    BOOST_CHECK(bets[0].id == 0u);
-}
-
-BOOST_FIXTURE_TEST_CASE(get_all_pending_bets, get_bets_fixture<pending_bet_object>)
-{
-    mocks
-        .ExpectCallOverload(pending_bet_service,
-                            (pending_bet_service_i::view_type(pending_bet_service_i::*)(pending_bet_id_type) const)
-                                & pending_bet_service_i::get_bets)
-        .With(_)
-        .Return({ objects.begin(), objects.end() });
-
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-    auto bets = api.lookup_pending_bets(0, 100);
-
-    BOOST_REQUIRE_EQUAL(bets.size(), 3);
-
-    BOOST_CHECK(bets[0].id == 0u);
-    BOOST_CHECK(bets[1].id == 1u);
-    BOOST_CHECK(bets[2].id == 2u);
-}
-
-BOOST_FIXTURE_TEST_CASE(check_get_matched_bets_from_arg, get_bets_fixture<matched_bet_object>)
-{
-    matched_bet_id_type from = 0;
-    mocks
-        .ExpectCallOverload(matched_bet_service,
-                            (matched_bet_service_i::view_type(matched_bet_service_i::*)(matched_bet_id_type) const)
-                                & matched_bet_service_i::get_bets)
-        .With(from)
-        .Return({ objects.begin(), objects.end() });
-
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-    api.lookup_matched_bets(from, 1);
-}
-
-BOOST_FIXTURE_TEST_CASE(get_one_matched_bet, get_bets_fixture<matched_bet_object>)
-{
-    mocks
-        .ExpectCallOverload(matched_bet_service,
-                            (matched_bet_service_i::view_type(matched_bet_service_i::*)(matched_bet_id_type) const)
-                                & matched_bet_service_i::get_bets)
-        .With(_)
-        .Return({ objects.begin(), objects.end() });
-
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-    auto bets = api.lookup_matched_bets(0, 1);
-
-    BOOST_REQUIRE_EQUAL(bets.size(), 1);
-
-    BOOST_CHECK(bets[0].id == 0u);
-}
-
-BOOST_FIXTURE_TEST_CASE(get_all_matched_bets, get_bets_fixture<matched_bet_object>)
-{
-    mocks
-        .ExpectCallOverload(matched_bet_service,
-                            (matched_bet_service_i::view_type(matched_bet_service_i::*)(matched_bet_id_type) const)
-                                & matched_bet_service_i::get_bets)
-        .With(_)
-        .Return({ objects.begin(), objects.end() });
-
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
-    auto bets = api.lookup_matched_bets(0, 100);
-
-    BOOST_REQUIRE_EQUAL(bets.size(), 3);
-
-    BOOST_CHECK(bets[0].id == 0u);
-    BOOST_CHECK(bets[1].id == 1u);
-    BOOST_CHECK(bets[2].id == 2u);
-}
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -5,11 +5,11 @@ namespace chain {
 
 using scorum::protocol::odds_fraction_type;
 
-asset calculate_gain(const asset& bet_stake, const odds& bet_odds)
+asset calculate_gain(const asset& bet_stake, const odds& odds)
 {
     FC_ASSERT(bet_stake.symbol() == SCORUM_SYMBOL, "Invalid symbol for stake");
     auto result = bet_stake;
-    result *= bet_odds;
+    result *= odds;
     result -= bet_stake;
     return result;
 }
