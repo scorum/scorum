@@ -124,6 +124,13 @@ get_range_by(db_index& db_idx, const detail::bound<TKeyLhs>& lower, const detail
     return { from, to };
 }
 
+template <typename TObject, typename IndexBy> utils::bidir_range<const TObject> get_all_by(db_index& db_idx)
+{
+    const auto& idx = db_idx.get_index<typename chainbase::get_index_type<TObject>::type, IndexBy>();
+
+    return { idx.begin(), idx.end() };
+}
+
 template <typename TIdx, typename TKey> auto get_lower_bound(TIdx& idx, const detail::bound<TKey>& bound)
 {
     switch (bound.kind)
@@ -261,6 +268,11 @@ public:
     utils::bidir_range<const object_type> get_range_by(unbounded_placeholder lower, unbounded_placeholder upper) const
     {
         return detail::get_range_by<TObject, IndexBy, TKey, TKey>(_db_idx, lower, upper);
+    }
+
+    template <typename IndexBy> utils::bidir_range<const object_type> get_all_by() const
+    {
+        return detail::get_all_by<TObject, IndexBy>(_db_idx);
     }
 
 private:

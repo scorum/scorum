@@ -3,12 +3,6 @@
 #include <chainbase/database_guard.hpp>
 #include <scorum/chain/database/database.hpp>
 
-#include <scorum/chain/data_service_factory.hpp>
-#include <scorum/chain/services/pending_bet.hpp>
-#include <scorum/chain/services/matched_bet.hpp>
-#include <scorum/chain/services/game.hpp>
-#include <scorum/chain/services/betting_property.hpp>
-
 #include <scorum/chain/dba/db_accessor.hpp>
 
 #include <scorum/app/application.hpp>
@@ -36,15 +30,12 @@ using namespace scorum::protocol;
 class betting_api::impl
 {
 public:
-    impl(data_service_factory_i& service_factory,
+    impl(dba::db_accessor<betting_property_object>& betting_prop_dba,
          dba::db_accessor<game_object>& game_dba,
          dba::db_accessor<matched_bet_object>& matched_bet_dba,
          dba::db_accessor<pending_bet_object>& pending_bet_dba,
          uint32_t lookup_limit = LOOKUP_LIMIT)
-        : _game_service(service_factory.game_service())
-        , _pending_bet_service(service_factory.pending_bet_service())
-        , _matched_bet_service(service_factory.matched_bet_service())
-        , _betting_property_service(service_factory.betting_property_service())
+        : _betting_prop_dba(betting_prop_dba)
         , _game_dba(game_dba)
         , _matched_bet_dba(matched_bet_dba)
         , _pending_bet_dba(pending_bet_dba)
@@ -87,7 +78,7 @@ public:
 
     std::vector<game_api_object> get_games_by_status(const fc::flat_set<game_status>& filter) const
     {
-        auto games = _game_service.get_games();
+        auto games = _game_dba.get_all_by<by_id>();
         auto rng = games //
             | boost::adaptors::filtered([&](const auto& obj) { return filter.find(obj.status) != filter.end(); })
             | boost::adaptors::transformed([](const auto& obj) { return game_api_object(obj); });
@@ -124,14 +115,14 @@ public:
         return result;
     }
 
-    auto lookup_matched_bets(matched_bet_id_type from, uint32_t limit) const
+    std::vector<matched_bet_api_object> lookup_matched_bets(matched_bet_id_type from, uint32_t limit) const
     {
-        return get_bets<matched_bet_api_object>(_matched_bet_service, from, limit);
+        return get_bets<matched_bet_api_object>(_matched_bet_dba, from, limit);
     }
 
-    auto lookup_pending_bets(pending_bet_id_type from, uint32_t limit) const
+    std::vector<pending_bet_api_object> lookup_pending_bets(pending_bet_id_type from, uint32_t limit) const
     {
-        return get_bets<pending_bet_api_object>(_pending_bet_service, from, limit);
+        return get_bets<pending_bet_api_object>(_pending_bet_dba, from, limit);
     }
 
     std::vector<matched_bet_api_object> get_matched_bets(const std::vector<uuid_type>& uuids) const
@@ -153,9 +144,9 @@ public:
             | collect<std::vector>();
 
         boost::range::sort(matched_bets_vec, [](const auto& l, const auto& r) { return l.id < r.id; });
-        auto tail = boost::range::unique(matched_bets_vec, [](const auto& l, const auto& r) { return l.id == r.id; });
+        auto rng = boost::range::unique(matched_bets_vec, [](const auto& l, const auto& r) { return l.id == r.id; });
 
-        matched_bets_vec.erase(tail.end(), matched_bets_vec.end());
+        matched_bets_vec.erase(rng.end(), matched_bets_vec.end());
 
         return matched_bets_vec;
     }
@@ -173,19 +164,20 @@ public:
         return result;
     }
 
-    template <typename ApiObjectType, typename ServiceType, typename IdType>
-    std::vector<ApiObjectType> get_bets(ServiceType& service, IdType from, uint32_t limit) const
+    template <typename TApiObject, typename TObject, typename TId>
+    std::vector<TApiObject> get_bets(dba::db_accessor<TObject>& accessor, TId from, uint32_t limit) const
     {
+        using namespace dba;
         using namespace boost::adaptors;
         using namespace utils::adaptors;
 
         FC_ASSERT(limit <= _lookup_limit, "Limit should be le than LOOKUP_LIMIT",
                   ("limit", limit)("LOOKUP_LIMIT", _lookup_limit));
 
-        auto bets = service.get_bets(from);
+        auto bets = accessor.template get_range_by<by_id>(from <= _x, unbounded);
         auto result = bets //
             | take_n(limit) //
-            | transformed([](const auto& obj) { return ApiObjectType(obj); }) //
+            | transformed([](const auto& obj) { return TApiObject(obj); }) //
             | collect<std::vector>();
 
         return result;
@@ -193,15 +185,11 @@ public:
 
     betting_property_api_object get_betting_properties() const
     {
-        return _betting_property_service.get();
+        return _betting_prop_dba.get();
     }
 
 private:
-    game_service_i& _game_service;
-    pending_bet_service_i& _pending_bet_service;
-    matched_bet_service_i& _matched_bet_service;
-    betting_property_service_i& _betting_property_service;
-
+    dba::db_accessor<betting_property_object>& _betting_prop_dba;
     dba::db_accessor<game_object>& _game_dba;
     dba::db_accessor<matched_bet_object>& _matched_bet_dba;
     dba::db_accessor<pending_bet_object>& _pending_bet_dba;
