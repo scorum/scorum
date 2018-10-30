@@ -7,7 +7,6 @@ List of exception that could be raised on betting operations
 * Assert Exception "Markets ${m} cannot be used with specified game" -- raises when try to create game with unexpected market
 * Assert Exception "Account \"${1}\" must exist." -- raises when account with name op.moderator doens't exists
 * Assert Exception "Game should start after head block time" -- raises when operation arg start_time <= head_block_time
-* Assert Exception "Game can only be resolved after it has been started" -- raises when op.start_time <= op.auto_resolve_delay_sec + head_block_time
 * Assert Exception "Game with name '$(op.name)' already exists -- raises when game with same uid already exists
 * Assert Exception "User '$(op.moderator)' isnt a betting moderator" -- raises when try to create game by non-betting_moderator account
 * Assert Exception "You provided duplicates in market list." -- raise when user provided two same markets in the list
