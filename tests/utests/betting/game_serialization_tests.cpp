@@ -201,7 +201,7 @@ SCORUM_TEST_CASE(serialize_soccer_with_empty_markets)
     scorum::protocol::operation ops = op;
     auto hex = to_hex(ops);
 
-    BOOST_CHECK_EQUAL(hex, "23e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e0967616d65206e616d659b2a645b210000000000");
+    BOOST_CHECK_EQUAL(hex, "23e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e027b7d9b2a645b210000000000");
 }
 
 SCORUM_TEST_CASE(serialize_cancel_game)
@@ -240,6 +240,8 @@ SCORUM_TEST_CASE(serialize_update_game_markets)
     auto hex = to_hex(ops);
 
     BOOST_CHECK_EQUAL(hex, "25e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e010ce803");
+}
+
 SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
 {
     create_game_operation op;
@@ -251,9 +253,10 @@ SCORUM_TEST_CASE(serialize_soccer_with_total_1000)
     op.game = soccer_game{};
     op.markets = { total{ 1000 } };
 
-    auto hex = to_hex(op);
+    scorum::protocol::operation ops = op;
+    auto hex = to_hex(ops);
 
-    BOOST_CHECK_EQUAL(hex, "e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e027b7d9b2a645b2100000000010ce803");
+    BOOST_CHECK_EQUAL(hex, "23e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696e027b7d9b2a645b2100000000010ce803");
 }
 
 SCORUM_TEST_CASE(serialize_post_game_results_to_hex)
