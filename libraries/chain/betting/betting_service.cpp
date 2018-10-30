@@ -31,7 +31,8 @@ betting_service::betting_service(data_service_factory_i& db,
                                  dba::db_accessor<matched_bet_object>& matched_bet_dba,
                                  dba::db_accessor<pending_bet_object>& pending_bet_dba,
                                  dba::db_accessor<game_object>& game_dba,
-                                 dba::db_accessor<dynamic_global_property_object>& dprop_dba)
+                                 dba::db_accessor<dynamic_global_property_object>& dprop_dba,
+                                 dba::db_accessor<bet_uuid_history_object>& uuid_hist_dba)
     : _account_svc(db.account_service())
     , _virt_op_emitter(virt_op_emitter)
     , _betting_property_dba(betting_property_dba)
@@ -39,6 +40,7 @@ betting_service::betting_service(data_service_factory_i& db,
     , _pending_bet_dba(pending_bet_dba)
     , _game_dba(game_dba)
     , _dprop_dba(dprop_dba)
+    , _uuid_hist_dba(uuid_hist_dba)
 {
 }
 
@@ -61,6 +63,8 @@ const pending_bet_object& betting_service::create_pending_bet(const account_name
 {
     const auto& better_acc = _account_svc.get_account(better);
     FC_ASSERT(better_acc.balance >= stake, "Insufficient funds");
+
+    _uuid_hist_dba.create([&](bet_uuid_history_object& o) { o.uuid = bet_uuid; });
 
     const auto& bet = _pending_bet_dba.create([&](pending_bet_object& o) {
         o.game = game;

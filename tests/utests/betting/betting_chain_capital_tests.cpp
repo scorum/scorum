@@ -34,6 +34,7 @@ struct chain_capital_fixture
         , game_dba(db)
         , dprop_dba(db)
         , account_dba(db)
+        , uuid_hist_dba(db)
     {
         db.add_index<betting_property_index>();
         db.add_index<pending_bet_index>();
@@ -41,6 +42,7 @@ struct chain_capital_fixture
         db.add_index<game_index>();
         db.add_index<account_index>();
         db.add_index<dynamic_global_property_index>();
+        db.add_index<bet_uuid_history_index>();
 
         mocks.OnCall(dbs_factory, data_service_factory_i::account_service).ReturnByRef(*account_svc);
         mocks.OnCall(vop_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
@@ -59,6 +61,7 @@ struct chain_capital_fixture
     dba::db_accessor<game_object> game_dba;
     dba::db_accessor<dynamic_global_property_object> dprop_dba;
     dba::db_accessor<account_object> account_dba;
+    dba::db_accessor<bet_uuid_history_object> uuid_hist_dba;
 };
 
 BOOST_FIXTURE_TEST_SUITE(betting_chain_capital_tests, chain_capital_fixture)
@@ -74,7 +77,7 @@ SCORUM_TEST_CASE(pending_bet_creation_should_change_betting_capital)
     mocks.OnCall(account_svc, account_service_i::decrease_balance);
 
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
-                        dprop_dba);
+                        dprop_dba, uuid_hist_dba);
 
     svc.create_pending_bet("alice", ASSET_SCR(1000), odds(10, 2), result_home::yes{}, 0, uuid_type{ 1 },
                            pending_bet_kind::live);
@@ -130,7 +133,7 @@ SCORUM_TEST_CASE(cancel_all_bets_should_change_betting_capital)
     mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
 
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
-                        dprop_dba);
+                        dprop_dba, uuid_hist_dba);
 
     svc.cancel_bets(0);
 
@@ -165,7 +168,7 @@ SCORUM_TEST_CASE(cancel_bets_all_bets_created_after_game_started_should_be_remov
     mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
 
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
-                        dprop_dba);
+                        dprop_dba, uuid_hist_dba);
 
     svc.cancel_bets(0, g.start_time);
 
@@ -190,7 +193,7 @@ SCORUM_TEST_CASE(cancel_bets_pending_bet_created_before_game_started_shouldnt_be
     mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
 
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
-                        dprop_dba);
+                        dprop_dba, uuid_hist_dba);
 
     svc.cancel_bets(0, g.start_time);
 
@@ -219,7 +222,7 @@ SCORUM_TEST_CASE(
     mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
 
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
-                        dprop_dba);
+                        dprop_dba, uuid_hist_dba);
 
     svc.cancel_bets(0, g.start_time);
 
@@ -248,7 +251,7 @@ SCORUM_TEST_CASE(cancel_pending_bets_only_live_pending_bet_should_be_removed_fro
     mocks.OnCallOverload(account_svc, (inc_balance_ptr)&account_service_i::increase_balance);
 
     betting_service svc(*dbs_factory, *vop_emitter, betting_prop_dba, matched_bet_dba, pending_bet_dba, game_dba,
-                        dprop_dba);
+                        dprop_dba, uuid_hist_dba);
 
     svc.cancel_pending_bets(0, pending_bet_kind::live);
 

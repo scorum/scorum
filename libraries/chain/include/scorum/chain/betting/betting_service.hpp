@@ -68,7 +68,8 @@ public:
                     dba::db_accessor<matched_bet_object>&,
                     dba::db_accessor<pending_bet_object>&,
                     dba::db_accessor<game_object>&,
-                    dba::db_accessor<dynamic_global_property_object>&);
+                    dba::db_accessor<dynamic_global_property_object>&,
+                    dba::db_accessor<bet_uuid_history_object>&);
 
     bool is_betting_moderator(const account_name_type& account_name) const override;
 
@@ -108,6 +109,7 @@ private:
     dba::db_accessor<pending_bet_object>& _pending_bet_dba;
     dba::db_accessor<game_object>& _game_dba;
     dba::db_accessor<dynamic_global_property_object>& _dprop_dba;
+    dba::db_accessor<bet_uuid_history_object>& _uuid_hist_dba;
 };
 }
 }

@@ -1,0 +1,48 @@
+#pragma once
+
+namespace scorum {
+namespace chain {
+class account_authority_object;
+class account_object;
+class account_blogging_statistic_object;
+class account_recovery_request_object;
+class atomicswap_contract_object;
+class block_stats_object;
+class block_summary_object;
+class owned_budgets_object;
+class chain_property_object;
+class change_recovery_account_request_object;
+class account_registration_bonus_object;
+class comment_object;
+class comments_bounty_fund_object;
+class comment_vote_object;
+class decline_voting_rights_request_object;
+class dynamic_global_property_object;
+class escrow_object;
+class hardfork_property_object;
+class owner_authority_history_object;
+class proposal_object;
+class registration_committee_member_object;
+class registration_pool_object;
+class transaction_object;
+class scorumpower_delegation_expiration_object;
+class scorumpower_delegation_object;
+class reg_pool_sp_delegation_object;
+class withdraw_scorumpower_route_object;
+class withdraw_scorumpower_route_statistic_object;
+class withdraw_scorumpower_object;
+class witness_object;
+class witness_schedule_object;
+class witness_vote_object;
+class dev_committee_object;
+class dev_committee_member_object;
+class witness_reward_in_sp_migration_object;
+class advertising_property_object;
+class betting_property_object;
+class pending_bet_object;
+class matched_bet_object;
+class game_object;
+class bet_uuid_history_object;
+class game_uuid_history_object;
+}
+}

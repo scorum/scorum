@@ -144,7 +144,8 @@ database_impl::database_impl(database& self)
                        _self.get_dba<matched_bet_object>(),
                        _self.get_dba<pending_bet_object>(),
                        _self.get_dba<game_object>(),
-                       _self.get_dba<dynamic_global_property_object>())
+                       _self.get_dba<dynamic_global_property_object>(),
+                       _self.get_dba<bet_uuid_history_object>())
     , _betting_matcher(static_cast<database_virtual_operations_emmiter_i&>(_self),
                        _self.get_dba<pending_bet_object>(),
                        _self.get_dba<matched_bet_object>(),
@@ -1289,15 +1290,16 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
-    _my->_evaluator_registry.register_evaluator(new create_game_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(
+        new create_game_evaluator(*this, _my->get_betting_service(), get_dba<game_uuid_history_object>()));
     _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(new update_game_markets_evaluator(*this, _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(
         new update_game_start_time_evaluator(*this, _my->get_betting_service(), *this));
     _my->_evaluator_registry.register_evaluator(
         new post_game_results_evaluator(*this, _my->get_betting_service(), *this));
-    _my->_evaluator_registry.register_evaluator(
-        new post_bet_evaluator(*this, _my->get_betting_matcher(), _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(new post_bet_evaluator(
+        *this, _my->get_betting_matcher(), _my->get_betting_service(), get_dba<bet_uuid_history_object>()));
     _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->get_betting_service()));
     _my->_evaluator_registry.register_evaluator(new delegate_sp_from_reg_pool_evaluator(
         *this, account_service(), get_dba<registration_pool_object>(), get_dba<registration_committee_member_object>(),
@@ -1358,6 +1360,9 @@ void database::initialize_indexes()
     add_index<betting_property_index>();
     add_index<pending_bet_index>();
     add_index<matched_bet_index>();
+
+    add_index<bet_uuid_history_index>();
+    add_index<game_uuid_history_index>();
 
     _plugin_index_signal();
 }

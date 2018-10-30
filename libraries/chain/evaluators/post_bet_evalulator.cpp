@@ -7,6 +7,8 @@
 #include <scorum/chain/betting/betting_service.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
 
+#include <scorum/chain/dba/db_accessor.hpp>
+
 #include <scorum/chain/betting/betting_service.hpp>
 #include <scorum/chain/betting/betting_matcher.hpp>
 
@@ -18,7 +20,8 @@ namespace scorum {
 namespace chain {
 post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
                                        betting_matcher_i& betting_matcher,
-                                       betting_service_i& betting_service)
+                                       betting_service_i& betting_service,
+                                       dba::db_accessor<bet_uuid_history_object>& uuid_hist_dba)
     : evaluator_impl<data_service_factory_i, post_bet_evaluator>(services)
     , _account_service(services.account_service())
     , _game_service(services.game_service())
@@ -26,13 +29,14 @@ post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
     , _pending_bet_svc(services.pending_bet_service())
     , _dgp_svc(services.dynamic_global_property_service())
     , _betting_svc(betting_service)
+    , _uuid_hist_dba(uuid_hist_dba)
 {
 }
 
 void post_bet_evaluator::do_apply(const operation_type& op)
 {
     FC_ASSERT(_game_service.is_exists(op.game_uuid), "Game with uuid ${1} doesn't exist", ("1", op.game_uuid));
-    FC_ASSERT(!_pending_bet_svc.is_exists(op.uuid), "Bet with uuid ${1} already exists", ("1", op.uuid));
+    FC_ASSERT(!_uuid_hist_dba.is_exists_by<by_uuid>(op.uuid), "Bet with uuid ${1} already exists", ("1", op.uuid));
 
     auto game_obj = _game_service.get_game(op.game_uuid);
 

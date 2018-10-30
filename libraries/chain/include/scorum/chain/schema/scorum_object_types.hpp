@@ -13,6 +13,7 @@
 #include <scorum/protocol/types.hpp>
 #include <scorum/protocol/asset.hpp>
 #include <scorum/protocol/authority.hpp>
+#include <scorum/chain/schema/scorum_objects_fwd.hpp>
 
 namespace scorum {
 namespace chain {
@@ -83,49 +84,10 @@ enum object_type
     pending_bet_object_type,
     matched_bet_object_type,
     game_object_type,
-    reg_pool_sp_delegation_object_type
+    reg_pool_sp_delegation_object_type,
+    bet_uuid_history_object_type,
+    game_uuid_history_object_type
 };
-
-class account_authority_object;
-class account_object;
-class account_blogging_statistic_object;
-class account_recovery_request_object;
-class atomicswap_contract_object;
-class block_stats_object;
-class block_summary_object;
-class owned_budgets_object;
-class chain_property_object;
-class change_recovery_account_request_object;
-class account_registration_bonus_object;
-class comment_object;
-class comments_bounty_fund_object;
-class comment_vote_object;
-class decline_voting_rights_request_object;
-class dynamic_global_property_object;
-class escrow_object;
-class hardfork_property_object;
-class owner_authority_history_object;
-class proposal_object;
-class registration_committee_member_object;
-class registration_pool_object;
-class transaction_object;
-class scorumpower_delegation_expiration_object;
-class scorumpower_delegation_object;
-class reg_pool_sp_delegation_object;
-class withdraw_scorumpower_route_object;
-class withdraw_scorumpower_route_statistic_object;
-class withdraw_scorumpower_object;
-class witness_object;
-class witness_schedule_object;
-class witness_vote_object;
-class dev_committee_object;
-class dev_committee_member_object;
-class witness_reward_in_sp_migration_object;
-class advertising_property_object;
-class betting_property_object;
-class pending_bet_object;
-class matched_bet_object;
-class game_object;
 
 using account_authority_id_type = oid<account_authority_object>;
 using account_id_type = oid<account_object>;
@@ -165,6 +127,8 @@ using witness_reward_in_sp_migration_id_type = oid<witness_reward_in_sp_migratio
 using game_id_type = oid<game_object>;
 using pending_bet_id_type = oid<pending_bet_object>;
 using matched_bet_id_type = oid<matched_bet_object>;
+using bet_uuid_history_id_type = oid<bet_uuid_history_object>;
+using game_uuid_history_id_type = oid<game_uuid_history_object>;
 
 using withdrawable_id_type = fc::static_variant<account_id_type, dev_committee_id_type>;
 
@@ -233,6 +197,8 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (matched_bet_object_type)
                 (game_object_type)
                 (reg_pool_sp_delegation_object_type)
+                (bet_uuid_history_object_type)
+                (game_uuid_history_object_type)
                )
 
 FC_REFLECT_ENUM( scorum::chain::bandwidth_type, (post)(forum)(market) )

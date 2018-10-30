@@ -34,6 +34,17 @@ struct bet_data
     pending_bet_kind kind = pending_bet_kind::live;
 };
 
+class bet_uuid_history_object : public object<bet_uuid_history_object_type, bet_uuid_history_object>
+{
+public:
+    /// @cond DO_NOT_DOCUMENT
+    CHAINBASE_DEFAULT_CONSTRUCTOR(bet_uuid_history_object)
+    /// @endcond
+
+    id_type id;
+    uuid_type uuid;
+};
+
 class pending_bet_object : public object<pending_bet_object_type, pending_bet_object>
 {
 public:
@@ -84,6 +95,17 @@ struct by_game_id_market;
 struct by_game_id_better;
 struct by_game_id_created;
 struct by_game_id_wincase;
+
+typedef shared_multi_index_container<bet_uuid_history_object,
+                                     indexed_by<ordered_unique<tag<by_id>,
+                                                               member<bet_uuid_history_object,
+                                                                      bet_uuid_history_id_type,
+                                                                      &bet_uuid_history_object::id>>,
+                                                hashed_unique<tag<by_uuid>,
+                                                              member<bet_uuid_history_object,
+                                                                     uuid_type,
+                                                                     &bet_uuid_history_object::uuid>>>>
+    bet_uuid_history_index;
 
 typedef shared_multi_index_container<pending_bet_object,
                                      indexed_by<ordered_unique<tag<by_id>,
@@ -180,6 +202,14 @@ typedef shared_multi_index_container<matched_bet_object,
 }
 
 // clang-format off
+
+FC_REFLECT(scorum::chain::bet_uuid_history_object,
+           (id)
+           (uuid)
+           )
+
+CHAINBASE_SET_INDEX_TYPE(scorum::chain::bet_uuid_history_object, scorum::chain::bet_uuid_history_index)
+
 FC_REFLECT_ENUM(scorum::chain::pending_bet_kind,
                 (live)
                 (non_live))
