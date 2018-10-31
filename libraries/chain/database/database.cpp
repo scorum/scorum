@@ -138,7 +138,7 @@ database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
     // TODO: using boost::di to avoid these explicit calls
-    , _betting_service(static_cast<data_service_factory_i&>(_self),
+    , _betting_service(_self.account_service(),
                        static_cast<database_virtual_operations_emmiter_i&>(_self),
                        _self.get_dba<betting_property_object>(),
                        _self.get_dba<matched_bet_object>(),

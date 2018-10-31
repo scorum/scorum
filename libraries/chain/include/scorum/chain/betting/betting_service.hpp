@@ -16,8 +16,6 @@ enum class pending_bet_kind : uint8_t;
 
 using scorum::protocol::market_type;
 
-struct data_service_factory_i;
-
 struct account_service_i;
 struct database_virtual_operations_emmiter_i;
 
@@ -62,7 +60,7 @@ struct betting_service_i
 class betting_service : public betting_service_i
 {
 public:
-    betting_service(data_service_factory_i&,
+    betting_service(account_service_i&,
                     database_virtual_operations_emmiter_i&,
                     dba::db_accessor<betting_property_object>&,
                     dba::db_accessor<matched_bet_object>&,

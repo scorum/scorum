@@ -25,7 +25,7 @@ namespace chain {
 
 betting_service_i::~betting_service_i() = default;
 
-betting_service::betting_service(data_service_factory_i& db,
+betting_service::betting_service(account_service_i& account_svc,
                                  database_virtual_operations_emmiter_i& virt_op_emitter,
                                  dba::db_accessor<betting_property_object>& betting_property_dba,
                                  dba::db_accessor<matched_bet_object>& matched_bet_dba,
@@ -33,7 +33,7 @@ betting_service::betting_service(data_service_factory_i& db,
                                  dba::db_accessor<game_object>& game_dba,
                                  dba::db_accessor<dynamic_global_property_object>& dprop_dba,
                                  dba::db_accessor<bet_uuid_history_object>& uuid_hist_dba)
-    : _account_svc(db.account_service())
+    : _account_svc(account_svc)
     , _virt_op_emitter(virt_op_emitter)
     , _betting_property_dba(betting_property_dba)
     , _matched_bet_dba(matched_bet_dba)
@@ -229,21 +229,16 @@ void betting_service::return_bet(const bet_data& bet, uuid_type game_uuid)
 
 void betting_service::restore_pending_bet(const bet_data& bet, uuid_type game_uuid)
 {
-    auto bets = _pending_bet_dba.get_range_by<by_game_uuid_better>(std::make_tuple(game_uuid, bet.better));
-
-    // clang-format off
-    auto found_it = boost::find_if(bets, [&](const pending_bet_object& o) {
-        return o.data.created == bet.created
-            && o.data.odds == bet.odds
-            && o.data.kind == bet.kind
-            && !(o.data.wincase < bet.wincase)
-            && !(bet.wincase < o.data.wincase);
-    });
-    // clang-format on
-
-    if (found_it != bets.end())
+    auto is_exists = _pending_bet_dba.is_exists_by<by_uuid>(bet.uuid);
+    if (is_exists)
     {
-        _pending_bet_dba.update(*found_it, [&](pending_bet_object& o) { o.data.stake += bet.stake; });
+        const auto& pending_bet = _pending_bet_dba.get_by<by_uuid>(bet.uuid);
+        auto old_stake = pending_bet.data.stake;
+
+        _pending_bet_dba.update(pending_bet, [&](pending_bet_object& o) { o.data.stake += bet.stake; });
+
+        _virt_op_emitter.push_virtual_operation(
+            bet_updated_operation{ game_uuid, bet.better, bet.uuid, old_stake, pending_bet.data.stake });
     }
     else
     {
@@ -252,14 +247,14 @@ void betting_service::restore_pending_bet(const bet_data& bet, uuid_type game_uu
             o.market = create_market(bet.wincase);
             o.data = bet;
         });
+
+        _virt_op_emitter.push_virtual_operation(bet_restored_operation{ game_uuid, bet.better, bet.uuid, bet.stake });
     }
 
     _dprop_dba.update([&](auto& o) {
         o.betting_stats.pending_bets_volume += bet.stake;
         o.betting_stats.matched_bets_volume -= bet.stake;
     });
-
-    _virt_op_emitter.push_virtual_operation(bet_restored_operation{ game_uuid, bet.better, bet.uuid, bet.stake });
 }
 
 void betting_service::push_matched_bet_cancelled_op(const bet_data& bet, uuid_type game_uuid)
