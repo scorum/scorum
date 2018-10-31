@@ -9,12 +9,13 @@
 namespace scorum {
 namespace chain {
 
-struct account_service_i;
-struct game_service_i;
+struct data_service_factory_i;
 struct betting_matcher_i;
-struct pending_bet_service_i;
-struct dynamic_global_property_service_i;
 struct betting_service_i;
+
+namespace dba {
+template <typename> class db_accessor;
+}
 
 class post_bet_evaluator : public evaluator_impl<data_service_factory_i, post_bet_evaluator>
 {
@@ -24,17 +25,18 @@ public:
     post_bet_evaluator(data_service_factory_i&,
                        betting_matcher_i&,
                        betting_service_i&,
+                       dba::db_accessor<game_object>&,
+                       dba::db_accessor<account_object>&,
                        dba::db_accessor<bet_uuid_history_object>&);
 
     void do_apply(const operation_type& op);
 
 private:
-    account_service_i& _account_service;
-    game_service_i& _game_service;
     betting_matcher_i& _betting_matcher;
-    pending_bet_service_i& _pending_bet_svc;
-    dynamic_global_property_service_i& _dgp_svc;
     betting_service_i& _betting_svc;
+
+    dba::db_accessor<game_object>& _game_dba;
+    dba::db_accessor<account_object>& _account_dba;
     dba::db_accessor<bet_uuid_history_object>& _uuid_hist_dba;
 };
 }

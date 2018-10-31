@@ -112,7 +112,7 @@ void betting_service::cancel_bets(uuid_type game_uuid, fc::time_point_sec create
     auto matched_bets = _matched_bet_dba.get_range_by<by_game_uuid_created>(lower <= _x, _x <= upper);
     auto pending_bets = _pending_bet_dba.get_range_by<by_game_uuid_created>(lower <= _x, _x <= upper);
 
-    cancel_pending_bets(pending_bets, game_uuid);
+    cancel_pending_bets(pending_bets);
 
     for (const matched_bet_object& matched_bet : matched_bets)
     {
@@ -147,7 +147,7 @@ void betting_service::cancel_bets(uuid_type game_uuid, const fc::flat_set<market
     std::vector<std::reference_wrapper<const pending_bet_object>> filtered_pending_bets;
     boost::set_intersection(pending_bets, cancelled_markets, std::back_inserter(filtered_pending_bets), less{});
 
-    cancel_pending_bets(utils::unwrap_ref_wrapper(filtered_pending_bets), game_uuid);
+    cancel_pending_bets(utils::unwrap_ref_wrapper(filtered_pending_bets));
 
     auto matched_bets = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
@@ -168,20 +168,20 @@ void betting_service::cancel_pending_bets(uuid_type game_uuid)
 {
     auto pending_bets = _pending_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
-    cancel_pending_bets(pending_bets, game_uuid);
+    cancel_pending_bets(pending_bets);
 }
 
 void betting_service::cancel_pending_bets(uuid_type game_uuid, pending_bet_kind kind)
 {
     auto pending_bets = _pending_bet_dba.get_range_by<by_game_uuid_kind>(std::make_tuple(game_uuid, kind));
 
-    cancel_pending_bets(pending_bets, game_uuid);
+    cancel_pending_bets(pending_bets);
 }
 
-void betting_service::cancel_pending_bets(utils::bidir_range<const pending_bet_object> bets, uuid_type game_uuid)
+void betting_service::cancel_pending_bets(utils::bidir_range<const pending_bet_object> bets)
 {
     utils::foreach_mut(bets, [&](const pending_bet_object& bet) { //
-        cancel_pending_bet(bet, game_uuid);
+        cancel_pending_bet(bet, bet.game_uuid);
     });
 }
 

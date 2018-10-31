@@ -15,50 +15,15 @@ using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
-struct post_bet_evaluator_fixture : public betting_common::betting_evaluator_fixture_impl
-{
-    post_bet_evaluator_fixture()
-        : uuid_hist_dba(*mocks.Mock<dba::db_index>())
-        , evaluator_for_test(*dbs_services, *betting_matcher_moc, *betting_service_moc, uuid_hist_dba)
-    {
-        better.scorum(ASSET_SCR(1e+9));
-        account_service.add_actor(better);
-
-        games.create([&](game_object& obj) { obj.uuid = gen_uuid("game"); });
-
-        test_op.better = better.name;
-        test_op.uuid = gen_uuid("game");
-        test_op.wincase = correct_score_home::yes();
-        test_op.odds = { 3, 1 };
-        test_op.stake = better.scr_amount;
-    }
-
-    pending_bet_object create_bet()
-    {
-        return create_object<pending_bet_object>(shm, [&](pending_bet_object& obj) {
-            obj.data.better = test_op.better;
-            obj.game_uuid = { 0 };
-            obj.data.uuid = gen_uuid("bet");
-            obj.data.wincase = test_op.wincase;
-            obj.data.odds = odds(test_op.odds.numerator, test_op.odds.denominator);
-            obj.data.stake = test_op.stake;
-            obj.market = create_market(test_op.wincase);
-        });
-    }
-
-    dba::db_accessor<bet_uuid_history_object> uuid_hist_dba;
-
-    post_bet_evaluator evaluator_for_test;
-
-    post_bet_operation test_op;
-
-    Actor better = "alice";
-};
-
-BOOST_FIXTURE_TEST_SUITE(post_bet_evaluator_tests, post_bet_evaluator_fixture)
-
 SCORUM_TEST_CASE(post_bet_evaluator_operation_validate_check)
 {
+    post_bet_operation test_op;
+    test_op.better = "aclice";
+    test_op.uuid = gen_uuid("game");
+    test_op.wincase = correct_score_home::yes();
+    test_op.odds = { 3, 1 };
+    test_op.stake = ASSET_SCR(100);
+
     post_bet_operation op = test_op;
 
     BOOST_CHECK_NO_THROW(op.validate());
@@ -79,19 +44,6 @@ SCORUM_TEST_CASE(post_bet_evaluator_operation_validate_check)
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
     op = test_op;
 }
-
-SCORUM_TEST_CASE(post_bet_evaluator_negative_check)
-{
-    // TODO: implement when db_accessors will be introduced
-    // mocks.OnCallFunc((dba::detail::is_exists_by<bet_uuid_history_object, by_uuid, uuid_type>));
-}
-
-SCORUM_TEST_CASE(post_bet_evaluator_positive_check)
-{
-    // TODO: implement when db_accessors will be introduced
-}
-
-BOOST_AUTO_TEST_SUITE_END()
 
 struct cancel_pending_bets_evaluator_fixture : public shared_memory_fixture
 {

@@ -30,8 +30,7 @@ betting_matcher::betting_matcher(database_virtual_operations_emmiter_i& virt_op_
 {
 }
 
-std::vector<std::reference_wrapper<const pending_bet_object>>
-betting_matcher::match(const pending_bet_object& bet2, const fc::time_point_sec& head_block_time)
+std::vector<std::reference_wrapper<const pending_bet_object>> betting_matcher::match(const pending_bet_object& bet2)
 {
     try
     {
@@ -49,7 +48,8 @@ betting_matcher::match(const pending_bet_object& bet2, const fc::time_point_sec&
 
             if (matched.bet1_matched.amount > 0 && matched.bet2_matched.amount > 0)
             {
-                const auto matched_bet_id = create_matched_bet(_matched_bet_dba, bet1, bet2, matched, head_block_time);
+                const auto matched_bet_id
+                    = create_matched_bet(_matched_bet_dba, bet1, bet2, matched, _dprop_dba.get().time);
 
                 _pending_bet_dba.update(bet1, [&](pending_bet_object& o) { o.data.stake -= matched.bet1_matched; });
                 _pending_bet_dba.update(bet2, [&](pending_bet_object& o) { o.data.stake -= matched.bet2_matched; });
