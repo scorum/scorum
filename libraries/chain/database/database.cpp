@@ -1304,10 +1304,7 @@ void database::initialize_evaluators()
                                                                        _my->get_betting_matcher(),
                                                                        _my->get_betting_service(),
                                                                        get_dba<game_object>(),
-                                                                       get_dba<pending_bet_object>(),
-                                                                       get_dba<matched_bet_object>(),
                                                                        get_dba<account_object>(),
-                                                                       get_dba<dynamic_global_property_object>(),
                                                                        get_dba<bet_uuid_history_object>()));
     // clang-format on
 

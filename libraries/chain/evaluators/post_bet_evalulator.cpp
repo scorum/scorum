@@ -22,19 +22,13 @@ post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
                                        betting_matcher_i& betting_matcher,
                                        betting_service_i& betting_service,
                                        dba::db_accessor<game_object>& game_dba,
-                                       dba::db_accessor<pending_bet_object>& pending_dba,
-                                       dba::db_accessor<matched_bet_object>& matched_dba,
                                        dba::db_accessor<account_object>& account_dba,
-                                       dba::db_accessor<dynamic_global_property_object>& dprop_dba,
                                        dba::db_accessor<bet_uuid_history_object>& uuid_hist_dba)
     : evaluator_impl<data_service_factory_i, post_bet_evaluator>(services)
     , _betting_matcher(betting_matcher)
     , _betting_svc(betting_service)
     , _game_dba(game_dba)
-    , _pending_dba(pending_dba)
-    , _matched_dba(matched_dba)
     , _account_dba(account_dba)
-    , _dprop_dba(dprop_dba)
     , _uuid_hist_dba(uuid_hist_dba)
 {
 }
@@ -61,9 +55,7 @@ void post_bet_evaluator::do_apply(const operation_type& op)
     const auto& bet
         = _betting_svc.create_pending_bet(op.better, op.stake, odds, op.wincase, game_obj.uuid, op.uuid, kind);
 
-    const auto head_block_time = _dprop_dba.get().time;
-
-    auto bets_to_cancel = _betting_matcher.match(bet, head_block_time);
+    auto bets_to_cancel = _betting_matcher.match(bet);
 
     _betting_svc.cancel_pending_bets(utils::unwrap_ref_wrapper(bets_to_cancel), game_obj.uuid);
 }
