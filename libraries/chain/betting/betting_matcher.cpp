@@ -51,6 +51,9 @@ betting_matcher::match(const pending_bet_object& bet2, const fc::time_point_sec&
             {
                 const auto matched_bet_id = create_matched_bet(_matched_bet_dba, bet1, bet2, matched, head_block_time);
 
+                auto bet1_old_stake = bet1.data.stake;
+                auto bet2_old_stake = bet2.data.stake;
+
                 _pending_bet_dba.update(bet1, [&](pending_bet_object& o) { o.data.stake -= matched.bet1_matched; });
                 _pending_bet_dba.update(bet2, [&](pending_bet_object& o) { o.data.stake -= matched.bet2_matched; });
 
@@ -59,6 +62,10 @@ betting_matcher::match(const pending_bet_object& bet2, const fc::time_point_sec&
                     obj.betting_stats.pending_bets_volume -= matched.bet1_matched + matched.bet2_matched;
                 });
 
+                _virt_op_emitter.push_virtual_operation(protocol::bet_updated_operation{
+                    bet1.game_uuid, bet1.data.better, bet1.data.uuid, bet1_old_stake, bet1.data.stake });
+                _virt_op_emitter.push_virtual_operation(protocol::bet_updated_operation{
+                    bet2.game_uuid, bet2.data.better, bet2.data.uuid, bet2_old_stake, bet2.data.stake });
                 _virt_op_emitter.push_virtual_operation(protocol::bets_matched_operation(
                     bet1.data.better, bet2.data.better, bet1.get_uuid(), bet2.get_uuid(), matched.bet1_matched,
                     matched.bet2_matched, matched_bet_id));

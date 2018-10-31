@@ -237,24 +237,21 @@ BOOST_FIXTURE_TEST_CASE(add_fully_matched_bet_to_cancel_list, two_bets_fixture)
 
 BOOST_FIXTURE_TEST_CASE(expect_virtual_operation_call_on_bets_matching, two_bets_fixture)
 {
-    auto check_virtual_operation = [&](const scorum::protocol::operation& o) {
-        o.visit([](const auto&) { BOOST_FAIL("expected 'bets_matched_operation' call"); },
-                [&](const scorum::protocol::bets_matched_operation& op) {
-                    BOOST_CHECK(op.bet1_uuid == bet1.uuid);
-                    BOOST_CHECK(op.bet2_uuid == bet2.uuid);
-                    BOOST_CHECK_EQUAL(op.better1, bet1.better);
-                    BOOST_CHECK_EQUAL(op.better2, bet2.better);
-                    BOOST_CHECK_EQUAL(op.matched_stake1.amount, 10u);
-                    BOOST_CHECK_EQUAL(op.matched_stake2.amount, 5u);
-                    BOOST_CHECK_EQUAL(op.matched_bet_id, 0);
-                });
-    };
+    using namespace scorum::protocol;
 
-    mocks.ExpectCall(vops_emiter, database_virtual_operations_emmiter_i::push_virtual_operation)
+    std::vector<operation> ops;
+    auto collect_virtual_operation = [&](const operation& o) { ops.push_back(o); };
+
+    mocks.OnCall(vops_emiter, database_virtual_operations_emmiter_i::push_virtual_operation)
         .With(_)
-        .Do(check_virtual_operation);
+        .Do(collect_virtual_operation);
 
     matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid), fc::time_point_sec::maximum());
+
+    BOOST_REQUIRE_EQUAL(3u, ops.size());
+    BOOST_CHECK(ops[0].which() == operation::tag<bet_updated_operation>::value);
+    BOOST_CHECK(ops[1].which() == operation::tag<bet_updated_operation>::value);
+    BOOST_CHECK(ops[2].which() == operation::tag<bets_matched_operation>::value);
 }
 
 BOOST_FIXTURE_TEST_CASE(create_one_matched_bet, two_bets_fixture)

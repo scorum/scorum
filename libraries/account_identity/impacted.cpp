@@ -323,6 +323,11 @@ struct get_impacted_account_visitor
         _impacted.insert(op.better);
     }
 
+    void operator()(const bet_updated_operation& op)
+    {
+        _impacted.insert(op.better);
+    }
+
 private:
     fc::flat_set<account_name_type>& _impacted;
 };
