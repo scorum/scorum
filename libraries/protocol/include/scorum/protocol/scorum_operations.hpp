@@ -12,6 +12,8 @@
 
 #include <fc/crypto/ripemd160.hpp>
 
+#include <boost/uuid/nil_generator.hpp>
+
 namespace scorum {
 namespace protocol {
 
@@ -762,7 +764,7 @@ struct create_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type owner;
     std::string json_metadata;
 
@@ -785,7 +787,7 @@ struct update_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type owner;
     std::string json_metadata;
 
@@ -804,7 +806,7 @@ struct close_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type owner;
 
     void validate() const;
@@ -822,7 +824,7 @@ struct close_budget_by_advertising_moderator_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type moderator;
 
     void validate() const;
@@ -962,7 +964,7 @@ struct odds_input
 struct create_game_operation : public base_operation
 {
     /// Universal Unique Identifier which is unique for each game
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
 
     /// moderator account name
     account_name_type moderator;
@@ -1000,7 +1002,7 @@ struct create_game_operation : public base_operation
 struct cancel_game_operation : public base_operation
 {
     /// Universal Unique Identifier which is specified during game creation
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
 
     /// moderator account name
     account_name_type moderator;
@@ -1024,7 +1026,7 @@ struct cancel_game_operation : public base_operation
 struct update_game_markets_operation : public base_operation
 {
     /// Universal Unique Identifier which is specified during game creation
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
 
     /// moderator account name
     account_name_type moderator;
@@ -1050,7 +1052,7 @@ struct update_game_markets_operation : public base_operation
 struct update_game_start_time_operation : public base_operation
 {
     /// Universal Unique Identifier which is specified during game creation
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
 
     /// moderator account name
     account_name_type moderator;
@@ -1078,7 +1080,7 @@ struct update_game_start_time_operation : public base_operation
 struct post_game_results_operation : public base_operation
 {
     /// Universal Unique Identifier which is specified during game creation
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
 
     /// moderator account name
     account_name_type moderator;
@@ -1103,13 +1105,13 @@ struct post_game_results_operation : public base_operation
 struct post_bet_operation : public base_operation
 {
     /// Universal Unique Identifier which is unique for each bet
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
 
     /// owner for new bet
     account_name_type better;
 
     /// Universal Unique Identifier which is specified during game creation
-    uuid_type game_uuid;
+    uuid_type game_uuid = boost::uuids::nil_uuid();
 
     /// wincase
     wincase_type wincase;

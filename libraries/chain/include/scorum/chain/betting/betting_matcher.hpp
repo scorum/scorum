@@ -25,8 +25,7 @@ struct betting_matcher_i
 {
     virtual ~betting_matcher_i();
 
-    virtual std::vector<std::reference_wrapper<const pending_bet_object>>
-    match(const pending_bet_object& bet1, const fc::time_point_sec& head_block_time) = 0;
+    virtual std::vector<std::reference_wrapper<const pending_bet_object>> match(const pending_bet_object& bet1) = 0;
 };
 
 int64_t create_matched_bet(dba::db_accessor<matched_bet_object>& _matched_bet_dba,
@@ -43,8 +42,7 @@ public:
                     dba::db_accessor<matched_bet_object>&,
                     dba::db_accessor<dynamic_global_property_object>&);
 
-    std::vector<std::reference_wrapper<const pending_bet_object>>
-    match(const pending_bet_object& bet2, const fc::time_point_sec& head_block_time) override;
+    std::vector<std::reference_wrapper<const pending_bet_object>> match(const pending_bet_object& bet2) override;
 
 private:
     bool is_bets_matched(const pending_bet_object& bet1, const pending_bet_object& bet2) const;
