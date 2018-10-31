@@ -57,7 +57,7 @@ void post_bet_evaluator::do_apply(const operation_type& op)
 
     auto bets_to_cancel = _betting_matcher.match(bet);
 
-    _betting_svc.cancel_pending_bets(utils::unwrap_ref_wrapper(bets_to_cancel), game_obj.uuid);
+    _betting_svc.cancel_pending_bets(utils::unwrap_ref_wrapper(bets_to_cancel));
 }
 }
 }

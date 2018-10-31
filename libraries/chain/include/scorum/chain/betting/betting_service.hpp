@@ -53,7 +53,7 @@ struct betting_service_i
     virtual void cancel_pending_bet(pending_bet_id_type id) = 0;
     virtual void cancel_pending_bets(uuid_type game_uuid) = 0;
     virtual void cancel_pending_bets(uuid_type game_uuid, pending_bet_kind kind) = 0;
-    virtual void cancel_pending_bets(utils::bidir_range<const pending_bet_object> bets, uuid_type game_uuid) = 0;
+    virtual void cancel_pending_bets(utils::bidir_range<const pending_bet_object> bets) = 0;
 
     virtual void cancel_matched_bets(uuid_type game_uuid) = 0;
     virtual void cancel_matched_bets(utils::bidir_range<const matched_bet_object> bets, uuid_type game_uuid) = 0;
@@ -89,7 +89,7 @@ public:
     void cancel_pending_bet(pending_bet_id_type id) override;
     void cancel_pending_bets(uuid_type game_uuid) override;
     void cancel_pending_bets(uuid_type game_uuid, pending_bet_kind kind) override;
-    void cancel_pending_bets(utils::bidir_range<const pending_bet_object> bets, uuid_type game_uuid) override;
+    void cancel_pending_bets(utils::bidir_range<const pending_bet_object> bets) override;
 
     void cancel_matched_bets(uuid_type game_uuid) override;
     void cancel_matched_bets(utils::bidir_range<const matched_bet_object> bets, uuid_type game_uuid) override;
