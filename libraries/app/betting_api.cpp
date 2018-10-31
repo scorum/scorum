@@ -8,7 +8,7 @@ using namespace scorum::chain;
 using namespace scorum::protocol;
 
 betting_api::betting_api(const api_context& ctx)
-    : _impl(std::make_unique<impl>(*ctx.app.chain_database(),
+    : _impl(std::make_unique<impl>(ctx.app.chain_database()->get_dba<betting_property_object>(),
                                    ctx.app.chain_database()->get_dba<game_object>(),
                                    ctx.app.chain_database()->get_dba<matched_bet_object>(),
                                    ctx.app.chain_database()->get_dba<pending_bet_object>()))

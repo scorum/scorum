@@ -27,73 +27,39 @@ class fixture : public shared_memory_fixture
 {
 public:
     MockRepository mocks;
-    data_service_factory_i* factory = mocks.Mock<data_service_factory_i>();
-
-    game_service_i* game_service = mocks.Mock<game_service_i>();
-    pending_bet_service_i* pending_bet_service = mocks.Mock<pending_bet_service_i>();
-    matched_bet_service_i* matched_bet_service = mocks.Mock<matched_bet_service_i>();
-    betting_property_service_i* betting_property_service = mocks.Mock<betting_property_service_i>();
-
     database* db_mock = mocks.Mock<database>();
+
+    dba::db_accessor<betting_property_object> betting_prop_dba;
     dba::db_accessor<game_object> game_dba;
     dba::db_accessor<matched_bet_object> matched_bet_dba;
     dba::db_accessor<pending_bet_object> pending_bet_dba;
 
     fixture()
-        : game_dba(*db_mock)
+        : betting_prop_dba(*db_mock)
+        , game_dba(*db_mock)
         , matched_bet_dba(*db_mock)
         , pending_bet_dba(*db_mock)
     {
-    }
-
-    void init()
-    {
-        mocks.OnCall(factory, data_service_factory_i::game_service).ReturnByRef(*game_service);
-        mocks.OnCall(factory, data_service_factory_i::pending_bet_service).ReturnByRef(*pending_bet_service);
-        mocks.OnCall(factory, data_service_factory_i::matched_bet_service).ReturnByRef(*matched_bet_service);
-        mocks.OnCall(factory, data_service_factory_i::betting_property_service).ReturnByRef(*betting_property_service);
     }
 };
 
 BOOST_AUTO_TEST_SUITE(betting_api_tests)
 
-BOOST_FIXTURE_TEST_CASE(get_services_in_constructor, fixture)
-{
-    game_service_i* game_service = mocks.Mock<game_service_i>();
-    pending_bet_service_i* pending_bet_service = mocks.Mock<pending_bet_service_i>();
-    matched_bet_service_i* matched_bet_service = mocks.Mock<matched_bet_service_i>();
-
-    mocks.ExpectCall(factory, data_service_factory_i::game_service).ReturnByRef(*game_service);
-    mocks.ExpectCall(factory, data_service_factory_i::pending_bet_service).ReturnByRef(*pending_bet_service);
-    mocks.ExpectCall(factory, data_service_factory_i::matched_bet_service).ReturnByRef(*matched_bet_service);
-    mocks.ExpectCall(factory, data_service_factory_i::betting_property_service).ReturnByRef(*betting_property_service);
-
-    BOOST_REQUIRE_NO_THROW(betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba));
-}
-
 BOOST_FIXTURE_TEST_CASE(get_games_dont_throw, fixture)
 {
-    init();
+    namespace dd = dba::detail;
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     std::vector<game_object> objects;
 
-    mocks
-        .ExpectCallOverload(game_service,
-                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
-        .Return({ objects.begin(), objects.end() });
+    mocks.ExpectCallFunc((dd::get_all_by<game_object, by_id>)).Return({ objects.begin(), objects.end() });
 
     BOOST_REQUIRE_NO_THROW(api.get_games_by_status({ game_status::resolved }));
 }
 
 struct get_game_winners_fixture : public fixture
 {
-    get_game_winners_fixture()
-    {
-        init();
-    }
-
     scorum::uuid_type uuid_ns = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
     boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(uuid_ns);
 };
@@ -102,7 +68,7 @@ BOOST_FIXTURE_TEST_CASE(unknown_uuid_should_throw, get_game_winners_fixture)
 {
     mocks.ExpectCallFunc((dba::detail::is_exists_by<game_object, by_uuid, uuid_type>)).Return(false);
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
     BOOST_CHECK_THROW(api.get_game_winners(uuid_gen("unknown")), fc::assert_exception);
 }
 
@@ -122,7 +88,7 @@ BOOST_FIXTURE_TEST_CASE(non_finished_game_should_return_empty_result, get_game_w
     mocks.ExpectCallFunc((dd::get_by<game_object, by_uuid, uuid_type>)).With(_, game_uuid).ReturnByRef(game);
     mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_uuid_market, uuid_type>)).Return({});
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto winners = api.get_game_winners(game_uuid);
 }
@@ -150,7 +116,7 @@ BOOST_FIXTURE_TEST_CASE(check_first_better_is_winner, get_game_winners_fixture)
     mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_uuid_market, uuid_type>)).Return(matched_bets);
 
     // Run
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto winners = api.get_game_winners(game_uuid);
 
@@ -185,7 +151,7 @@ BOOST_FIXTURE_TEST_CASE(check_second_better_is_winner, get_game_winners_fixture)
     mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_uuid_market, uuid_type>)).Return(matched_bets);
 
     // Run
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto winners = api.get_game_winners(game_uuid);
 
@@ -260,7 +226,7 @@ BOOST_FIXTURE_TEST_CASE(trd_state_markets_without_winner_are_not_returned, get_g
     mocks.ExpectCallFunc((dd::get_range_by<matched_bet_object, by_game_uuid_market, uuid_type>)).Return(matched_bets);
 
     // Run
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto winners = api.get_game_winners(game_uuid);
 
@@ -276,8 +242,6 @@ struct get_games_fixture : public fixture
 {
     get_games_fixture()
     {
-        init();
-
         objects.push_back(
             create_object<game_object>(shm, [&](game_object& game) { game.status = game_status::created; }));
 
@@ -302,12 +266,11 @@ struct get_games_fixture : public fixture
 
 BOOST_FIXTURE_TEST_CASE(get_games_return_all_games_in_creation_order, get_games_fixture)
 {
-    mocks
-        .ExpectCallOverload(game_service,
-                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
-        .Return({ objects.begin(), objects.end() });
+    namespace dd = dba::detail;
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    mocks.ExpectCallFunc((dd::get_all_by<game_object, by_id>)).Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
     std::vector<game_api_object> games
         = api.get_games_by_status({ game_status::started, game_status::created, game_status::finished,
                                     game_status::cancelled, game_status::expired, game_status::resolved });
@@ -323,12 +286,11 @@ BOOST_FIXTURE_TEST_CASE(get_games_return_all_games_in_creation_order, get_games_
 
 BOOST_FIXTURE_TEST_CASE(return_games_with_created_status, get_games_fixture)
 {
-    mocks
-        .ExpectCallOverload(game_service,
-                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
-        .Return({ objects.begin(), objects.end() });
+    namespace dd = dba::detail;
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    mocks.ExpectCallFunc((dd::get_all_by<game_object, by_id>)).Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
     std::vector<game_api_object> games = api.get_games_by_status({ game_status::created });
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
@@ -337,12 +299,11 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_created_status, get_games_fixture)
 
 BOOST_FIXTURE_TEST_CASE(return_games_with_started_status, get_games_fixture)
 {
-    mocks
-        .ExpectCallOverload(game_service,
-                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
-        .Return({ objects.begin(), objects.end() });
+    namespace dd = dba::detail;
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    mocks.ExpectCallFunc((dd::get_all_by<game_object, by_id>)).Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
     std::vector<game_api_object> games = api.get_games_by_status({ game_status::started });
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
@@ -351,12 +312,11 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_started_status, get_games_fixture)
 
 BOOST_FIXTURE_TEST_CASE(return_games_with_finished_status, get_games_fixture)
 {
-    mocks
-        .ExpectCallOverload(game_service,
-                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
-        .Return({ objects.begin(), objects.end() });
+    namespace dd = dba::detail;
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    mocks.ExpectCallFunc((dd::get_all_by<game_object, by_id>)).Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
     std::vector<game_api_object> games = api.get_games_by_status({ game_status::finished });
 
     BOOST_REQUIRE_EQUAL(games.size(), 1);
@@ -365,12 +325,11 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_finished_status, get_games_fixture)
 
 BOOST_FIXTURE_TEST_CASE(return_games_with_created_finished_cancelled_status, get_games_fixture)
 {
-    mocks
-        .ExpectCallOverload(game_service,
-                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
-        .Return({ objects.begin(), objects.end() });
+    namespace dd = dba::detail;
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    mocks.ExpectCallFunc((dd::get_all_by<game_object, by_id>)).Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
     std::vector<game_api_object> games
         = api.get_games_by_status({ game_status::finished, game_status::created, game_status::cancelled });
 
@@ -382,14 +341,13 @@ BOOST_FIXTURE_TEST_CASE(return_games_with_created_finished_cancelled_status, get
 
 BOOST_FIXTURE_TEST_CASE(return_two_games_with_finished_status, get_games_fixture)
 {
+    namespace dd = dba::detail;
+
     objects.push_back(create_object<game_object>(shm, [&](game_object& game) { game.status = game_status::finished; }));
 
-    mocks
-        .ExpectCallOverload(game_service,
-                            (game_service_i::view_type(game_service_i::*)() const) & game_service_i::get_games)
-        .Return({ objects.begin(), objects.end() });
+    mocks.ExpectCallFunc((dd::get_all_by<game_object, by_id>)).Return({ objects.begin(), objects.end() });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
     std::vector<game_api_object> games = api.get_games_by_status({ game_status::finished });
 
     BOOST_REQUIRE_EQUAL(games.size(), 2);
@@ -399,7 +357,7 @@ BOOST_FIXTURE_TEST_CASE(return_two_games_with_finished_status, get_games_fixture
 
 BOOST_FIXTURE_TEST_CASE(throw_exception_when_limit_is_negative, get_games_fixture)
 {
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     BOOST_REQUIRE_THROW(api.lookup_pending_bets(0, -1), fc::assert_exception);
     BOOST_REQUIRE_THROW(api.lookup_matched_bets(0, -1), fc::assert_exception);
@@ -409,18 +367,54 @@ BOOST_FIXTURE_TEST_CASE(throw_exception_when_limit_gt_than_max_limit, get_games_
 {
     const auto max_limit = 100;
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba, max_limit);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba, max_limit);
 
     BOOST_REQUIRE_THROW(api.lookup_pending_bets(0, max_limit + 1), fc::assert_exception);
     BOOST_REQUIRE_THROW(api.lookup_matched_bets(0, max_limit + 1), fc::assert_exception);
+}
+
+BOOST_FIXTURE_TEST_CASE(dont_throw_when_limit_is_zero, get_games_fixture)
+{
+    namespace dd = dba::detail;
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
+
+    std::vector<pending_bet_object> pbets;
+    std::vector<matched_bet_object> mbets;
+
+    mocks.OnCallFunc((dd::get_range_by<pending_bet_object, by_id, pending_bet_id_type>))
+        .Return({ pbets.begin(), pbets.end() });
+    mocks.OnCallFunc((dd::get_range_by<matched_bet_object, by_id, matched_bet_id_type>))
+        .Return({ mbets.begin(), mbets.end() });
+
+    BOOST_REQUIRE_NO_THROW(api.lookup_pending_bets(0, 0));
+    BOOST_REQUIRE_NO_THROW(api.lookup_matched_bets(0, 0));
+}
+
+BOOST_FIXTURE_TEST_CASE(dont_throw_when_limit_eq_max, get_games_fixture)
+{
+    namespace dd = dba::detail;
+
+    const auto max_limit = 100;
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba, max_limit);
+
+    std::vector<pending_bet_object> pbets;
+    std::vector<matched_bet_object> mbets;
+
+    mocks.OnCallFunc((dd::get_range_by<pending_bet_object, by_id, pending_bet_id_type>))
+        .Return({ pbets.begin(), pbets.end() });
+    mocks.OnCallFunc((dd::get_range_by<matched_bet_object, by_id, matched_bet_id_type>))
+        .Return({ mbets.begin(), mbets.end() });
+
+    BOOST_REQUIRE_NO_THROW(api.lookup_pending_bets(0, max_limit));
+    BOOST_REQUIRE_NO_THROW(api.lookup_matched_bets(0, max_limit));
 }
 
 template <typename T> struct get_bets_fixture : public fixture
 {
     get_bets_fixture()
     {
-        init();
-
         objects.push_back(create_object<T>(shm, [&](auto& bet) { bet.id = 0; }));
         objects.push_back(create_object<T>(shm, [&](auto& bet) { bet.id = 1; }));
         objects.push_back(create_object<T>(shm, [&](auto& bet) { bet.id = 2; }));
@@ -429,6 +423,92 @@ template <typename T> struct get_bets_fixture : public fixture
     std::vector<T> objects;
 };
 
+BOOST_FIXTURE_TEST_CASE(check_get_pending_bets_from_arg, get_bets_fixture<pending_bet_object>)
+{
+    namespace dd = dba::detail;
+
+    mocks.OnCallFunc((dd::get_range_by<pending_bet_object, by_id, pending_bet_id_type>))
+        .Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
+    api.lookup_pending_bets(0, 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(get_one_pending_bet, get_bets_fixture<pending_bet_object>)
+{
+    namespace dd = dba::detail;
+
+    mocks.OnCallFunc((dd::get_range_by<pending_bet_object, by_id, pending_bet_id_type>))
+        .Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
+    auto bets = api.lookup_pending_bets(0, 1);
+
+    BOOST_REQUIRE_EQUAL(bets.size(), 1);
+
+    BOOST_CHECK(bets[0].id == 0u);
+}
+
+BOOST_FIXTURE_TEST_CASE(get_all_pending_bets, get_bets_fixture<pending_bet_object>)
+{
+    namespace dd = dba::detail;
+
+    mocks.OnCallFunc((dd::get_range_by<pending_bet_object, by_id, pending_bet_id_type>))
+        .Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
+    auto bets = api.lookup_pending_bets(0, 100);
+
+    BOOST_REQUIRE_EQUAL(bets.size(), 3);
+
+    BOOST_CHECK(bets[0].id == 0u);
+    BOOST_CHECK(bets[1].id == 1u);
+    BOOST_CHECK(bets[2].id == 2u);
+}
+
+BOOST_FIXTURE_TEST_CASE(check_get_matched_bets_from_arg, get_bets_fixture<matched_bet_object>)
+{
+    namespace dd = dba::detail;
+
+    mocks.OnCallFunc((dd::get_range_by<matched_bet_object, by_id, matched_bet_id_type>))
+        .Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
+    api.lookup_matched_bets(0, 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(get_one_matched_bet, get_bets_fixture<matched_bet_object>)
+{
+    namespace dd = dba::detail;
+
+    mocks.OnCallFunc((dd::get_range_by<matched_bet_object, by_id, matched_bet_id_type>))
+        .Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
+    auto bets = api.lookup_matched_bets(0, 1);
+
+    BOOST_REQUIRE_EQUAL(bets.size(), 1);
+
+    BOOST_CHECK(bets[0].id == 0u);
+}
+
+BOOST_FIXTURE_TEST_CASE(get_all_matched_bets, get_bets_fixture<matched_bet_object>)
+{
+    namespace dd = dba::detail;
+
+    mocks.OnCallFunc((dd::get_range_by<matched_bet_object, by_id, matched_bet_id_type>))
+        .Return({ objects.begin(), objects.end() });
+
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
+    auto bets = api.lookup_matched_bets(0, 100);
+
+    BOOST_REQUIRE_EQUAL(bets.size(), 3);
+
+    BOOST_CHECK(bets[0].id == 0u);
+    BOOST_CHECK(bets[1].id == 1u);
+    BOOST_CHECK(bets[2].id == 2u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 class betting_api_fixture
@@ -436,33 +516,24 @@ class betting_api_fixture
 public:
     db_mock db;
 
+    dba::db_accessor<betting_property_object> betting_prop_dba;
     dba::db_accessor<game_object> game_dba;
     dba::db_accessor<matched_bet_object> matched_bet_dba;
     dba::db_accessor<pending_bet_object> pending_bet_dba;
-
-    MockRepository mocks;
-    data_service_factory_i* factory = mocks.Mock<data_service_factory_i>();
-    game_service_i* game_service = mocks.Mock<game_service_i>();
-    pending_bet_service_i* pending_bet_service = mocks.Mock<pending_bet_service_i>();
-    matched_bet_service_i* matched_bet_service = mocks.Mock<matched_bet_service_i>();
-    betting_property_service_i* betting_property_service = mocks.Mock<betting_property_service_i>();
 
     uuid_type uuid_ns = boost::uuids::string_generator()("e629f9aa-6b2c-46aa-8fa8-36770e7a7a5f");
     boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(uuid_ns);
 
     betting_api_fixture()
-        : game_dba(db)
+        : betting_prop_dba(db)
+        , game_dba(db)
         , matched_bet_dba(db)
         , pending_bet_dba(db)
     {
+        db.add_index<betting_property_index>();
         db.add_index<game_index>();
         db.add_index<pending_bet_index>();
         db.add_index<matched_bet_index>();
-
-        mocks.OnCall(factory, data_service_factory_i::game_service).ReturnByRef(*game_service);
-        mocks.OnCall(factory, data_service_factory_i::pending_bet_service).ReturnByRef(*pending_bet_service);
-        mocks.OnCall(factory, data_service_factory_i::matched_bet_service).ReturnByRef(*matched_bet_service);
-        mocks.OnCall(factory, data_service_factory_i::betting_property_service).ReturnByRef(*betting_property_service);
     }
 };
 
@@ -472,7 +543,7 @@ BOOST_AUTO_TEST_CASE(empty_uuids_list_should_return_empty)
 {
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_games_by_uuids({});
 
@@ -483,7 +554,7 @@ BOOST_AUTO_TEST_CASE(non_exists_uuid_should_return_empty)
 {
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_games_by_uuids({ uuid_gen("b1") });
 
@@ -495,7 +566,7 @@ BOOST_AUTO_TEST_CASE(passed_uuids_is_superset_should_return_in_correct_order)
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_games_by_uuids({ uuid_gen("b2"), uuid_gen("b1"), uuid_gen("b0") });
 
@@ -510,7 +581,7 @@ BOOST_AUTO_TEST_CASE(passed_uuids_is_subset_should_return_in_correct_order)
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); });
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b2"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_games_by_uuids({ uuid_gen("b1"), uuid_gen("b2") });
 
@@ -521,7 +592,7 @@ BOOST_AUTO_TEST_CASE(passed_uuids_is_subset_should_return_in_correct_order)
 
 BOOST_AUTO_TEST_CASE(get_by_uuids_empty_db_should_return_empty)
 {
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_games_by_uuids({ uuid_gen("b1"), uuid_gen("b2") });
 
@@ -533,7 +604,7 @@ BOOST_AUTO_TEST_CASE(return_all_starting_from_the_beginning)
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b0"); });
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b1"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.lookup_games_by_id(0, 42);
 
@@ -548,7 +619,7 @@ BOOST_AUTO_TEST_CASE(return_the_tail_starting_from_the_middle)
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); });
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.lookup_games_by_id(2, 42);
 
@@ -566,7 +637,7 @@ BOOST_AUTO_TEST_CASE(limit_test)
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); });
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.lookup_games_by_id(1, 2);
 
@@ -583,7 +654,7 @@ BOOST_AUTO_TEST_CASE(api_lookup_limit_is_less_than_limit)
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b3"); });
     db.create<game_object>([&](game_object& o) { o.uuid = uuid_gen("b4"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba, 2);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba, 2);
 
     auto result = api.lookup_games_by_id(1, 3);
 
@@ -602,7 +673,7 @@ BOOST_AUTO_TEST_CASE(get_pending_bets_test_passed_uuids_is_subset)
     db.create<pending_bet_object>([&](pending_bet_object& o) { o.data.uuid = uuid_gen("b1"); });
     db.create<pending_bet_object>([&](pending_bet_object& o) { o.data.uuid = uuid_gen("b2"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_pending_bets({ uuid_gen("b1"), uuid_gen("b2") });
 
@@ -616,7 +687,7 @@ BOOST_AUTO_TEST_CASE(get_pending_bets_test_passed_uuids_is_superset)
     db.create<pending_bet_object>([&](pending_bet_object& o) { o.data.uuid = uuid_gen("b0"); });
     db.create<pending_bet_object>([&](pending_bet_object& o) { o.data.uuid = uuid_gen("b1"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_pending_bets({ uuid_gen("b0"), uuid_gen("uknown0"), uuid_gen("b1"), uuid_gen("uknown1") });
 
@@ -629,7 +700,7 @@ BOOST_AUTO_TEST_CASE(get_pending_bets_test_passed_uuids_is_empty)
 {
     db.create<pending_bet_object>([&](pending_bet_object& o) { o.data.uuid = uuid_gen("b0"); });
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_pending_bets({});
 
@@ -638,7 +709,7 @@ BOOST_AUTO_TEST_CASE(get_pending_bets_test_passed_uuids_is_empty)
 
 BOOST_AUTO_TEST_CASE(get_pending_bets_test_empty_db)
 {
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_pending_bets({ uuid_gen("b1"), uuid_gen("b2") });
 
@@ -653,7 +724,7 @@ BOOST_AUTO_TEST_CASE(get_matched_bets_no_duplicates_check)
     db.create<matched_bet_object>([&](matched_bet_object& o) { o.bet1_data.uuid = uuid_gen("b0"); o.bet2_data.uuid = uuid_gen("b3"); });
     // clang-format on
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_matched_bets({ uuid_gen("b3"), uuid_gen("b0") });
 
@@ -672,7 +743,7 @@ BOOST_AUTO_TEST_CASE(get_matched_bets_same_better_several_bets_should_return)
     db.create<matched_bet_object>([&](matched_bet_object& o) { o.bet1_data.uuid = uuid_gen("b5"); o.bet2_data.uuid = uuid_gen("b1"); });
     // clang-format on
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_matched_bets({ uuid_gen("b1"), uuid_gen("b0") });
 
@@ -689,7 +760,7 @@ BOOST_AUTO_TEST_CASE(get_matched_bets_test_passed_uuids_is_empty)
     db.create<matched_bet_object>([&](matched_bet_object& o) { o.bet1_data.uuid = uuid_gen("b0"); o.bet2_data.uuid = uuid_gen("b1"); });
     // clang-format on
 
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_matched_bets({});
 
@@ -698,7 +769,7 @@ BOOST_AUTO_TEST_CASE(get_matched_bets_test_passed_uuids_is_empty)
 
 BOOST_AUTO_TEST_CASE(get_matched_bets_test_empty_db)
 {
-    betting_api_impl api(*factory, game_dba, matched_bet_dba, pending_bet_dba);
+    betting_api_impl api(betting_prop_dba, game_dba, matched_bet_dba, pending_bet_dba);
 
     auto result = api.get_matched_bets({ uuid_gen("b1"), uuid_gen("b2") });
 
