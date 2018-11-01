@@ -1621,7 +1621,7 @@ public:
      * @param limit query limit
      * @return array of matched_bet_api_object's
      */
-    std::vector<matched_bet_api_object> get_matched_bets(matched_bet_id_type from, int64_t limit) const;
+    std::vector<matched_bet_api_object> lookup_matched_bets(matched_bet_id_type from, int64_t limit) const;
 
     /**
      * @brief Return pending bets
@@ -1629,7 +1629,21 @@ public:
      * @param limit query limit
      * @return array of pending_bet_api_object's
      */
-    std::vector<pending_bet_api_object> get_pending_bets(pending_bet_id_type from, int64_t limit) const;
+    std::vector<pending_bet_api_object> lookup_pending_bets(pending_bet_id_type from, int64_t limit) const;
+
+    /**
+     * @brief Returns matched bets
+     * @param uuids  The vector of UUIDs of pending bets which form matched bets
+     * @return array of matched_bet_api_object's
+     */
+    std::vector<matched_bet_api_object> get_matched_bets(const std::vector<uuid_type>& uuids) const;
+
+    /**
+     * @brief Return pending bets
+     * @param uuids The vector of UUIDs of pending bets which should be returned
+     * @return array of pending_bet_api_object's
+     */
+    std::vector<pending_bet_api_object> get_pending_bets(const std::vector<uuid_type>& uuids) const;
 
     /** @}*/
 
@@ -1804,6 +1818,14 @@ FC_API( scorum::wallet::wallet_api,
         (post_bet)
         (cancel_pending_bets)
 
+        (get_games_by_status)
+        (get_games_by_uuids)
+        (lookup_games_by_id)
+        (lookup_matched_bets)
+        (lookup_pending_bets)
+        (get_matched_bets)
+        (get_pending_bets)
+
         // helper api
         (get_prototype_operation)
         (serialize_transaction)
@@ -1816,13 +1838,6 @@ FC_API( scorum::wallet::wallet_api,
         (get_transaction)
 
         (exit)
-
-        // Beting api
-        (get_games_by_status)
-        (get_games_by_uuids)
-        (lookup_games_by_id)
-        (get_matched_bets)
-        (get_pending_bets)
       )
 
 FC_REFLECT( scorum::wallet::memo_data, (from)(to)(nonce)(check)(encrypted) )
