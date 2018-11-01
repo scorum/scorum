@@ -2,7 +2,7 @@
 List of exception that could be raised on betting operations
 
 ## create_game_operation
-* Assert Exception "Account name is invalid" -- raises when op.moderator is invalid account name 
+* Assert Exception "Account name is invalid" -- raises when op.moderator is invalid account name
 * Assert Exception "Game name should be less than ${1}" -- raises when op.name greater than SCORUM_MAX_GAME_NAME_LENGTH value
 * Assert Exception "Markets ${m} cannot be used with specified game" -- raises when try to create game with unexpected market
 * Assert Exception "Account \"${1}\" must exist." -- raises when account with name op.moderator doens't exists
@@ -37,6 +37,8 @@ List of exception that could be raised on betting operations
 * Assert Exception "Unable to post game results after bets were resolved" -- raises when try to post results op.start_time + op.auto_resolve_delay_sec was reached
 * Assert Exception "Wincase winners list do not contain neither '${1}' nor '${2}'"
 * Assert Exception "You've provided opposite wincases from same market as winners"
+* Assert Exception "Wincase '${w}' dont belongs to game markets"
+
 
 ## cancel_game_operation
 * Assert Exception "Account name is invalid" -- raises when op.moderator is invalid account name
@@ -58,6 +60,7 @@ List of exception that could be raised on betting operations
 * Assert Exception "Cannot post bet for game that is finished" -- raises when try post bet on game which status is "finished"(status changed to finished after post_game_results_operation was pushed by betting moderator)
 * Assert Exception "Cannot create non-live bet after game was started" -- raises when try to post bet with arg bet.live == False on game which status is "started"(status changes to "started" after game start_time was reached))
 * Assert Exception "Invalid wincase '${w}'" -- raises when try to post bet on invalid wincase
+* Assert Exception "Wincase '${w}' dont belongs to game markets"
 
 ## cancel_pending_bet
 * Assert Exception "Account name is invalid" -- raises when op.better is invalid account name

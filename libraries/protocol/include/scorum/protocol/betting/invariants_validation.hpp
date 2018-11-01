@@ -3,8 +3,6 @@
 #include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/betting/wincase.hpp>
 
-#include <fc/shared_containers.hpp>
-
 namespace scorum {
 namespace protocol {
 void validate_game(const game_type& game, const fc::flat_set<market_type>& markets);
