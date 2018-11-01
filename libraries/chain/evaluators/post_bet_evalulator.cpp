@@ -13,8 +13,11 @@
 #include <scorum/chain/betting/betting_matcher.hpp>
 
 #include <scorum/protocol/betting/invariants_validation.hpp>
+#include <scorum/protocol/betting/market.hpp>
 
 #include <scorum/utils/range/unwrap_ref_wrapper_adaptor.hpp>
+
+#include <boost/range/algorithm/transform.hpp>
 
 namespace scorum {
 namespace chain {
@@ -41,6 +44,11 @@ void post_bet_evaluator::do_apply(const operation_type& op)
     auto game_obj = _game_dba.get_by<by_uuid>(op.game_uuid);
 
     validate_if_wincase_in_game(game_obj.game, op.wincase);
+
+    std::set<market_kind> actual_markets = get_markets_kind(game_obj.markets);
+
+    FC_ASSERT(actual_markets.find(get_market_kind(op.wincase)) != actual_markets.end(),
+              "Wincase '${w}' dont belongs to game markets", ("w", op.wincase));
 
     FC_ASSERT(game_obj.status != game_status::finished, "Cannot post bet for game that is finished");
     FC_ASSERT(game_obj.status == game_status::created || op.live, "Cannot create non-live bet after game was started");

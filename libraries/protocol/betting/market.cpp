@@ -74,7 +74,13 @@ bool match_wincases(const wincase_type& lhs, const wincase_type& rhs)
 
     return !(lhs_opposite < rhs) && !(rhs < lhs_opposite);
 }
+
+market_kind get_market_kind(const wincase_type& wincase)
+{
+    return wincase.visit([](const auto& w) { return std::decay_t<decltype(w)>::kind_v; });
 }
+
+} // namespace protocol
 
 namespace utils {
 /**

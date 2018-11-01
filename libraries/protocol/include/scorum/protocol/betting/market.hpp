@@ -4,6 +4,8 @@
 #include <scorum/protocol/betting/market_kind.hpp>
 #include <scorum/protocol/config.hpp>
 
+#include <boost/range/algorithm/transform.hpp>
+
 namespace scorum {
 namespace protocol {
 
@@ -130,8 +132,21 @@ wincase_type create_opposite(const wincase_type& wincase);
 market_type create_market(const wincase_type& wincase);
 bool has_trd_state(const market_type& market);
 bool match_wincases(const wincase_type& lhs, const wincase_type& rhs);
+
+market_kind get_market_kind(const wincase_type& wincase);
+
+template <typename T> std::set<market_kind> get_markets_kind(const T& markets)
+{
+    std::set<market_kind> actual_markets;
+    boost::transform(markets, std::inserter(actual_markets, actual_markets.begin()), [](const market_type& m) {
+        return m.visit([&](const auto& market_impl) { return market_impl.kind_v; });
+    });
+
+    return actual_markets;
 }
-}
+
+} // namespace protocol
+} // namespace scorum
 
 #include <scorum/protocol/betting/wincase_comparison.hpp>
 #include <scorum/protocol/betting/market_comparison.hpp>
