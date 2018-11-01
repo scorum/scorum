@@ -64,7 +64,7 @@ struct bet_operations_fixture : public database_fixture::database_betting_integr
     game_service_i& game_service;
 };
 
-BOOST_FIXTURE_TEST_SUITE(budget_operations_tests, bet_operations_fixture)
+BOOST_FIXTURE_TEST_SUITE(create_and_cancel_bet_tests, bet_operations_fixture)
 
 SCORUM_TEST_CASE(post_bet_operation_check)
 {

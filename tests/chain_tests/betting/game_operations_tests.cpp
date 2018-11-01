@@ -312,4 +312,37 @@ SCORUM_TEST_CASE(update_after_game_started_should_change_status)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(create_game_with_empty_markets_tests, game_operations_fixture)
+
+SCORUM_TEST_CASE(throw_on_post_bet_when_game_markets_empty)
+{
+    create_game(moderator, {});
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(1u, db.get_index<game_index>().indices().size());
+
+    const auto& game = db.get(game_object::id_type(0));
+
+    BOOST_REQUIRE_EQUAL(0u, game.markets.size());
+
+    BOOST_REQUIRE_THROW(create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)),
+                        fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(throw_on_post_game_results_when_game_markets_empty)
+{
+    create_game(moderator, {});
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(1u, db.get_index<game_index>().indices().size());
+
+    const auto& game = db.get(game_object::id_type(0));
+
+    BOOST_REQUIRE_EQUAL(0u, game.markets.size());
+
+    BOOST_REQUIRE_THROW(post_results(moderator, { correct_score_home::yes{} }), fc::assert_exception);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 }

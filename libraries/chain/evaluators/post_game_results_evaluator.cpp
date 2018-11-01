@@ -39,6 +39,14 @@ void post_game_results_evaluator::do_apply(const operation_type& op)
 
     const fc::flat_set<wincase_type> wincases(op.wincases.begin(), op.wincases.end());
 
+    std::set<market_kind> actual_markets = get_markets_kind(game.markets);
+
+    for (auto wincase : wincases)
+    {
+        FC_ASSERT(actual_markets.find(get_market_kind(wincase)) != actual_markets.end(),
+                  "Wincase '${w}' dont belongs to game markets", ("w", wincase));
+    }
+
     validate_all_winners_present(game.markets, wincases);
     validate_opposite_winners_absent(wincases);
 
