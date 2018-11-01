@@ -3372,18 +3372,32 @@ std::vector<game_api_object> wallet_api::lookup_games_by_id(game_id_type from, u
     return api->lookup_games_by_id(from, limit);
 }
 
-std::vector<matched_bet_api_object> wallet_api::get_matched_bets(matched_bet_id_type from, int64_t limit) const
+std::vector<matched_bet_api_object> wallet_api::lookup_matched_bets(matched_bet_id_type from, int64_t limit) const
 {
     auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
 
     return api->lookup_matched_bets(from, limit);
 }
 
-std::vector<pending_bet_api_object> wallet_api::get_pending_bets(pending_bet_id_type from, int64_t limit) const
+std::vector<pending_bet_api_object> wallet_api::lookup_pending_bets(pending_bet_id_type from, int64_t limit) const
 {
     auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
 
     return api->lookup_pending_bets(from, limit);
+}
+
+std::vector<matched_bet_api_object> wallet_api::get_matched_bets(const std::vector<uuid_type>& uuids) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_matched_bets(uuids);
+}
+
+std::vector<pending_bet_api_object> wallet_api::get_pending_bets(const std::vector<uuid_type>& uuids) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_pending_bets(uuids);
 }
 
 } // namespace wallet
