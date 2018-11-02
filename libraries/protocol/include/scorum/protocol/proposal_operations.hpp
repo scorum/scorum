@@ -275,6 +275,7 @@ FC_REFLECT(scorum::protocol::development_committee_change_quorum_operation, (quo
 FC_REFLECT(scorum::protocol::development_committee_withdraw_vesting_operation, (vesting_shares))
 FC_REFLECT(scorum::protocol::development_committee_transfer_operation, (amount)(to_account))
 FC_REFLECT(scorum::protocol::development_committee_empower_advertising_moderator_operation, (account))
+
 FC_REFLECT(scorum::protocol::development_committee_empower_betting_moderator_operation, (account))
 FC_REFLECT(scorum::protocol::development_committee_change_betting_resolve_delay_operation, (delay_sec))
 
