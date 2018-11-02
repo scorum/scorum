@@ -264,32 +264,55 @@ public:
         return true;
     }
 
-    bool operator()(const scorum::protocol::create_budget_operation&) const
-    {
-        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3);
-    }
-    bool operator()(const scorum::protocol::close_budget_operation&) const
-    {
-        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3);
-    }
-    bool operator()(const scorum::protocol::close_budget_by_advertising_moderator_operation&) const
-    {
-        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3);
-    }
-    bool operator()(const scorum::protocol::update_budget_operation&) const
-    {
-        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3);
-    }
     bool operator()(const scorum::protocol::proposal_create_operation& op) const
     {
         using namespace scorum::protocol;
         // clang-format off
         auto idx = op.operation.which();
-        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_3)
-            || (idx != proposal_operation::tag<development_committee_empower_advertising_moderator_operation>::value
-            &&  idx != proposal_operation::tag<development_committee_change_post_budgets_auction_properties_operation>::value
-            &&  idx != proposal_operation::tag<development_committee_change_banner_budgets_auction_properties_operation>::value);
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_4)
+            || (idx != proposal_operation::tag<development_committee_empower_betting_moderator_operation>::value
+            &&  idx != proposal_operation::tag<development_committee_change_betting_resolve_delay_operation>::value);
         // clang-format on
+    }
+
+    bool operator()(const scorum::protocol::cancel_pending_bets_operation&) const
+    {
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_4);
+    }
+
+    bool operator()(const scorum::protocol::create_game_operation&) const
+    {
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_4);
+    }
+
+    bool operator()(const scorum::protocol::cancel_game_operation&) const
+    {
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_4);
+    }
+
+    bool operator()(const scorum::protocol::update_game_markets_operation&) const
+    {
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_4);
+    }
+
+    bool operator()(const scorum::protocol::update_game_start_time_operation&) const
+    {
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_4);
+    }
+
+    bool operator()(const scorum::protocol::post_game_results_operation&) const
+    {
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_4);
+    }
+
+    bool operator()(const scorum::protocol::post_bet_operation&) const
+    {
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_4);
+    }
+
+    bool operator()(const scorum::protocol::delegate_sp_from_reg_pool_operation&) const
+    {
+        return _hardfork_svc.has_hardfork(SCORUM_HARDFORK_0_4);
     }
 
 private:
