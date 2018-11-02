@@ -29,12 +29,7 @@ using namespace database_fixture;
 struct game_operations_fixture : public database_fixture::database_betting_integration_fixture
 {
     game_operations_fixture()
-        : dgp_service(db.dynamic_global_property_service())
-        , betting_property_service(db.betting_property_service())
-        , account_service(db.account_service())
-        , game_service(db.game_service())
-        , matched_bet_service(db.matched_bet_service())
-        , pending_bet_service(db.pending_bet_service())
+        : game_dba(db.get_dba<game_object>())
         , matched_bet_dba(db.get_dba<matched_bet_object>())
         , pending_bet_dba(db.get_dba<pending_bet_object>())
     {
@@ -56,20 +51,15 @@ struct game_operations_fixture : public database_fixture::database_betting_integ
 
         empower_moderator(moderator);
 
-        BOOST_REQUIRE(betting_property_service.is_exists());
-        BOOST_REQUIRE_EQUAL(betting_property_service.get().moderator, moderator.name);
+        BOOST_REQUIRE(!db.get_dba<betting_property_object>().is_empty());
+        BOOST_REQUIRE_EQUAL(db.get_dba<betting_property_object>().get().moderator, moderator.name);
     }
 
     Actor alice = "alice";
     Actor bob = "bob";
     Actor moderator = "smit";
 
-    dynamic_global_property_service_i& dgp_service;
-    betting_property_service_i& betting_property_service;
-    account_service_i& account_service;
-    game_service_i& game_service;
-    matched_bet_service_i& matched_bet_service;
-    pending_bet_service_i& pending_bet_service;
+    dba::db_accessor<game_object>& game_dba;
     dba::db_accessor<matched_bet_object>& matched_bet_dba;
     dba::db_accessor<pending_bet_object>& pending_bet_dba;
 
@@ -93,11 +83,11 @@ BOOST_FIXTURE_TEST_SUITE(post_game_results_operation_tests, game_operations_fixt
 SCORUM_TEST_CASE(post_game_results_positive_test)
 {
     // clang-format off
-    create_game(moderator, {
-        result_home{},
-        total{ 2000 },
-        total{ 500 },
-        correct_score{ 0, 0 } });
+        create_game(moderator, {
+            result_home{},
+            total{ 2000 },
+            total{ 500 },
+            correct_score{ 0, 0 } });
     // clang-format on
 
     auto creation_time = db.head_block_time();
@@ -167,15 +157,15 @@ SCORUM_TEST_CASE(auto_resolve_time_updating_test)
     create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    BOOST_CHECK_EQUAL((game_service.get().start_time - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 2);
-    BOOST_CHECK_EQUAL((game_service.get().auto_resolve_time - game_service.get().start_time).to_seconds(),
+    BOOST_CHECK_EQUAL((game_dba.get().start_time - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 2);
+    BOOST_CHECK_EQUAL((game_dba.get().auto_resolve_time - game_dba.get().start_time).to_seconds(),
                       auto_resolve_delay_default);
 
     time = db.head_block_time();
     update_start_time(moderator, SCORUM_BLOCK_INTERVAL * 3);
 
-    BOOST_CHECK_EQUAL((game_service.get().start_time - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 3);
-    BOOST_CHECK_EQUAL((game_service.get().auto_resolve_time - game_service.get().start_time).to_seconds(),
+    BOOST_CHECK_EQUAL((game_dba.get().start_time - time).to_seconds(), SCORUM_BLOCK_INTERVAL * 3);
+    BOOST_CHECK_EQUAL((game_dba.get().auto_resolve_time - game_dba.get().start_time).to_seconds(),
                       auto_resolve_delay_default);
 }
 
@@ -304,11 +294,11 @@ SCORUM_TEST_CASE(update_after_game_started_should_change_status)
     create_game(moderator, { result_home{} }, SCORUM_BLOCK_INTERVAL);
     generate_block(); // game started
 
-    BOOST_REQUIRE(game_service.get_game(0).status == game_status::started);
+    BOOST_REQUIRE(game_dba.get_by<by_id>(0).status == game_status::started);
 
     update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
 
-    BOOST_CHECK(game_service.get_game(0).status == game_status::created);
+    BOOST_CHECK(game_dba.get_by<by_id>(0).status == game_status::created);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

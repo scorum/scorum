@@ -2064,6 +2064,10 @@ void database::init_hardforks(time_point_sec genesis_time)
     _hardfork_times[SCORUM_HARDFORK_0_3] = fc::time_point_sec(SCORUM_HARDFORK_0_3_TIME);
     _hardfork_versions[SCORUM_HARDFORK_0_3] = SCORUM_HARDFORK_0_3_VERSION;
 
+    FC_ASSERT(SCORUM_HARDFORK_0_4 == 4, "Invalid hardfork #4 configuration");
+    _hardfork_times[SCORUM_HARDFORK_0_4] = fc::time_point_sec(SCORUM_HARDFORK_0_4_TIME);
+    _hardfork_versions[SCORUM_HARDFORK_0_4] = SCORUM_HARDFORK_0_4_VERSION;
+
     const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",
               ("hardforks.last_hardfork", hardforks.last_hardfork)("SCORUM_NUM_HARDFORKS", SCORUM_NUM_HARDFORKS));

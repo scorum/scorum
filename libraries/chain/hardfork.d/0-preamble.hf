@@ -11,6 +11,7 @@
 
 #include <scorum/protocol/types.hpp>
 #include <scorum/protocol/version.hpp>
+#include <fc/shared_containers.hpp>
 
 namespace scorum { namespace chain {
 
@@ -21,14 +22,14 @@ class hardfork_property_object : public object< hardfork_property_object_type, h
 
       id_type                                                              id;
 
-      fc::shared_vector< fc::time_point_sec >							   processed_hardforks;
+      fc::shared_vector< fc::time_point_sec >                              processed_hardforks;
       uint32_t                                                             last_hardfork = 0;
       protocol::hardfork_version                                           current_hardfork_version;
       protocol::hardfork_version                                           next_hardfork;
       fc::time_point_sec                                                   next_hardfork_time;
 };
 
-typedef shared_multi_index_container<
+typedef fc::shared_multi_index_container<
    hardfork_property_object,
    indexed_by<
       ordered_unique< member< hardfork_property_object, hardfork_property_object::id_type, &hardfork_property_object::id > >
