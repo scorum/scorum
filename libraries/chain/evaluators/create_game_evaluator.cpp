@@ -32,6 +32,8 @@ void create_game_evaluator::do_apply(const operation_type& op)
     FC_ASSERT(_betting_service.is_betting_moderator(op.moderator), "User ${u} isn't a betting moderator",
               ("u", op.moderator));
 
+    FC_ASSERT(op.auto_resolve_delay_sec > 0, "Auto resolve delay is not set.");
+
     fc::flat_set<market_type> markets(op.markets.begin(), op.markets.end());
 
     _game_svc.create_game(op.uuid, op.moderator, op.json_metadata, op.start_time, op.auto_resolve_delay_sec, op.game,

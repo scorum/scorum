@@ -976,7 +976,7 @@ struct create_game_operation : public base_operation
     time_point_sec start_time;
 
     /// delay starting from start after which all bets are automatically resolved if game results weren't provided
-    uint32_t auto_resolve_delay_sec;
+    uint32_t auto_resolve_delay_sec = 0;
 
     /// game type (soccer, hockey, etc ...)
     game_type game;
