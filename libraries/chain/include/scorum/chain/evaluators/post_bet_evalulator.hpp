@@ -1,6 +1,5 @@
 #pragma once
 
-#include <scorum/protocol/scorum_operations.hpp>
 #include <scorum/chain/evaluators/evaluator.hpp>
 
 #include <scorum/chain/dba/db_accessor_fwd.hpp>
@@ -12,10 +11,6 @@ namespace chain {
 struct data_service_factory_i;
 struct betting_matcher_i;
 struct betting_service_i;
-
-namespace dba {
-template <typename> class db_accessor;
-}
 
 class post_bet_evaluator : public evaluator_impl<data_service_factory_i, post_bet_evaluator>
 {

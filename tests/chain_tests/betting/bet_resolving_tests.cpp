@@ -1,19 +1,18 @@
 #include <boost/test/unit_test.hpp>
 
+#include <scorum/protocol/proposal_operations.hpp>
+#include <scorum/protocol/betting/market_kind.hpp>
+
+#include <scorum/chain/schema/account_objects.hpp>
+#include <scorum/chain/schema/game_object.hpp>
+#include <scorum/chain/schema/betting_property_object.hpp>
+#include <scorum/chain/dba/db_accessor.hpp>
+
 #include "defines.hpp"
+#include "detail.hpp"
 
 #include "database_betting_integration.hpp"
 #include "actor.hpp"
-
-#include <scorum/protocol/proposal_operations.hpp>
-
-#include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/chain/services/proposal.hpp>
-#include <scorum/chain/services/betting_property.hpp>
-#include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/game.hpp>
-
-#include <scorum/protocol/betting/market_kind.hpp>
 
 namespace {
 
@@ -24,6 +23,9 @@ using namespace database_fixture;
 struct bet_resolving_fixture : public database_fixture::database_betting_integration_fixture
 {
     bet_resolving_fixture()
+        : account_dba(db)
+        , game_dba(db)
+        , betting_prop_dba(db)
     {
         open_database();
 
@@ -43,78 +45,81 @@ struct bet_resolving_fixture : public database_fixture::database_betting_integra
 
         empower_moderator(moderator);
 
-        BOOST_REQUIRE(betting_property_service.is_exists());
-        BOOST_REQUIRE_EQUAL(betting_property_service.get().moderator, moderator.name);
+        BOOST_REQUIRE_EQUAL(this->betting_moderator(), moderator.name);
     }
 
     Actor alice = "alice";
     Actor bob = "bob";
     Actor moderator = "smit";
+
+    dba::db_accessor<account_object> account_dba;
+    dba::db_accessor<game_object> game_dba;
+    dba::db_accessor<betting_property_object> betting_prop_dba;
 };
 
 BOOST_FIXTURE_TEST_SUITE(bet_resolving_tests, bet_resolving_fixture)
 
 SCORUM_TEST_CASE(live_bets_no_pending_bets_return_after_start_check)
 {
-    const auto& alice_acc = account_service.get_account(alice.name);
-    const auto& bob_acc = account_service.get_account(bob.name);
+    const auto& alice_acc = account_dba.get_by<by_name>(alice.name);
+    const auto& bob_acc = account_dba.get_by<by_name>(bob.name);
 
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
-    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
+    create_bet(gen_uuid("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
+    create_bet(gen_uuid("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
 
-    BOOST_CHECK(game_service.get().status == game_status::created);
+    BOOST_CHECK(game_dba.get().status == game_status::created);
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
 
     generate_block(); // game started
 
-    BOOST_CHECK(game_service.get().status == game_status::started);
+    BOOST_CHECK(game_dba.get().status == game_status::started);
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000); // pending bets are keeping for live bets
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000); // pending bets are keeping for live bets
 }
 
 SCORUM_TEST_CASE(non_live_bets_return_pending_bets_after_start_check)
 {
-    const auto& alice_acc = account_service.get_account(alice.name);
-    const auto& bob_acc = account_service.get_account(bob.name);
+    const auto& alice_acc = account_dba.get_by<by_name>(alice.name);
+    const auto& bob_acc = account_dba.get_by<by_name>(bob.name);
 
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2, false); // 500'000
-    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2, false); // 500'000
+    create_bet(gen_uuid("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2, false); // 500'000
+    create_bet(gen_uuid("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2, false); // 500'000
 
-    BOOST_CHECK(game_service.get().status == game_status::created);
+    BOOST_CHECK(game_dba.get().status == game_status::created);
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
 
     generate_block(); // game started
 
-    BOOST_CHECK(game_service.get().status == game_status::started);
+    BOOST_CHECK(game_dba.get().status == game_status::started);
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000 + 375'000); // 375'000 returned after game was started
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000); // nothing to return
 }
 
 SCORUM_TEST_CASE(non_live_bets_resolve_test_check)
 {
-    const auto& alice_acc = account_service.get_account(alice.name);
-    const auto& bob_acc = account_service.get_account(bob.name);
+    const auto& alice_acc = account_dba.get_by<by_name>(alice.name);
+    const auto& bob_acc = account_dba.get_by<by_name>(bob.name);
 
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
-    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
+    create_bet(gen_uuid("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
+    create_bet(gen_uuid("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
 
     generate_block(); // game started
 
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000); // live pending bets weren't returned
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
 
-    auto resolve_delay = betting_property_service.get().resolve_delay_sec;
+    auto resolve_delay = betting_prop_dba.get().resolve_delay_sec;
 
     post_results(moderator, { result_away::no{} });
 
@@ -131,15 +136,15 @@ SCORUM_TEST_CASE(non_live_bets_resolve_test_check)
 
 SCORUM_TEST_CASE(bets_auto_resolve_test_check)
 {
-    const auto& alice_acc = account_service.get_account(alice.name);
-    const auto& bob_acc = account_service.get_account(bob.name);
+    const auto& alice_acc = account_dba.get_by<by_name>(alice.name);
+    const auto& bob_acc = account_dba.get_by<by_name>(bob.name);
 
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
-    auto start_time = game_service.get().start_time;
+    auto start_time = game_dba.get().start_time;
     generate_block();
 
-    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
-    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
+    create_bet(gen_uuid("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
+    create_bet(gen_uuid("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
 
     generate_block(); // game started
 
@@ -154,14 +159,14 @@ SCORUM_TEST_CASE(bets_auto_resolve_test_check)
 
 SCORUM_TEST_CASE(cancel_game_before_start_return_all_check)
 {
-    const auto& alice_acc = account_service.get_account(alice.name);
-    const auto& bob_acc = account_service.get_account(bob.name);
+    const auto& alice_acc = account_dba.get_by<by_name>(alice.name);
+    const auto& bob_acc = account_dba.get_by<by_name>(bob.name);
 
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 3);
     generate_block();
 
-    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
-    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
+    create_bet(gen_uuid("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
+    create_bet(gen_uuid("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
 
     generate_block();
 
@@ -176,14 +181,14 @@ SCORUM_TEST_CASE(cancel_game_before_start_return_all_check)
 
 SCORUM_TEST_CASE(cancel_game_after_start_return_all_check)
 {
-    const auto& alice_acc = account_service.get_account(alice.name);
-    const auto& bob_acc = account_service.get_account(bob.name);
+    const auto& alice_acc = account_dba.get_by<by_name>(alice.name);
+    const auto& bob_acc = account_dba.get_by<by_name>(bob.name);
 
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
-    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
+    create_bet(gen_uuid("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 2); // 500'000
+    create_bet(gen_uuid("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000
 
     BOOST_CHECK_EQUAL(alice_acc.balance.amount, 500'000);
     BOOST_CHECK_EQUAL(bob_acc.balance.amount, 500'000);
@@ -197,16 +202,16 @@ SCORUM_TEST_CASE(cancel_game_after_start_return_all_check)
 
 SCORUM_TEST_CASE(update_markets_trigger_bets_cancelling_check)
 {
-    const auto& alice_acc = account_service.get_account(alice.name);
-    const auto& bob_acc = account_service.get_account(bob.name);
+    const auto& alice_acc = account_dba.get_by<by_name>(alice.name);
+    const auto& bob_acc = account_dba.get_by<by_name>(bob.name);
 
     create_game(moderator, { result_away{}, result_draw{} }, SCORUM_BLOCK_INTERVAL * 3);
     generate_block();
 
-    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 4); // 250'000
-    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 4); // 250'000
-    create_bet(uuid_gen("b3"), alice, result_draw::yes{}, { 10, 2 }, alice.scr_amount * 3 / 4); // 750'000
-    create_bet(uuid_gen("b4"), bob, result_draw::no{}, { 10, 8 }, bob.scr_amount * 3 / 4); // 750'000
+    create_bet(gen_uuid("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 4); // 250'000
+    create_bet(gen_uuid("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 4); // 250'000
+    create_bet(gen_uuid("b3"), alice, result_draw::yes{}, { 10, 2 }, alice.scr_amount * 3 / 4); // 750'000
+    create_bet(gen_uuid("b4"), bob, result_draw::no{}, { 10, 8 }, bob.scr_amount * 3 / 4); // 750'000
 
     generate_block();
 
@@ -221,17 +226,17 @@ SCORUM_TEST_CASE(update_markets_trigger_bets_cancelling_check)
 
 SCORUM_TEST_CASE(cancel_game_after_markets_update_check)
 {
-    const auto& alice_acc = account_service.get_account(alice.name);
-    const auto& bob_acc = account_service.get_account(bob.name);
+    const auto& alice_acc = account_dba.get_by<by_name>(alice.name);
+    const auto& bob_acc = account_dba.get_by<by_name>(bob.name);
 
     create_game(moderator, { result_away{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 4);
     generate_block();
 
-    create_bet(uuid_gen("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 4); // 250'000 (125'000 matched)
-    create_bet(uuid_gen("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000 (500'000 matched)
+    create_bet(gen_uuid("b1"), alice, result_away::yes{}, { 10, 2 }, alice.scr_amount / 4); // 250'000 (125'000 matched)
+    create_bet(gen_uuid("b2"), bob, result_away::no{}, { 10, 8 }, bob.scr_amount / 2); // 500'000 (500'000 matched)
 
-    create_bet(uuid_gen("b3"), alice, total::over{ 2000 }, { 10, 2 }, alice.scr_amount / 2); // 500'000 (62'500 matched)
-    create_bet(uuid_gen("b4"), bob, total::under{ 2000 }, { 10, 8 }, bob.scr_amount / 4); // 250'000 (250'000 matched)
+    create_bet(gen_uuid("b3"), alice, total::over{ 2000 }, { 10, 2 }, alice.scr_amount / 2); // 500'000 (62'500 matched)
+    create_bet(gen_uuid("b4"), bob, total::under{ 2000 }, { 10, 8 }, bob.scr_amount / 4); // 250'000 (250'000 matched)
 
     generate_block();
 
@@ -264,11 +269,11 @@ SCORUM_TEST_CASE(game_resolve_time_is_after_auto_resolve_time)
     post_results(moderator, { result_away::yes{} });
     generate_block();
 
-    BOOST_CHECK(game_service.is_exists(0));
+    BOOST_CHECK(game_dba.is_exists_by<by_id>(0));
 
     generate_block();
 
-    BOOST_CHECK(game_service.is_exists(0));
+    BOOST_CHECK(game_dba.is_exists_by<by_id>(0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

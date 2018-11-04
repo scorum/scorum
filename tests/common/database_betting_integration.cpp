@@ -1,23 +1,25 @@
 #include "database_betting_integration.hpp"
 
+#include <fc/time.hpp>
+
 #include <scorum/protocol/betting/wincase.hpp>
 #include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/betting/game.hpp>
-#include <fc/time.hpp>
+
+#include <scorum/chain/dba/db_accessor.hpp>
+#include <scorum/chain/schema/game_object.hpp>
+#include <scorum/chain/schema/betting_property_object.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
+#include <scorum/chain/schema/proposal_object.hpp>
 
 #include <boost/test/unit_test.hpp>
+
+#include "detail.hpp"
 
 namespace database_fixture {
 
 using namespace scorum::protocol;
-
-database_betting_integration_fixture::database_betting_integration_fixture()
-    : dgp_service(db.dynamic_global_property_service())
-    , betting_property_service(db.betting_property_service())
-    , account_service(db.account_service())
-    , game_service(db.game_service())
-{
-}
+using namespace scorum::chain;
 
 void database_betting_integration_fixture::empower_moderator(const Actor& moderator)
 {
@@ -59,7 +61,7 @@ create_game_operation database_betting_integration_fixture::create_game(const sc
         create_game_operation op;
         op.uuid = uuid;
         op.moderator = moderator.name;
-        op.start_time = dgp_service.head_block_time() + start_delay;
+        op.start_time = head_block_time() + start_delay;
         op.auto_resolve_delay_sec = auto_resolve_delay_sec;
         op.json_metadata = "{}";
         op.game = soccer_game{};
@@ -77,7 +79,7 @@ create_game_operation database_betting_integration_fixture::create_game(const Ac
                                                                         uint32_t start_delay,
                                                                         uint32_t auto_resolve_delay_sec)
 {
-    return create_game(uuid_gen("test"), moderator, markets, start_delay, auto_resolve_delay_sec);
+    return create_game(gen_uuid("test"), moderator, markets, start_delay, auto_resolve_delay_sec);
 }
 
 post_bet_operation database_betting_integration_fixture::create_bet(const scorum::uuid_type& uuid,
@@ -92,7 +94,7 @@ post_bet_operation database_betting_integration_fixture::create_bet(const scorum
         post_bet_operation op;
         op.uuid = uuid;
         op.better = better.name;
-        op.game_uuid = game_service.get_game(0).uuid;
+        op.game_uuid = dba::db_accessor<game_object>(db).get().uuid;
         op.wincase = wincase;
         op.odds = odds_value;
         op.stake = stake;
@@ -128,7 +130,7 @@ cancel_game_operation database_betting_integration_fixture::cancel_game(const Ac
     {
         cancel_game_operation op;
         op.moderator = moderator.name;
-        op.uuid = game_service.get_game(0).uuid;
+        op.uuid = dba::db_accessor<game_object>(db).get().uuid;
 
         push_operation_only(op, moderator.private_key);
 
@@ -144,7 +146,7 @@ update_game_markets_operation database_betting_integration_fixture::update_marke
     {
         update_game_markets_operation op;
         op.moderator = moderator.name;
-        op.uuid = game_service.get_game(0).uuid;
+        op.uuid = dba::db_accessor<game_object>(db).get().uuid;
         op.markets = markets;
 
         push_operation_only(op, moderator.private_key);
@@ -161,8 +163,8 @@ update_game_start_time_operation database_betting_integration_fixture::update_st
     {
         update_game_start_time_operation op;
         op.moderator = moderator.name;
-        op.uuid = game_service.get_game(0).uuid;
-        op.start_time = dgp_service.head_block_time() + start_delay;
+        op.uuid = dba::db_accessor<game_object>(db).get().uuid;
+        op.start_time = head_block_time() + start_delay;
 
         push_operation_only(op, moderator.private_key);
 
@@ -178,7 +180,7 @@ post_game_results_operation database_betting_integration_fixture::post_results(c
     {
         post_game_results_operation op;
         op.moderator = moderator.name;
-        op.uuid = game_service.get_game(0).uuid;
+        op.uuid = dba::db_accessor<game_object>(db).get().uuid;
         op.wincases = winners;
 
         push_operation_only(op, moderator.private_key);
@@ -190,11 +192,24 @@ post_game_results_operation database_betting_integration_fixture::post_results(c
 
 proposal_id_type database_betting_integration_fixture::get_last_proposal_id()
 {
-    auto& proposal_service = db.obtain_service<dbs_proposal>();
-    std::vector<proposal_object::cref_type> proposals = proposal_service.get_proposals();
+    const auto proposals = dba::db_accessor<proposal_object>(db).get_all_by<by_id>();
 
-    BOOST_REQUIRE_GT(proposals.size(), static_cast<size_t>(0));
+    BOOST_REQUIRE_GT(boost::size(proposals), static_cast<size_t>(0));
 
-    return proposals[proposals.size() - 1].get().id;
+    return proposals.back().id;
+}
+
+fc::time_point_sec database_betting_integration_fixture::head_block_time() const
+{
+    return dba::db_accessor<dynamic_global_property_object>(db).get().time;
+}
+
+account_name_type database_betting_integration_fixture::betting_moderator() const
+{
+    auto betting_prop_dba = dba::db_accessor<betting_property_object>(db);
+
+    BOOST_REQUIRE(!betting_prop_dba.is_empty());
+
+    return betting_prop_dba.get().moderator;
 }
 }

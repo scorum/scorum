@@ -36,22 +36,31 @@ post_bet_evaluator::post_bet_evaluator(data_service_factory_i& services,
 {
 }
 
+bool is_belong_markets(const wincase_type& wincase, const fc::shared_flat_set<market_type>& markets)
+{
+    const auto wincase_market = create_market(wincase);
+
+    for (const auto& market : markets)
+    {
+        if (wincase_market == market)
+            return true;
+    }
+
+    return false;
+}
+
 void post_bet_evaluator::do_apply(const operation_type& op)
 {
     FC_ASSERT(_game_dba.is_exists_by<by_uuid>(op.game_uuid), "Game with uuid ${1} doesn't exist", ("1", op.game_uuid));
     FC_ASSERT(!_uuid_hist_dba.is_exists_by<by_uuid>(op.uuid), "Bet with uuid ${1} already exists", ("1", op.uuid));
 
-    auto game_obj = _game_dba.get_by<by_uuid>(op.game_uuid);
+    auto game = _game_dba.get_by<by_uuid>(op.game_uuid);
 
-    validate_if_wincase_in_game(game_obj.game, op.wincase);
+    FC_ASSERT(is_belong_markets(op.wincase, game.markets), "Wincase '${w}' dont belongs to game markets",
+              ("w", op.wincase));
 
-    std::set<market_kind> actual_markets = get_markets_kind(game_obj.markets);
-
-    FC_ASSERT(actual_markets.find(get_market_kind(op.wincase)) != actual_markets.end(),
-              "Wincase '${w}' dont belongs to game markets", ("w", op.wincase));
-
-    FC_ASSERT(game_obj.status != game_status::finished, "Cannot post bet for game that is finished");
-    FC_ASSERT(game_obj.status == game_status::created || op.live, "Cannot create non-live bet after game was started");
+    FC_ASSERT(game.status != game_status::finished, "Cannot post bet for game that is finished");
+    FC_ASSERT(game.status == game_status::created || op.live, "Cannot create non-live bet after game was started");
 
     FC_ASSERT(_account_dba.is_exists_by<by_name>(op.better), "Account \"${1}\" must exist.", ("1", op.better));
 
@@ -60,8 +69,7 @@ void post_bet_evaluator::do_apply(const operation_type& op)
         ? pending_bet_kind::live
         : pending_bet_kind::non_live;
 
-    const auto& bet
-        = _betting_svc.create_pending_bet(op.better, op.stake, odds, op.wincase, game_obj.uuid, op.uuid, kind);
+    const auto& bet = _betting_svc.create_pending_bet(op.better, op.stake, odds, op.wincase, game.uuid, op.uuid, kind);
 
     auto bets_to_cancel = _betting_matcher.match(bet);
 

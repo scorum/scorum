@@ -1,11 +1,5 @@
 #pragma once
 
-#include <scorum/chain/services/dynamic_global_property.hpp>
-#include <scorum/chain/services/proposal.hpp>
-#include <scorum/chain/services/betting_property.hpp>
-#include <scorum/chain/services/account.hpp>
-#include <scorum/chain/services/game.hpp>
-
 #include <scorum/protocol/operations.hpp>
 #include <scorum/protocol/betting/wincase.hpp>
 
@@ -21,7 +15,7 @@ const uint32_t auto_resolve_delay_default = DAYS_TO_SECONDS(1);
 
 struct database_betting_integration_fixture : public database_trx_integration_fixture
 {
-    database_betting_integration_fixture();
+    database_betting_integration_fixture() = default;
 
     virtual ~database_betting_integration_fixture() = default;
 
@@ -55,12 +49,8 @@ struct database_betting_integration_fixture : public database_trx_integration_fi
 
     proposal_id_type get_last_proposal_id();
 
-    dynamic_global_property_service_i& dgp_service;
-    betting_property_service_i& betting_property_service;
-    account_service_i& account_service;
-    game_service_i& game_service;
+    fc::time_point_sec head_block_time() const;
 
-    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
-    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
+    account_name_type betting_moderator() const;
 };
 }

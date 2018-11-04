@@ -17,8 +17,8 @@ public:
     void transfer_to_scorumpower(const Actor& a, asset amount);
     void transfer(const Actor& a, asset amount);
 
-    void give_scr(const Actor& a, int amount);
-    void give_sp(const Actor& a, int amount);
+    void give_scr(const Actor& a, long amount);
+    void give_sp(const Actor& a, long amount);
 
     void create_budget(const std::string& json_metadata,
                        asset balance,

@@ -1,10 +1,5 @@
 #include <boost/test/unit_test.hpp>
 
-#include "defines.hpp"
-
-#include "database_betting_integration.hpp"
-#include "actor.hpp"
-
 #include <scorum/protocol/proposal_operations.hpp>
 
 #include <scorum/chain/dba/db_accessor.hpp>
@@ -19,6 +14,11 @@
 #include <scorum/protocol/betting/market_kind.hpp>
 
 #include <scorum/utils/collect_range_adaptor.hpp>
+
+#include "defines.hpp"
+#include "detail.hpp"
+#include "database_betting_integration.hpp"
+#include "actor.hpp"
 
 namespace {
 using namespace scorum::utils::adaptors;
@@ -66,14 +66,14 @@ struct game_operations_fixture : public database_fixture::database_betting_integ
     std::vector<matched_bet_object> get_matched_bets()
     {
         auto matched_bets
-            = matched_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test")) | collect<std::vector>();
+            = matched_bet_dba.get_range_by<by_game_uuid_market>(gen_uuid("test")) | collect<std::vector>();
         return matched_bets;
     }
 
     std::vector<pending_bet_object> get_pending_bets()
     {
         auto pending_bets
-            = pending_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test")) | collect<std::vector>();
+            = pending_bet_dba.get_range_by<by_game_uuid_market>(gen_uuid("test")) | collect<std::vector>();
         return pending_bets;
     }
 };
@@ -175,8 +175,8 @@ SCORUM_TEST_CASE(update_after_game_started_should_cancel_bets)
     generate_block(); // game started
     generate_block(); // generate one more block in order to make bets creation time diff from start_time
 
-    create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 250 matched, 750 pending
-    create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
+    create_bet(gen_uuid("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 250 matched, 750 pending
+    create_bet(gen_uuid("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
 
     generate_block();
 
@@ -202,8 +202,8 @@ SCORUM_TEST_CASE(update_after_game_started_should_keep_bets)
     create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 250 matched, 750 pending
-    create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
+    create_bet(gen_uuid("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 250 matched, 750 pending
+    create_bet(gen_uuid("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
 
     generate_block(); // game started
 
@@ -229,14 +229,14 @@ SCORUM_TEST_CASE(update_after_game_started_should_increase_existing_pending_bet)
     create_game(moderator, { result_home{}, total{ 2000 } }, SCORUM_BLOCK_INTERVAL * 2);
     generate_block();
 
-    create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 250 matched, 750 pending
+    create_bet(gen_uuid("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 250 matched, 750 pending
 
     generate_block(); // game started
 
-    create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
+    create_bet(gen_uuid("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(1000)); // 1000 matched
 
-    auto matched_bets = matched_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test"));
-    auto pending_bets = pending_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test"));
+    auto matched_bets = matched_bet_dba.get_range_by<by_game_uuid_market>(gen_uuid("test"));
+    auto pending_bets = pending_bet_dba.get_range_by<by_game_uuid_market>(gen_uuid("test"));
     BOOST_REQUIRE_EQUAL(boost::size(matched_bets), 1u);
     BOOST_REQUIRE_EQUAL(boost::size(pending_bets), 1u);
 
@@ -245,8 +245,8 @@ SCORUM_TEST_CASE(update_after_game_started_should_increase_existing_pending_bet)
     update_start_time(moderator, SCORUM_BLOCK_INTERVAL);
 
     {
-        auto matched_bets = matched_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test"));
-        auto pending_bets = pending_bet_dba.get_range_by<by_game_uuid_market>(uuid_gen("test"));
+        auto matched_bets = matched_bet_dba.get_range_by<by_game_uuid_market>(gen_uuid("test"));
+        auto pending_bets = pending_bet_dba.get_range_by<by_game_uuid_market>(gen_uuid("test"));
         BOOST_REQUIRE_EQUAL(boost::size(matched_bets), 0u);
         BOOST_REQUIRE_EQUAL(boost::size(pending_bets), 1u);
         BOOST_REQUIRE_EQUAL(pending_bets.begin()->data.stake.amount, 1000u);
@@ -262,11 +262,11 @@ SCORUM_TEST_CASE(update_after_game_started_should_restore_missing_pending_bet)
 
     auto original_create_time = db.head_block_time();
 
-    create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 1000 matched
+    create_bet(gen_uuid("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)); // 1000 matched
 
     generate_block(); // game started
 
-    create_bet(uuid_gen("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(4000)); // 4000 matched
+    create_bet(gen_uuid("b2"), bob, total::over{ 2000 }, { 10, 8 }, ASSET_SCR(4000)); // 4000 matched
 
     auto matched_bets = get_matched_bets();
     auto pending_bets = get_pending_bets();
@@ -316,7 +316,7 @@ SCORUM_TEST_CASE(throw_on_post_bet_when_game_markets_empty)
 
     BOOST_REQUIRE_EQUAL(0u, game.markets.size());
 
-    BOOST_REQUIRE_THROW(create_bet(uuid_gen("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)),
+    BOOST_REQUIRE_THROW(create_bet(gen_uuid("b1"), alice, total::under{ 2000 }, { 10, 2 }, ASSET_SCR(1000)),
                         fc::assert_exception);
 }
 
@@ -332,6 +332,78 @@ SCORUM_TEST_CASE(throw_on_post_game_results_when_game_markets_empty)
     BOOST_REQUIRE_EQUAL(0u, game.markets.size());
 
     BOOST_REQUIRE_THROW(post_results(moderator, { correct_score_home::yes{} }), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(throw_on_when_post_results_have_different_score_in_wincase)
+{
+    create_game(moderator, { correct_score{ 1, 0 } });
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(1u, db.get_index<game_index>().indices().size());
+
+    const auto& game = db.get(game_object::id_type(0));
+
+    BOOST_REQUIRE_EQUAL(1u, game.markets.size());
+
+    BOOST_REQUIRE_THROW(post_results(moderator, { correct_score::yes{ 5, 5 } }), fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(dont_throw_when_game_market_and_post_results_wincase_have_same_yse_score)
+{
+    create_game(moderator, { correct_score{ 1, 0 } });
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(1u, db.get_index<game_index>().indices().size());
+
+    const auto& game = db.get(game_object::id_type(0));
+
+    BOOST_REQUIRE_EQUAL(1u, game.markets.size());
+
+    BOOST_REQUIRE_NO_THROW(post_results(moderator, { correct_score::yes{ 1, 0 } }));
+}
+
+SCORUM_TEST_CASE(dont_throw_when_game_market_and_post_results_wincase_have_same_no_score)
+{
+    create_game(moderator, { correct_score{ 1, 0 } });
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(1u, db.get_index<game_index>().indices().size());
+
+    const auto& game = db.get(game_object::id_type(0));
+
+    BOOST_REQUIRE_EQUAL(1u, game.markets.size());
+
+    BOOST_REQUIRE_NO_THROW(post_results(moderator, { correct_score::no{ 1, 0 } }));
+}
+
+SCORUM_TEST_CASE(throw_when_post_bet_have_different_score_in_wincase)
+{
+    create_game(moderator, { correct_score{ 1, 0 } });
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(1u, db.get_index<game_index>().indices().size());
+
+    const auto& game = db.get(game_object::id_type(0));
+
+    BOOST_REQUIRE_EQUAL(1u, game.markets.size());
+
+    BOOST_REQUIRE_THROW(create_bet(gen_uuid("b1"), alice, correct_score::yes{ 5, 5 }, { 10, 2 }, ASSET_SCR(1000)),
+                        fc::assert_exception);
+}
+
+SCORUM_TEST_CASE(dont_throw_when_post_bet_have_valid_score_in_wincase)
+{
+    create_game(moderator, { correct_score{ 1, 0 } });
+    generate_block();
+
+    BOOST_REQUIRE_EQUAL(1u, db.get_index<game_index>().indices().size());
+
+    const auto& game = db.get(game_object::id_type(0));
+
+    BOOST_REQUIRE_EQUAL(1u, game.markets.size());
+
+    BOOST_REQUIRE_NO_THROW(create_bet(gen_uuid("b1"), alice, correct_score::yes{ 1, 0 }, { 3, 2 }, ASSET_SCR(10)));
+    BOOST_REQUIRE_NO_THROW(create_bet(gen_uuid("b2"), alice, correct_score::no{ 1, 0 }, { 3, 2 }, ASSET_SCR(10)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
