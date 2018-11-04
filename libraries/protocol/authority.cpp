@@ -1,4 +1,6 @@
 #include <scorum/protocol/authority.hpp>
+#include <scorum/protocol/config.hpp>
+
 #include <cctype>
 
 namespace scorum {

@@ -3,8 +3,17 @@
 #include <functional>
 
 #include <scorum/chain/services/dbs_base.hpp>
+#include <scorum/chain/dba/dba.hpp>
 
 #include <limits>
+
+#include <boost/range/any_range.hpp>
+
+namespace scorum {
+namespace utils {
+template <typename TObject> using forward_range = boost::any_range<TObject, boost::forward_traversal_tag>;
+}
+}
 
 namespace scorum {
 namespace chain {
@@ -15,6 +24,8 @@ template <class T> struct base_service_i
     using modifier_type = std::function<void(object_type&)>;
     using call_type = std::function<void(const object_type&)>;
     using object_cref_type = std::reference_wrapper<const object_type>;
+
+    using view_type = scorum::utils::forward_range<object_type>;
 
     virtual ~base_service_i()
     {
@@ -30,6 +41,8 @@ template <class T> struct base_service_i
 
     virtual void remove(const object_type& o) = 0;
 
+    virtual void remove_all(const std::vector<object_cref_type>& os) = 0;
+
     virtual bool is_exists() const = 0;
 
     virtual const object_type& get() const = 0;
@@ -39,15 +52,17 @@ template <class service_interface> class dbs_service_base : public dbs_base, pub
 {
     friend class dbservice_dbs_factory;
 
-protected:
-    explicit dbs_service_base(database& db)
+public:
+    explicit dbs_service_base(dba::db_index& db)
         : _base_type(db)
     {
     }
 
     using base_service_type = dbs_service_base;
 
-public:
+    using service_interface::get;
+    using service_interface::is_exists;
+
     using modifier_type = typename service_interface::modifier_type;
     using object_type = typename service_interface::object_type;
     using object_cref_type = typename service_interface::object_cref_type;
@@ -75,6 +90,18 @@ public:
     virtual void remove(const object_type& o) override
     {
         db_impl().remove(o);
+    }
+
+    virtual void remove_all(const std::vector<object_cref_type>& os) override
+    {
+        try
+        {
+            for (const auto& o : os)
+            {
+                remove(o);
+            }
+        }
+        FC_CAPTURE_AND_RETHROW()
     }
 
     virtual bool is_exists() const override

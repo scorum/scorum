@@ -5,9 +5,13 @@
 
 namespace scorum {
 namespace protocol {
-class chain_properties;
+struct chain_properties;
 }
 namespace chain {
+
+namespace dba {
+template <typename> class db_accessor;
+}
 
 class account_object;
 
@@ -15,6 +19,9 @@ using chain_properties = scorum::protocol::chain_properties;
 
 struct witness_service_i : public base_service_i<witness_object>
 {
+    using base_service_i<witness_object>::get;
+    using base_service_i<witness_object>::is_exists;
+
     virtual const witness_object& get(const account_name_type& owner) const = 0;
 
     virtual bool is_exists(const account_name_type& owner) const = 0;
@@ -48,10 +55,15 @@ class dbs_witness : public dbs_service_base<witness_service_i>
 {
     friend class dbservice_dbs_factory;
 
-protected:
-    explicit dbs_witness(database& db);
-
 public:
+    explicit dbs_witness(dba::db_index& db,
+                         witness_schedule_service_i&,
+                         dynamic_global_property_service_i&,
+                         dba::db_accessor<chain_property_object>&);
+
+    using base_service_i<witness_object>::get;
+    using base_service_i<witness_object>::is_exists;
+
     const witness_object& get(const account_name_type& owner) const override;
 
     bool is_exists(const account_name_type& owner) const override;
@@ -79,6 +91,11 @@ public:
 
 private:
     const witness_object& create_internal(const account_name_type& owner, const public_key_type& block_signing_key);
+    block_info get_head_block_context();
+
+    dynamic_global_property_service_i& _dgp_svc;
+    witness_schedule_service_i& _witness_schedule_svc;
+    dba::db_accessor<chain_property_object>& _chain_dba;
 };
 } // namespace chain
 } // namespace scorum

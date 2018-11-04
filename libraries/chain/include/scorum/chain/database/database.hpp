@@ -12,11 +12,13 @@
 
 #include <scorum/protocol/protocol.hpp>
 
+#include <scorum/chain/dba/db_accessor_factory.hpp>
 #include <scorum/chain/services/dbservice_dbs_factory.hpp>
 #include <scorum/chain/data_service_factory.hpp>
 
 #include <scorum/chain/database/database_virtual_operations.hpp>
 
+#include <scorum/chain/database/debug_log.hpp>
 #include <fc/signals.hpp>
 #include <fc/shared_string.hpp>
 #include <fc/log/logger.hpp>
@@ -45,6 +47,7 @@ struct genesis_persistent_state_type;
 class database : public chainbase::database,
                  public dbservice_dbs_factory,
                  public data_service_factory,
+                 public dba::db_accessor_factory,
                  public database_virtual_operations_emmiter_i
 {
 
@@ -407,5 +410,3 @@ private:
 };
 } // namespace chain
 } // namespace scorum
-
-#define debug_log(CTX, FORMAT, ...) fc_ctx_dlog(fc::logger::get("debug"), CTX, FORMAT, __VA_ARGS__)

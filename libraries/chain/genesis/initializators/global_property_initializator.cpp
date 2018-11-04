@@ -43,7 +43,7 @@ void global_property_initializator_impl::on_apply(initializator_context& ctx)
               ("gt", ctx.genesis_state().total_supply)("rt", total_supply));
 
     dgp_service.create([&](dynamic_global_property_object& gpo) {
-        gpo.time = dgp_service.get_genesis_time();
+        gpo.time = ctx.genesis_state().initial_timestamp;
         gpo.recent_slots_filled = fc::uint128::max_value();
         gpo.participation_count = 128;
         gpo.circulating_capital = circulating_capital;

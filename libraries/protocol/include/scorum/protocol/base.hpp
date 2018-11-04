@@ -1,8 +1,9 @@
 #pragma once
 
-#include <scorum/protocol/types.hpp>
+#include <scorum/protocol/config.hpp>
 #include <scorum/protocol/authority.hpp>
 #include <scorum/protocol/version.hpp>
+#include <scorum/protocol/odds.hpp>
 
 #include <fc/time.hpp>
 #include <fc/utf8.hpp>

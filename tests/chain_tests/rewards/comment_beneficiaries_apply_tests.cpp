@@ -21,8 +21,6 @@ BOOST_FIXTURE_TEST_SUITE(comment_beneficiaries_tests, database_default_integrati
 
 struct comment_benefactor_reward_visitor
 {
-    typedef void result_type;
-
     database& _db;
 
     std::map<account_name_type, asset> reward_map;
@@ -143,11 +141,11 @@ BOOST_AUTO_TEST_CASE(old_tests)
         generate_blocks(db.obtain_service<dbs_comment>().get("alice", std::string("test")).cashout_time
                         - SCORUM_BLOCK_INTERVAL);
 
-        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("bob").balance, ASSET_SCR(0));
-        BOOST_REQUIRE_EQUAL(db.obtain_service<dbs_account>().get_account("sam").balance, ASSET_SCR(0));
+        BOOST_REQUIRE_EQUAL(db.account_service().get_account("bob").balance, ASSET_SCR(0));
+        BOOST_REQUIRE_EQUAL(db.account_service().get_account("sam").balance, ASSET_SCR(0));
 
-        asset bob_sp_before = db.obtain_service<dbs_account>().get_account("bob").scorumpower;
-        asset sam_sp_before = db.obtain_service<dbs_account>().get_account("sam").scorumpower;
+        asset bob_sp_before = db.account_service().get_account("bob").scorumpower;
+        asset sam_sp_before = db.account_service().get_account("sam").scorumpower;
 
         comment_benefactor_reward_visitor visitor(db);
 
@@ -163,9 +161,9 @@ BOOST_AUTO_TEST_CASE(old_tests)
         BOOST_REQUIRE(visitor.reward_map.find("sam") != visitor.reward_map.end());
 
         BOOST_REQUIRE_EQUAL(visitor.reward_map["bob"],
-                            (db.obtain_service<dbs_account>().get_account("bob").scorumpower - bob_sp_before));
+                            (db.account_service().get_account("bob").scorumpower - bob_sp_before));
         BOOST_REQUIRE_EQUAL(visitor.reward_map["sam"],
-                            (db.obtain_service<dbs_account>().get_account("sam").scorumpower - sam_sp_before));
+                            (db.account_service().get_account("sam").scorumpower - sam_sp_before));
 
         // clang-format off
         const auto &alice_post_id = db.obtain_service<dbs_comment>().get("alice", std::string("test")).id;

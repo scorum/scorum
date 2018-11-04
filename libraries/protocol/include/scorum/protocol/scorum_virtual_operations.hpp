@@ -2,6 +2,8 @@
 #include <scorum/protocol/base.hpp>
 #include <scorum/protocol/block_header.hpp>
 #include <scorum/protocol/asset.hpp>
+#include <scorum/protocol/betting/game_status.hpp>
+#include <scorum/protocol/types.hpp>
 
 #include <fc/utf8.hpp>
 
@@ -391,6 +393,156 @@ struct budget_closing_operation : public virtual_operation
     account_name_type owner;
     int64_t id = -1;
 };
+
+struct bets_matched_operation : public virtual_operation
+{
+    bets_matched_operation() = default;
+    bets_matched_operation(account_name_type better1,
+                           account_name_type better2,
+                           uuid_type bet1_uuid,
+                           uuid_type bet2_uuid,
+                           asset matched_stake1,
+                           asset matched_stake2,
+                           int64_t matched_bet_id)
+        : better1(better1)
+        , better2(better2)
+        , bet1_uuid(bet1_uuid)
+        , bet2_uuid(bet2_uuid)
+        , matched_stake1(matched_stake1)
+        , matched_stake2(matched_stake2)
+        , matched_bet_id(matched_bet_id)
+    {
+    }
+
+    account_name_type better1;
+    account_name_type better2;
+    uuid_type bet1_uuid;
+    uuid_type bet2_uuid;
+    asset matched_stake1 = asset(0, SCORUM_SYMBOL);
+    asset matched_stake2 = asset(0, SCORUM_SYMBOL);
+    int64_t matched_bet_id = -1;
+};
+
+struct game_status_changed_operation : public virtual_operation
+{
+    // TODO: could be removed in C++17
+    game_status_changed_operation() = default;
+    game_status_changed_operation(const uuid_type& game_uuid, game_status old_status, game_status new_status)
+        : game_uuid(game_uuid)
+        , old_status(old_status)
+        , new_status(new_status)
+    {
+    }
+
+    uuid_type game_uuid;
+    game_status old_status;
+    game_status new_status;
+};
+
+enum class bet_resolve_kind : uint8_t
+{
+    win,
+    draw
+};
+
+struct bet_resolved_operation : public virtual_operation
+{
+    // TODO: could be removed in C++17
+    bet_resolved_operation() = default;
+    bet_resolved_operation(const uuid_type& game_uuid,
+                           const account_name_type& better,
+                           const uuid_type& bet_uuid,
+                           const asset& income,
+                           bet_resolve_kind kind)
+        : game_uuid(game_uuid)
+        , better(better)
+        , bet_uuid(bet_uuid)
+        , income(income)
+        , kind(kind)
+    {
+    }
+
+    uuid_type game_uuid;
+    account_name_type better;
+    uuid_type bet_uuid;
+    asset income;
+    bet_resolve_kind kind;
+};
+
+enum class bet_kind : uint8_t
+{
+    pending,
+    matched
+};
+
+struct bet_cancelled_operation : public virtual_operation
+{
+    // TODO: could be removed in C++17
+    bet_cancelled_operation() = default;
+    bet_cancelled_operation(const uuid_type& game_uuid,
+                            const account_name_type& better,
+                            const uuid_type& bet_uuid,
+                            const asset& stake,
+                            bet_kind kind)
+        : game_uuid(game_uuid)
+        , better(better)
+        , bet_uuid(bet_uuid)
+        , stake(stake)
+        , kind(kind)
+    {
+    }
+
+    uuid_type game_uuid;
+    account_name_type better;
+    uuid_type bet_uuid;
+    asset stake;
+    bet_kind kind;
+};
+
+struct bet_restored_operation : public virtual_operation
+{
+    // TODO: could be removed in C++17
+    bet_restored_operation() = default;
+    bet_restored_operation(const uuid_type& game_uuid,
+                           const account_name_type& better,
+                           const uuid_type& bet_uuid,
+                           const asset& stake)
+        : game_uuid(game_uuid)
+        , better(better)
+        , bet_uuid(bet_uuid)
+        , stake(stake)
+    {
+    }
+
+    uuid_type game_uuid;
+    account_name_type better;
+    uuid_type bet_uuid;
+    asset stake;
+};
+
+struct bet_updated_operation : public virtual_operation
+{
+    // TODO: could be removed in C++17
+    bet_updated_operation() = default;
+    bet_updated_operation(const uuid_type& game_uuid,
+                          const account_name_type& better,
+                          const uuid_type& bet_uuid,
+                          const asset& old_stake,
+                          const asset& new_stake)
+        : game_uuid(game_uuid)
+        , better(better)
+        , bet_uuid(bet_uuid)
+        , old_stake(old_stake)
+        , new_stake(new_stake)
+    {
+    }
+
+    uuid_type game_uuid;
+    account_name_type better;
+    uuid_type bet_uuid;
+    asset old_stake;
+    asset new_stake;
+};
 }
 } // scorum::protocol
 
@@ -474,4 +626,42 @@ FC_REFLECT(scorum::protocol::budget_closing_operation,
            (type)
            (owner)
            (id))
+FC_REFLECT(scorum::protocol::game_status_changed_operation,
+           (game_uuid)
+           (old_status)
+           (new_status))
+FC_REFLECT_ENUM(scorum::protocol::bet_resolve_kind,
+           (win)
+           (draw))
+FC_REFLECT(scorum::protocol::bet_resolved_operation,
+           (game_uuid)
+           (better)
+           (bet_uuid)
+           (income)
+           (kind))
+FC_REFLECT_ENUM(scorum::protocol::bet_kind,
+           (pending)
+           (matched))
+FC_REFLECT(scorum::protocol::bet_cancelled_operation,
+           (game_uuid)
+           (better)
+           (bet_uuid)
+           (stake)
+           (kind))
+FC_REFLECT(scorum::protocol::bet_restored_operation,
+           (game_uuid)
+           (better)
+           (bet_uuid)
+           (stake))
+FC_REFLECT(scorum::protocol::bet_updated_operation,
+           (game_uuid)
+           (better)
+           (bet_uuid)
+           (old_stake)
+           (new_stake))
+FC_REFLECT(scorum::protocol::bets_matched_operation, (better1)(better2)(bet1_uuid)
+           (bet2_uuid)
+           (matched_stake1)
+           (matched_stake2)
+           (matched_bet_id))
 // clang-format on

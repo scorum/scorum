@@ -7,8 +7,9 @@
 #include <boost/test/unit_test.hpp>
 #include <fc/filesystem.hpp>
 #include <graphene/utilities/tempdir.hpp>
-#include <chrono>
 #include <random>
+
+#include "performance_common.hpp"
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
@@ -16,6 +17,8 @@ using namespace scorum::app;
 using namespace scorum::tags;
 
 using namespace database_fixture;
+
+using performance_common::cpu_profiler;
 
 struct tag_perf_fixture : public database_fixture::database_trx_integration_fixture
 {
@@ -54,7 +57,7 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
         auto acc_name = "alice";
         auto tags = { "a", "b", "c", "d", "e", "f", "g", "h", "" };
 
-        auto& acc_service = db.obtain_service<dbs_account>();
+        auto& acc_service = db.account_service();
         auto alice_id = acc_service.get_account(acc_name).id;
 
         std::random_device device;
@@ -84,7 +87,7 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
         auto size = db.get_index<tag_index, by_comment>().size();
         BOOST_REQUIRE_EQUAL(size, posts_count * tags.size());
 
-        auto t1 = std::chrono::steady_clock::now();
+        cpu_profiler prof;
 
         api::discussion_query q;
         q.tags = { "A", "B", "C", "D" };
@@ -92,8 +95,7 @@ struct tag_perf_fixture : public database_fixture::database_trx_integration_fixt
         q.limit = 100;
         auto posts = _api.get_discussions_by_created(q);
 
-        auto t2 = std::chrono::steady_clock::now();
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+        auto ms = prof.elapsed();
         BOOST_TEST_MESSAGE("get_discussions_by_created' time: " << ms << "ms");
 
         BOOST_CHECK(

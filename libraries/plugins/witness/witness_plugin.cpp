@@ -144,8 +144,6 @@ struct operation_visitor
 
     const chain::database& _db;
 
-    typedef void result_type;
-
     template <typename T> void operator()(const T&) const
     {
     }
@@ -204,9 +202,11 @@ void witness_plugin_impl::pre_transaction(const signed_transaction& trx)
 
     auto trx_size = fc::raw::pack_size(trx);
 
+    auto& account_svc = _db.account_service();
+
     for (const auto& auth : required)
     {
-        const auto& acnt = _db.obtain_service<dbs_account>().get_account(auth);
+        const auto& acnt = account_svc.get_account(auth);
 
         update_account_bandwidth(acnt, trx_size, bandwidth_type::forum);
 

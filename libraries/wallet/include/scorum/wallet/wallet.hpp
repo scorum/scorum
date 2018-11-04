@@ -3,6 +3,7 @@
 #include <scorum/app/api.hpp>
 #include <scorum/app/scorum_api_objects.hpp>
 #include <scorum/app/chain_api.hpp>
+#include <scorum/app/betting_api_objects.hpp>
 
 #include <scorum/wallet/utils.hpp>
 
@@ -14,11 +15,11 @@
 #include <scorum/blockchain_history/schema/applied_operation.hpp>
 #include <scorum/blockchain_history/api_objects.hpp>
 
-using namespace scorum::app;
-using namespace scorum::chain;
-
 namespace scorum {
 namespace wallet {
+
+using namespace scorum::app;
+using namespace scorum::chain;
 
 using scorum::blockchain_history::applied_operation;
 using scorum::blockchain_history::applied_withdraw_operation;
@@ -85,6 +86,9 @@ class wallet_api_impl;
 }
 
 /**
+ * @defgroup wallet Wallet
+ * @brief Wallet api
+ *
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
  */
@@ -610,6 +614,19 @@ public:
                                                       const std::string& delegatee,
                                                       const asset& scorumpower,
                                                       bool broadcast);
+
+    /**
+     * This method delegates SP from registration pool to account.
+     *
+     * @param reg_committee_member Registration committee member
+     * @param delegatee The name of the account receiving SP
+     * @param scorumpower The amount of SP to delegate
+     * @param broadcast true if you wish to broadcast the transaction
+     */
+    annotated_signed_transaction delegate_scorumpower_from_reg_pool(const std::string& reg_committee_member,
+                                                                    const std::string& delegatee,
+                                                                    const asset& scorumpower,
+                                                                    bool broadcast);
 
     /**
      *  This method is used to convert a JSON transaction to its transaction ID.
@@ -1302,6 +1319,13 @@ public:
                                                                                            uint64_t quorum_percent,
                                                                                            uint32_t lifetime_sec,
                                                                                            bool broadcast);
+    /**
+     * Change development committee for changing betting moderator quorum
+     */
+    annotated_signed_transaction development_committee_change_betting_moderator_quorum(const std::string& creator,
+                                                                                       uint64_t quorum_percent,
+                                                                                       uint32_t lifetime_sec,
+                                                                                       bool broadcast);
 
     /**
      * Create proposal for set up the advertising moderator.
@@ -1310,6 +1334,22 @@ public:
                                                                                      const std::string& moderator,
                                                                                      uint32_t lifetime_sec,
                                                                                      bool broadcast);
+
+    /**
+    * Create proposal for set up the betting moderator.
+    */
+    annotated_signed_transaction development_committee_empower_betting_moderator(const std::string& initiator,
+                                                                                 const std::string& moderator,
+                                                                                 uint32_t lifetime_sec,
+                                                                                 bool broadcast);
+
+    /**
+    * Create proposal for changing delay after game was finished before bets will be resolved.
+    */
+    annotated_signed_transaction development_committee_change_betting_resolve_delay(const std::string& initiator,
+                                                                                    uint32_t delay_sec,
+                                                                                    uint32_t lifetime_sec,
+                                                                                    bool broadcast);
 
     /**
      * Create proposal for transfering SCR from development pool to account
@@ -1438,15 +1478,174 @@ public:
      */
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner);
 
-    /** Gets all money circulating between funds and users.
-    *
-    */
+    /**
+     * Gets all money circulating between funds and users.
+     */
     chain_capital_api_obj get_chain_capital() const;
 
     /**
      * Close wallet application
      */
     void exit();
+
+    /**
+     * @name Betting API
+     * @addtogroup wallet
+     * @{
+     */
+
+    /**
+     * Create betting game
+     * @param uuid game UUID
+     * @param moderator betting moderator
+     * @param json_metadata JSON metadata
+     * @param start_time time when game should start
+     * @param auto_resolve_delay_sec delay starting from @p start_time after expiration of which (if game results
+     * weren't posted) game will be cancelled
+     * @param game type of game (soccer, hockey, etc.)
+     * @param markets betting markets for this particular game
+     * @param broadcast
+     * @return signed transaction
+     */
+    annotated_signed_transaction create_game(uuid_type uuid,
+                                             account_name_type moderator,
+                                             const std::string& json_metadata,
+                                             fc::time_point_sec start_time,
+                                             uint32_t auto_resolve_delay_sec,
+                                             game_type game,
+                                             const std::vector<market_type>& markets,
+                                             const bool broadcast);
+
+    /**
+     * Cancel game (return all bets to owners)
+     * @param uuid game UUID
+     * @param moderator betting moderator
+     * @param broadcast
+     * @return signed transaction
+     */
+    annotated_signed_transaction cancel_game(uuid_type uuid, account_name_type moderator, const bool broadcast);
+
+    /**
+     * Update betting markets for the game
+     * @param uuid game UUID
+     * @param moderator betting moderator
+     * @param markets new betting markets for this game
+     * @param broadcast
+     * @return signed transaction
+     */
+    annotated_signed_transaction update_game_markets(uuid_type uuid,
+                                                     account_name_type moderator,
+                                                     const std::vector<market_type>& markets,
+                                                     const bool broadcast);
+
+    /**
+     * Update game start time
+     * @param uuid game UUID
+     * @param moderator betting moderator
+     * @param start_time game new start time
+     * @param broadcast
+     * @return signed transaction
+     */
+    annotated_signed_transaction update_game_start_time(uuid_type uuid,
+                                                        account_name_type moderator,
+                                                        fc::time_point_sec start_time,
+                                                        const bool broadcast);
+
+    /**
+     * Post game results (provide won wincases)
+     * @param uuid game UUID
+     * @param moderator betting moderator
+     * @param wincases won wincases
+     * @param broadcast
+     * @return signed transaction
+     */
+    annotated_signed_transaction post_game_results(uuid_type uuid,
+                                                   account_name_type moderator,
+                                                   const std::vector<wincase_type>& wincases,
+                                                   const bool broadcast);
+
+    /**
+     * @brief Create bet.
+     * @param uuid bet UUID
+     * @param better owner for new bet
+     * @param game_uuid game UUID which is specified during game creation
+     * @param wincase wincase for bet
+     * @param odds rational coefficient that define potential result (p). p = odds * stake
+     * @param stake amount in SCR to bet
+     * @param is_live specify is bet live or not
+     * @param broadcast
+     */
+    annotated_signed_transaction post_bet(uuid_type uuid,
+                                          account_name_type better,
+                                          uuid_type game_uuid,
+                                          wincase_type wincase,
+                                          odds_input odds,
+                                          asset stake,
+                                          bool is_live,
+                                          const bool broadcast);
+
+    /**
+     * @brief Cancel pending bets list.
+     * @param better owner
+     * @param bet_uuids UUIDs of bets which are being cancelled
+     * @param broadcast
+     */
+    annotated_signed_transaction
+    cancel_pending_bets(account_name_type better, const std::vector<uuid_type>& bet_uuids, const bool broadcast);
+
+    /**
+     * @brief Returns games
+     * @param filter [created, started, finished]
+     * @return array of game_api_object's
+     */
+    std::vector<game_api_object> get_games_by_status(const fc::flat_set<game_status>& filter) const;
+
+    /**
+     * @brief Returns games
+     * @param uuids UUIDs of games to return
+     * @return array of game_api_object's
+     */
+    std::vector<game_api_object> get_games_by_uuids(const std::vector<uuid_type>& uuids) const;
+
+    /**
+     * @brief Returns games
+     * @param from lower bound game id
+     * @param limit query limit
+     * @return array of game_api_object's
+     */
+    std::vector<game_api_object> lookup_games_by_id(game_id_type from, uint32_t limit) const;
+
+    /**
+     * @brief Returns matched bets
+     * @param from lower bound bet id
+     * @param limit query limit
+     * @return array of matched_bet_api_object's
+     */
+    std::vector<matched_bet_api_object> lookup_matched_bets(matched_bet_id_type from, int64_t limit) const;
+
+    /**
+     * @brief Return pending bets
+     * @param from lower bound bet id
+     * @param limit query limit
+     * @return array of pending_bet_api_object's
+     */
+    std::vector<pending_bet_api_object> lookup_pending_bets(pending_bet_id_type from, int64_t limit) const;
+
+    /**
+     * @brief Returns matched bets
+     * @param uuids  The vector of UUIDs of pending bets which form matched bets
+     * @return array of matched_bet_api_object's
+     */
+    std::vector<matched_bet_api_object> get_matched_bets(const std::vector<uuid_type>& uuids) const;
+
+    /**
+     * @brief Return pending bets
+     * @param uuids The vector of UUIDs of pending bets which should be returned
+     * @return array of pending_bet_api_object's
+     */
+    std::vector<pending_bet_api_object> get_pending_bets(const std::vector<uuid_type>& uuids) const;
+
+    /** @}*/
 
 public:
     fc::signal<void(bool)> lock_changed;
@@ -1536,6 +1735,7 @@ FC_API( scorum::wallet::wallet_api,
         (update_account_meta)
         (update_account_memo_key)
         (delegate_scorumpower)
+        (delegate_scorumpower_from_reg_pool)
         (update_witness)
         (set_voting_proxy)
         (vote_for_witness)
@@ -1590,7 +1790,10 @@ FC_API( scorum::wallet::wallet_api,
         (development_committee_change_transfer_quorum)
         (development_committee_change_budget_auction_properties_quorum)
         (development_committee_change_advertising_moderator_quorum)
+        (development_committee_change_betting_moderator_quorum)
         (development_committee_empower_advertising_moderator)
+        (development_committee_empower_betting_moderator)
+        (development_committee_change_betting_resolve_delay)
         (get_development_committee)
         (development_pool_transfer)
         (development_pool_withdraw_vesting)
@@ -1606,7 +1809,24 @@ FC_API( scorum::wallet::wallet_api,
         (atomicswap_refund)
         (get_atomicswap_contracts)
 
-        /// helper api
+        // betting API
+        (create_game)
+        (cancel_game)
+        (update_game_markets)
+        (update_game_start_time)
+        (post_game_results)
+        (post_bet)
+        (cancel_pending_bets)
+
+        (get_games_by_status)
+        (get_games_by_uuids)
+        (lookup_games_by_id)
+        (lookup_matched_bets)
+        (lookup_pending_bets)
+        (get_matched_bets)
+        (get_pending_bets)
+
+        // helper api
         (get_prototype_operation)
         (serialize_transaction)
         (sign_transaction)

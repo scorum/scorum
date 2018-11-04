@@ -14,6 +14,8 @@ namespace chain {
 
 dbs_registration_committee::dbs_registration_committee(database& db)
     : _base_type(db)
+    , _account_svc(db.account_service())
+    , _reg_pool_svc(db.registration_pool_service())
 {
 }
 
@@ -50,14 +52,12 @@ dbs_registration_committee::create_committee(const std::vector<account_name_type
     // check existence here to allow unit tests check input data even if object exists in DB
     FC_ASSERT(get_committee().empty(), "Can't create more than one committee.");
 
-    const dbs_account& account_service = db().obtain_service<dbs_account>();
-
     // create unique accout list form genesis unordered data
     using sorted_type = std::map<account_name_type, std::reference_wrapper<const account_object>>;
     sorted_type items;
     for (const auto& account_name : accounts)
     {
-        const account_object& accout = account_service.get_account(account_name);
+        const account_object& accout = _account_svc.get_account(account_name);
 
         items.insert(sorted_type::value_type(accout.name, std::cref(accout)));
     }
@@ -88,9 +88,7 @@ void dbs_registration_committee::add_member(const account_name_type& account_nam
     // to fill empty committee it is used create_committee
     FC_ASSERT(!get_committee().empty(), "No committee to add member.");
 
-    const dbs_account& account_service = db().obtain_service<dbs_account>();
-
-    const account_object& accout = account_service.get_account(account_name);
+    const account_object& accout = _account_svc.get_account(account_name);
 
     _add_member(accout);
 }
@@ -100,9 +98,7 @@ void dbs_registration_committee::exclude_member(const account_name_type& account
     // committee must exist after exclude (at least one member)
     FC_ASSERT(get_committee().size() > 1, "No committee to exclude member.");
 
-    const dbs_account& account_service = db().obtain_service<dbs_account>();
-
-    const account_object& accout = account_service.get_account(account_name);
+    const account_object& accout = _account_svc.get_account(account_name);
 
     _exclude_member(accout);
 }
@@ -126,41 +122,32 @@ bool dbs_registration_committee::is_exists(const account_name_type& account_name
 
 void dbs_registration_committee::change_add_member_quorum(const protocol::percent_type quorum)
 {
-    auto& service = db_impl().obtain_service<dbs_registration_pool>();
-
-    db_impl().modify(service.get(), [&](registration_pool_object& m) { m.invite_quorum = quorum; });
+    _reg_pool_svc.update([&](registration_pool_object& m) { m.invite_quorum = quorum; });
 }
 
 void dbs_registration_committee::change_exclude_member_quorum(const percent_type quorum)
 {
-    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
-
-    db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.dropout_quorum = quorum; });
+    _reg_pool_svc.update([&](registration_pool_object& m) { m.dropout_quorum = quorum; });
 }
 
 void dbs_registration_committee::change_base_quorum(const percent_type quorum)
 {
-    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
-
-    db_impl().modify(reg_committee, [&](registration_pool_object& m) { m.change_quorum = quorum; });
+    _reg_pool_svc.update([&](registration_pool_object& m) { m.change_quorum = quorum; });
 }
 
 percent_type dbs_registration_committee::get_add_member_quorum()
 {
-    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
-    return reg_committee.invite_quorum;
+    return _reg_pool_svc.get().invite_quorum;
 }
 
 percent_type dbs_registration_committee::get_exclude_member_quorum()
 {
-    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
-    return reg_committee.dropout_quorum;
+    return _reg_pool_svc.get().dropout_quorum;
 }
 
 percent_type dbs_registration_committee::get_base_quorum()
 {
-    const registration_pool_object& reg_committee = db_impl().get<registration_pool_object>();
-    return reg_committee.change_quorum;
+    return _reg_pool_svc.get().change_quorum;
 }
 
 const registration_committee_member_object& dbs_registration_committee::_add_member(const account_object& account)

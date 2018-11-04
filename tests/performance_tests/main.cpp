@@ -7,6 +7,8 @@
 
 #include <scorum/protocol/config.hpp>
 
+#include "logger.hpp"
+
 boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[])
 {
     using namespace scorum::protocol;
@@ -14,6 +16,12 @@ boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[])
 
     std::srand(time(NULL));
     std::cout << "Random number generator seeded to " << time(NULL) << std::endl;
+
+#ifdef LOG_MESSAGES
+    tests::initialize_logger(fc::log_level::info);
+#else
+    tests::initialize_logger(fc::log_level::error);
+#endif
 
     return nullptr;
 }

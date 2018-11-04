@@ -34,6 +34,8 @@ private:
     proposal_service_i& proposal_service;
     evaluator_registry<protocol::proposal_operation> evaluators;
     fc::flat_set<account_name_type> removed_members;
+    // TODO: tech dept: remove this dependency if possible
+    database& _db;
 };
 
 } // namespace scorum

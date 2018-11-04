@@ -11,6 +11,7 @@ namespace chain {
 
 dbs_decline_voting_rights_request::dbs_decline_voting_rights_request(database& db)
     : base_service_type(db)
+    , _dgp_svc(db.dynamic_global_property_service())
 {
 }
 
@@ -32,11 +33,9 @@ bool dbs_decline_voting_rights_request::is_exists(const account_id_type& account
 const decline_voting_rights_request_object&
 dbs_decline_voting_rights_request::create_rights(const account_id_type& account, const fc::microseconds& time_to_life)
 {
-    const dynamic_global_property_object& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
-
     const auto& new_object = create([&](decline_voting_rights_request_object& req) {
         req.account = account;
-        req.effective_date = props.time + time_to_life;
+        req.effective_date = _dgp_svc.head_block_time() + time_to_life;
     });
 
     return new_object;

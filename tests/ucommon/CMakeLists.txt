@@ -10,6 +10,7 @@ set( SOURCES
   actor.cpp
   genesis.cpp
   logger.cpp
+  db_mock.cpp
 )
 
 add_library(ucommon_test 

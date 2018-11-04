@@ -8,6 +8,8 @@ namespace chain {
 
 template <class T> struct comment_statistic_base_service_i : public base_service_i<T>
 {
+    using base_service_i<T>::get;
+
     virtual const T& get(const comment_id_type& comment_id) const = 0;
 };
 
@@ -26,6 +28,8 @@ protected:
     }
 
 public:
+    using base_service_i<comment_statisticobject_type>::get;
+
     const comment_statisticobject_type& get(const comment_id_type& comment_id) const override
     {
         try

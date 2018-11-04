@@ -74,6 +74,27 @@ percent_type development_committee_empower_advertising_moderator_operation::get_
     return committee_service.get_advertising_moderator_quorum();
 }
 
+void development_committee_empower_betting_moderator_operation::validate() const
+{
+    validate_account_name(account);
+}
+
+percent_type
+development_committee_empower_betting_moderator_operation::get_required_quorum(committee_type& committee_service) const
+{
+    return committee_service.get_betting_moderator_quorum();
+}
+
+void development_committee_change_betting_resolve_delay_operation::validate() const
+{
+}
+
+percent_type development_committee_change_betting_resolve_delay_operation::get_required_quorum(
+    committee_type& committee_service) const
+{
+    return committee_service.get_betting_moderator_quorum();
+}
+
 void registration_committee_change_quorum_operation::validate() const
 {
     validate_quorum(committee_quorum, quorum);

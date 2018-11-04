@@ -5,8 +5,11 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <fc/io/json.hpp>
 
-#include "utils.hpp"
+#include "detail.hpp"
 #include "defines.hpp"
+
+using ::detail::from_hex;
+using ::detail::to_hex;
 
 namespace {
 using namespace std::string_literals;
@@ -29,17 +32,17 @@ SCORUM_TEST_CASE(serialize_create_budget_operation_to_binary_test)
 
     BOOST_CHECK_EQUAL("00000000000000006dcd3132e5df480a89a891984bca0a090c696e697464656c6567617465027b7d00e40b5402000000"
                       "09534352000000009b2a645bb92a645b",
-                      utils::to_hex(op));
+                      to_hex(op));
 }
 
 SCORUM_TEST_CASE(deserialize_create_budget_operation_from_binary_test)
 {
     auto bin = "00000000000000006dcd3132e5df480a89a891984bca0a090c696e697464656c6567617465027b7d00e40b5402000000"
-               "09534352000000009b2a645bb92a645b"s;
+               "09534352000000009b2a645bb92a645b";
 
-    auto op = utils::from_hex<create_budget_operation>(bin);
+    auto op = from_hex<create_budget_operation>(bin);
 
-    BOOST_CHECK_EQUAL(bin, utils::to_hex(op));
+    BOOST_CHECK_EQUAL(bin, to_hex(op));
 }
 
 SCORUM_TEST_CASE(serialize_create_budget_operation_to_json_test)
@@ -62,7 +65,7 @@ SCORUM_TEST_CASE(serialize_create_budget_operation_to_json_test)
                               "balance": "10.000000000 SCR",
                               "start": "2018-08-03T10:12:43",
                               "deadline": "2018-08-03T10:13:13"
-                            })"s;
+                            })";
     BOOST_CHECK_EQUAL(fc::json::to_string(fc::json::from_string(json_expected)), json_actual);
 }
 
@@ -76,7 +79,7 @@ SCORUM_TEST_CASE(deserialize_create_budget_operation_from_json_test)
                      "balance": "10.000000000 SCR",
                      "start": "2018-08-03T10:12:43",
                      "deadline": "2018-08-03T10:13:13"
-                   })"s;
+                   })";
     auto op = fc::json::from_string(json).as<create_budget_operation>();
 
     BOOST_CHECK_EQUAL(fc::json::to_string(fc::json::from_string(json)), fc::json::to_string(op));

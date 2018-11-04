@@ -1,12 +1,15 @@
 #include <scorum/chain/genesis/initializators/rewards_initializator.hpp>
 #include <scorum/chain/data_service_factory.hpp>
+#include <scorum/chain/dba/db_accessor_factory.hpp>
 
+#include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/reward_funds.hpp>
 #include <scorum/chain/services/reward_balancer.hpp>
 #include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 
+#include <scorum/chain/schema/chain_property_object.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
@@ -73,14 +76,14 @@ void rewards_initializator_impl::create_balancers(initializator_context& ctx)
 
 void rewards_initializator_impl::create_fund_budget(initializator_context& ctx)
 {
-    dynamic_global_property_service_i& dprops_service = ctx.services().dynamic_global_property_service();
     fund_budget_service_i& budget_service = ctx.services().fund_budget_service();
+    dba::db_accessor<chain_property_object>& chain_dba = ctx.dba_factory().get_dba<chain_property_object>();
 
     FC_ASSERT(!budget_service.is_exists());
 
     auto balance = asset(ctx.genesis_state().rewards_supply.amount, SP_SYMBOL);
 
-    time_point_sec start_date = dprops_service.get_genesis_time();
+    time_point_sec start_date = chain_dba.get().genesis_time;
     fc::time_point deadline = start_date + fc::days(SCORUM_REWARDS_INITIAL_SUPPLY_PERIOD_IN_DAYS);
 
     budget_service.create_budget(balance, start_date, deadline);

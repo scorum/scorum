@@ -157,4 +157,3 @@ BOOST_AUTO_TEST_CASE(dont_throw_exception_when_weigth_in_range_hf_0_2)
 
 BOOST_AUTO_TEST_SUITE_END()
 }
-

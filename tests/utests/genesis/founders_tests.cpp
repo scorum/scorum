@@ -24,7 +24,7 @@ struct genesis_initiate_founders_fixture
     MockRepository mocks;
 
     data_service_factory_i* pservices = mocks.Mock<data_service_factory_i>();
-
+    dba::db_accessor_factory* dba_factory = mocks.Mock<dba::db_accessor_factory>();
     account_service_i* paccount_service = mocks.Mock<account_service_i>();
     dynamic_global_property_service_i* pdgp_service = mocks.Mock<dynamic_global_property_service_i>();
 
@@ -42,14 +42,14 @@ BOOST_AUTO_TEST_SUITE(founders_initializator_tests)
 BOOST_FIXTURE_TEST_CASE(check_empty_genesis, genesis_initiate_founders_fixture)
 {
     genesis_state_type input_genesis = Genesis::create().generate();
-    initializator_context ctx(*pservices, input_genesis);
+    initializator_context ctx(*pservices, *dba_factory, input_genesis);
     BOOST_REQUIRE_NO_THROW(test_it.apply(ctx));
 }
 
 BOOST_FIXTURE_TEST_CASE(check_empty_founders_list, genesis_initiate_founders_fixture)
 {
     genesis_state_type input_genesis = Genesis::create().founders_supply(ASSET_SP(1e+6)).generate();
-    initializator_context ctx(*pservices, input_genesis);
+    initializator_context ctx(*pservices, *dba_factory, input_genesis);
     SCORUM_REQUIRE_THROW(test_it.apply(ctx), fc::assert_exception);
 }
 
@@ -67,7 +67,7 @@ struct genesis_initiate_founders_with_actors_fixture : public genesis_initiate_f
     {
         genesis_state_type input_genesis
             = Genesis::create().accounts(alice.config, bob.config, mike.config, jake.config).generate();
-        initializator_context ctx(*pservices, input_genesis);
+        initializator_context ctx(*pservices, *dba_factory, input_genesis);
         BOOST_REQUIRE_NO_THROW(required_i.apply(ctx));
     }
 

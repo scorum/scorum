@@ -275,9 +275,7 @@ template <typename T, bool reflected = fc::reflector<T>::is_defined::value> stru
 
 struct register_type_visitor
 {
-    typedef void result_type;
-
-    template <typename Type> result_type operator()(const Type& op) const
+    template <typename Type> void operator()(const Type& op) const
     {
         serializer<Type>::init();
     }
@@ -287,15 +285,13 @@ class register_member_visitor;
 
 struct serialize_type_visitor
 {
-    typedef void result_type;
-
     int t = 0;
     serialize_type_visitor(int _t)
         : t(_t)
     {
     }
 
-    template <typename Type> result_type operator()(const Type& op) const
+    template <typename Type> void operator()(const Type& op) const
     {
         std::cout << "    " << remove_namespace(fc::get_typename<Type>::name()) << ": " << t << "\n";
     }
