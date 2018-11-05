@@ -28,8 +28,9 @@ BOOST_AUTO_TEST_CASE(odds_negative_creation_check)
 {
     BOOST_REQUIRE_EQUAL(sizeof(odds_value_type), sizeof(uint32_t));
 
+    BOOST_CHECK_NO_THROW(odds(utils::make_fraction(std::numeric_limits<int32_t>::max(), 2)));
+    BOOST_CHECK_THROW(odds(utils::make_fraction(std::numeric_limits<uint32_t>::max(), 2)), fc::assert_exception);
     BOOST_CHECK_THROW(odds(utils::make_fraction(std::numeric_limits<int64_t>::max(), 2)), fc::overflow_exception);
-    BOOST_CHECK_THROW(odds(utils::make_fraction(std::numeric_limits<int32_t>::max(), 2)), fc::overflow_exception);
 
     BOOST_CHECK_THROW(odds(utils::make_fraction(-2, 1)), fc::assert_exception);
     BOOST_CHECK_THROW(odds(utils::make_fraction(2, -1)), fc::assert_exception);
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(odds_str_check)
     BOOST_CHECK_THROW(odds::from_string(""), fc::exception);
     BOOST_CHECK_THROW(odds::from_string("230"), fc::exception);
     BOOST_CHECK_THROW(odds::from_string("aaaaaaaaa/30"), fc::exception);
-    BOOST_CHECK_THROW(odds::from_string("10000000/30"), fc::exception);
+    BOOST_CHECK_THROW(odds::from_string("2147483648/1"), fc::exception);
     BOOST_CHECK_THROW(odds::from_string("30/10000000"), fc::exception);
 
     const std::string str = "30/2";
