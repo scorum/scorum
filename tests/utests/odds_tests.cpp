@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(odds_positive_creation_check)
 
 BOOST_AUTO_TEST_CASE(odds_negative_creation_check)
 {
-    BOOST_REQUIRE_EQUAL(sizeof(odds_value_type), sizeof(int16_t));
+    BOOST_REQUIRE_EQUAL(sizeof(odds_value_type), sizeof(uint32_t));
 
     BOOST_CHECK_THROW(odds(utils::make_fraction(std::numeric_limits<int64_t>::max(), 2)), fc::overflow_exception);
     BOOST_CHECK_THROW(odds(utils::make_fraction(std::numeric_limits<int32_t>::max(), 2)), fc::overflow_exception);
