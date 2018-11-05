@@ -1,6 +1,8 @@
 #include <scorum/protocol/scorum_operations.hpp>
 #include <fc/io/json.hpp>
 
+#include <boost/rational.hpp>
+
 #include <locale>
 
 #include <scorum/protocol/atomicswap_helper.hpp>
@@ -401,6 +403,17 @@ void post_bet_operation::validate() const
     FC_ASSERT(odds.numerator > 0, "odds numerator must be greater then zero");
     FC_ASSERT(odds.denominator > 0, "odds denominator must be greater then zero");
     FC_ASSERT(odds.numerator > odds.denominator, "odds must be greater then one");
+
+    boost::rational<odds_value_type> bet_odds(odds.numerator, odds.denominator);
+    boost::rational<odds_value_type> max_odds(SCORUM_MAX_ODDS_NUMERATOR, SCORUM_MAX_ODDS_DENUMERATOR);
+
+    // clang-format off
+    FC_ASSERT(bet_odds <= max_odds, "Invalid odds value",
+              ("numerator", odds.numerator)
+              ("denominator", odds.denominator)
+              ("SCORUM_MAX_ODDS_NUMERATOR", SCORUM_MAX_ODDS_NUMERATOR)
+              ("SCORUM_MAX_ODDS_DENUMERATOR", SCORUM_MAX_ODDS_DENUMERATOR));
+    // clang-format on
 }
 
 void cancel_pending_bets_operation::validate() const

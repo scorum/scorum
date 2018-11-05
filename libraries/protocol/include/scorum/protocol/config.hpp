@@ -290,6 +290,9 @@ namespace detail {
 
 #define SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC      (scorum::protocol::detail::get_config().advertising_cashout_period_sec)
 
+#define SCORUM_MAX_ODDS_NUMERATOR (999999)
+#define SCORUM_MAX_ODDS_DENUMERATOR (1000)
+
 #ifdef IS_LOW_MEM
 #define SCORUM_LOW_MEMORY_NODE (true)
 #else
