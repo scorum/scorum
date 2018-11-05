@@ -7,7 +7,7 @@
 namespace scorum {
 namespace protocol {
 
-using odds_value_type = int16_t;
+using odds_value_type = uint32_t;
 using odds_fraction_type = utils::fraction<odds_value_type, odds_value_type>;
 
 class odds

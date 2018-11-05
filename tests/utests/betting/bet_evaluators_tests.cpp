@@ -15,6 +15,31 @@ using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
 
+SCORUM_TEST_CASE(post_bet_operation_validate_odds)
+{
+    post_bet_operation op;
+    op.better = "aclice";
+    op.uuid = gen_uuid("game");
+    op.wincase = correct_score_home::yes();
+    op.stake = ASSET_SCR(100);
+
+    op.odds = { 999999, 1000 }; // max odds
+
+    BOOST_CHECK_NO_THROW(op.validate());
+
+    op.odds = { 1001, 1000 };
+
+    BOOST_CHECK_NO_THROW(op.validate());
+
+    op.odds = { 999999 + 1, 1000 };
+
+    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
+
+    op.odds = { 1, 1 };
+
+    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
+}
+
 SCORUM_TEST_CASE(post_bet_evaluator_operation_validate_check)
 {
     post_bet_operation test_op;
