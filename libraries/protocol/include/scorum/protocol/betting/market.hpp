@@ -145,6 +145,19 @@ template <typename T> std::set<market_kind> get_markets_kind(const T& markets)
     return actual_markets;
 }
 
+template <typename T> bool is_belong_markets(const wincase_type& wincase, const T& markets)
+{
+    const auto wincase_market = create_market(wincase);
+
+    for (const auto& market : markets)
+    {
+        if (wincase_market == market)
+            return true;
+    }
+
+    return false;
+}
+
 } // namespace protocol
 } // namespace scorum
 
