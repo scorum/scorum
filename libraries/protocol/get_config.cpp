@@ -169,6 +169,9 @@ fc::variant_object get_config()
 
     result["SCORUM_WITNESS_REWARD_MIGRATION_DATE"] = SCORUM_WITNESS_REWARD_MIGRATION_DATE;
 
+    result["SCORUM_MAX_ODDS_NUMERATOR"] = SCORUM_MAX_ODDS_NUMERATOR;
+    result["SCORUM_MAX_ODDS_DENUMERATOR"] = SCORUM_MAX_ODDS_DENUMERATOR;
+
     return result;
 }
 } // namespace protocol
