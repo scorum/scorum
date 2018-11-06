@@ -288,7 +288,7 @@ SCORUM_TEST_CASE(serialize_post_bet_to_hex)
     auto hex = to_hex(ops);
 
     BOOST_CHECK_EQUAL(hex, "28e629f9aa6b2c46aa8fa836770e7a7a5f0561646d696ee629f9aa6b2c46aa8fa836770e7a7a5f10110017000"
-                                                                           "100020000e40b5402000000095343520000000001");
+        "10000000200000000e40b5402000000095343520000000001");
 }
 
 SCORUM_TEST_CASE(serialize_cancel_pending_bet_to_hex)
