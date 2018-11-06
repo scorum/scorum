@@ -25,6 +25,22 @@ namespace detail {
 class blockchain_history_api_impl;
 }
 
+struct block_api_operation_object
+{
+    block_api_operation_object() = default;
+
+    block_api_operation_object(const applied_operation& op)
+    {
+        trx_id = op.trx_id;
+        timestamp = op.timestamp;
+        op.op.visit([&](const auto& operation) { this->op = operation; });
+    }
+
+    transaction_id_type trx_id;
+    fc::time_point_sec timestamp;
+    operation op;
+};
+
 struct block_api_object : public signed_block_header
 {
     block_api_object() = default;
@@ -34,8 +50,8 @@ struct block_api_object : public signed_block_header
     {
     }
 
-    uint32_t block_num;
-    std::vector<applied_operation> operations;
+    uint32_t block_num = 0;
+    std::vector<block_api_operation_object> operations;
 };
 
 /**
@@ -134,6 +150,8 @@ private:
 
 } // namespace blockchain_history
 } // namespace scorum
+
+FC_REFLECT(scorum::blockchain_history::block_api_operation_object, (trx_id)(timestamp)(op))
 
 FC_REFLECT_DERIVED(scorum::blockchain_history::block_api_object,
                    (scorum::protocol::signed_block_header),

@@ -3,10 +3,6 @@
 namespace scorum {
 namespace blockchain_history {
 
-applied_operation::applied_operation()
-{
-}
-
 applied_operation::applied_operation(const operation_object& op_obj)
     : trx_id(op_obj.trx_id)
     , block(op_obj.block)
