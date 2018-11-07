@@ -21,6 +21,7 @@ namespace wallet {
 using namespace scorum::app;
 using namespace scorum::chain;
 
+using scorum::blockchain_history::block_api_object;
 using scorum::blockchain_history::applied_operation;
 using scorum::blockchain_history::applied_withdraw_operation;
 using scorum::blockchain_history::applied_operation_type;
@@ -185,6 +186,14 @@ public:
                                                                   const fc::time_point_sec& to,
                                                                   uint32_t from_op,
                                                                   uint32_t limit) const;
+
+    /**
+     * @brief Retrieve the list of blocks from block log in range [from-limit, from]
+     * @param from Height of the block to be returned
+     * @param limit the maximum number of blocks that can be queried (0 to 100], must be less than from
+     * @return the list of signed blocks
+     */
+    std::vector<block_api_object> get_blocks(uint32_t from, uint32_t limit) const;
 
     /**
      * Returns the list of witnesses producing blocks in the current round (21 Blocks)

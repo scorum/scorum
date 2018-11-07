@@ -112,6 +112,13 @@ public:
      */
     std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t block_num, uint32_t limit) const;
 
+    /**
+     * @brief Retrieve the list of blocks from block log in range [from-limit, from]
+     * @param from Height of the block to be returned
+     * @param limit the maximum number of blocks that can be queried (0 to 100], must be less than from
+     * @return the list of signed blocks
+     */
+    std::vector<block_api_object> get_blocks(uint32_t from, uint32_t limit) const;
     /// @}
 
 private:
@@ -124,4 +131,4 @@ private:
 FC_API(scorum::blockchain_history::blockchain_history_api,
        (get_ops_history)(get_ops_history_by_time)(get_ops_in_block)
        // Blocks and transactions
-       (get_transaction)(get_block_header)(get_block_headers_history)(get_block)(get_blocks_history))
+       (get_transaction)(get_block_header)(get_block_headers_history)(get_block)(get_blocks_history)(get_blocks))

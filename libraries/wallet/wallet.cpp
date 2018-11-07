@@ -1103,6 +1103,13 @@ std::map<uint32_t, applied_operation> wallet_api::get_ops_history_by_time(const 
     return (*my->_remote_blockchain_history_api)->get_ops_history_by_time(from, to, from_op, limit);
 }
 
+std::vector<block_api_object> wallet_api::get_blocks(uint32_t from, uint32_t limit) const
+{
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_blocks(from, limit);
+}
+
 std::vector<account_api_obj> wallet_api::list_my_accounts()
 {
     FC_ASSERT(!is_locked(), "Wallet must be unlocked to list accounts");
