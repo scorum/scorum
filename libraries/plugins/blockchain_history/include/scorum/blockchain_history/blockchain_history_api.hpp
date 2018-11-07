@@ -25,35 +25,6 @@ namespace detail {
 class blockchain_history_api_impl;
 }
 
-struct block_api_operation_object
-{
-    block_api_operation_object() = default;
-
-    block_api_operation_object(const applied_operation& op)
-    {
-        trx_id = op.trx_id;
-        timestamp = op.timestamp;
-        op.op.visit([&](const auto& operation) { this->op = operation; });
-    }
-
-    transaction_id_type trx_id;
-    fc::time_point_sec timestamp;
-    operation op;
-};
-
-struct block_api_object : public signed_block_header
-{
-    block_api_object() = default;
-
-    block_api_object(const signed_block_header& b)
-        : signed_block_header(b)
-    {
-    }
-
-    uint32_t block_num = 0;
-    std::vector<block_api_operation_object> operations;
-};
-
 /**
  * @brief Provide set of getters to retrive information about blocks, transactions and operations
  *
@@ -141,6 +112,12 @@ public:
      */
     std::map<uint32_t, signed_block_api_obj> get_blocks_history(uint32_t block_num, uint32_t limit) const;
 
+    /**
+     * @brief Retrieve the list of blocks from block log in range [from-limit, from]
+     * @param from Height of the block to be returned
+     * @param limit the maximum number of blocks that can be queried (0 to 100], must be less than from
+     * @return the list of signed blocks
+     */
     std::vector<block_api_object> get_blocks(uint32_t from, uint32_t limit) const;
     /// @}
 
@@ -150,12 +127,6 @@ private:
 
 } // namespace blockchain_history
 } // namespace scorum
-
-FC_REFLECT(scorum::blockchain_history::block_api_operation_object, (trx_id)(timestamp)(op))
-
-FC_REFLECT_DERIVED(scorum::blockchain_history::block_api_object,
-                   (scorum::protocol::signed_block_header),
-                   (block_num)(operations))
 
 FC_API(scorum::blockchain_history::blockchain_history_api,
        (get_ops_history)(get_ops_history_by_time)(get_ops_in_block)
