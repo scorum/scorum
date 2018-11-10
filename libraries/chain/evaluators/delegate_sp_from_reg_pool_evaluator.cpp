@@ -39,7 +39,10 @@ void delegate_sp_from_reg_pool_evaluator::do_apply(const protocol::delegate_sp_f
         FC_ASSERT(_reg_pool_dba.get().balance.amount >= op.scorumpower.amount, "Registration pool is exhausted.");
 
         _account_svc.increase_received_scorumpower(op.delegatee, op.scorumpower);
-        _reg_pool_dba.update([&](registration_pool_object& pool) { pool.balance -= op.scorumpower; });
+        _reg_pool_dba.update([&](registration_pool_object& pool) {
+            pool.balance -= op.scorumpower.amount;
+            pool.delegated += op.scorumpower.amount;
+        });
 
         _reg_pool_delegation_dba.create([&](reg_pool_sp_delegation_object& o) {
             o.delegatee = op.delegatee;
@@ -54,7 +57,10 @@ void delegate_sp_from_reg_pool_evaluator::do_apply(const protocol::delegate_sp_f
         FC_ASSERT(_reg_pool_dba.get().balance.amount >= extra_sp.amount, "Registration pool is exhausted.");
 
         _account_svc.increase_received_scorumpower(op.delegatee, extra_sp);
-        _reg_pool_dba.update([&](registration_pool_object& pool) { pool.balance -= extra_sp; });
+        _reg_pool_dba.update([&](registration_pool_object& pool) {
+            pool.balance -= extra_sp.amount;
+            pool.delegated += extra_sp.amount;
+        });
 
         if (op.scorumpower.amount > 0)
             _reg_pool_delegation_dba.update(delegation, [&](reg_pool_sp_delegation_object& o) { o.sp += extra_sp; });

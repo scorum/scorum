@@ -78,7 +78,7 @@ template <class T> T make_test_index_object()
     }                                                                                                                  \
     catch (exception & e)                                                                                              \
     {                                                                                                                  \
-        BOOST_REQUIRE(e.get_log().size() == 1);                                                                        \
+        BOOST_REQUIRE(e.get_log().size() >= 1);                                                                        \
         bool check_exception_message = e.get_log().front().get_message().find(message) != std::string::npos;           \
         if (!check_exception_message)                                                                                  \
             std::cout << "EXCEPTION:" << e.get_log().front().get_message() << std::endl;                               \
@@ -216,3 +216,29 @@ template <class T> T make_test_index_object()
     SCORUM_AUTO_TU_REGISTRAR(test_name)                                                                                \
                                                                                                                        \
     void test_name::test_method_override()
+
+#define SCORUM_FIXTURE_TEST_CASE(test_name, F)                                                                         \
+    struct test_name : public F                                                                                        \
+    {                                                                                                                  \
+        void test_method();                                                                                            \
+    };                                                                                                                 \
+                                                                                                                       \
+    static void BOOST_AUTO_TC_INVOKER(test_name)()                                                                     \
+    {                                                                                                                  \
+        try                                                                                                            \
+        {                                                                                                              \
+            test_name t;                                                                                               \
+            t.test_method();                                                                                           \
+        }                                                                                                              \
+        FC_LOG_AND_RETHROW()                                                                                           \
+    }                                                                                                                  \
+                                                                                                                       \
+    struct BOOST_AUTO_TC_UNIQUE_ID(test_name)                                                                          \
+    {                                                                                                                  \
+    };                                                                                                                 \
+                                                                                                                       \
+    BOOST_AUTO_TU_REGISTRAR(test_name)                                                                                 \
+    (boost::unit_test::make_test_case(&BOOST_AUTO_TC_INVOKER(test_name), #test_name),                                  \
+     boost::unit_test::ut_detail::auto_tc_exp_fail<BOOST_AUTO_TC_UNIQUE_ID(test_name)>::instance()->value());          \
+                                                                                                                       \
+    void test_name::test_method()

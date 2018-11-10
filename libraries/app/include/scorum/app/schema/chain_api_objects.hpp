@@ -114,6 +114,7 @@ struct chain_capital_api_obj
     asset total_scorumpower = asset(0, SP_SYMBOL);
 
     asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
+    asset registration_pool_delegated = asset(0, SP_SYMBOL);
     asset fund_budget_balance = asset(0, SP_SYMBOL);
     asset dev_pool_scr_balance = asset(0, SCORUM_SYMBOL);
     asset dev_pool_sp_balance = asset(0, SP_SYMBOL);
@@ -178,6 +179,7 @@ FC_REFLECT(scorum::app::chain_capital_api_obj,
            (total_scr)
            (total_scorumpower)
            (registration_pool_balance)
+           (registration_pool_delegated)
            (fund_budget_balance)
            (dev_pool_scr_balance)
            (dev_pool_sp_balance)
