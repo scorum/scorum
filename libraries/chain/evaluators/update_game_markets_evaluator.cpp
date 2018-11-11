@@ -40,6 +40,7 @@ void update_game_markets_evaluator::do_apply(const operation_type& op)
               ("input_markets", op.markets)("set_of_markets", set_of_markets));
 
     validate_game(game.game, set_of_markets);
+    validate_markets(set_of_markets);
 
     fc::flat_set<market_type> cancelled_markets;
     boost::set_difference(game.markets, set_of_markets, std::inserter(cancelled_markets, cancelled_markets.end()));

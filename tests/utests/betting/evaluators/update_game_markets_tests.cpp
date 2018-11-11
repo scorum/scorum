@@ -110,11 +110,11 @@ SCORUM_TEST_CASE(update_game_new_markets_is_overset_no_cancelled_bets)
     update_game_markets_evaluator ev(*dbs_services, *betting_service);
 
     update_game_markets_operation op;
-    op.markets = { total{ 1000 }, total{ 0 }, total{ 500 }, result_home{} };
+    op.markets = { total{ 1000 }, total{ 1500 }, total{ 500 }, result_home{} };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
-        o.markets = { total{ 1000 }, total{ 0 } };
+        o.markets = { total{ 1000 }, total{ 1500 } };
     });
 
     mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
@@ -166,11 +166,11 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
     update_game_markets_evaluator ev(*dbs_services, *betting_service);
 
     update_game_markets_operation op;
-    op.markets = { total{ 1000 }, total{ 0 }, correct_score_home{} /* this one is new */ };
+    op.markets = { total{ 1000 }, total{ 1500 }, correct_score_home{} /* this one is new */ };
 
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::created;
-        o.markets = { total{ 1000 }, total{ 0 }, total{ 500 }, /* should be returned */
+        o.markets = { total{ 1000 }, total{ 1500 }, total{ 500 }, /* should be returned */
                       result_home{} /* should be returned */ };
     });
 
@@ -195,11 +195,6 @@ SCORUM_TEST_CASE(update_game_new_markets_overlap_old_ones_some_bets_cancelled)
 
 SCORUM_TEST_CASE(throw_exception_on_duplicate_markets)
 {
-    update_game_markets_evaluator ev(*dbs_services, *betting_service);
-
-    update_game_markets_operation op;
-    op.markets = { total{ 1 }, total{ 1 } };
-
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {
         o.status = game_status::started;
         o.markets = { total{ 1000 } };
@@ -212,7 +207,37 @@ SCORUM_TEST_CASE(throw_exception_on_duplicate_markets)
     mocks.OnCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_bets);
     mocks.OnCall(game_service, game_service_i::update_markets);
 
-    BOOST_CHECK_THROW(ev.do_apply(op), fc::assert_exception);
+    update_game_markets_evaluator ev(*dbs_services, *betting_service);
+
+    update_game_markets_operation op;
+    op.markets = { total{ 500 }, total{ 500 } };
+
+    SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception, "You provided duplicates in market list.");
+}
+
+SCORUM_TEST_CASE(throw_exception_on_wrong_market_threshold)
+{
+    auto game_obj = create_object<game_object>(shm, [](game_object& o) {
+        o.status = game_status::started;
+        o.markets = { total{ 1000 } };
+    });
+
+    mocks.OnCallOverload(account_service, (check_account_existence_ptr)&account_service_i::check_account_existence);
+    mocks.OnCallOverload(game_service, (exists_by_id_ptr)&game_service_i::is_exists).Return(true);
+    mocks.OnCallOverload(game_service, (get_by_id_ptr)&game_service_i::get_game).ReturnByRef(game_obj);
+    mocks.OnCall(betting_service, betting_service_i::is_betting_moderator).Return(true);
+    mocks.OnCallOverload(betting_service, (cancel_bets_ptr)&betting_service_i::cancel_bets);
+    mocks.OnCall(game_service, game_service_i::update_markets);
+
+    update_game_markets_evaluator ev(*dbs_services, *betting_service);
+
+    update_game_markets_operation op;
+    op.markets = { total{ 0 }, total{ 1000 } };
+
+    const auto expected_message
+        = fc::format_string("Wincase '${w}' is invalid", { "w", create_wincases(total{ 0 }).first });
+
+    SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception, expected_message);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
