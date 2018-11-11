@@ -11,7 +11,7 @@ using protocol::percent_type;
 using protocol::asset;
 struct dynamic_global_property_service_i;
 struct advertising_property_service_i;
-template <budget_type> class adv_budget_service_i;
+template <budget_type> struct adv_budget_service_i;
 
 /**
  * @details See [advertising details](@ref advdetails) for detailed information about how budgets work.

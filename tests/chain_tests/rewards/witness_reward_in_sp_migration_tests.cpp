@@ -41,8 +41,6 @@ using reward_map_type = std::map<account_name_type, witness_reward_infos_type>;
 
 struct witness_reward_visitor
 {
-    typedef void result_type;
-
     witness_reward_visitor(database& db)
         : _db(db)
     {

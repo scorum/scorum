@@ -35,6 +35,8 @@ struct dbs_development_committee : public dbs_base, public development_committee
     void change_base_quorum(const percent_type quorum) override;
     void change_transfer_quorum(const percent_type quorum) override;
     void change_advertising_moderator_quorum(const percent_type quorum) override;
+    void change_betting_moderator_quorum(const percent_type quorum) override;
+    void change_betting_resolve_delay_quorum(const percent_type quorum) override;
     void change_budgets_auction_properties_quorum(const percent_type quorum) override;
 
     percent_type get_add_member_quorum() override;
@@ -42,6 +44,8 @@ struct dbs_development_committee : public dbs_base, public development_committee
     percent_type get_base_quorum() override;
     percent_type get_transfer_quorum() override;
     percent_type get_advertising_moderator_quorum() override;
+    percent_type get_betting_moderator_quorum() override;
+    percent_type get_betting_resolve_delay_quorum() override;
     percent_type get_budgets_auction_properties_quorum() override;
 
     bool is_exists(const account_name_type& account_name) const override;

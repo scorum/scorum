@@ -42,3 +42,37 @@ public:
     private_key_type post_key;
     public_key_type public_key;
 };
+
+class supply_type
+{
+public:
+    using value_type = scorum::protocol::share_value_type;
+
+    supply_type(value_type amount)
+        : _amount(amount)
+    {
+    }
+
+    value_type take(value_type amount)
+    {
+        amount *= 1'000'000'000;
+
+        FC_ASSERT(_amount >= amount);
+
+        _amount -= amount;
+
+        return amount;
+    }
+
+    value_type take_rest()
+    {
+        value_type a = _amount;
+
+        _amount = 0;
+
+        return a;
+    }
+
+private:
+    value_type _amount;
+};

@@ -288,8 +288,6 @@ struct comment_options_extension_visitor
         });
     }
 
-    typedef void result_type;
-
     const comment_object& _c;
     account_service_i& _account_service;
     comment_service_i& _comment_service;

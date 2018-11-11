@@ -70,6 +70,14 @@ checksum_type signed_block::calculate_merkle_root() const
 }
 }
 
+block_info::block_info(uint32_t block_num, std::string block_id, fc::time_point_sec when, std::string block_witness)
+    : _block_num(block_num)
+    , _block_id(block_id)
+    , _when(when)
+    , _block_witness(block_witness)
+{
+}
+
 block_info::block_info(const scorum::protocol::signed_block& block)
     : _block_num(block.block_num())
     , _block_id(block.id().str())

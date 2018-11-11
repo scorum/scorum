@@ -29,12 +29,14 @@ set(SOURCES
     logger/logger_config_tests.cpp
     signed_transaction_serialization_tests.cpp
     serialization_tests.cpp
+    accounts/delegate_sp_from_reg_pool_tests.cpp
     proposal/proposal_operations_tests.cpp
     proposal/proposal_evaluator_register_tests.cpp
     proposal/proposal_create_evaluator_tests.cpp
     proposal/proposal_vote_evaluator_tests.cpp
     proposal/development_committee_transfer_evaluator_tests.cpp
     proposal/development_committee_top_budgets_evaluator_tests.cpp
+    proposal/development_committee_change_betting_moderator_tests.cpp
     rewards_math/calculate_payout_tests.cpp
     rewards_math/calculate_total_claims_tests.cpp
     rewards_math/calculate_curations_payout_tests.cpp
@@ -44,6 +46,11 @@ set(SOURCES
     rewards/comment_reward_legacy_tests.cpp
     rewards/comment_reward_tests.cpp
     utils/string_algorithm_tests.cpp
+    utils/take_n_range_tests.cpp
+    utils/flatten_range_tests.cpp
+    utils/join_range_tests.cpp
+    utils/static_variant_comparison_tests.cpp
+    fc/static_variant_visitor_tests.cpp
     utils/math_tests.cpp
     tasks_base_tests.cpp
     app_tests.cpp
@@ -55,6 +62,28 @@ set(SOURCES
     fraction_tests.cpp
     config_api_tests.cpp
     vote_evaluator_tests.cpp
+    betting/invariants_validation_tests.cpp
+    betting/wincase_comparison_tests.cpp
+    betting/threshold_comparison_tests.cpp
+    betting/game_serialization_tests.cpp
+    betting/betting_service_tests.cpp
+    betting/betting_math_tests.cpp
+    betting/betting_matcher_tests.cpp
+    betting/bet_evaluators_tests.cpp
+    betting/betting_api_tests.cpp
+    betting/post_game_results_serialization_tests.cpp
+    betting/wincase_type_tests.cpp
+    betting/market_type_tests.cpp
+    betting/create_matched_bet_tests.cpp
+    betting/betting_chain_capital_tests.cpp
+    betting/evaluators/create_game_tests.cpp
+    betting/evaluators/cancel_game_tests.cpp
+    betting/evaluators/update_game_markets_tests.cpp
+    betting/evaluators/update_start_time_tests.cpp
+    betting/evaluators/post_game_results_tests.cpp
+    betting/betting_chain_capital_tests.cpp
+    db_accessors/db_accessors_tests.cpp
+    odds_tests.cpp
     create_account_by_committee_evaluator_tests.cpp
 )
 
@@ -63,6 +92,9 @@ add_executable(utests
               ${HEADERS})
 
 target_link_libraries(utests
+                      fc
+                      chainbase
+                      common_test
                       ucommon_test
                       scorum_app
                       scorum_rewards_math

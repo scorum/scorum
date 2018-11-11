@@ -92,8 +92,8 @@ SCORUM_TEST_CASE(get_budget_winners_check_post_and_banners_do_not_affect_each_ot
     auto post_budgets = _api.get_current_winners(budget_type::post);
     auto banner_budgets = _api.get_current_winners(budget_type::banner);
 
-    BOOST_REQUIRE_EQUAL(post_budgets.size(), 2);
-    BOOST_REQUIRE_EQUAL(banner_budgets.size(), 3);
+    BOOST_REQUIRE_EQUAL(post_budgets.size(), 2u);
+    BOOST_REQUIRE_EQUAL(banner_budgets.size(), 3u);
 
     BOOST_CHECK_EQUAL(post_budgets[0].id, 1u);
     BOOST_CHECK_EQUAL(post_budgets[1].id, 0u);

@@ -3,6 +3,7 @@
 
 #include <scorum/app/api.hpp>
 #include <scorum/app/chain_api.hpp>
+#include <scorum/app/betting_api.hpp>
 #include <scorum/protocol/base.hpp>
 #include <scorum/wallet/wallet.hpp>
 #include <scorum/wallet/api_documentation.hpp>
@@ -87,8 +88,6 @@ template <class T> optional<T> maybe_id(const std::string& name_or_id)
 
 struct op_prototype_visitor
 {
-    typedef void result_type;
-
     int t = 0;
     flat_map<std::string, operation>& name2op;
 
@@ -98,7 +97,7 @@ struct op_prototype_visitor
     {
     }
 
-    template <typename Type> result_type operator()(const Type& op) const
+    template <typename Type> void operator()(const Type& op) const
     {
         std::string name = fc::get_typename<Type>::name();
         size_t p = name.rfind(':');
@@ -728,7 +727,7 @@ public:
 
         m["gethelp"] = [](variant result, const fc::variants& a) { return result.get_string(); };
 
-        m["list_my_accounts"] = [this](variant result, const fc::variants& a) {
+        m["list_my_accounts"] = [](variant result, const fc::variants& a) {
             auto accounts = result.as<std::vector<account_api_obj>>();
 
             cli::formatter p;
@@ -756,7 +755,7 @@ public:
 
             return p.str();
         };
-        m["get_account_balance"] = [this](variant result, const fc::variants& a) -> std::string {
+        m["get_account_balance"] = [](variant result, const fc::variants& a) -> std::string {
             auto rt = result.as<account_balance_info_api_obj>();
 
             cli::formatter p;
@@ -772,7 +771,7 @@ public:
             return p.str();
         };
 
-        auto history_formatter = [this](variant result, const fc::variants& a) {
+        auto history_formatter = [](variant result, const fc::variants& a) {
             const auto& results = result.get_array();
 
             cli::formatter p;
@@ -809,7 +808,7 @@ public:
         m["get_devcommittee_scr_to_scr_transfers"] = history_formatter;
         m["get_devcommittee_sp_to_scr_transfers"] = history_formatter;
 
-        m["get_withdraw_routes"] = [this](variant result, const fc::variants& a) {
+        m["get_withdraw_routes"] = [](variant result, const fc::variants& a) {
             auto routes = result.as<std::vector<withdraw_route>>();
 
             cli::formatter p;
@@ -1102,6 +1101,13 @@ std::map<uint32_t, applied_operation> wallet_api::get_ops_history_by_time(const 
     my->use_remote_blockchain_history_api();
 
     return (*my->_remote_blockchain_history_api)->get_ops_history_by_time(from, to, from_op, limit);
+}
+
+std::vector<block_api_object> wallet_api::get_blocks(uint32_t from, uint32_t limit) const
+{
+    my->use_remote_blockchain_history_api();
+
+    return (*my->_remote_blockchain_history_api)->get_blocks(from, limit);
 }
 
 std::vector<account_api_obj> wallet_api::list_my_accounts()
@@ -1820,10 +1826,34 @@ annotated_signed_transaction wallet_api::delegate_scorumpower(const std::string&
     auto accounts = my->_remote_db->get_accounts({ delegator, delegatee });
     FC_ASSERT(accounts.size() == 2, "One or more of the accounts specified do not exist.");
     FC_ASSERT(delegator == accounts[0].name, "Delegator account is not right?");
-    FC_ASSERT(delegatee == accounts[1].name, "Delegator account is not right?");
+    FC_ASSERT(delegatee == accounts[1].name, "Delegatee account is not right?");
 
     delegate_scorumpower_operation op;
     op.delegator = delegator;
+    op.delegatee = delegatee;
+    op.scorumpower = scorumpower;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::delegate_scorumpower_from_reg_pool(const std::string& reg_committee_member,
+                                                                            const std::string& delegatee,
+                                                                            const asset& scorumpower,
+                                                                            bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    auto accounts = my->_remote_db->get_accounts({ reg_committee_member, delegatee });
+    FC_ASSERT(accounts.size() == 2, "One or more of the accounts specified do not exist.");
+    FC_ASSERT(reg_committee_member == accounts[0].name, "Registration committee member account is not right?");
+    FC_ASSERT(delegatee == accounts[1].name, "Delegatee account is not right?");
+
+    delegate_sp_from_reg_pool_operation op;
+    op.reg_committee_member = reg_committee_member;
     op.delegatee = delegatee;
     op.scorumpower = scorumpower;
 
@@ -2920,6 +2950,19 @@ annotated_signed_transaction wallet_api::development_committee_change_advertisin
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction wallet_api::development_committee_change_betting_moderator_quorum(
+    const std::string& initiator, uint64_t quorum_percent, uint32_t lifetime_sec, bool broadcast)
+{
+    using operation_type = development_committee_change_quorum_operation;
+
+    signed_transaction tx = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) {
+        o.quorum = quorum_percent;
+        o.committee_quorum = betting_moderator_quorum;
+    });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
 annotated_signed_transaction wallet_api::development_committee_empower_advertising_moderator(
     const std::string& initiator, const std::string& moderator, uint32_t lifetime_sec, bool broadcast)
 {
@@ -2927,6 +2970,30 @@ annotated_signed_transaction wallet_api::development_committee_empower_advertisi
 
     signed_transaction tx
         = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account = moderator; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_empower_betting_moderator(const std::string& initiator,
+                                                                                         const std::string& moderator,
+                                                                                         uint32_t lifetime_sec,
+                                                                                         bool broadcast)
+{
+    using operation_type = development_committee_empower_betting_moderator_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.account = moderator; });
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::development_committee_change_betting_resolve_delay(
+    const std::string& initiator, uint32_t delay_sec, uint32_t lifetime_sec, bool broadcast)
+{
+    using operation_type = development_committee_change_betting_resolve_delay_operation;
+
+    signed_transaction tx
+        = proposal<operation_type>(initiator, lifetime_sec, [&](operation_type& o) { o.delay_sec = delay_sec; });
 
     return my->sign_transaction(tx, broadcast);
 }
@@ -3019,19 +3086,9 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_initiate(const std::st
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret;
-    try
-    {
-        ret = my->sign_transaction(tx, broadcast);
+    auto ret = my->sign_transaction(tx, broadcast);
 
-        return atomicswap_contract_result_api_obj(ret, op, secret);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't initiate Atomic Swap.");
-    }
-
-    return atomicswap_contract_result_api_obj(ret);
+    return atomicswap_contract_result_api_obj(ret, op, secret);
 }
 
 atomicswap_contract_result_api_obj wallet_api::atomicswap_participate(const std::string& secret_hash,
@@ -3056,19 +3113,9 @@ atomicswap_contract_result_api_obj wallet_api::atomicswap_participate(const std:
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret;
-    try
-    {
-        ret = my->sign_transaction(tx, broadcast);
+    auto ret = my->sign_transaction(tx, broadcast);
 
-        return atomicswap_contract_result_api_obj(ret, op);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't participate Atomic Swap.");
-    }
-
-    return atomicswap_contract_result_api_obj(ret);
+    return atomicswap_contract_result_api_obj(ret, op);
 }
 
 annotated_signed_transaction wallet_api::atomicswap_redeem(const std::string& from,
@@ -3088,51 +3135,24 @@ annotated_signed_transaction wallet_api::atomicswap_redeem(const std::string& fr
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret;
-    try
-    {
-        ret = my->sign_transaction(tx, broadcast);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't redeem Atomic Swap contract.");
-    }
-
-    return ret;
+    return my->sign_transaction(tx, broadcast);
 }
 
 atomicswap_contract_info_api_obj
 wallet_api::atomicswap_auditcontract(const std::string& from, const std::string& to, const std::string& secret_hash)
 {
-    atomicswap_contract_info_api_obj ret;
-    try
-    {
-        ret = my->_remote_db->get_atomicswap_contract(from, to, secret_hash);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't access to Atomic Swap contract.");
-    }
-    return ret;
+    return my->_remote_db->get_atomicswap_contract(from, to, secret_hash);
 }
 
 std::string
 wallet_api::atomicswap_extractsecret(const std::string& from, const std::string& to, const std::string& secret_hash)
 {
-    try
-    {
-        atomicswap_contract_info_api_obj contract_info = atomicswap_auditcontract(from, to, secret_hash);
 
-        FC_ASSERT(!contract_info.secret.empty(), "Contract is not redeemed.");
+    atomicswap_contract_info_api_obj contract_info = atomicswap_auditcontract(from, to, secret_hash);
 
-        return contract_info.secret;
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't access to Atomic Swap contract secret.");
-    }
+    FC_ASSERT(!contract_info.secret.empty(), "Contract is not redeemed.");
 
-    return "";
+    return contract_info.secret;
 }
 
 annotated_signed_transaction wallet_api::atomicswap_refund(const std::string& participant,
@@ -3152,17 +3172,7 @@ annotated_signed_transaction wallet_api::atomicswap_refund(const std::string& pa
     tx.operations.push_back(op);
     tx.validate();
 
-    annotated_signed_transaction ret;
-    try
-    {
-        ret = my->sign_transaction(tx, broadcast);
-    }
-    catch (fc::exception& e)
-    {
-        elog("Can't refund Atomic Swap contract.");
-    }
-
-    return ret;
+    return my->sign_transaction(tx, broadcast);
 }
 
 std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(const std::string& owner)
@@ -3174,6 +3184,170 @@ std::vector<atomicswap_contract_api_obj> wallet_api::get_atomicswap_contracts(co
     return result;
 }
 
+annotated_signed_transaction wallet_api::create_game(uuid_type uuid,
+                                                     account_name_type moderator,
+                                                     const std::string& json_metadata,
+                                                     fc::time_point_sec start_time,
+                                                     uint32_t auto_resolve_delay_sec,
+                                                     game_type game,
+                                                     const std::vector<market_type>& markets,
+                                                     const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    create_game_operation op;
+
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.game = game;
+    op.json_metadata = json_metadata;
+    op.start_time = start_time;
+    op.auto_resolve_delay_sec = auto_resolve_delay_sec;
+    op.markets = markets;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    ret = my->sign_transaction(tx, broadcast);
+
+    return ret;
+}
+
+annotated_signed_transaction wallet_api::cancel_game(uuid_type uuid, account_name_type moderator, const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    cancel_game_operation op;
+
+    op.uuid = uuid;
+    op.moderator = moderator;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    ret = my->sign_transaction(tx, broadcast);
+
+    return ret;
+}
+
+annotated_signed_transaction wallet_api::update_game_markets(uuid_type uuid,
+                                                             account_name_type moderator,
+                                                             const std::vector<market_type>& markets,
+                                                             const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    update_game_markets_operation op;
+
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.markets = markets;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    ret = my->sign_transaction(tx, broadcast);
+
+    return ret;
+}
+
+annotated_signed_transaction wallet_api::update_game_start_time(uuid_type uuid,
+                                                                account_name_type moderator,
+                                                                fc::time_point_sec start_time,
+                                                                const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    update_game_start_time_operation op;
+
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.start_time = start_time;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    ret = my->sign_transaction(tx, broadcast);
+
+    return ret;
+}
+
+annotated_signed_transaction wallet_api::post_game_results(uuid_type uuid,
+                                                           account_name_type moderator,
+                                                           const std::vector<wincase_type>& wincases,
+                                                           const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    post_game_results_operation op;
+
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.wincases = wincases;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    annotated_signed_transaction ret;
+    ret = my->sign_transaction(tx, broadcast);
+
+    return ret;
+}
+
+annotated_signed_transaction wallet_api::post_bet(uuid_type uuid,
+                                                  account_name_type better,
+                                                  uuid_type game_uuid,
+                                                  wincase_type wincase,
+                                                  odds_input odds,
+                                                  asset stake,
+                                                  bool is_live,
+                                                  const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    post_bet_operation op;
+
+    op.uuid = uuid;
+    op.better = better;
+    op.game_uuid = game_uuid;
+    op.odds = odds;
+    op.stake = stake;
+    op.wincase = wincase;
+    op.live = is_live;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction
+wallet_api::cancel_pending_bets(account_name_type better, const std::vector<uuid_type>& bet_uuids, const bool broadcast)
+{
+    FC_ASSERT(!is_locked());
+
+    cancel_pending_bets_operation op;
+
+    op.better = better;
+    op.bet_uuids = bet_uuids;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
 void wallet_api::exit()
 {
     exit_func();
@@ -3182,6 +3356,55 @@ void wallet_api::exit()
 chain_capital_api_obj wallet_api::get_chain_capital() const
 {
     return my->_chain_api->get_chain_capital();
+}
+
+std::vector<game_api_object> wallet_api::get_games_by_status(const fc::flat_set<game_status>& filter) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_games_by_status(filter);
+}
+
+std::vector<game_api_object> wallet_api::get_games_by_uuids(const std::vector<uuid_type>& uuids) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_games_by_uuids(uuids);
+}
+
+std::vector<game_api_object> wallet_api::lookup_games_by_id(game_id_type from, uint32_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->lookup_games_by_id(from, limit);
+}
+
+std::vector<matched_bet_api_object> wallet_api::lookup_matched_bets(matched_bet_id_type from, int64_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->lookup_matched_bets(from, limit);
+}
+
+std::vector<pending_bet_api_object> wallet_api::lookup_pending_bets(pending_bet_id_type from, int64_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->lookup_pending_bets(from, limit);
+}
+
+std::vector<matched_bet_api_object> wallet_api::get_matched_bets(const std::vector<uuid_type>& uuids) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_matched_bets(uuids);
+}
+
+std::vector<pending_bet_api_object> wallet_api::get_pending_bets(const std::vector<uuid_type>& uuids) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_pending_bets(uuids);
 }
 
 } // namespace wallet

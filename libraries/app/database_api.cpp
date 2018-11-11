@@ -190,7 +190,6 @@ void database_api_impl::set_block_applied_callback(std::function<void(const vari
 
 database_api::database_api(const scorum::app::api_context& ctx)
     : my(new database_api_impl(ctx))
-    , _app(ctx.app)
 {
 }
 
@@ -469,7 +468,7 @@ std::vector<withdraw_route> database_api::get_withdraw_routes(const std::string&
     return my->_db.with_read_lock([&]() {
         std::vector<withdraw_route> result;
 
-        const auto& acc = my->_db.obtain_service<chain::dbs_account>().get_account(account);
+        const auto& acc = my->_db.account_service().get_account(account);
 
         if (type == outgoing || type == all)
         {
@@ -664,7 +663,7 @@ database_api_impl::lookup_registration_committee_members(const std::string& lowe
 {
     FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
 
-    return committee::lookup_members<registration_committee_member_index>(_db, lower_bound_name, limit);
+    return chain::committee::lookup_members<registration_committee_member_index>(_db, lower_bound_name, limit);
 }
 
 std::set<account_name_type> database_api_impl::lookup_development_committee_members(const std::string& lower_bound_name,
@@ -672,7 +671,7 @@ std::set<account_name_type> database_api_impl::lookup_development_committee_memb
 {
     FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
 
-    return committee::lookup_members<dev_committee_member_index>(_db, lower_bound_name, limit);
+    return chain::committee::lookup_members<dev_committee_member_index>(_db, lower_bound_name, limit);
 }
 
 std::vector<proposal_api_obj> database_api::lookup_proposals() const
@@ -868,7 +867,7 @@ std::vector<account_vote> database_api::get_account_votes(const std::string& vot
     return my->_db.with_read_lock([&]() {
         std::vector<account_vote> result;
 
-        const auto& voter_acnt = my->_db.obtain_service<chain::dbs_account>().get_account(voter);
+        const auto& voter_acnt = my->_db.account_service().get_account(voter);
         const auto& idx = my->_db.get_index<comment_vote_index>().indices().get<by_voter_comment>();
 
         account_id_type aid(voter_acnt.id);
@@ -940,8 +939,8 @@ std::vector<atomicswap_contract_api_obj> database_api_impl::get_atomicswap_contr
 {
     std::vector<atomicswap_contract_api_obj> results;
 
-    chain::dbs_account& account_service = _db.obtain_service<chain::dbs_account>();
-    const chain::account_object& owner_obj = account_service.get_account(owner);
+    auto& account_svc = _db.account_service();
+    const chain::account_object& owner_obj = account_svc.get_account(owner);
 
     chain::dbs_atomicswap& atomicswap_service = _db.obtain_service<chain::dbs_atomicswap>();
 
@@ -967,9 +966,9 @@ atomicswap_contract_info_api_obj database_api_impl::get_atomicswap_contract(cons
 {
     atomicswap_contract_info_api_obj result;
 
-    chain::dbs_account& account_service = _db.obtain_service<chain::dbs_account>();
-    const chain::account_object& from_obj = account_service.get_account(from);
-    const chain::account_object& to_obj = account_service.get_account(to);
+    auto& account_svc = _db.account_service();
+    const chain::account_object& from_obj = account_svc.get_account(from);
+    const chain::account_object& to_obj = account_svc.get_account(to);
 
     chain::dbs_atomicswap& atomicswap_service = _db.obtain_service<chain::dbs_atomicswap>();
 

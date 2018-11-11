@@ -22,7 +22,7 @@ struct comment_cashout_from_scr_fund_fixture : public database_blog_integration_
         : advertising_budget_service(db.post_budget_service())
         , reward_fund_scr_service(db.content_reward_fund_scr_service())
         , reward_balancer(db.content_reward_scr_service())
-        , account_service(db.obtain_service<dbs_account>())
+        , account_service(db.account_service())
         , dprops_service(db.dynamic_global_property_service())
         , alice("alice")
         , sam("sam")

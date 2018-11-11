@@ -1,7 +1,7 @@
 #pragma once
 
 #include <scorum/protocol/authority.hpp>
-#include <scorum/protocol/types.hpp>
+#include <scorum/protocol/config.hpp>
 
 namespace scorum {
 namespace protocol {

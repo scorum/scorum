@@ -22,29 +22,27 @@ using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
 using scorum::protocol::public_key_type;
 
-struct dbs_base
+class dbs_base
 {
 protected:
     dbs_base() = delete;
     dbs_base(dbs_base&&) = delete;
 
-    explicit dbs_base(database&);
+    explicit dbs_base(dba::db_index&);
 
     typedef dbs_base _base_type;
 
 public:
     virtual ~dbs_base();
 
-    dbservice_dbs_factory& db();
-
+protected:
     time_point_sec head_block_time();
 
-protected:
-    database& db_impl();
-    const database& db_impl() const;
+    dba::db_index& db_impl();
+    const dba::db_index& db_impl() const;
 
 private:
-    database& _db_core;
+    dba::db_index& _db_core;
 };
 
 } // namespace chain

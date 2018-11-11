@@ -57,6 +57,17 @@ using operation = fc::static_variant<vote_operation,
                                      close_budget_by_advertising_moderator_operation,
                                      update_budget_operation,
 
+                                     create_game_operation,
+                                     cancel_game_operation,
+                                     update_game_markets_operation,
+                                     update_game_start_time_operation,
+                                     post_game_results_operation,
+
+                                     post_bet_operation,
+                                     cancel_pending_bets_operation,
+
+                                     delegate_sp_from_reg_pool_operation,
+
                                      /// virtual operations
                                      author_reward_operation,
                                      comment_benefficiary_reward_operation,
@@ -77,10 +88,18 @@ using operation = fc::static_variant<vote_operation,
                                      acc_to_devpool_vesting_withdraw_operation,
                                      devpool_to_devpool_vesting_withdraw_operation,
                                      proposal_virtual_operation,
+
                                      budget_outgo_operation,
                                      budget_owner_income_operation,
                                      active_sp_holders_reward_legacy_operation,
-                                     budget_closing_operation>;
+                                     budget_closing_operation,
+
+                                     bets_matched_operation,
+                                     game_status_changed_operation,
+                                     bet_resolved_operation,
+                                     bet_cancelled_operation,
+                                     bet_restored_operation,
+                                     bet_updated_operation>;
 
 /*void operation_get_required_authorities( const operation& op,
                                          flat_set<string>& active,

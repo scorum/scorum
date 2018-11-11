@@ -13,7 +13,7 @@ class witness_data_service_fixture : public database_default_integration_fixture
 {
 public:
     witness_data_service_fixture()
-        : witness_service(db.obtain_service<dbs_witness>())
+        : witness_svc(db.witness_service())
         , user("user")
     {
     }
@@ -23,7 +23,7 @@ public:
         actor(initdelegate).create_account(user);
     }
 
-    dbs_witness& witness_service;
+    witness_service_i& witness_svc;
 
     const Actor user;
 };
@@ -47,9 +47,9 @@ SCORUM_TEST_CASE(check_create_witness)
 
         create_account();
 
-        const account_object& account = db.obtain_service<dbs_account>().get_account(user.name);
+        const account_object& account = db.account_service().get_account(user.name);
 
-        const witness_object& witness = witness_service.create_witness(account.name, url, signing_key, chain_props);
+        const witness_object& witness = witness_svc.create_witness(account.name, url, signing_key, chain_props);
 
         BOOST_REQUIRE(witness.signing_key == signing_key);
         BOOST_REQUIRE_EQUAL(witness.url, url);
@@ -71,9 +71,9 @@ SCORUM_TEST_CASE(check_create_witness_with_empty_key)
 
         create_account();
 
-        const account_object& account = db.obtain_service<dbs_account>().get_account(user.name);
+        const account_object& account = db.account_service().get_account(user.name);
 
-        const witness_object& witness = witness_service.create_witness(account.name, url, signing_key, chain_props);
+        const witness_object& witness = witness_svc.create_witness(account.name, url, signing_key, chain_props);
 
         BOOST_REQUIRE(witness.signing_key == signing_key);
         BOOST_REQUIRE_EQUAL(witness.url, url);
@@ -95,10 +95,9 @@ SCORUM_TEST_CASE(check_update_witness)
 
         create_account();
 
-        const account_object& account = db.obtain_service<dbs_account>().get_account(user.name);
+        const account_object& account = db.account_service().get_account(user.name);
 
-        const witness_object& witness
-            = witness_service.create_witness(account.name, "", signing_key, chain_properties());
+        const witness_object& witness = witness_svc.create_witness(account.name, "", signing_key, chain_properties());
         BOOST_REQUIRE(witness.signing_key == signing_key);
         BOOST_REQUIRE_EQUAL(witness.url, "");
         BOOST_REQUIRE_EQUAL(witness.proposed_chain_props.account_creation_fee, SCORUM_MIN_ACCOUNT_CREATION_FEE);
@@ -106,14 +105,14 @@ SCORUM_TEST_CASE(check_update_witness)
 
         signing_key = private_key_type::regenerate(fc::sha256::hash("abrakadabra")).get_public_key();
 
-        witness_service.update_witness(witness, url, signing_key, chain_props);
+        witness_svc.update_witness(witness, url, signing_key, chain_props);
         BOOST_REQUIRE(witness.signing_key == signing_key);
         BOOST_REQUIRE_EQUAL(witness.url, url);
         BOOST_REQUIRE_EQUAL(witness.proposed_chain_props.account_creation_fee, chain_props.account_creation_fee);
         BOOST_REQUIRE_EQUAL(witness.proposed_chain_props.maximum_block_size, chain_props.maximum_block_size);
 
         // check signing_key reset
-        witness_service.update_witness(witness, url, public_key_type(), chain_props);
+        witness_svc.update_witness(witness, url, public_key_type(), chain_props);
         BOOST_REQUIRE(witness.signing_key == public_key_type());
     }
     FC_LOG_AND_RETHROW()
@@ -127,14 +126,13 @@ SCORUM_TEST_CASE(check_signing_key_reset)
 
         create_account();
 
-        const account_object& account = db.obtain_service<dbs_account>().get_account(user.name);
+        const account_object& account = db.account_service().get_account(user.name);
 
-        const witness_object& witness
-            = witness_service.create_witness(account.name, "", signing_key, chain_properties());
+        const witness_object& witness = witness_svc.create_witness(account.name, "", signing_key, chain_properties());
         BOOST_REQUIRE(witness.signing_key == signing_key);
 
         // check signing_key reset
-        witness_service.update_witness(witness, "", public_key_type(), chain_properties());
+        witness_svc.update_witness(witness, "", public_key_type(), chain_properties());
         BOOST_REQUIRE(witness.signing_key == public_key_type());
     }
     FC_LOG_AND_RETHROW()

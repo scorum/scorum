@@ -7,7 +7,7 @@
 namespace scorum {
 
 namespace chain {
-class genesis_state_type;
+struct genesis_state_type;
 }
 
 namespace util {

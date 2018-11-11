@@ -4,6 +4,7 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
 set( SOURCES
     main.cpp
     block_tests.cpp
+    boost_interprocess_clang_test.cpp
     chain_api_tests.cpp
     operation_tests.cpp
     fork_tests.cpp
@@ -30,6 +31,7 @@ set( SOURCES
     registration/registration_service_tests.cpp
     registration/registration_helpers.cpp
     registration/burning_bonus.cpp
+    registration/delegate_sp_from_reg_pool_operation_tests.cpp
     atomicswap/atomicswap_service_tests.cpp
     atomicswap/atomicswap_operations_tests.cpp
     budget/budget_check_common.cpp
@@ -41,6 +43,7 @@ set( SOURCES
     budget/api/advertising_api_tests.cpp
     budget/budget_security_tests.cpp
     budget/budget_winners_tests.cpp
+    db_accessors/db_accessors_tests.cpp
     budget/budget_owner_close_tests.cpp
     proposal/proposal_tests.cpp
     plugins/statistic/node_monitoring_tests.cpp
@@ -67,6 +70,9 @@ set( SOURCES
     withdraw_scorumpower/lock_tests.cpp
     account/account_service_tests.cpp
     hardfork_tests.cpp
+    betting/bet_operations_tests.cpp
+    betting/bet_resolving_tests.cpp
+    betting/game_operations_tests.cpp
 )
 
 add_executable(chain_tests

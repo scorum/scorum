@@ -18,7 +18,6 @@ struct from_operation
     {
     }
 
-    typedef void result_type;
     template <typename T> void operator()(const T& v) const
     {
         auto name = name_from_type(fc::get_typename<T>::name());
@@ -34,7 +33,6 @@ struct get_operation_name
     {
     }
 
-    typedef void result_type;
     template <typename T> void operator()(const T& v) const
     {
         name = name_from_type(fc::get_typename<T>::name());
@@ -47,7 +45,6 @@ namespace protocol {
 
 struct operation_validate_visitor
 {
-    typedef void result_type;
     template <typename T> void operator()(const T& v) const
     {
         v.validate();
@@ -56,8 +53,6 @@ struct operation_validate_visitor
 
 struct operation_get_required_auth_visitor
 {
-    typedef void result_type;
-
     flat_set<account_name_type>& active;
     flat_set<account_name_type>& owner;
     flat_set<account_name_type>& posting;

@@ -11,10 +11,11 @@
 namespace scorum {
 namespace chain {
 
+struct data_service_factory_i;
+struct hardfork_property_service_i;
+
 class account_object;
-class data_service_factory_i;
 class registration_pool_evaluator_impl;
-class hardfork_property_service_i;
 
 class registration_pool_evaluator : public evaluator_impl<data_service_factory_i, registration_pool_evaluator>
 {

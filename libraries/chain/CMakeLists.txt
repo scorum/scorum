@@ -6,6 +6,7 @@ file(GLOB HEADERS "include/scorum/chain/*.hpp"
                   "include/scorum/chain/genesis/*.hpp"
                   "include/scorum/chain/genesis/initializators/*.hpp"
                   "include/scorum/chain/database/*.hpp"
+                  "include/scorum/chain/dba/*.hpp"
                   "include/scorum/chain/database/block_tasks/*.hpp"
                   "database/block_tasks/*.hpp")
 
@@ -58,8 +59,12 @@ add_library( scorum_chain
              services/account_registration_bonus.cpp
              services/blocks_story.cpp
              services/hardfork_property.cpp
+             services/pending_bet.cpp
+             services/matched_bet.cpp
+             services/game.cpp
 
              data_service_factory.cpp
+             dba/db_accessor_factory.cpp
 
              evaluators/scorum_evaluators.cpp
              evaluators/proposal_create_evaluator.cpp
@@ -73,7 +78,15 @@ add_library( scorum_chain
              evaluators/update_budget_evaluator.cpp
              evaluators/close_budget_evaluator.cpp
              evaluators/close_budget_by_advertising_moderator_evaluator.cpp
+             evaluators/create_game_evaluator.cpp
+             evaluators/cancel_game_evaluator.cpp
+             evaluators/update_game_markets_evaluator.cpp
+             evaluators/update_game_start_time_evaluator.cpp
+             evaluators/post_game_results_evaluator.cpp
+             evaluators/post_bet_evalulator.cpp
+             evaluators/cancel_pending_bets_evaluator.cpp
              evaluators/vote_evaluator.cpp
+             evaluators/delegate_sp_from_reg_pool_evaluator.cpp
 
              schema/shared_authority.cpp
              schema/advertising_property_object.cpp
@@ -94,6 +107,7 @@ add_library( scorum_chain
              genesis/initializators/dev_pool_initializator.cpp
              genesis/initializators/dev_committee_initialiazator.cpp
              genesis/initializators/advertising_property_initializator.cpp
+             genesis/initializators/betting_property_initializator.cpp
 
              database/block_tasks/block_tasks.cpp
              database/block_tasks/process_contracts_expiration.cpp
@@ -107,10 +121,18 @@ add_library( scorum_chain
              database/block_tasks/process_account_registration_bonus_expiration.cpp
              database/block_tasks/process_witness_reward_in_sp_migration.cpp
              database/block_tasks/process_active_sp_holders_cashout.cpp
+             database/block_tasks/process_games_startup.cpp
+             database/block_tasks/process_bets_resolving.cpp
+             database/block_tasks/process_bets_auto_resolving.cpp
 
              database/process_user_activity.cpp
 
              advertising/advertising_auction.cpp
+
+             betting/betting_service.cpp
+             betting/betting_math.cpp
+             betting/betting_matcher.cpp
+             betting/betting_resolver.cpp
 
              ${HEADERS}
              ${hardfork_hpp_file}
@@ -136,7 +158,7 @@ if(MSVC)
 endif(MSVC)
 
 if(UNIX)
-  set_source_files_properties( evaluators/scorum_evaluators.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -Wno-maybe-uninitialized" )
+  set_source_files_properties( evaluators/scorum_evaluators.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare -Wno-maybe-uninitialized -Wno-unknown-warning-option" )
 endif(UNIX)
 
 INSTALL( TARGETS

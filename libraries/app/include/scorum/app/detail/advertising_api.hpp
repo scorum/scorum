@@ -6,7 +6,6 @@
 #include <scorum/app/scorum_api_objects.hpp>
 #include <scorum/app/advertising_api.hpp>
 
-#include <boost/range/join.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <boost/range/algorithm/sort.hpp>
 

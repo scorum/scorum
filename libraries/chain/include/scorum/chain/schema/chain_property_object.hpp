@@ -12,6 +12,7 @@ public:
 
     id_type id;
     chain_id_type chain_id;
+    time_point_sec genesis_time;
 };
 
 typedef shared_multi_index_container<chain_property_object,
@@ -24,5 +25,5 @@ typedef shared_multi_index_container<chain_property_object,
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::chain_property_object, (id)(chain_id))
+FC_REFLECT(scorum::chain::chain_property_object, (id)(chain_id)(genesis_time))
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::chain_property_object, scorum::chain::chain_property_index)

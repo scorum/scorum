@@ -80,8 +80,6 @@ class operation_visitor
     account_name_type _item;
 
 public:
-    using result_type = void;
-
     operation_visitor(database& db, const operation_object& obj, const account_name_type& i)
         : _db(db)
         , _obj(obj)
@@ -244,8 +242,6 @@ struct operation_visitor_filter
         , _blacklist(blacklist)
     {
     }
-
-    using result_type = bool;
 
     template <typename T> bool operator()(const T& op) const
     {

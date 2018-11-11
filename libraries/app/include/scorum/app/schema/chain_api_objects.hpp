@@ -5,6 +5,7 @@
 #include <scorum/protocol/version.hpp>
 #include <scorum/app/schema/api_template.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
+#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/witness/witness_objects.hpp>
 
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
@@ -113,6 +114,7 @@ struct chain_capital_api_obj
     asset total_scorumpower = asset(0, SP_SYMBOL);
 
     asset registration_pool_balance = asset(0, SCORUM_SYMBOL);
+    asset registration_pool_delegated = asset(0, SP_SYMBOL);
     asset fund_budget_balance = asset(0, SP_SYMBOL);
     asset dev_pool_scr_balance = asset(0, SCORUM_SYMBOL);
     asset dev_pool_sp_balance = asset(0, SP_SYMBOL);
@@ -135,6 +137,7 @@ struct chain_capital_api_obj
     asset total_pending_sp = asset(0, SP_SYMBOL);
 
     scorum::chain::adv_total_stats advertising;
+    scorum::chain::betting_total_stats betting_stats;
 };
 }
 }
@@ -176,6 +179,7 @@ FC_REFLECT(scorum::app::chain_capital_api_obj,
            (total_scr)
            (total_scorumpower)
            (registration_pool_balance)
+           (registration_pool_delegated)
            (fund_budget_balance)
            (dev_pool_scr_balance)
            (dev_pool_sp_balance)
@@ -190,5 +194,6 @@ FC_REFLECT(scorum::app::chain_capital_api_obj,
            (witness_reward_in_sp_migration_fund)
            (total_pending_scr)
            (total_pending_sp)
-           (advertising))
+           (advertising)
+           (betting_stats))
 // clang-format on

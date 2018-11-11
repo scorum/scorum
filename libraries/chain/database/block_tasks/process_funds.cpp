@@ -20,6 +20,13 @@
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
 
 #include <scorum/chain/advertising/advertising_auction.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/transform.hpp>
+#include <boost/range/algorithm_ext/copy_n.hpp>
+#include <scorum/utils/take_n_range.hpp>
+#include <scorum/utils/collect_range_adaptor.hpp>
+
+#include <vector>
 
 namespace scorum {
 namespace chain {

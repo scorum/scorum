@@ -5,11 +5,13 @@
 // clang-format off
 
 #pragma once
-#include <cstdint>
-#include <fc/time.hpp>
+
+#include <scorum/protocol/types.hpp>
+#include <boost/preprocessor/cat.hpp>
 
 namespace scorum {
 namespace protocol {
+
 namespace detail {
 
     struct config
@@ -71,6 +73,8 @@ namespace detail {
 
         const uint8_t scorum_hardfork_required_witnesses;
 
+        const share_type min_bet_stake;
+
         enum test_mode { test };
 
         explicit config(test_mode);
@@ -86,7 +90,7 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 3, 0) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 4, 0) )
 
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
@@ -115,6 +119,8 @@ namespace detail {
 
 #define SCORUM_MIN_PER_BLOCK_REWARD            share_type(1)
 
+#define SCORUM_MIN_STAKE_FOR_MATCHING          share_type(1)
+
 #define SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER  30
 
 #define SCORUM_MIN_DELEGATE_VESTING_SHARES_MODIFIER 10
@@ -122,6 +128,9 @@ namespace detail {
 #define SCORUM_START_WITHDRAW_COEFFICIENT           10
 
 #define SCORUM_ACTIVE_SP_HOLDERS_REWARD_PERIOD           (scorum::protocol::detail::get_config().active_sp_holders_reward_period)
+
+#define SCORUM_MIN_BET_STAKE_FOR_MATCHING      share_type(1)
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #define SCORUM_BLOCKID_POOL_SIZE                (scorum::protocol::detail::get_config().blockid_pool_size)
@@ -153,6 +162,9 @@ namespace detail {
 #define SCORUM_MIN_VOTE_INTERVAL_SEC            (scorum::protocol::detail::get_config().min_vote_interval_sec)
 
 #define SCORUM_DB_FREE_MEMORY_THRESHOLD_MB      (scorum::protocol::detail::get_config().db_free_memory_threshold_mb)
+
+#define SCORUM_MIN_BET_STAKE                    (scorum::protocol::detail::get_config().min_bet_stake)
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define SCORUM_REGISTRATION_BONUS_LIMIT_PER_MEMBER_PER_N_BLOCK    100 /// * registration_bonus
@@ -213,6 +225,7 @@ namespace detail {
 
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_RATIO     5
 #define SCORUM_CREATE_ACCOUNT_DELEGATION_TIME      fc::days(30)
+#define SCORUM_CREATE_ACCOUNT_REG_COMMITTEE_DELEGATION_MAX      asset(10'000'000'000, SP_SYMBOL)
 
 #define SCORUM_RECENT_RSHARES_DECAY_RATE       (scorum::protocol::detail::get_config().recent_rshares_decay_rate)
 // note, if redefining these constants make sure calculate_claims doesn't overflow
@@ -242,6 +255,8 @@ namespace detail {
 #define SCORUM_COMMITTEE_QUORUM_PERCENT         (60u)
 
 #define SCORUM_COMMITTEE_ADVERTISING_MODERATOR_QUORUM_PERCENT       (50u)
+#define SCORUM_COMMITTEE_BETTING_MODERATOR_QUORUM_PERCENT       (50u)
+#define SCORUM_COMMITTEE_BETTING_RESOLVE_DELAY_QUORUM_PERCENT   (50u)
 #define SCORUM_COMMITTEE_TRANSFER_QUORUM_PERCENT            (50u)
 #define SCORUM_COMMITTEE_ADD_EXCLUDE_QUORUM_PERCENT         (60u)
 
@@ -252,6 +267,11 @@ namespace detail {
 
 #define SCORUM_PROPOSAL_LIFETIME_MIN_SECONDS    (DAYS_TO_SECONDS(1u))
 #define SCORUM_PROPOSAL_LIFETIME_MAX_SECONDS    (DAYS_TO_SECONDS(10u))
+
+#define SCORUM_BETTING_RESOLVE_DELAY_SEC        (DAYS_TO_SECONDS(1u))
+#define SCORUM_BETTING_START_TIME_DIFF_MAX      (fc::hours(12))
+
+#define SCORUM_BETTING_THRESHOLD_FACTOR         1000
 
 /**
  *  Reserved Account IDs with special meaning
@@ -269,6 +289,9 @@ namespace detail {
 #define SCORUM_WITNESS_REWARD_MIGRATION_DATE           (scorum::protocol::detail::get_config().witness_reward_migration_date)
 
 #define SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC      (scorum::protocol::detail::get_config().advertising_cashout_period_sec)
+
+#define SCORUM_MAX_ODDS_NUMERATOR (999999)
+#define SCORUM_MAX_ODDS_DENUMERATOR (1000)
 
 #ifdef IS_LOW_MEM
 #define SCORUM_LOW_MEMORY_NODE (true)
