@@ -299,7 +299,7 @@ SCORUM_TEST_CASE(delegated_sp_upper_bound_test)
 
     op.scorumpower.amount += 1;
 
-    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Delegation cannot be more than {0}SP");
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Delegation cannot be more than 10.000000000 SP");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
