@@ -31,6 +31,7 @@ set( SOURCES
     registration/registration_service_tests.cpp
     registration/registration_helpers.cpp
     registration/burning_bonus.cpp
+    registration/delegate_sp_from_reg_pool_operation_tests.cpp
     atomicswap/atomicswap_service_tests.cpp
     atomicswap/atomicswap_operations_tests.cpp
     budget/budget_check_common.cpp

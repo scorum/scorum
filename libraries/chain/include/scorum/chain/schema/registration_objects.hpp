@@ -25,6 +25,7 @@ public:
     id_type id;
 
     asset balance = asset(0, SCORUM_SYMBOL);
+    asset delegated = asset(0, SP_SYMBOL);
 
     asset maximum_bonus = asset(0, SCORUM_SYMBOL);
 
@@ -89,6 +90,7 @@ typedef shared_multi_index_container<registration_committee_member_object,
 FC_REFLECT(scorum::chain::registration_pool_object,
            (id)
            (balance)
+           (delegated)
            (maximum_bonus)
            (already_allocated_count)
            (schedule_items)

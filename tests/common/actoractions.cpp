@@ -19,6 +19,20 @@ void ActorActions::create_account(const Actor& a)
                           a.post_key.get_public_key(), "");
 }
 
+void ActorActions::create_account_by_committee(const Actor& a)
+{
+    account_create_by_committee_operation op;
+    op.creator = _actor.name;
+    op.new_account_name = a.name;
+    op.owner = authority(1, a.public_key, 1);
+    op.active = authority(1, a.public_key, 1);
+    op.posting = authority(1, a.public_key, 1);
+    op.memo_key = a.public_key;
+    op.json_metadata = "";
+
+    _chain.push_operation(op, _actor.private_key);
+}
+
 void ActorActions::transfer_to_scorumpower(const Actor& a, asset amount)
 {
     _chain.transfer_to_scorumpower(_actor.name, a.name, amount);
@@ -50,6 +64,16 @@ void ActorActions::create_budget(const std::string& json_metadata,
     op.balance = balance;
     op.start = start;
     op.deadline = deadline;
+
+    _chain.push_operation(op);
+}
+
+void ActorActions::delegate_sp_from_reg_pool(const Actor& a, asset amount)
+{
+    delegate_sp_from_reg_pool_operation op;
+    op.delegatee = a.name;
+    op.reg_committee_member = _actor.name;
+    op.scorumpower = amount;
 
     _chain.push_operation(op);
 }

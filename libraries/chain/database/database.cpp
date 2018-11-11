@@ -2219,7 +2219,9 @@ void database::validate_invariants() const
 
         if (obtain_service<dbs_registration_pool>().is_exists())
         {
-            total_supply += obtain_service<dbs_registration_pool>().get().balance;
+            auto& pool = obtain_service<dbs_registration_pool>().get();
+            total_supply += pool.balance;
+            total_supply += asset(pool.delegated.amount, SCORUM_SYMBOL);
         }
 
         total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
