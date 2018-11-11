@@ -124,6 +124,8 @@ chain_capital_api_obj chain_api::get_chain_capital() const
         capital.total_witness_reward_sp = dpo.total_witness_reward_sp;
 
         capital.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
+        capital.registration_pool_delegated = _db.obtain_service<dbs_registration_pool>().get().delegated;
+
         capital.fund_budget_balance = _db.obtain_service<dbs_fund_budget>().get().balance;
 
         capital.dev_pool_scr_balance = _db.obtain_service<dbs_development_committee>().get().scr_balance;
@@ -164,6 +166,7 @@ chain_capital_api_obj chain_api::get_chain_capital() const
                 + capital.content_reward_fifa_world_cup_2018_bounty_fund_sp_balance
                 + capital.content_reward_fund_sp_balance
                 + capital.dev_pool_sp_balance
+                + capital.registration_pool_delegated
                 + capital.witness_reward_in_sp_migration_fund
                 + capital.total_scorumpower
                 + capital.total_pending_sp;

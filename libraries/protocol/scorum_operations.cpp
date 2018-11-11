@@ -286,7 +286,7 @@ void delegate_sp_from_reg_pool_operation::validate() const
     FC_ASSERT(is_asset_type(scorumpower, SP_SYMBOL), "Delegation must be SP");
     FC_ASSERT(scorumpower.amount >= 0u, "Delegation cannot be negative");
     auto max_delegation = SCORUM_CREATE_ACCOUNT_REG_COMMITTEE_DELEGATION_MAX;
-    FC_ASSERT(scorumpower.amount <= max_delegation, "Delegation cannot be more than {0}SP", ("0", max_delegation));
+    FC_ASSERT(scorumpower <= max_delegation, "Delegation cannot be more than ${0}", ("0", max_delegation));
 }
 
 void create_budget_operation::validate() const

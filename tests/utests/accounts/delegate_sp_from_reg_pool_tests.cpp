@@ -120,7 +120,7 @@ SCORUM_TEST_CASE(not_enough_cash_in_reg_pool_should_throw)
 {
     db.create<account_object>([](account_object& o) { o.name = "reg"; });
     db.create<account_object>([](account_object& o) { o.name = "delegatee"; });
-    db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SP(100); });
+    db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SCR(100); });
     db.create<registration_committee_member_object>([](registration_committee_member_object& o) { o.account = "reg"; });
 
     delegate_sp_from_reg_pool_operation op;
@@ -139,7 +139,7 @@ SCORUM_TEST_CASE(new_delegation_created_check_balances)
     // clang-format off
     db.create<account_object>([](account_object& o) { o.name = "reg"; });
     const auto& delegatee = db.create<account_object>([](account_object& o) { o.name = "delegatee"; });
-    const auto& pool = db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SP(100); });
+    const auto& pool = db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SCR(100); });
     db.create<registration_committee_member_object>([](registration_committee_member_object& o) { o.account = "reg"; });
     // clang-format on
 
@@ -152,15 +152,16 @@ SCORUM_TEST_CASE(new_delegation_created_check_balances)
                                            reg_pool_delegation_dba);
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
-    BOOST_CHECK_EQUAL(delegatee.received_scorumpower.amount, 99u);
+    BOOST_CHECK_EQUAL(delegatee.received_scorumpower, op.scorumpower);
     BOOST_CHECK_EQUAL(pool.balance.amount, 1u);
+    BOOST_CHECK_EQUAL(pool.delegated, op.scorumpower);
 }
 
 SCORUM_TEST_CASE(new_delegation_object_should_be_created)
 {
     db.create<account_object>([](account_object& o) { o.name = "reg"; });
     db.create<account_object>([](account_object& o) { o.name = "delegatee"; });
-    db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SP(100); });
+    db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SCR(100); });
     db.create<registration_committee_member_object>([](registration_committee_member_object& o) { o.account = "reg"; });
 
     delegate_sp_from_reg_pool_operation op;
@@ -184,7 +185,7 @@ SCORUM_TEST_CASE(delegation_exists_no_enough_cash_to_delegate_extra_sp)
     db.create<account_object>([](account_object& o) { o.name = "reg"; });
     db.create<account_object>([](account_object& o) { o.name = "delegatee"; });
     db.create<reg_pool_sp_delegation_object>([](reg_pool_sp_delegation_object& o) { o.delegatee = "delegatee"; o.sp = ASSET_SP(30); });
-    db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SP(9); });
+    db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SCR(9); });
     db.create<registration_committee_member_object>([](registration_committee_member_object& o) { o.account = "reg"; });
     // clang-format on
 
@@ -193,7 +194,7 @@ SCORUM_TEST_CASE(delegation_exists_no_enough_cash_to_delegate_extra_sp)
     op.delegatee = "delegatee";
     op.scorumpower = ASSET_SP(40);
 
-    BOOST_REQUIRE(reg_pool_dba.get().balance + reg_pool_delegation_dba.get().sp < op.scorumpower);
+    BOOST_REQUIRE(reg_pool_dba.get().balance.amount + reg_pool_delegation_dba.get().sp.amount < op.scorumpower.amount);
 
     delegate_sp_from_reg_pool_evaluator ev(*factory, account_svc, reg_pool_dba, reg_committee_dba,
                                            reg_pool_delegation_dba);
@@ -207,7 +208,7 @@ SCORUM_TEST_CASE(update_existing_delegation_increase_account_received_sp)
     db.create<account_object>([](account_object& o) { o.name = "reg"; });
     const auto& delegatee = db.create<account_object>([](account_object& o) { o.name = "delegatee"; o.received_scorumpower = ASSET_SP(30); });
     db.create<reg_pool_sp_delegation_object>([](reg_pool_sp_delegation_object& o) { o.delegatee = "delegatee"; o.sp = ASSET_SP(30); });
-    const auto& pool = db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SP(20); });
+    const auto& pool = db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SCR(20); });
     db.create<registration_committee_member_object>([](registration_committee_member_object& o) { o.account = "reg"; });
     // clang-format on
 
@@ -231,7 +232,7 @@ SCORUM_TEST_CASE(update_existing_delegation_decrease_account_received_sp)
     db.create<account_object>([](account_object& o) { o.name = "reg"; });
     const auto& delegatee = db.create<account_object>([](account_object& o) { o.name = "delegatee"; o.received_scorumpower = ASSET_SP(30); });
     db.create<reg_pool_sp_delegation_object>([](reg_pool_sp_delegation_object& o) { o.delegatee = "delegatee"; o.sp = ASSET_SP(30); });
-    const auto& pool = db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SP(20); });
+    const auto& pool = db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SCR(20); o.delegated = ASSET_SP(10);});
     db.create<registration_committee_member_object>([](registration_committee_member_object& o) { o.account = "reg"; });
     // clang-format on
 
@@ -246,6 +247,7 @@ SCORUM_TEST_CASE(update_existing_delegation_decrease_account_received_sp)
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
     BOOST_CHECK_EQUAL(delegatee.received_scorumpower.amount, 20u);
     BOOST_CHECK_EQUAL(pool.balance.amount, 30u);
+    BOOST_CHECK_EQUAL(pool.delegated.amount, 0u);
     BOOST_CHECK_EQUAL(reg_pool_delegation_dba.get().sp.amount, 20u);
 }
 
@@ -255,7 +257,7 @@ SCORUM_TEST_CASE(remove_existing_delegation_with_zero_delegation)
     db.create<account_object>([](account_object& o) { o.name = "reg"; });
     const auto& delegatee = db.create<account_object>([](account_object& o) { o.name = "delegatee"; o.received_scorumpower = ASSET_SP(30); });
     db.create<reg_pool_sp_delegation_object>([](reg_pool_sp_delegation_object& o) { o.delegatee = "delegatee"; o.sp = ASSET_SP(30); });
-    const auto& pool = db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SP(20); });
+    const auto& pool = db.create<registration_pool_object>([](registration_pool_object& o) { o.balance = ASSET_SCR(20); });
     db.create<registration_committee_member_object>([](registration_committee_member_object& o) { o.account = "reg"; });
     // clang-format on
 
@@ -297,7 +299,7 @@ SCORUM_TEST_CASE(delegated_sp_upper_bound_test)
 
     op.scorumpower.amount += 1;
 
-    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Delegation cannot be more than {0}SP");
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Delegation cannot be more than 10.000000000 SP");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

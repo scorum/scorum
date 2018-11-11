@@ -19,6 +19,12 @@ template <typename TObject> using cref_type = std::reference_wrapper<const TObje
 
 namespace detail {
 
+template <typename TObject> size_t size(db_index& db_idx)
+{
+    const auto& idx = db_idx.get_index<typename chainbase::get_index_type<TObject>::type>();
+    return idx.indices().size();
+}
+
 template <typename TObject> const TObject& create(db_index& db_idx, modifier_type<TObject> modifier)
 {
     return db_idx.template create<TObject>([&](TObject& o) { modifier(o); });
@@ -179,6 +185,11 @@ public:
     using modifier_type = utils::function_view<void(object_type&)>;
     using predicate_type = utils::function_view<bool(const object_type&)>;
     using object_cref_type = std::reference_wrapper<const TObject>;
+
+    size_t size() const
+    {
+        return detail::size<TObject>(_db_idx);
+    }
 
     const object_type& create(modifier_type modifier)
     {
