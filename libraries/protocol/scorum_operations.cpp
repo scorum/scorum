@@ -363,6 +363,7 @@ void create_game_operation::validate() const
               ("set_of_markets", set_of_markets));
 
     validate_game(game, set_of_markets);
+    validate_markets(set_of_markets);
 }
 
 void cancel_game_operation::validate() const

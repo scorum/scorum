@@ -44,6 +44,14 @@ void validate_game(const game_type& game, const fc::flat_set<market_type>& marke
     FC_ASSERT(diff.empty(), "Markets [${m}] cannot be used with specified game", ("m", diff));
 }
 
+void validate_markets(const fc::flat_set<market_type>& markets)
+{
+    for (const auto& m : markets)
+    {
+        validate_market(m);
+    }
+}
+
 void validate_wincases(const fc::flat_set<wincase_type>& wincases)
 {
     for (const auto& wincase : wincases)
@@ -87,6 +95,14 @@ void validate_bet_ids(const fc::flat_set<int64_t>& bet_ids)
     {
         FC_ASSERT(id >= 0, "Invalid bet Id");
     }
+}
+
+void validate_market(const market_type& market)
+{
+    auto wincase_pair = create_wincases(market);
+
+    validate_wincase(wincase_pair.first);
+    validate_wincase(wincase_pair.second);
 }
 }
 }

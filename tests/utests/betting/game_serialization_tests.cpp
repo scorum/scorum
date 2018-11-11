@@ -286,19 +286,6 @@ SCORUM_TEST_CASE(create_game_operation_allows_put_duplicate_markets)
                       fc::json::to_string(op));
 }
 
-SCORUM_TEST_CASE(create_game_operation_validate_throws_exception_on_duplicate_markets)
-{
-    create_game_operation op;
-    op.uuid = game_uuid;
-    op.game = soccer_game{};
-    op.markets = { correct_score_home{}, correct_score_home{} };
-    op.auto_resolve_delay_sec = 33;
-
-    auto json = fc::json::to_string(op);
-
-    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
-}
-
 SCORUM_TEST_CASE(deserialize_operation_with_duplicate_markets)
 {
     auto json_with_duplicates = R"({
@@ -538,6 +525,78 @@ SCORUM_TEST_CASE(validate_dont_throw_exception_on_duplicate_markets)
     op.markets = { correct_score_home{}, correct_score_home{} };
 
     BOOST_CHECK_NO_THROW(op.validate());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(create_game_operation_validate_tests)
+
+SCORUM_TEST_CASE(create_game_operation_validate_throws_exception_on_duplicate_markets)
+{
+    create_game_operation op;
+    op.uuid = { { 1 } };
+    op.game = soccer_game{};
+    op.markets = { correct_score_home{}, correct_score_home{} };
+    op.auto_resolve_delay_sec = 33;
+
+    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
+}
+
+BOOST_AUTO_TEST_CASE(throw_when_market_have_invalid_threshold)
+{
+    std::vector<market_type> invalid_markets = { total{ 0 },
+                                                 total{ 100 },
+                                                 total{ 600 },
+                                                 total{ -500 },
+                                                 handicap{ 100 },
+                                                 handicap{ 600 },
+                                                 handicap{ -100 },
+                                                 handicap{ -600 },
+                                                 total_goals_away{ 0 },
+                                                 total_goals_away{ 100 },
+                                                 total_goals_away{ 600 },
+                                                 total_goals_away{ -500 },
+                                                 total_goals_home{ 0 },
+                                                 total_goals_home{ 100 },
+                                                 total_goals_home{ 600 },
+                                                 total_goals_home{ -500 } };
+
+    for (const auto& m : invalid_markets)
+    {
+        create_game_operation op;
+        op.moderator = "alice";
+        op.uuid = { { 1 } };
+        op.game = soccer_game{};
+        op.markets = { m };
+        op.auto_resolve_delay_sec = 33;
+
+        auto wincase = create_wincases(m).first;
+
+        const auto expected_message = fc::format_string("Wincase '${w}' is invalid", { "w", wincase });
+
+        SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, expected_message);
+    }
+}
+
+SCORUM_TEST_CASE(no_throw_when_market_have_valid_threshold)
+{
+    std::vector<market_type> valid_markets
+        = { total{ 500 },  handicap{ 500 },  total_goals_away{ 500 },  total_goals_home{ 500 },
+            total{ 1000 }, handicap{ 1000 }, total_goals_away{ 1000 }, total_goals_home{ 1000 },
+            total{ 6000 }, handicap{ 6000 }, total_goals_away{ 6000 }, total_goals_home{ 6000 },
+            handicap{ 0 }, handicap{ -500 }, handicap{ -2000 } };
+
+    for (const auto& m : valid_markets)
+    {
+        create_game_operation op;
+        op.moderator = "alice";
+        op.uuid = { { 1 } };
+        op.game = soccer_game{};
+        op.markets = { m };
+        op.auto_resolve_delay_sec = 33;
+
+        BOOST_CHECK_NO_THROW(op.validate());
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
