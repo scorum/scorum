@@ -21,22 +21,27 @@ SCORUM_TEST_CASE(post_bet_operation_validate_odds)
     op.better = "aclice";
     op.uuid = gen_uuid("game");
     op.wincase = correct_score_home::yes();
-    op.stake = ASSET_SCR(100);
+    op.stake = ASSET_SCR(100'000'000);
 
-    op.odds = { 999999, 1000 }; // max odds
+    BOOST_CHECK_EQUAL(1001u, SCORUM_MIN_ODDS.inverted().numerator);
+    BOOST_CHECK_EQUAL(1u, SCORUM_MIN_ODDS.inverted().denominator);
 
+    BOOST_CHECK_EQUAL(1001u, SCORUM_MIN_ODDS.base().numerator);
+    BOOST_CHECK_EQUAL(1000u, SCORUM_MIN_ODDS.base().denominator);
+
+    op.odds = { SCORUM_MIN_ODDS.inverted().numerator, SCORUM_MIN_ODDS.inverted().denominator }; // max odds
     BOOST_CHECK_NO_THROW(op.validate());
 
-    op.odds = { 1001, 1000 };
-
+    op.odds = { SCORUM_MIN_ODDS.base().numerator, SCORUM_MIN_ODDS.base().denominator };
     BOOST_CHECK_NO_THROW(op.validate());
 
-    op.odds = { 999999 + 1, 1000 };
+    op.odds = { SCORUM_MIN_ODDS.inverted().numerator + 1, SCORUM_MIN_ODDS.inverted().denominator };
+    BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
 
+    op.odds = { SCORUM_MIN_ODDS.base().numerator - 1, SCORUM_MIN_ODDS.base().denominator };
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
 
     op.odds = { 1, 1 };
-
     BOOST_CHECK_THROW(op.validate(), fc::assert_exception);
 }
 
@@ -47,7 +52,7 @@ SCORUM_TEST_CASE(post_bet_evaluator_operation_validate_check)
     test_op.uuid = gen_uuid("game");
     test_op.wincase = correct_score_home::yes();
     test_op.odds = { 3, 1 };
-    test_op.stake = ASSET_SCR(100);
+    test_op.stake = ASSET_SCR(100'000'000);
 
     post_bet_operation op = test_op;
 
