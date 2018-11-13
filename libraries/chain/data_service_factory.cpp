@@ -2,6 +2,8 @@
 
 #include <scorum/chain/database/database.hpp>
 
+#include <scorum/chain/dba/db_accessor.hpp>
+
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -33,10 +35,15 @@
 #include <scorum/chain/services/witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/services/blocks_story.hpp>
 #include <scorum/chain/services/advertising_property.hpp>
+#include <scorum/chain/services/betting_property.hpp>
+#include <scorum/chain/services/matched_bet.hpp>
+#include <scorum/chain/services/pending_bet.hpp>
+#include <scorum/chain/services/game.hpp>
+
+#include <scorum/chain/schema/chain_property_object.hpp>
 
 // clang-format off
 DATA_SERVICE_FACTORY_IMPL(
-        (account)
         (account_blogging_statistic)
         (account_registration_bonus)
         (atomicswap)
@@ -66,7 +73,6 @@ DATA_SERVICE_FACTORY_IMPL(
         (withdraw_scorumpower_route)
         (withdraw_scorumpower_route_statistic)
         (withdraw_scorumpower)
-        (witness)
         (witness_schedule)
         (witness_vote)
         (dev_pool)
@@ -74,5 +80,9 @@ DATA_SERVICE_FACTORY_IMPL(
         (witness_reward_in_sp_migration)
         (blocks_story)
         (advertising_property)
+        (betting_property)
+        (matched_bet)
+        (pending_bet)
+        (game)
         )
 // clang-format on

@@ -2,6 +2,7 @@
 
 #include <fc/uint128.hpp>
 #include <fc/exception/exception.hpp>
+#include <fc/safe.hpp>
 
 namespace scorum {
 namespace utils {
@@ -19,7 +20,10 @@ ModifyingValue multiply_by_fractional(const ModifyingValue& val,
                   "Only unsigned and non zero denominator accepted");
         fc::uint128_t extra_hi = val;
         extra_hi *= numerator;
-        extra_hi /= denominator;
+        if (denominator != static_cast<FractionalDenominator>(1))
+        {
+            extra_hi /= denominator;
+        }
         return static_cast<ModifyingValue>(extra_hi.to_uint64());
     }
     FC_CAPTURE_AND_RETHROW((val)(numerator)(denominator))

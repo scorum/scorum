@@ -15,7 +15,6 @@ struct get_impacted_account_visitor
         : _impacted(impact)
     {
     }
-    typedef void result_type;
 
     template <typename T> void operator()(const T& op)
     {
@@ -142,6 +141,11 @@ struct get_impacted_account_visitor
     void operator()(const delegate_scorumpower_operation& op)
     {
         _impacted.insert(op.delegator);
+        _impacted.insert(op.delegatee);
+    }
+
+    void operator()(const delegate_sp_from_reg_pool_operation& op)
+    {
         _impacted.insert(op.delegatee);
     }
 
@@ -291,6 +295,37 @@ struct get_impacted_account_visitor
     void operator()(const budget_closing_operation& op)
     {
         _impacted.insert(op.owner);
+    }
+
+    void operator()(const post_bet_operation& op)
+    {
+        _impacted.insert(op.better);
+    }
+
+    void operator()(const bets_matched_operation& op)
+    {
+        _impacted.insert(op.better1);
+        _impacted.insert(op.better2);
+    }
+
+    void operator()(const bet_resolved_operation& op)
+    {
+        _impacted.insert(op.better);
+    }
+
+    void operator()(const bet_cancelled_operation& op)
+    {
+        _impacted.insert(op.better);
+    }
+
+    void operator()(const bet_restored_operation& op)
+    {
+        _impacted.insert(op.better);
+    }
+
+    void operator()(const bet_updated_operation& op)
+    {
+        _impacted.insert(op.better);
     }
 
 private:

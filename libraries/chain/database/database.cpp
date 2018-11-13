@@ -42,6 +42,9 @@
 #include <scorum/chain/schema/withdraw_scorumpower_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
 #include <scorum/chain/schema/advertising_property_object.hpp>
+#include <scorum/chain/schema/betting_property_object.hpp>
+#include <scorum/chain/schema/bet_objects.hpp>
+#include <scorum/chain/schema/game_object.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -66,6 +69,9 @@
 #include <scorum/chain/database/block_tasks/process_account_registration_bonus_expiration.hpp>
 #include <scorum/chain/database/block_tasks/process_witness_reward_in_sp_migration.hpp>
 #include <scorum/chain/database/block_tasks/process_active_sp_holders_cashout.hpp>
+#include <scorum/chain/database/block_tasks/process_games_startup.hpp>
+#include <scorum/chain/database/block_tasks/process_bets_resolving.hpp>
+#include <scorum/chain/database/block_tasks/process_bets_auto_resolving.hpp>
 #include <scorum/chain/database/process_user_activity.hpp>
 
 #include <scorum/chain/evaluators/evaluator_registry.hpp>
@@ -80,8 +86,20 @@
 #include <scorum/chain/evaluators/update_budget_evaluator.hpp>
 #include <scorum/chain/evaluators/close_budget_by_advertising_moderator_evaluator.hpp>
 #include <scorum/chain/evaluators/vote_evaluator.hpp>
+#include <scorum/chain/evaluators/create_game_evaluator.hpp>
+#include <scorum/chain/evaluators/cancel_game_evaluator.hpp>
+#include <scorum/chain/evaluators/update_game_markets_evaluator.hpp>
+#include <scorum/chain/evaluators/update_game_start_time_evaluator.hpp>
+#include <scorum/chain/evaluators/post_game_results_evaluator.hpp>
+#include <scorum/chain/evaluators/post_bet_evalulator.hpp>
+#include <scorum/chain/evaluators/cancel_pending_bets_evaluator.hpp>
+#include <scorum/chain/evaluators/delegate_sp_from_reg_pool_evaluator.hpp>
 
 #include <cmath>
+
+#include <scorum/chain/betting/betting_service.hpp>
+#include <scorum/chain/betting/betting_matcher.hpp>
+#include <scorum/chain/betting/betting_resolver.hpp>
 
 namespace scorum {
 namespace chain {
@@ -94,11 +112,49 @@ public:
     database& _self;
     evaluator_registry<operation> _evaluator_registry;
     genesis_persistent_state_type _genesis_persistent_state;
+
+    betting_service_i& get_betting_service()
+    {
+        return _betting_service;
+    }
+
+    betting_matcher_i& get_betting_matcher()
+    {
+        return _betting_matcher;
+    }
+
+    betting_resolver_i& get_betting_resolver()
+    {
+        return _betting_resolver;
+    }
+
+private:
+    betting_service _betting_service;
+    betting_matcher _betting_matcher;
+    betting_resolver _betting_resolver;
 };
 
 database_impl::database_impl(database& self)
     : _self(self)
     , _evaluator_registry(self)
+    // TODO: using boost::di to avoid these explicit calls
+    , _betting_service(_self.account_service(),
+                       static_cast<database_virtual_operations_emmiter_i&>(_self),
+                       _self.get_dba<betting_property_object>(),
+                       _self.get_dba<matched_bet_object>(),
+                       _self.get_dba<pending_bet_object>(),
+                       _self.get_dba<game_object>(),
+                       _self.get_dba<dynamic_global_property_object>(),
+                       _self.get_dba<bet_uuid_history_object>())
+    , _betting_matcher(static_cast<database_virtual_operations_emmiter_i&>(_self),
+                       _self.get_dba<pending_bet_object>(),
+                       _self.get_dba<matched_bet_object>(),
+                       _self.get_dba<dynamic_global_property_object>())
+    , _betting_resolver(_self.account_service(),
+                        static_cast<database_virtual_operations_emmiter_i&>(_self),
+                        _self.get_dba<matched_bet_object>(),
+                        _self.get_dba<game_object>(),
+                        _self.get_dba<dynamic_global_property_object>())
 {
 }
 
@@ -106,6 +162,7 @@ database::database(uint32_t options)
     : chainbase::database()
     , dbservice_dbs_factory(*this)
     , data_service_factory(*this)
+    , db_accessor_factory(static_cast<dba::db_index&>(*this))
     , _my(new database_impl(*this))
     , _options(options)
 {
@@ -764,7 +821,7 @@ signed_block database::_generate_block(fc::time_point_sec when,
 
     debug_log(ctx, "_generate_block");
 
-    auto& witness_service = obtain_service<dbs_witness>();
+    auto& witness_svc = witness_service();
 
     uint32_t skip = get_node_properties().skip_flags;
     uint32_t slot_num = get_slot_at_time(when);
@@ -772,7 +829,7 @@ signed_block database::_generate_block(fc::time_point_sec when,
     std::string scheduled_witness = get_scheduled_witness(slot_num);
     FC_ASSERT(scheduled_witness == witness_owner);
 
-    const auto& witness_obj = witness_service.get(witness_owner);
+    const auto& witness_obj = witness_svc.get(witness_owner);
 
     if (!(skip & skip_witness_signature))
     {
@@ -859,7 +916,7 @@ signed_block database::_generate_block(fc::time_point_sec when,
     pending_block.transaction_merkle_root = pending_block.calculate_merkle_root();
     pending_block.witness = witness_owner;
 
-    const auto& witness = witness_service.get(witness_owner);
+    const auto& witness = witness_svc.get(witness_owner);
 
     if (witness.running_version != SCORUM_BLOCKCHAIN_VERSION)
     {
@@ -916,7 +973,7 @@ void database::pop_block()
 
     if (_fork_db.head())
     {
-        ctx = std::move(block_info(_fork_db.head()->data));
+        ctx = block_info(_fork_db.head()->data);
     }
 
     debug_log(ctx, "pop_block");
@@ -1092,10 +1149,10 @@ void database::account_recovery_processing()
     const auto& change_req_idx = get_index<change_recovery_account_request_index>().indices().get<by_effective_date>();
     auto change_req = change_req_idx.begin();
 
-    const dbs_account& account_service = obtain_service<dbs_account>();
+    auto& account_svc = account_service();
     while (change_req != change_req_idx.end() && change_req->effective_on <= head_block_time())
     {
-        modify(account_service.get_account(change_req->account_to_recover),
+        modify(account_svc.get_account(change_req->account_to_recover),
                [&](account_object& a) { a.recovery_account = change_req->recovery_account; });
 
         remove(*change_req);
@@ -1108,7 +1165,7 @@ void database::expire_escrow_ratification()
     const auto& escrow_idx = get_index<escrow_index>().indices().get<by_ratification_deadline>();
     auto escrow_itr = escrow_idx.lower_bound(false);
 
-    dbs_account& account_service = obtain_service<dbs_account>();
+    auto& account_svc = account_service();
 
     while (escrow_itr != escrow_idx.end() && !escrow_itr->is_approved()
            && escrow_itr->ratification_deadline <= head_block_time())
@@ -1116,8 +1173,8 @@ void database::expire_escrow_ratification()
         const auto& old_escrow = *escrow_itr;
         ++escrow_itr;
 
-        const auto& from_account = obtain_service<dbs_account>().get_account(old_escrow.from);
-        account_service.increase_balance(from_account, old_escrow.scorum_balance + old_escrow.pending_fee);
+        const auto& from_account = account_svc.get_account(old_escrow.from);
+        account_svc.increase_balance(from_account, old_escrow.scorum_balance + old_escrow.pending_fee);
 
         remove(old_escrow);
     }
@@ -1128,7 +1185,7 @@ void database::process_decline_voting_rights()
     const auto& request_idx = get_index<decline_voting_rights_request_index>().indices().get<by_effective_date>();
     auto itr = request_idx.begin();
 
-    dbs_account& account_service = obtain_service<dbs_account>();
+    auto& account_svc = account_service();
 
     while (itr != request_idx.end() && itr->effective_date <= head_block_time())
     {
@@ -1141,9 +1198,9 @@ void database::process_decline_voting_rights()
         {
             delta[i + 1] = -account.proxied_vsf_votes[i];
         }
-        account_service.adjust_proxied_witness_votes(account, delta);
+        account_svc.adjust_proxied_witness_votes(account, delta);
 
-        account_service.clear_witness_votes(account);
+        account_svc.clear_witness_votes(account);
 
         modify(get(itr->account), [&](account_object& a) {
             a.can_vote = false;
@@ -1176,12 +1233,11 @@ block_info database::head_block_context() const
     auto b = fetch_block_by_id(head_block_id());
     if (b.valid())
     {
-        ret = std::move(block_info(*b));
+        ret = block_info(*b);
     }
     else
     {
-        ret = std::move(
-            block_info(head_block_time(), obtain_service<dbs_dynamic_global_property>().get().current_witness));
+        ret = block_info(head_block_time(), obtain_service<dbs_dynamic_global_property>().get().current_witness);
     }
     return ret;
 }
@@ -1234,6 +1290,28 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator<close_budget_evaluator>();
     _my->_evaluator_registry.register_evaluator<close_budget_by_advertising_moderator_evaluator>();
     _my->_evaluator_registry.register_evaluator<update_budget_evaluator>();
+    _my->_evaluator_registry.register_evaluator(
+        new create_game_evaluator(*this, _my->get_betting_service(), get_dba<game_uuid_history_object>()));
+    _my->_evaluator_registry.register_evaluator(new cancel_game_evaluator(*this, _my->get_betting_service(), *this));
+    _my->_evaluator_registry.register_evaluator(new update_game_markets_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(
+        new update_game_start_time_evaluator(*this, _my->get_betting_service(), *this));
+    _my->_evaluator_registry.register_evaluator(
+        new post_game_results_evaluator(*this, _my->get_betting_service(), *this));
+
+    // clang-format off
+    _my->_evaluator_registry.register_evaluator(new post_bet_evaluator(*this,
+                                                                       _my->get_betting_matcher(),
+                                                                       _my->get_betting_service(),
+                                                                       get_dba<game_object>(),
+                                                                       get_dba<account_object>(),
+                                                                       get_dba<bet_uuid_history_object>()));
+    // clang-format on
+
+    _my->_evaluator_registry.register_evaluator(new cancel_pending_bets_evaluator(*this, _my->get_betting_service()));
+    _my->_evaluator_registry.register_evaluator(new delegate_sp_from_reg_pool_evaluator(
+        *this, account_service(), get_dba<registration_pool_object>(), get_dba<registration_committee_member_object>(),
+        get_dba<reg_pool_sp_delegation_object>()));
 }
 
 void database::initialize_indexes()
@@ -1270,6 +1348,7 @@ void database::initialize_indexes()
     add_index<transaction_index>();
     add_index<scorumpower_delegation_expiration_index>();
     add_index<scorumpower_delegation_index>();
+    add_index<reg_pool_sp_delegation_index>();
     add_index<withdraw_scorumpower_route_index>();
     add_index<withdraw_scorumpower_route_statistic_index>();
     add_index<withdraw_scorumpower_index>();
@@ -1283,6 +1362,15 @@ void database::initialize_indexes()
 
     add_index<witness_reward_in_sp_migration_index>();
     add_index<advertising_property_index>();
+
+    add_index<game_index>();
+
+    add_index<betting_property_index>();
+    add_index<pending_bet_index>();
+    add_index<matched_bet_index>();
+
+    add_index<bet_uuid_history_index>();
+    add_index<game_uuid_history_index>();
 
     _plugin_index_signal();
 }
@@ -1460,7 +1548,7 @@ void database::_apply_block(const signed_block& next_block)
         /// parse witness version reporting
         process_header_extensions(next_block);
 
-        const auto& witness = obtain_service<dbs_witness>().get(next_block.witness);
+        const auto& witness = witness_service().get(next_block.witness);
         const auto& hardfork_state = obtain_service<dbs_hardfork_property>().get();
         FC_ASSERT(witness.running_version >= hardfork_state.current_hardfork_version,
                   "Block produced by witness that is not running current hardfork",
@@ -1514,6 +1602,14 @@ void database::_apply_block(const signed_block& next_block)
         database_ns::process_account_registration_bonus_expiration().apply(task_ctx);
         database_ns::process_witness_reward_in_sp_migration().apply(task_ctx);
         database_ns::process_active_sp_holders_cashout().apply(task_ctx);
+        database_ns::process_games_startup(_my->get_betting_service(), *this).apply(task_ctx);
+        database_ns::process_bets_resolving(_my->get_betting_service(), _my->get_betting_resolver(), *this,
+                                            get_dba<game_object>(), get_dba<dynamic_global_property_object>())
+            .apply(task_ctx);
+        // TODO: using boost::di to avoid these explicit calls
+        database_ns::process_bets_auto_resolving(_my->get_betting_service(), *this, get_dba<game_object>(),
+                                                 get_dba<dynamic_global_property_object>())
+            .apply(task_ctx);
 
         debug_log(ctx, "account_recovery_processing");
         account_recovery_processing();
@@ -1538,7 +1634,7 @@ void database::_apply_block(const signed_block& next_block)
 
 void database::process_header_extensions(const signed_block& next_block)
 {
-    auto& witness_service = obtain_service<dbs_witness>();
+    auto& witness_svc = witness_service();
 
     auto itr = next_block.extensions.begin();
 
@@ -1551,7 +1647,7 @@ void database::process_header_extensions(const signed_block& next_block)
         case 1: // version
         {
             auto reported_version = itr->get<version>();
-            const auto& signing_witness = witness_service.get(next_block.witness);
+            const auto& signing_witness = witness_svc.get(next_block.witness);
             // idump( (next_block.witness)(signing_witness.running_version)(reported_version) );
 
             if (reported_version != signing_witness.running_version)
@@ -1563,7 +1659,7 @@ void database::process_header_extensions(const signed_block& next_block)
         case 2: // hardfork_version vote
         {
             auto hfv = itr->get<hardfork_version_vote>();
-            const auto& signing_witness = witness_service.get(next_block.witness);
+            const auto& signing_witness = witness_svc.get(next_block.witness);
             // idump( (next_block.witness)(signing_witness.running_version)(hfv) );
 
             if (hfv.hf_version != signing_witness.hardfork_version_vote
@@ -1705,7 +1801,7 @@ const witness_object& database::validate_block_header(uint32_t skip, const signe
             head_block_time() < next_block.timestamp, "",
             ("head_block_time", head_block_time())("next", next_block.timestamp)("blocknum", next_block.block_num()));
 
-        const witness_object& witness = obtain_service<dbs_witness>().get(next_block.witness);
+        const witness_object& witness = witness_service().get(next_block.witness);
 
         if (!(skip & skip_witness_signature))
         {
@@ -1748,7 +1844,7 @@ void database::update_global_dynamic_data(const signed_block& b)
     try
     {
         const dynamic_global_property_object& _dgp = obtain_service<dbs_dynamic_global_property>().get();
-        auto& witness_service = obtain_service<dbs_witness>();
+        auto& witness_svc = witness_service();
 
         uint32_t missed_blocks = 0;
         if (head_block_time() != fc::time_point_sec())
@@ -1769,7 +1865,7 @@ void database::update_global_dynamic_data(const signed_block& b)
 
             for (uint32_t i = 0; i < missed_blocks; ++i)
             {
-                const auto& witness_missed = witness_service.get(get_scheduled_witness(i + 1));
+                const auto& witness_missed = witness_svc.get(get_scheduled_witness(i + 1));
                 if (witness_missed.owner != b.witness)
                 {
                     modify(witness_missed, [&](witness_object& w) {
@@ -1847,14 +1943,14 @@ void database::update_last_irreversible_block()
         }
         else
         {
-            auto& witness_service = obtain_service<dbs_witness>();
+            auto& witness_svc = witness_service();
             const witness_schedule_object& wso = obtain_service<dbs_witness_schedule>().get();
 
             std::vector<const witness_object*> wit_objs;
             wit_objs.reserve(wso.num_scheduled_witnesses);
             for (int i = 0; i < wso.num_scheduled_witnesses; i++)
             {
-                wit_objs.push_back(&witness_service.get(wso.current_shuffled_witnesses[i]));
+                wit_objs.push_back(&witness_svc.get(wso.current_shuffled_witnesses[i]));
             }
 
             static_assert(SCORUM_IRREVERSIBLE_THRESHOLD > 0, "irreversible threshold must be nonzero");
@@ -1930,11 +2026,11 @@ void database::clear_expired_delegations()
 {
     auto now = head_block_time();
     const auto& delegations_by_exp = get_index<scorumpower_delegation_expiration_index, by_expiration>();
-    const auto& account_service = obtain_service<dbs_account>();
+    const auto& account_svc = account_service();
     auto itr = delegations_by_exp.begin();
     while (itr != delegations_by_exp.end() && itr->expiration < now)
     {
-        modify(account_service.get_account(itr->delegator),
+        modify(account_svc.get_account(itr->delegator),
                [&](account_object& a) { a.delegated_scorumpower -= itr->scorumpower; });
 
         push_virtual_operation(return_scorumpower_delegation_operation(itr->delegator, itr->scorumpower));
@@ -1967,6 +2063,10 @@ void database::init_hardforks(time_point_sec genesis_time)
     FC_ASSERT(SCORUM_HARDFORK_0_3 == 3, "Invalid hardfork #3 configuration");
     _hardfork_times[SCORUM_HARDFORK_0_3] = fc::time_point_sec(SCORUM_HARDFORK_0_3_TIME);
     _hardfork_versions[SCORUM_HARDFORK_0_3] = SCORUM_HARDFORK_0_3_VERSION;
+
+    FC_ASSERT(SCORUM_HARDFORK_0_4 == 4, "Invalid hardfork #4 configuration");
+    _hardfork_times[SCORUM_HARDFORK_0_4] = fc::time_point_sec(SCORUM_HARDFORK_0_4_TIME);
+    _hardfork_versions[SCORUM_HARDFORK_0_4] = SCORUM_HARDFORK_0_4_VERSION;
 
     const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",
@@ -2058,10 +2158,10 @@ void database::validate_invariants() const
     {
         asset total_supply = asset(0, SCORUM_SYMBOL);
 
-        const auto& account_service = obtain_service<dbs_account>();
+        const auto& account_svc = account_service();
         const auto& gpo = obtain_service<dbs_dynamic_global_property>().get();
 
-        const auto accounts_circulating = account_service.accounts_circulating_capital();
+        const auto accounts_circulating = account_svc.accounts_circulating_capital();
 
         total_supply += accounts_circulating.scr;
         // following two field do not represented in global properties
@@ -2119,7 +2219,9 @@ void database::validate_invariants() const
 
         if (obtain_service<dbs_registration_pool>().is_exists())
         {
-            total_supply += obtain_service<dbs_registration_pool>().get().balance;
+            auto& pool = obtain_service<dbs_registration_pool>().get();
+            total_supply += pool.balance;
+            total_supply += asset(pool.delegated.amount, SCORUM_SYMBOL);
         }
 
         total_supply += asset(obtain_service<dbs_dev_pool>().get().sp_balance.amount, SCORUM_SYMBOL);
@@ -2137,6 +2239,19 @@ void database::validate_invariants() const
         }
 
         // clang-format off
+        const auto& matched_bets = get_index<matched_bet_index, by_id>();
+        for (auto itr = matched_bets.begin(); itr != matched_bets.end(); ++itr)
+        {
+            total_supply += itr->bet1_data.stake;
+            total_supply += itr->bet2_data.stake;
+        }
+
+        const auto& pending_bets = get_index<pending_bet_index, by_id>();
+        for (auto itr = pending_bets.begin(); itr != pending_bets.end(); ++itr)
+        {
+            total_supply += itr->data.stake;
+        }
+
         FC_ASSERT(total_supply <= asset::maximum(SCORUM_SYMBOL), "Assets SCR overflow");
         FC_ASSERT(accounts_circulating.sp <= asset::maximum(SP_SYMBOL), "Assets SP overflow");
 

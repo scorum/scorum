@@ -1,9 +1,12 @@
 #include <scorum/protocol/scorum_operations.hpp>
 #include <fc/io/json.hpp>
 
+#include <boost/rational.hpp>
+
 #include <locale>
 
 #include <scorum/protocol/atomicswap_helper.hpp>
+#include <scorum/protocol/betting/invariants_validation.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -11,6 +14,14 @@ namespace protocol {
 bool inline is_asset_type(asset asset, asset_symbol_type symbol)
 {
     return asset.symbol() == symbol;
+}
+
+template <class T> bool is_unique(const std::vector<T>& input)
+{
+    std::vector<T> data(input);
+
+    sort(data.begin(), data.end());
+    return adjacent_find(data.begin(), data.end()) == data.end();
 }
 
 void account_create_operation::validate() const
@@ -267,6 +278,17 @@ void delegate_scorumpower_operation::validate() const
     FC_ASSERT(scorumpower >= asset(0, SP_SYMBOL), "Delegation cannot be negative");
 }
 
+void delegate_sp_from_reg_pool_operation::validate() const
+{
+    validate_account_name(reg_committee_member);
+    validate_account_name(delegatee);
+    FC_ASSERT(reg_committee_member != delegatee, "You cannot delegate SP to yourself");
+    FC_ASSERT(is_asset_type(scorumpower, SP_SYMBOL), "Delegation must be SP");
+    FC_ASSERT(scorumpower.amount >= 0u, "Delegation cannot be negative");
+    auto max_delegation = SCORUM_CREATE_ACCOUNT_REG_COMMITTEE_DELEGATION_MAX;
+    FC_ASSERT(scorumpower <= max_delegation, "Delegation cannot be more than ${0}", ("0", max_delegation));
+}
+
 void create_budget_operation::validate() const
 {
     validate_account_name(owner);
@@ -328,5 +350,89 @@ void proposal_create_operation::validate() const
     operation_validate(operation);
 }
 
+void create_game_operation::validate() const
+{
+    validate_account_name(moderator);
+
+    validate_json_metadata(json_metadata);
+
+    fc::flat_set<market_type> set_of_markets(markets.begin(), markets.end());
+
+    FC_ASSERT(set_of_markets.size() == markets.size(), "You provided duplicates in market list.",
+              ("input_markets", markets) //
+              ("set_of_markets", set_of_markets));
+
+    validate_game(game, set_of_markets);
+    validate_markets(set_of_markets);
+}
+
+void cancel_game_operation::validate() const
+{
+    validate_account_name(moderator);
+}
+
+void update_game_markets_operation::validate() const
+{
+    validate_account_name(moderator);
+}
+
+void update_game_start_time_operation::validate() const
+{
+    validate_account_name(moderator);
+}
+
+void post_game_results_operation::validate() const
+{
+    validate_account_name(moderator);
+
+    const fc::flat_set<wincase_type> set_of_wincases(wincases.begin(), wincases.end());
+
+    FC_ASSERT(set_of_wincases.size() == wincases.size(), "You provided duplicates in wincases list.",
+              ("input_markets", wincases) //
+              ("set_of_markets", set_of_wincases));
+
+    validate_wincases(set_of_wincases);
+}
+
+void post_bet_operation::validate() const
+{
+    validate_account_name(better);
+    validate_wincase(wincase);
+
+    FC_ASSERT(is_asset_type(stake, SCORUM_SYMBOL), "Stake must be SCR");
+    FC_ASSERT(stake >= SCORUM_MIN_BET_STAKE, "Stake must be greater  or equal then ${s}", ("s", SCORUM_MIN_BET_STAKE));
+    FC_ASSERT(odds.numerator > 0, "odds numerator must be greater then zero");
+    FC_ASSERT(odds.denominator > 0, "odds denominator must be greater then zero");
+    FC_ASSERT(odds.numerator > odds.denominator, "odds must be greater then one");
+
+    const auto min = SCORUM_MIN_ODDS.base();
+    const auto max = SCORUM_MIN_ODDS.inverted();
+
+    boost::rational<odds_value_type> bet_odds(odds.numerator, odds.denominator);
+    boost::rational<odds_value_type> min_odds(min.numerator, min.denominator);
+    boost::rational<odds_value_type> max_odds(max.numerator, max.denominator);
+
+    // clang-format off
+    FC_ASSERT(bet_odds <= max_odds, "Invalid odds value",
+              ("numerator", odds.numerator)
+              ("denominator", odds.denominator)
+              ("min_odds", protocol::odds(min).to_string())
+              ("max_odds", protocol::odds(max).to_string()));
+
+    FC_ASSERT(bet_odds >= min_odds, "Invalid odds value",
+              ("numerator", odds.numerator)
+              ("denominator", odds.denominator)
+              ("min_odds", protocol::odds(min).to_string())
+              ("max_odds", protocol::odds(max).to_string()));
+    // clang-format on
+}
+
+void cancel_pending_bets_operation::validate() const
+{
+    FC_ASSERT(bet_uuids.size() > 0, "List of bets is empty.");
+    FC_ASSERT(is_unique<uuid_type>(bet_uuids), "You provided duplicates in bets list.", ("bets", bet_uuids));
+
+    validate_account_name(better);
+}
 } // namespace protocol
 } // namespace scorum

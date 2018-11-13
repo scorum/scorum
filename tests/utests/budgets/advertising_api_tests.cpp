@@ -11,12 +11,15 @@
 #include <scorum/chain/services/dynamic_global_property.hpp>
 #include <scorum/chain/services/advertising_property.hpp>
 
+#include <boost/uuid/uuid_io.hpp>
+
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
 #include <defines.hpp>
 #include <hippomocks.h>
-#include "object_wrapper.hpp"
+#include <detail.hpp>
+#include <object_wrapper.hpp>
 
 using namespace scorum::chain;
 using namespace scorum::protocol;
@@ -58,9 +61,6 @@ struct advertising_api_fixture : public shared_memory_fixture
     database dummy_db;
     std::unique_ptr<advertising_api::impl> api;
 
-    boost::uuids::uuid ns_uuid = boost::uuids::string_generator()("00000000-0000-0000-0000-000000000001");
-    boost::uuids::name_generator uuid_gen = boost::uuids::name_generator(ns_uuid);
-
     int next()
     {
         static int counter = 0;
@@ -94,9 +94,11 @@ BOOST_FIXTURE_TEST_SUITE(advertising_api_tests, advertising_api_fixture)
 
 SCORUM_TEST_CASE(check_get_post_budget_positive)
 {
-    auto uuid = uuid_gen("x");
+    auto uuid = gen_uuid("x");
     auto p = create_post_budget("alice", uuid);
-    mocks.OnCall(post_budget_service, post_budget_service_i::is_exists).With(uuid).Return(true);
+    mocks.OnCallOverload(post_budget_service, (exists_ptr<budget_type::post>)&post_budget_service_i::is_exists)
+        .With(uuid)
+        .Return(true);
     mocks.OnCallOverload(post_budget_service, (get_ptr<budget_type::post>)&post_budget_service_i::get)
         .With(uuid)
         .ReturnByRef(p);
@@ -108,9 +110,11 @@ SCORUM_TEST_CASE(check_get_post_budget_positive)
 
 SCORUM_TEST_CASE(check_get_banner_budget_positive)
 {
-    auto uuid = uuid_gen("x");
+    auto uuid = gen_uuid("x");
     auto p = create_banner_budget("alice", uuid);
-    mocks.OnCall(banner_budget_service, banner_budget_service_i::is_exists).With(uuid).Return(true);
+    mocks.OnCallOverload(banner_budget_service, (exists_ptr<budget_type::banner>)&banner_budget_service_i::is_exists)
+        .With(uuid)
+        .Return(true);
     mocks.OnCallOverload(banner_budget_service, (get_ptr<budget_type::banner>)&banner_budget_service_i::get)
         .With(uuid)
         .ReturnByRef(p);
@@ -122,7 +126,8 @@ SCORUM_TEST_CASE(check_get_banner_budget_positive)
 
 SCORUM_TEST_CASE(check_get_post_budget_negative)
 {
-    mocks.OnCall(post_budget_service, post_budget_service_i::is_exists).Return(false);
+    mocks.OnCallOverload(post_budget_service, (exists_ptr<budget_type::post>)&post_budget_service_i::is_exists)
+        .Return(false);
 
     auto budget = api->get_budget({ 0 }, budget_type::post);
     BOOST_REQUIRE(!budget.valid());
@@ -130,7 +135,8 @@ SCORUM_TEST_CASE(check_get_post_budget_negative)
 
 SCORUM_TEST_CASE(check_get_banner_budget_negative)
 {
-    mocks.OnCall(banner_budget_service, banner_budget_service_i::is_exists).Return(false);
+    mocks.OnCallOverload(banner_budget_service, (exists_ptr<budget_type::banner>)&banner_budget_service_i::is_exists)
+        .Return(false);
 
     auto budget = api->get_budget({ 0 }, budget_type::banner);
     BOOST_REQUIRE(!budget.valid());
@@ -138,10 +144,10 @@ SCORUM_TEST_CASE(check_get_banner_budget_negative)
 
 SCORUM_TEST_CASE(check_get_user_budgets_ordered)
 {
-    auto p1 = create_post_budget("alice", uuid_gen("1"));
-    auto b1 = create_banner_budget("alice", uuid_gen("2"));
-    auto p2 = create_post_budget("alice", uuid_gen("3"));
-    auto b2 = create_banner_budget("alice", uuid_gen("4"));
+    auto p1 = create_post_budget("alice", gen_uuid("1"));
+    auto b1 = create_banner_budget("alice", gen_uuid("2"));
+    auto p2 = create_post_budget("alice", gen_uuid("3"));
+    auto b2 = create_banner_budget("alice", gen_uuid("4"));
     post_budget_service_i::budgets_type alice_posts = { std::cref(p1), std::cref(p2) };
     banner_budget_service_i::budgets_type alice_banners = { std::cref(b1), std::cref(b2) };
     post_budget_service_i::budgets_type bob_posts;
@@ -165,7 +171,7 @@ SCORUM_TEST_CASE(check_get_user_budgets_ordered)
 
     auto alice_budgets = api->get_user_budgets("alice");
 
-    BOOST_REQUIRE_EQUAL(alice_budgets.size(), 4);
+    BOOST_REQUIRE_EQUAL(alice_budgets.size(), 4u);
     BOOST_CHECK(
         (std::is_sorted(alice_budgets.begin(), alice_budgets.end(),
                         [](const budget_api_obj& l, const budget_api_obj& r) { return l.created > r.created; })));
@@ -194,7 +200,7 @@ SCORUM_TEST_CASE(check_get_user_budgets_empty)
 
     auto bob_budgets = api->get_user_budgets("alice");
 
-    BOOST_REQUIRE_EQUAL(bob_budgets.size(), 0);
+    BOOST_REQUIRE_EQUAL(bob_budgets.size(), 0u);
 }
 
 SCORUM_TEST_CASE(get_auction_coeffs_test)

@@ -18,6 +18,7 @@ struct signed_block : public signed_block_header
 class block_info
 {
 public:
+    block_info(uint32_t block_num, std::string block_id, fc::time_point_sec when, std::string block_witness);
     block_info(const scorum::protocol::signed_block&);
     block_info(const fc::time_point_sec& when, const std::string& witness_owner);
     block_info()

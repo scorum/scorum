@@ -4,20 +4,29 @@
 
 namespace scorum {
 namespace chain {
-
-class data_service_factory_i;
-class genesis_state_type;
+namespace dba {
+struct db_accessor_factory;
+}
+struct data_service_factory_i;
+struct genesis_state_type;
 
 namespace genesis {
 
 class initializator_context
 {
 public:
-    explicit initializator_context(data_service_factory_i& services, const genesis_state_type& genesis_state);
+    explicit initializator_context(data_service_factory_i& services,
+                                   dba::db_accessor_factory& dba_factory,
+                                   const genesis_state_type& genesis_state);
 
     data_service_factory_i& services() const
     {
         return _services;
+    }
+
+    dba::db_accessor_factory& dba_factory() const
+    {
+        return _dba_factory;
     }
 
     const genesis_state_type& genesis_state() const
@@ -27,6 +36,7 @@ public:
 
 private:
     data_service_factory_i& _services;
+    dba::db_accessor_factory& _dba_factory;
     const genesis_state_type& _genesis_state;
 };
 

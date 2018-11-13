@@ -1,18 +1,26 @@
 #include <scorum/chain/services/witness.hpp>
 #include <scorum/chain/services/witness_schedule.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
+#include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/database/database.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/witness_objects.hpp>
+#include <scorum/chain/schema/chain_property_object.hpp>
 
 #include <scorum/protocol/scorum_operations.hpp>
 
 namespace scorum {
 namespace chain {
 
-dbs_witness::dbs_witness(database& db)
+dbs_witness::dbs_witness(dba::db_index& db,
+                         witness_schedule_service_i& witness_schedule_svc,
+                         dynamic_global_property_service_i& dgp_svc,
+                         dba::db_accessor<chain_property_object>& chain_dba)
     : base_service_type(db)
+    , _dgp_svc(dgp_svc)
+    , _witness_schedule_svc(witness_schedule_svc)
+    , _chain_dba(chain_dba)
 {
 }
 
@@ -44,13 +52,11 @@ const witness_object& dbs_witness::create_witness(const account_name_type& owner
 {
     FC_ASSERT(owner.size(), "Witness 'owner_name' should not be empty.");
 
-    const auto& dprops = db_impl().obtain_service<dbs_dynamic_global_property>().get();
-
     const auto& new_witness = create_internal(owner, block_signing_key);
 
     update(new_witness, [&](witness_object& w) {
         fc::from_string(w.url, url);
-        w.created = dprops.time;
+        w.created = _dgp_svc.head_block_time();
         w.proposed_chain_props = props;
     });
 
@@ -73,7 +79,7 @@ const witness_object& dbs_witness::create_internal(const account_name_type& owne
     return create([&](witness_object& w) {
         w.owner = owner;
         w.signing_key = block_signing_key;
-        w.hardfork_time_vote = db_impl().get_genesis_time();
+        w.hardfork_time_vote = _chain_dba.get().genesis_time;
     });
 }
 
@@ -102,11 +108,11 @@ void dbs_witness::adjust_witness_votes(const account_object& account, const shar
 
 void dbs_witness::adjust_witness_vote(const witness_object& witness, const share_type& delta)
 {
-    block_info ctx = std::move(db_impl().head_block_context());
+    block_info ctx = get_head_block_context();
 
-    const auto& props = db_impl().obtain_service<dbs_dynamic_global_property>().get();
+    const auto& props = _dgp_svc.get();
+    const auto& wso = _witness_schedule_svc.get();
 
-    const witness_schedule_object& wso = db_impl().obtain_service<dbs_witness_schedule>().get();
     update(witness, [&](witness_object& w) {
         debug_log(ctx, "updating votes for witness=${w}", ("w", w.owner));
 
@@ -131,6 +137,14 @@ void dbs_witness::adjust_witness_vote(const witness_object& witness, const share
 
         debug_log(ctx, "new_votes=${v}", ("v", w.votes));
     });
+}
+
+block_info dbs_witness::get_head_block_context()
+{
+    const auto& dprop = _dgp_svc.get();
+    block_info ctx(dprop.head_block_number, dprop.head_block_id.str(), dprop.time, dprop.current_witness);
+
+    return ctx;
 }
 } // namespace chain
 } // namespace scorum

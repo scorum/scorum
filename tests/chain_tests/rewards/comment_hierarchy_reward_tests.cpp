@@ -28,8 +28,6 @@ struct comment_stats
 
 struct comments_hierarchy_reward_visitor
 {
-    typedef void result_type;
-
     database& _db;
     fc::scoped_connection conn;
 
@@ -89,7 +87,7 @@ struct comments_hierarchy_legacy_reward_fixture : public database_blog_integrati
 
     comments_hierarchy_legacy_reward_fixture()
         : comment_statistic_sp_service(db.obtain_service<dbs_comment_statistic_sp>())
-        , account_service(db.obtain_service<dbs_account>())
+        , account_service(db.account_service())
     {
         open_database();
 

@@ -6,9 +6,13 @@
 #include <scorum/protocol/comment.hpp>
 #include <scorum/protocol/types.hpp>
 
+#include <scorum/protocol/betting/game.hpp>
+#include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/proposal_operations.hpp>
 
 #include <fc/crypto/ripemd160.hpp>
+
+#include <boost/uuid/nil_generator.hpp>
 
 namespace scorum {
 namespace protocol {
@@ -724,6 +728,28 @@ struct delegate_scorumpower_operation : public base_operation
     void validate() const;
 };
 
+/**
+ * Delegate scorumpower from registration pool to the other. The scorumpower are still owned
+ * by registration committee, but content voting rights and bandwidth allocation are transferred
+ * to the receiving account. This sets the delegation to `scorumpower`, increasing it or
+ * decreasing it as needed. (i.e. a delegation of 0 removes the delegation)
+ *
+ * When a delegation is removed the shares are placed in limbo for a week to prevent a satoshi
+ * of SP from voting on the same content twice.
+ */
+struct delegate_sp_from_reg_pool_operation : public base_operation
+{
+    account_name_type reg_committee_member;
+    account_name_type delegatee;
+    asset scorumpower = asset(0, SP_SYMBOL);
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(reg_committee_member);
+    }
+};
+
 /// @defgroup advertising Advertising operations
 /// @brief Operations to work with advertising budgets
 /// @ingroup operations
@@ -738,13 +764,13 @@ struct create_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type owner;
     std::string json_metadata;
 
     asset balance = asset(0, SCORUM_SYMBOL);
-    time_point_sec start;
-    time_point_sec deadline;
+    fc::time_point_sec start;
+    fc::time_point_sec deadline;
 
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
@@ -761,7 +787,7 @@ struct update_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type owner;
     std::string json_metadata;
 
@@ -780,7 +806,7 @@ struct close_budget_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type owner;
 
     void validate() const;
@@ -798,7 +824,7 @@ struct close_budget_by_advertising_moderator_operation : public base_operation
 {
     budget_type type = budget_type::post;
 
-    uuid_type uuid;
+    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type moderator;
 
     void validate() const;
@@ -809,7 +835,6 @@ struct close_budget_by_advertising_moderator_operation : public base_operation
 };
 
 /// @}
-
 
 /**
  * @ingroup operations
@@ -917,6 +942,224 @@ struct atomicswap_refund_operation : public base_operation
     }
 };
 
+/// rational number
+struct odds_input
+{
+    odds_value_type numerator;
+    odds_value_type denominator;
+};
+
+/// @defgroup betting_operations Betting operations
+/// This is a set of betting operations
+/// @ingroup operations
+/// @{
+
+/**
+ * @ingroup operations
+ * @brief This operation creates game object
+ *
+ * Game will have status 'created' until start_time < head_block_time. Game status changed to 'started' when
+ * start_time >= head_block_time. Game status changed to 'finished' when moderator performs post_game_results_operation
+ */
+struct create_game_operation : public base_operation
+{
+    /// Universal Unique Identifier which is unique for each game
+    uuid_type uuid = boost::uuids::nil_uuid();
+
+    /// moderator account name
+    account_name_type moderator;
+
+    /// JSON metadata
+    std::string json_metadata;
+
+    /// game start time
+    time_point_sec start_time;
+
+    /// delay starting from start after which all bets are automatically resolved if game results weren't provided
+    uint32_t auto_resolve_delay_sec = 0;
+
+    /// game type (soccer, hockey, etc ...)
+    game_type game;
+
+    /// list of markets
+    std::vector<market_type> markets;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @ingroup operations
+ * @brief This operation canceling game.
+ *
+ * Moderator could cancel game any time. All accepted bets would be canceled and returned back.
+ */
+struct cancel_game_operation : public base_operation
+{
+    /// Universal Unique Identifier which is specified during game creation
+    uuid_type uuid = boost::uuids::nil_uuid();
+
+    /// moderator account name
+    account_name_type moderator;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @ingroup operations
+ * @brief This operation updates game markets list
+ *
+ * Before game started moderator could add or remove markets. All accepted bets would be canceled and returned back when
+ * moderator removes markets. After game started moderator could only add new markets.
+ */
+struct update_game_markets_operation : public base_operation
+{
+    /// Universal Unique Identifier which is specified during game creation
+    uuid_type uuid = boost::uuids::nil_uuid();
+
+    /// moderator account name
+    account_name_type moderator;
+
+    /// list of markets
+    std::vector<market_type> markets;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @ingroup operations
+ * @brief This operation updates game start time.
+ *
+ * After game started moderator could update start_time only in 12 hours range.
+ */
+struct update_game_start_time_operation : public base_operation
+{
+    /// Universal Unique Identifier which is specified during game creation
+    uuid_type uuid = boost::uuids::nil_uuid();
+
+    /// moderator account name
+    account_name_type moderator;
+
+    /// game start time
+    time_point_sec start_time;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @ingroup operations
+ * @brief With this operation moderator provides game results(wincases)
+ *
+ * This operation changes game status to 'finished'. Stop accepting bets. All unmatched bets returned back. This
+ * operation triger resolving delay. After this delay all bets would be resolved. During resolving delay moderator could
+ * update results several times.
+ */
+struct post_game_results_operation : public base_operation
+{
+    /// Universal Unique Identifier which is specified during game creation
+    uuid_type uuid = boost::uuids::nil_uuid();
+
+    /// moderator account name
+    account_name_type moderator;
+
+    /// list of wincases
+    std::vector<wincase_type> wincases;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @ingroup operations
+ * @brief This operation creates bet
+ */
+struct post_bet_operation : public base_operation
+{
+    /// Universal Unique Identifier which is unique for each bet
+    uuid_type uuid = boost::uuids::nil_uuid();
+
+    /// owner for new bet
+    account_name_type better;
+
+    /// Universal Unique Identifier which is specified during game creation
+    uuid_type game_uuid = boost::uuids::nil_uuid();
+
+    /// wincase
+    wincase_type wincase;
+
+    /// odds - rational coefficient that define potential result (p). p = odds * stake
+    odds_input odds;
+
+    /// stake amount in SCR
+    asset stake;
+
+    /// is this bet is active in live
+    bool live = true;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(better);
+    }
+    /// @endcond
+};
+
+/**
+ * @ingroup operations
+ * @brief This operation cancel unmatched bets by id
+ */
+struct cancel_pending_bets_operation : public base_operation
+{
+    /// bets list that is being canceling
+    std::vector<uuid_type> bet_uuids;
+
+    /// owner
+    account_name_type better;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(better);
+    }
+    /// @endcond
+};
+
+/// @}
+
+/// bets list that is being canceling
+/// supervisor
+/// timepoint from that even matched stake is being canceling
 } // namespace protocol
 } // namespace scorum
 
@@ -985,16 +1228,24 @@ FC_REFLECT( scorum::protocol::recover_account_operation, (account_to_recover)(ne
 FC_REFLECT( scorum::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) )
 FC_REFLECT( scorum::protocol::decline_voting_rights_operation, (account)(decline) )
 FC_REFLECT( scorum::protocol::delegate_scorumpower_operation, (delegator)(delegatee)(scorumpower) )
+FC_REFLECT( scorum::protocol::delegate_sp_from_reg_pool_operation, (reg_committee_member)(delegatee)(scorumpower) )
 
 FC_REFLECT( scorum::protocol::create_budget_operation, (type)(uuid)(owner)(json_metadata)(balance)(start)(deadline) )
 FC_REFLECT( scorum::protocol::update_budget_operation, (type)(uuid)(owner)(json_metadata) )
 FC_REFLECT( scorum::protocol::close_budget_operation, (type)(uuid)(owner) )
+FC_REFLECT( scorum::protocol::close_budget_by_advertising_moderator_operation, (type)(uuid)(moderator) )
 
 FC_REFLECT( scorum::protocol::atomicswap_initiate_operation, (type)(owner)(recipient)(amount)(secret_hash)(metadata) )
 FC_REFLECT_ENUM(scorum::protocol::atomicswap_initiate_operation::operation_type,(by_initiator)(by_participant))
 FC_REFLECT( scorum::protocol::atomicswap_redeem_operation, (from)(to)(secret) )
 FC_REFLECT( scorum::protocol::atomicswap_refund_operation, (participant)(initiator)(secret_hash) )
-FC_REFLECT( scorum::protocol::close_budget_by_advertising_moderator_operation, (type)(uuid)(moderator) )
+
+FC_REFLECT( scorum::protocol::create_game_operation, (uuid)(moderator)(json_metadata)(start_time)(auto_resolve_delay_sec)(game)(markets) )
+FC_REFLECT( scorum::protocol::cancel_game_operation, (uuid)(moderator) )
+FC_REFLECT( scorum::protocol::update_game_markets_operation, (uuid)(moderator)(markets) )
+FC_REFLECT( scorum::protocol::update_game_start_time_operation, (uuid)(moderator)(start_time) )
+FC_REFLECT( scorum::protocol::post_game_results_operation, (uuid)(moderator)(wincases) )
+
 
 FC_REFLECT( scorum::protocol::proposal_vote_operation,
             (voting_account)
@@ -1004,4 +1255,20 @@ FC_REFLECT( scorum::protocol::proposal_create_operation,
             (creator)
             (lifetime_sec)
             (operation))
+
+FC_REFLECT(scorum::protocol::odds_input,
+           (numerator)
+           (denominator))
+
+FC_REFLECT( scorum::protocol::post_bet_operation,
+           (uuid)
+           (better)
+           (game_uuid)
+           (wincase)
+           (odds)
+           (stake)
+           (live))
+FC_REFLECT( scorum::protocol::cancel_pending_bets_operation,
+           (bet_uuids)
+           (better))
 // clang-format on

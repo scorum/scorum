@@ -35,7 +35,8 @@ const asset create_scorumpower(const account_object& account, const asset& amoun
 
 struct pay_for_comments_legacy_fixture : public shared_memory_fixture
 {
-    template <typename TService> using get_by_comment_id_ptr = void (TService::*)(const comment_id_type&);
+    template <typename TService>
+    using get_by_comment_id_ptr = const typename TService::object_type& (TService::*)(const comment_id_type&)const;
     template <typename TService>
     using update_ptr
         = void (TService::*)(const typename TService::object_type&, const typename TService::modifier_type&);
@@ -129,15 +130,17 @@ struct pay_for_comments_legacy_fixture : public shared_memory_fixture
 
     void mock_do_nothing()
     {
+        static auto stat_sp = create_object<comment_statistic_sp_object>(shm);
+        static auto stat_scr = create_object<comment_statistic_scr_object>(shm);
+        static auto blog_stat = create_object<account_blogging_statistic_object>(shm);
         // clang-format off
         mocks.OnCallOverload(comment_service, (update_ptr<comment_service_i>) &comment_service_i::update);
         mocks.OnCallOverload(sp_stats_service, (update_ptr<comment_statistic_sp_service_i>) &comment_statistic_sp_service_i::update);
-        mocks.OnCallOverload(sp_stats_service, (get_by_comment_id_ptr<comment_statistic_sp_service_i>) &comment_statistic_sp_service_i::get);
+        mocks.OnCallOverload(sp_stats_service, (get_by_comment_id_ptr<comment_statistic_sp_service_i>) &comment_statistic_sp_service_i::get).ReturnByRef(stat_sp);
         mocks.OnCallOverload(scr_stats_service, (update_ptr<comment_statistic_scr_service_i>) &comment_statistic_scr_service_i::update);
-        mocks.OnCallOverload(scr_stats_service, (get_by_comment_id_ptr<comment_statistic_scr_service_i>) &comment_statistic_scr_service_i::get);
+        mocks.OnCallOverload(scr_stats_service, (get_by_comment_id_ptr<comment_statistic_scr_service_i>) &comment_statistic_scr_service_i::get).ReturnByRef(stat_scr);
         mocks.OnCall(acc_blog_stats_service, account_blogging_statistic_service_i::increase_posting_rewards);
-        static auto obj = create_object<account_blogging_statistic_object>(shm);
-        mocks.OnCall(acc_blog_stats_service, account_blogging_statistic_service_i::obtain).ReturnByRef(obj);
+        mocks.OnCall(acc_blog_stats_service, account_blogging_statistic_service_i::obtain).ReturnByRef(blog_stat);
         mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
         // clang-format on
     }
@@ -148,6 +151,7 @@ struct pay_for_comments_legacy_fixture : public shared_memory_fixture
     {
         using get_acc_ptr
             = const comment_object& (comment_service_i::*)(const account_name_type&, const std::string&)const;
+        using inc_acc_balance_ptr = void (account_service_i::*)(const account_object&, const asset&);
 
         auto alice_acc = create_object<account_object>(shm, [](account_object& acc) { acc.name = "alice"; });
         auto bob_acc = create_object<account_object>(shm, [](account_object& acc) { acc.name = "bob"; });
@@ -159,7 +163,8 @@ struct pay_for_comments_legacy_fixture : public shared_memory_fixture
         mocks.OnCall(acc_service, account_service_i::get_account).With("alice").ReturnByRef(alice_acc);
         mocks.OnCall(acc_service, account_service_i::get_account).With("bob").ReturnByRef(bob_acc);
         mocks.OnCall(acc_service, account_service_i::create_scorumpower).Do(create_scorumpower);
-        mocks.OnCall(acc_service, account_service_i::increase_balance).Do(increase_balance);
+        mocks.OnCallOverload(acc_service, (inc_acc_balance_ptr)&account_service_i::increase_balance)
+            .Do(increase_balance);
 
         process_comments_cashout_impl cashout(*ctx);
         cashout.pay_for_comments_legacy(comment_refs, rewards);

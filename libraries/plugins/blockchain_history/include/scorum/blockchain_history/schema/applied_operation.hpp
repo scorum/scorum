@@ -11,7 +11,7 @@ using scorum::protocol::operation;
 
 struct applied_operation
 {
-    applied_operation();
+    applied_operation() = default;
     applied_operation(const operation_object& op_obj);
 
     transaction_id_type trx_id;

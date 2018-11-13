@@ -22,6 +22,8 @@
 #include "devcommittee_fixture.hpp"
 #include "operation_check.hpp"
 
+#include "detail.hpp"
+
 namespace blockchain_history_tests {
 
 using namespace scorum;
@@ -66,9 +68,8 @@ struct history_database_fixture : public database_fixture::database_trx_integrat
     template <typename history_object_type>
     operation_map_type get_operations_accomplished_by_account(const std::string& account_name)
     {
-        const auto& idx = db.get_index<blockchain_history::account_history_index<history_object_type>>()
-                              .indices()
-                              .get<blockchain_history::by_account>();
+        const auto& idx = db.get_index<blockchain_history::account_history_index<history_object_type>,
+                                       blockchain_history::by_account>();
 
         auto itr = idx.lower_bound(boost::make_tuple(account_name, uint32_t(-1)));
         if (itr != idx.end())
@@ -940,6 +941,62 @@ SCORUM_TEST_CASE(get_ops_history_by_time_negative_check)
 
     SCORUM_REQUIRE_THROW(blockchain_history_api_call.get_ops_history_by_time(timestamp1, timestamp2, -1, 1),
                          fc::exception);
+}
+
+SCORUM_TEST_CASE(get_one_block_with_one_operation)
+{
+    using ::detail::flatten;
+
+    generate_block();
+
+    transfer_operation op;
+    op.from = bob.name;
+    op.to = alice.name;
+    op.amount = ASSET_SCR(1);
+    op.memo = "test";
+    push_operation(op, bob.private_key);
+
+    generate_block();
+
+    auto response = blockchain_history_api_call.get_blocks(db.head_block_num() - 1, 1);
+
+    BOOST_CHECK_EQUAL(flatten(R"(
+                              [{
+                                "previous": "00000008feee45efe631581b5c342506779446ca",
+                                "timestamp": "2018-04-01T00:00:27",
+                                "witness": "initdelegate1",
+                                "transaction_merkle_root": "76edc5596f2beaaf1c5e82b6a36291dd644c3649",
+                                "extensions": [[1, "0.4.0"]],
+                                "witness_signature": "1f72e58a022a0e3ea46c66bbf56c4c6200f346bbdae64a329e41a0b55f6140fa6c2037882c351ebf9e53a54b7eb8a880e3f240231f7796dcbdf718bcea803df640",
+                                "block_num": 9,
+                                "operations": [
+                                  {
+                                    "trx_id": "d5fc45b1c47b11275393ace0ff352dd800f95026",
+                                    "timestamp": "2018-04-01T00:00:24",
+                                    "op": [
+                                      "transfer",
+                                      {
+                                        "from": "bob",
+                                        "to": "alice",
+                                        "amount": "0.000000001 SCR",
+                                        "memo": "test"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "trx_id": "0000000000000000000000000000000000000000",
+                                    "timestamp": "2018-04-01T00:00:27",
+                                    "op": [
+                                      "producer_reward",
+                                      {
+                                        "producer": "initdelegate1",
+                                        "reward": "0.000000010 SP"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }])"),
+                      fc::json::to_string(response));
 }
 
 SCORUM_TEST_CASE(get_ops_history_by_time_positive_check)

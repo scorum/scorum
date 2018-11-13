@@ -20,6 +20,10 @@ protected:
 
 public:
     virtual bool has_hardfork(uint32_t hardfork) const override;
+
+private:
+    // TODO: tech dept: remove this dependency if possible
+    database& _db;
 };
 
 } // namespace chain

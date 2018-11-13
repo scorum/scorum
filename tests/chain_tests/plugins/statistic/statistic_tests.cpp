@@ -273,7 +273,7 @@ SCORUM_TEST_CASE(vesting_withdrawals_stat_test)
 {
     const bucket_object& bucket = get_lifetime_bucket();
 
-    const account_object& alice_acc = db.obtain_service<dbs_account>().get_account(alice.name);
+    const account_object& alice_acc = db.account_service().get_account(alice.name);
 
     {
         auto orig_val = bucket.new_vesting_withdrawal_requests;

@@ -8,12 +8,13 @@ namespace chain {
 
 dbs_genesis_state::dbs_genesis_state(database& db)
     : _base_type(db)
+    , _db(db)
 {
 }
 
 const fc::time_point_sec& dbs_genesis_state::get_lock_withdraw_sp_until_timestamp() const
 {
-    return db_impl().genesis_persistent_state().lock_withdraw_sp_until_timestamp;
+    return _db.genesis_persistent_state().lock_withdraw_sp_until_timestamp;
 }
 }
 }

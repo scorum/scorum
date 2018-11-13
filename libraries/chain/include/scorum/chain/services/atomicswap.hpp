@@ -63,6 +63,8 @@ public:
 
 private:
     std::size_t _contracts_per_recipient(const account_name_type& owner, const account_name_type& recipient) const;
+    dynamic_global_property_service_i& _dgp_svc;
+    account_service_i& _account_svc;
 };
 } // namespace chain
 } // namespace scorum

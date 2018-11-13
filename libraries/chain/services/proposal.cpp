@@ -17,7 +17,7 @@ const proposal_object& dbs_proposal::create_proposal(const account_name_type& cr
     return create([&](proposal_object& proposal) {
         proposal.creator = creator;
         proposal.operation = operation;
-        proposal.created = db_impl().head_block_time();
+        proposal.created = head_block_time();
         proposal.expiration = expiration;
         proposal.quorum_percent = quorum;
     });

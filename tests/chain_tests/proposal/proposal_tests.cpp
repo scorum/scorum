@@ -480,8 +480,6 @@ public:
 
 struct dev_committee_operation_visitor
 {
-    using result_type = void;
-
     void operator()(const proposal_virtual_operation& op)
     {
         op.proposal_op.weak_visit([&](const development_committee_transfer_operation& op) {

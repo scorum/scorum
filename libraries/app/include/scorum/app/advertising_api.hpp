@@ -17,7 +17,7 @@ class advertising_api
 {
 public:
     advertising_api(const api_context& ctx);
-    ~advertising_api() = default;
+    ~advertising_api();
 
     /// @name Public API
     /// @addtogroup adv_api
@@ -55,7 +55,7 @@ public:
     class impl;
 
 private:
-    std::shared_ptr<impl> _impl;
+    std::unique_ptr<impl> _impl;
 };
 }
 }

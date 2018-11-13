@@ -11,6 +11,9 @@ class dev_committee_object;
 
 struct withdraw_scorumpower_route_service_i : public base_service_i<withdraw_scorumpower_route_object>
 {
+    using base_service_i<withdraw_scorumpower_route_object>::get;
+    using base_service_i<withdraw_scorumpower_route_object>::is_exists;
+
     virtual bool is_exists(const account_id_type& from, const account_id_type& to) const = 0;
 
     virtual bool is_exists(const account_id_type& from, const dev_committee_id_type& to) const = 0;
@@ -51,6 +54,9 @@ protected:
     explicit dbs_withdraw_scorumpower_route(database& db);
 
 public:
+    using base_service_i<withdraw_scorumpower_route_object>::get;
+    using base_service_i<withdraw_scorumpower_route_object>::is_exists;
+
     ~dbs_withdraw_scorumpower_route();
 
     virtual bool is_exists(const account_id_type& from, const account_id_type& to) const override;

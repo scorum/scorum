@@ -14,6 +14,8 @@ namespace chain {
 
 dbs_atomicswap::dbs_atomicswap(database& db)
     : base_service_type(db)
+    , _dgp_svc(db.dynamic_global_property_service())
+    , _account_svc(db.account_service())
 {
 }
 
@@ -80,7 +82,7 @@ const atomicswap_contract_object& dbs_atomicswap::create_contract(atomicswap_con
               "Can't create more then ${1} contract per recipient.",
               ("1", SCORUM_ATOMICSWAP_LIMIT_REQUESTED_CONTRACTS_PER_RECIPIENT));
 
-    time_point_sec start = db_impl().obtain_service<dbs_dynamic_global_property>().get().time;
+    time_point_sec start = _dgp_svc.head_block_time();
     time_point_sec deadline = start;
     switch (tp)
     {
@@ -109,19 +111,16 @@ const atomicswap_contract_object& dbs_atomicswap::create_contract(atomicswap_con
         }
     });
 
-    dbs_account& account_service = db().obtain_service<dbs_account>();
-    account_service.decrease_balance(owner, amount);
+    _account_svc.decrease_balance(owner, amount);
 
     return new_contract;
 }
 
 void dbs_atomicswap::redeem_contract(const atomicswap_contract_object& contract, const std::string& secret)
 {
-    dbs_account& account_service = db().obtain_service<dbs_account>();
+    const account_object& to = _account_svc.get_account(contract.to);
 
-    const account_object& to = account_service.get_account(contract.to);
-
-    account_service.increase_balance(to, contract.amount);
+    _account_svc.increase_balance(to, contract.amount);
 
     if (contract.type == atomicswap_contract_initiator)
     {
@@ -139,11 +138,9 @@ void dbs_atomicswap::redeem_contract(const atomicswap_contract_object& contract,
 
 void dbs_atomicswap::refund_contract(const atomicswap_contract_object& contract)
 {
-    dbs_account& account_service = db().obtain_service<dbs_account>();
+    const account_object& owner = _account_svc.get_account(contract.owner);
 
-    const account_object& owner = account_service.get_account(contract.owner);
-
-    account_service.increase_balance(owner, contract.amount);
+    _account_svc.increase_balance(owner, contract.amount);
 
     remove(contract);
 }

@@ -9,7 +9,8 @@
 #include <scorum/chain/services/advertising_property.hpp>
 #include <scorum/chain/services/budgets.hpp>
 
-#include <scorum/utils/range_adaptors.hpp>
+#include <scorum/utils/take_n_range.hpp>
+#include <scorum/utils/collect_range_adaptor.hpp>
 
 namespace scorum {
 namespace chain {
@@ -44,7 +45,10 @@ void advertising_auction::run_round(adv_budget_service_i<budget_type_v>& budget_
     std::vector<asset> per_block_list;
     br::transform(budgets, std::back_inserter(per_block_list), [](auto b) { return b.get().per_block; });
 
-    auto valuable_per_block_vec = utils::take_n(per_block_list, coeffs.size() + 1);
+    auto valuable_per_block_vec = boost::make_iterator_range(per_block_list)
+        | utils::adaptors::take_n(coeffs.size() + 1) //
+        | utils::adaptors::collect<std::vector>();
+
     auto auction_bets = calculate_bets(valuable_per_block_vec, coeffs);
 
     for (size_t i = 0; i < budgets.size(); ++i)
