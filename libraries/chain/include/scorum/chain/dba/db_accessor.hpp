@@ -12,6 +12,9 @@
 
 namespace scorum {
 namespace chain {
+
+struct by_id;
+
 namespace dba {
 template <typename TObject> using modifier_type = utils::function_view<void(TObject&)>;
 template <typename TObject> using predicate_type = utils::function_view<bool(const TObject&)>;
@@ -21,8 +24,7 @@ namespace detail {
 
 template <typename TObject> size_t size(db_index& db_idx)
 {
-    const auto& idx = db_idx.get_index<typename chainbase::get_index_type<TObject>::type>();
-    return idx.indices().size();
+    return db_idx.get_index<typename chainbase::get_index_type<TObject>::type, by_id>().size();
 }
 
 template <typename TObject> const TObject& create(db_index& db_idx, modifier_type<TObject> modifier)

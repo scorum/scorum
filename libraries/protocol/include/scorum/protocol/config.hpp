@@ -288,6 +288,8 @@ namespace detail {
 #define SCORUM_MIN_STAKE_FOR_MATCHING                  (share_type(1))
 #define SCORUM_MIN_BET_STAKE                           (scorum::protocol::asset(1'000'000, SCORUM_SYMBOL)) // 0.001'000'000 SCR
 
+#define SCORUM_MAX_BET_STAKE                           (scorum::protocol::asset(9214157878975800, SCORUM_SYMBOL))
+
 #ifdef IS_LOW_MEM
 #define SCORUM_LOW_MEMORY_NODE (true)
 #else
