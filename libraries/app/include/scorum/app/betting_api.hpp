@@ -104,6 +104,20 @@ public:
     std::vector<pending_bet_api_object> get_pending_bets(const std::vector<uuid_type>& uuids) const;
 
     /**
+     * @brief Returns matched bets for game
+     * @param uuid Game uuid
+     * @return array of matched_bet_api_object's
+     */
+    std::vector<matched_bet_api_object> get_game_matched_bets(const uuid_type& uuid) const;
+
+    /**
+     * @brief Return pending bets for game
+     * @param uuid Game uuid
+     * @return array of pending_bet_api_object's
+     */
+    std::vector<pending_bet_api_object> get_game_pending_bets(const uuid_type& uuid) const;
+
+    /**
      * @brief Return betting properties
      * @return betting propery api object
      */
@@ -132,5 +146,7 @@ FC_API(scorum::app::betting_api, (get_game_returns)
                                  (lookup_pending_bets)
                                  (get_matched_bets)
                                  (get_pending_bets)
+                                 (get_game_matched_bets)
+                                 (get_game_pending_bets)
                                  (get_betting_properties))
 // clang-format on

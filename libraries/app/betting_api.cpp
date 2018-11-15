@@ -67,6 +67,16 @@ std::vector<pending_bet_api_object> betting_api::get_pending_bets(const std::vec
     return _guard->with_read_lock([&] { return _impl->get_pending_bets(uuids); });
 }
 
+std::vector<matched_bet_api_object> betting_api::get_game_matched_bets(const uuid_type& uuid) const
+{
+    return _guard->with_read_lock([&] { return _impl->get_game_matched_bets(uuid); });
+}
+
+std::vector<pending_bet_api_object> betting_api::get_game_pending_bets(const uuid_type& uuid) const
+{
+    return _guard->with_read_lock([&] { return _impl->get_game_pending_bets(uuid); });
+}
+
 betting_property_api_object betting_api::get_betting_properties() const
 {
     return _guard->with_read_lock([&] { return _impl->get_betting_properties(); });
