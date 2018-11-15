@@ -50,7 +50,7 @@ public:
         const auto& game = _game_dba.get_by<by_uuid>(game_uuid);
         auto bets_rng = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
-        std::vector<matched_bet_object> winners;
+        std::vector<matched_bet_api_object> winners;
 
         for (const matched_bet_object& bet : bets_rng)
         {
