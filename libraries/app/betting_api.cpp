@@ -22,6 +22,11 @@ void betting_api::on_api_startup()
 {
 }
 
+std::vector<matched_bet_api_object> betting_api::get_game_returns(const uuid_type& game_uuid) const
+{
+    return _guard->with_read_lock([&] { return _impl->get_game_returns(game_uuid); });
+}
+
 std::vector<winner_api_object> betting_api::get_game_winners(const uuid_type& game_uuid) const
 {
     return _guard->with_read_lock([&] { return _impl->get_game_winners(game_uuid); });

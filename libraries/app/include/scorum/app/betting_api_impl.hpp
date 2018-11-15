@@ -42,12 +42,33 @@ public:
         , _lookup_limit(lookup_limit)
     {
     }
+    std::vector<matched_bet_api_object> get_game_returns(const uuid_type& game_uuid) const
+    {
+        using namespace scorum::chain::dba;
+
+        FC_ASSERT(_game_dba.is_exists_by<by_uuid>(game_uuid), "Game with uuid '${1}' doesn't exist", ("1", game_uuid));
+        const auto& game = _game_dba.get_by<by_uuid>(game_uuid);
+        auto bets_rng = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
+
+        std::vector<matched_bet_object> winners;
+
+        for (const matched_bet_object& bet : bets_rng)
+        {
+            auto fst_won = game.results.find(bet.bet1_data.wincase) != game.results.end();
+            auto snd_won = game.results.find(bet.bet2_data.wincase) != game.results.end();
+
+            if (!fst_won && !snd_won)
+            {
+                winners.push_back(matched_bet_api_object(bet));
+            }
+        }
+
+        return winners;
+    }
 
     std::vector<winner_api_object> get_game_winners(const uuid_type& game_uuid) const
     {
         using namespace scorum::chain::dba;
-        using namespace boost::adaptors;
-        using namespace utils::adaptors;
 
         FC_ASSERT(_game_dba.is_exists_by<by_uuid>(game_uuid), "Game with uuid '${1}' doesn't exist", ("1", game_uuid));
         const auto& game = _game_dba.get_by<by_uuid>(game_uuid);
@@ -67,14 +88,6 @@ public:
             else if (snd_won)
             {
                 winners.push_back(winner_api_object(bet.market, bet.bet2_data, bet.bet1_data));
-            }
-            else
-            {
-                chain::bet_data null_winner;
-                winners.push_back(winner_api_object(bet.market, bet.bet1_data, null_winner));
-                winners.push_back(winner_api_object(bet.market, bet.bet2_data, null_winner));
-
-                winners.back().draw = true;
             }
         }
 
