@@ -42,37 +42,55 @@ public:
         , _lookup_limit(lookup_limit)
     {
     }
-
-    std::vector<winner_api_object> get_game_winners(const uuid_type& game_uuid) const
+    std::vector<matched_bet_api_object> get_game_returns(const uuid_type& game_uuid) const
     {
         using namespace scorum::chain::dba;
-        using namespace boost::adaptors;
-        using namespace utils::adaptors;
 
         FC_ASSERT(_game_dba.is_exists_by<by_uuid>(game_uuid), "Game with uuid '${1}' doesn't exist", ("1", game_uuid));
         const auto& game = _game_dba.get_by<by_uuid>(game_uuid);
         auto bets_rng = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
-        auto game_results = game.results //
-            | transformed([](const wincase_type& w) { return std::make_pair(create_market(w), w); })
-            | collect<fc::flat_map>(game.results.size());
+        std::vector<matched_bet_api_object> winners;
 
-        // clang-format off
-        struct less
+        for (const matched_bet_object& bet : bets_rng)
         {
-            bool operator()(const matched_bet_object& l, const std::pair<market_type, wincase_type>& r){ return l.market < r.first; }
-            bool operator()(const std::pair<market_type, wincase_type>& l, const matched_bet_object& r){ return l.first < r.market; }
-        };
-        // clang-format on
+            auto fst_won = game.results.find(bet.bet1_data.wincase) != game.results.end();
+            auto snd_won = game.results.find(bet.bet2_data.wincase) != game.results.end();
+
+            if (!fst_won && !snd_won)
+            {
+                winners.push_back(matched_bet_api_object(bet));
+            }
+        }
+
+        return winners;
+    }
+
+    std::vector<winner_api_object> get_game_winners(const uuid_type& game_uuid) const
+    {
+        using namespace scorum::chain::dba;
+
+        FC_ASSERT(_game_dba.is_exists_by<by_uuid>(game_uuid), "Game with uuid '${1}' doesn't exist", ("1", game_uuid));
+        const auto& game = _game_dba.get_by<by_uuid>(game_uuid);
+        auto bets_rng = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
         std::vector<winner_api_object> winners;
-        utils::set_intersection(bets_rng, game_results, std::back_inserter(winners), less{},
-                                [](const matched_bet_object& lhs, const std::pair<market_type, wincase_type>& rhs) {
-                                    if (lhs.bet1_data.wincase == rhs.second)
-                                        return winner_api_object(lhs.market, lhs.bet1_data, lhs.bet2_data);
-                                    else
-                                        return winner_api_object(lhs.market, lhs.bet2_data, lhs.bet1_data);
-                                });
+
+        for (const matched_bet_object& bet : bets_rng)
+        {
+            auto fst_won = game.results.find(bet.bet1_data.wincase) != game.results.end();
+            auto snd_won = game.results.find(bet.bet2_data.wincase) != game.results.end();
+
+            if (fst_won)
+            {
+                winners.push_back(winner_api_object(bet.market, bet.bet1_data, bet.bet2_data));
+            }
+            else if (snd_won)
+            {
+                winners.push_back(winner_api_object(bet.market, bet.bet2_data, bet.bet1_data));
+            }
+        }
+
         return winners;
     }
 
@@ -186,6 +204,34 @@ public:
     betting_property_api_object get_betting_properties() const
     {
         return _betting_prop_dba.get();
+    }
+
+    std::vector<matched_bet_api_object> get_game_matched_bets(const uuid_type& uuid) const
+    {
+        auto bets_rng = _matched_bet_dba.get_range_by<by_game_uuid_market>(uuid);
+
+        std::vector<matched_bet_api_object> result;
+
+        for (auto& bet : bets_rng)
+        {
+            result.push_back(bet);
+        }
+
+        return result;
+    }
+
+    std::vector<pending_bet_api_object> get_game_pending_bets(const uuid_type& uuid) const
+    {
+        auto bets_rng = _pending_bet_dba.get_range_by<by_game_uuid_market>(uuid);
+
+        std::vector<pending_bet_api_object> result;
+
+        for (auto& bet : bets_rng)
+        {
+            result.push_back(bet);
+        }
+
+        return result;
     }
 
 private:
