@@ -53,26 +53,31 @@ public:
         const auto& game = _game_dba.get_by<by_uuid>(game_uuid);
         auto bets_rng = _matched_bet_dba.get_range_by<by_game_uuid_market>(game_uuid);
 
-        auto game_results = game.results //
-            | transformed([](const wincase_type& w) { return std::make_pair(create_market(w), w); })
-            | collect<fc::flat_map>(game.results.size());
-
-        // clang-format off
-        struct less
-        {
-            bool operator()(const matched_bet_object& l, const std::pair<market_type, wincase_type>& r){ return l.market < r.first; }
-            bool operator()(const std::pair<market_type, wincase_type>& l, const matched_bet_object& r){ return l.first < r.market; }
-        };
-        // clang-format on
-
         std::vector<winner_api_object> winners;
-        utils::set_intersection(bets_rng, game_results, std::back_inserter(winners), less{},
-                                [](const matched_bet_object& lhs, const std::pair<market_type, wincase_type>& rhs) {
-                                    if (lhs.bet1_data.wincase == rhs.second)
-                                        return winner_api_object(lhs.market, lhs.bet1_data, lhs.bet2_data);
-                                    else
-                                        return winner_api_object(lhs.market, lhs.bet2_data, lhs.bet1_data);
-                                });
+
+        for (const matched_bet_object& bet : bets_rng)
+        {
+            auto fst_won = game.results.find(bet.bet1_data.wincase) != game.results.end();
+            auto snd_won = game.results.find(bet.bet2_data.wincase) != game.results.end();
+
+            if (fst_won)
+            {
+                winners.push_back(winner_api_object(bet.market, bet.bet1_data, bet.bet2_data));
+            }
+            else if (snd_won)
+            {
+                winners.push_back(winner_api_object(bet.market, bet.bet2_data, bet.bet1_data));
+            }
+            else
+            {
+                chain::bet_data null_winner;
+                winners.push_back(winner_api_object(bet.market, bet.bet1_data, null_winner));
+                winners.push_back(winner_api_object(bet.market, bet.bet2_data, null_winner));
+
+                winners.back().draw = true;
+            }
+        }
+
         return winners;
     }
 
