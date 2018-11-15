@@ -206,6 +206,34 @@ public:
         return _betting_prop_dba.get();
     }
 
+    std::vector<matched_bet_api_object> get_game_matched_bets(const uuid_type& uuid) const
+    {
+        auto bets_rng = _matched_bet_dba.get_range_by<by_game_uuid_market>(uuid);
+
+        std::vector<matched_bet_api_object> result;
+
+        for (auto& bet : bets_rng)
+        {
+            result.push_back(bet);
+        }
+
+        return result;
+    }
+
+    std::vector<pending_bet_api_object> get_game_pending_bets(const uuid_type& uuid) const
+    {
+        auto bets_rng = _pending_bet_dba.get_range_by<by_game_uuid_market>(uuid);
+
+        std::vector<pending_bet_api_object> result;
+
+        for (auto& bet : bets_rng)
+        {
+            result.push_back(bet);
+        }
+
+        return result;
+    }
+
 private:
     dba::db_accessor<betting_property_object>& _betting_prop_dba;
     dba::db_accessor<game_object>& _game_dba;
