@@ -73,6 +73,11 @@ public:
         return a;
     }
 
+    value_type amount() const
+    {
+        return static_cast<value_type>(_amount / 1'000'000'000);
+    }
+
 private:
     value_type _amount;
 };
