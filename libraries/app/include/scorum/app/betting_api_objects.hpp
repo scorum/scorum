@@ -73,8 +73,6 @@ struct winner_api_object
     better loser;
     chain::market_type market;
 
-    bool draw = false;
-
     /**
      * @brief Winner's net win
      */
@@ -116,7 +114,6 @@ FC_REFLECT(scorum::app::winner_api_object,
           (winner)
           (loser)
           (market)
-          (draw)
           (profit)
           (income))
 // clang-format on
