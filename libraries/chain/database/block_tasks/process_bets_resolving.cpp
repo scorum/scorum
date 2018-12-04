@@ -8,6 +8,8 @@
 #include <scorum/chain/dba/db_accessor.hpp>
 #include <scorum/chain/dba/db_accessor_helpers.hpp>
 
+#include <scorum/chain/services/service_base.hpp>
+
 #include <scorum/utils/algorithm/foreach_mut.hpp>
 
 namespace scorum {
@@ -34,7 +36,7 @@ void process_bets_resolving::on_apply(block_task_context& ctx)
     debug_log(ctx.get_block_info(), "process_bets_resolving BEGIN");
 
     auto head_time = _dprop_dba.get().time;
-    auto games = _game_dba.get_range_by<by_bets_resolve_time>(unbounded, _x <= head_time);
+    auto games = _game_dba.get_range_by<by_bets_resolve_time>(unbounded, _x <= std::make_tuple(head_time, ALL_IDS));
 
     utils::foreach_mut(games, [&](const game_object& game) {
 

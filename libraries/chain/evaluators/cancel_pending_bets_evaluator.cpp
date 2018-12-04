@@ -2,7 +2,6 @@
 #include <scorum/chain/data_service_factory.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
-#include <scorum/chain/services/matched_bet.hpp>
 
 #include <scorum/chain/betting/betting_service.hpp>
 

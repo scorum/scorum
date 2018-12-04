@@ -8,7 +8,6 @@
 #include <scorum/chain/services/betting_property.hpp>
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/game.hpp>
-#include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
 
 #include <scorum/protocol/betting/market_kind.hpp>
