@@ -7,7 +7,6 @@
 #include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
-#include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/game.hpp>
 
 #include <fc/optional.hpp>

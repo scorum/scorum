@@ -5,7 +5,6 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/betting_property.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
-#include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/betting/betting_math.hpp>
