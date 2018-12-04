@@ -1474,13 +1474,15 @@ void application::initialize_plugins(const boost::program_options::variables_map
     for (auto& entry : my->_plugins_enabled)
     {
         const auto& plugin_name = entry.first;
-        ilog("Initializing plugin ${name}", ("name", plugin_name));
-        if (read_only)
+
+        if (read_only
+            && my->_plugins_locked_in_readonly_mode.find(plugin_name) != my->_plugins_locked_in_readonly_mode.end())
         {
-            FC_ASSERT(my->_plugins_locked_in_readonly_mode.find(plugin_name)
-                          == my->_plugins_locked_in_readonly_mode.end(),
-                      "Plugin '${p}' can't be loaded in read-only mode.", ("p", plugin_name));
+            ilog("Skip ${p} plugin initialization in read-only mode", ("p", plugin_name));
+            continue;
         }
+
+        ilog("Initializing plugin ${name}", ("name", plugin_name));
         entry.second->plugin_initialize(options);
     }
 }
