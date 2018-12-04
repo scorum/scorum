@@ -3407,5 +3407,40 @@ std::vector<pending_bet_api_object> wallet_api::get_pending_bets(const std::vect
     return api->get_pending_bets(uuids);
 }
 
+betting_property_api_object wallet_api::get_betting_properties() const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_betting_properties();
+}
+
+std::vector<matched_bet_api_object> wallet_api::get_game_returns(const uuid_type& game_uuid) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_game_returns(game_uuid);
+}
+
+std::vector<winner_api_object> wallet_api::get_game_winners(const uuid_type& game_uuid) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_game_winners(game_uuid);
+}
+
+std::vector<matched_bet_api_object> wallet_api::get_game_matched_bets(const uuid_type& uuid) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_game_matched_bets(uuid);
+}
+
+std::vector<pending_bet_api_object> wallet_api::get_game_pending_bets(const uuid_type& uuid) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
+
+    return api->get_game_pending_bets(uuid);
+}
+
 } // namespace wallet
 } // namespace scorum
