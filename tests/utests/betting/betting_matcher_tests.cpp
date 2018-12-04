@@ -1,5 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+
 #include <scorum/chain/database/database_virtual_operations.hpp>
 
 #include <scorum/chain/betting/betting_matcher.hpp>
@@ -12,6 +14,8 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 
 #include <scorum/chain/dba/db_accessor.hpp>
+
+#include <scorum/protocol/types.hpp>
 
 #include "detail.hpp"
 #include "db_mock.hpp"
@@ -84,7 +88,7 @@ public:
 
 BOOST_AUTO_TEST_SUITE(betting_matcher_tests)
 
-BOOST_FIXTURE_TEST_CASE(add_bet_with_no_stake_to_the_close_list, no_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(add_bet_with_no_stake_to_the_close_list, no_bets_fixture)
 {
     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
@@ -103,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(add_bet_with_no_stake_to_the_close_list, no_bets_fixture
     BOOST_CHECK_EQUAL(1u, bets_to_cancel.size());
 }
 
-BOOST_FIXTURE_TEST_CASE(dont_create_matched_bet_when_stake_is_zero, no_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(dont_create_matched_bet_when_stake_is_zero, no_bets_fixture)
 {
     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
@@ -122,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(dont_create_matched_bet_when_stake_is_zero, no_bets_fixt
     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
 
-BOOST_FIXTURE_TEST_CASE(dont_add_bet_with_no_stake_to_the_close_list, no_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(dont_add_bet_with_no_stake_to_the_close_list, no_bets_fixture)
 {
     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(0);
@@ -135,7 +139,7 @@ BOOST_FIXTURE_TEST_CASE(dont_add_bet_with_no_stake_to_the_close_list, no_bets_fi
     BOOST_CHECK_EQUAL(0u, bets_to_cancel.size());
 }
 
-BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_wincase, no_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_wincase, no_bets_fixture)
 {
     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
@@ -154,7 +158,7 @@ BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_wincase, no_bets_fixture)
     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
 
-BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_odds, no_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_odds, no_bets_fixture)
 {
     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(10);
@@ -173,7 +177,7 @@ BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_odds, no_bets_fixture)
     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
 
-BOOST_FIXTURE_TEST_CASE(match_with_two_bets, no_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(match_with_two_bets, no_bets_fixture)
 {
     const auto one_point_five = odds(3, 2);
     const auto total_over_1 = total::over({ 1 });
@@ -226,7 +230,7 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(add_fully_matched_bet_to_cancel_list, two_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(add_fully_matched_bet_to_cancel_list, two_bets_fixture)
 {
     auto bets_to_cancel = matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid));
 
@@ -235,7 +239,7 @@ BOOST_FIXTURE_TEST_CASE(add_fully_matched_bet_to_cancel_list, two_bets_fixture)
     BOOST_CHECK(bets_to_cancel.front().get().data.uuid == bet1.uuid);
 }
 
-BOOST_FIXTURE_TEST_CASE(expect_virtual_operation_call_on_bets_matching, two_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(expect_virtual_operation_call_on_bets_matching, two_bets_fixture)
 {
     using namespace scorum::protocol;
 
@@ -254,14 +258,14 @@ BOOST_FIXTURE_TEST_CASE(expect_virtual_operation_call_on_bets_matching, two_bets
     BOOST_CHECK(ops[2].which() == operation::tag<bets_matched_operation>::value);
 }
 
-BOOST_FIXTURE_TEST_CASE(create_one_matched_bet, two_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(create_one_matched_bet, two_bets_fixture)
 {
     matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid));
 
     BOOST_CHECK_EQUAL(1u, count<matched_bet_index>());
 }
 
-BOOST_FIXTURE_TEST_CASE(check_bets_matched_stake, two_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(check_bets_matched_stake, two_bets_fixture)
 {
     matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid));
 
@@ -269,14 +273,14 @@ BOOST_FIXTURE_TEST_CASE(check_bets_matched_stake, two_bets_fixture)
     BOOST_CHECK_EQUAL(5u, matched_dba.get_by<by_id>(0u).bet2_data.stake.amount);
 }
 
-BOOST_FIXTURE_TEST_CASE(second_bet_matched_on_five_tockens, two_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(second_bet_matched_on_five_tockens, two_bets_fixture)
 {
     matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid));
 
     BOOST_CHECK_EQUAL(5u, pending_dba.get_by<by_uuid>(bet2.uuid).data.stake.amount);
 }
 
-BOOST_FIXTURE_TEST_CASE(first_bet_matched_on_hole_stake, two_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(first_bet_matched_on_hole_stake, two_bets_fixture)
 {
     matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid));
 
@@ -319,14 +323,14 @@ struct three_bets_fixture : public no_bets_fixture
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(dont_match_bets_when_odds_dont_match, three_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(dont_match_bets_when_odds_dont_match, three_bets_fixture)
 {
     matcher.match(pending_dba.get_by<by_uuid>(bet3.uuid));
 
     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
 }
 
-BOOST_FIXTURE_TEST_CASE(dont_change_pending_bet_stake_when_matching_dont_occur, three_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(dont_change_pending_bet_stake_when_matching_dont_occur, three_bets_fixture)
 {
     matcher.match(pending_dba.get_by<by_uuid>(bet3.uuid));
 
@@ -335,7 +339,7 @@ BOOST_FIXTURE_TEST_CASE(dont_change_pending_bet_stake_when_matching_dont_occur, 
     BOOST_CHECK(compare_bet_data(bet3, pending_dba.get_by<by_uuid>(bet3.uuid).data));
 }
 
-BOOST_FIXTURE_TEST_CASE(stop_matching_when_stake_is_spent, three_bets_fixture)
+SCORUM_FIXTURE_TEST_CASE(stop_matching_when_stake_is_spent, three_bets_fixture)
 {
     const auto& bet4 = create_bet([&](pending_bet_object& bet) {
         bet.data.stake = ASSET_SCR(1);
@@ -353,4 +357,71 @@ BOOST_FIXTURE_TEST_CASE(stop_matching_when_stake_is_spent, three_bets_fixture)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+using uuid_type = scorum::uuid_type;
+
+SCORUM_TEST_CASE(matching_fix_list_from_string_test)
+{
+    static const std::string str
+        = R"([["01000000-0000-0000-0000-000000000000",["02000000-0000-0000-0000-000000000000","03000000-0000-0000-0000-000000000000"]]])";
+
+    auto matched_bets = fc::json::from_string(str).as<matching_fix_list>();
+
+    BOOST_CHECK_EQUAL(str, fc::json::to_string(matched_bets));
+}
+
+SCORUM_TEST_CASE(matching_fix_list_to_string_test)
+{
+    matching_fix_list fix;
+    fix.insert(std::make_pair<uuid_type, std::vector<uuid_type>>({ { 1 } }, { { { 2 } }, { { 3 } } }));
+
+    BOOST_CHECK_EQUAL(
+        R"([["01000000-0000-0000-0000-000000000000",["02000000-0000-0000-0000-000000000000","03000000-0000-0000-0000-000000000000"]]])",
+        fc::json::to_string(fix));
+}
+
+SCORUM_TEST_CASE(by_game_uuid_wincase_asc_sorting_test)
+{
+    db_mock db;
+    db.add_index<pending_bet_index>();
+
+    dba::db_accessor<pending_bet_object> pending_dba(db);
+
+    boost::uuids::uuid game_uuid = { { 7 } };
+
+    auto wincase = total::over({ 1000 });
+
+    pending_dba.create([&](pending_bet_object& bet) { //
+        bet.data.uuid = { { 1 } };
+        bet.game_uuid = game_uuid;
+        bet.data.wincase = wincase;
+        bet.data.created = fc::time_point_sec::from_iso_string("2018-11-25T12:00:00");
+    });
+
+    pending_dba.create([&](pending_bet_object& bet) { //
+        bet.data.uuid = { { 3 } };
+        bet.game_uuid = game_uuid;
+        bet.data.wincase = wincase;
+        bet.data.created = fc::time_point_sec::from_iso_string("2018-11-25T12:02:00");
+    });
+
+    pending_dba.create([&](pending_bet_object& bet) { //
+        bet.data.uuid = { { 2 } };
+        bet.game_uuid = game_uuid;
+        bet.data.wincase = wincase;
+        bet.data.created = fc::time_point_sec::from_iso_string("2018-11-25T12:01:00");
+    });
+
+    auto key = std::make_tuple(game_uuid, wincase);
+
+    auto pending_bets = pending_dba.get_range_by<by_game_uuid_wincase_asc>(key);
+
+    std::vector<pending_bet_object> bets(pending_bets.begin(), pending_bets.end());
+
+    BOOST_REQUIRE_EQUAL(3u, bets.size());
+
+    BOOST_CHECK(bets[0].data.uuid == boost::uuids::uuid({ { 1 } }));
+    BOOST_CHECK(bets[1].data.uuid == boost::uuids::uuid({ { 2 } }));
+    BOOST_CHECK(bets[2].data.uuid == boost::uuids::uuid({ { 3 } }));
+}
 }

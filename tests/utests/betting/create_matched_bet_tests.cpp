@@ -61,7 +61,7 @@ template <typename Wincase>
 auto get_range(const dba::db_accessor<pending_bet_object>& accessor, scorum::uuid_type id, Wincase w)
 {
     auto key = std::make_tuple(id, w);
-    return accessor.get_range_by<by_game_uuid_wincase>(key);
+    return accessor.get_range_by<by_game_uuid_wincase_asc>(key);
 }
 
 SCORUM_TEST_CASE(check_order_in_range_of_bets_with_equal_game_id_and_wincase)
