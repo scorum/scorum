@@ -5,7 +5,6 @@
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/betting_property.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
-#include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/dynamic_global_property.hpp>
 
 #include <scorum/chain/betting/betting_math.hpp>
@@ -38,7 +37,6 @@ protected:
         , account_service(*this, mocks)
         , games(*this, mocks)
         , pending_bets(*this, mocks)
-        , matched_bets(*this, mocks)
         , dgp_service(*this, mocks, [&](dynamic_global_property_object& p) {
             p.time = fc::time_point_sec::from_iso_string("2018-07-01T00:00:00");
             p.head_block_number = 1;
@@ -49,7 +47,6 @@ protected:
         mocks.OnCall(dbs_services, data_service_factory_i::account_service).ReturnByRef(account_service.service());
         mocks.OnCall(dbs_services, data_service_factory_i::game_service).ReturnByRef(games.service());
         mocks.OnCall(dbs_services, data_service_factory_i::pending_bet_service).ReturnByRef(pending_bets.service());
-        mocks.OnCall(dbs_services, data_service_factory_i::matched_bet_service).ReturnByRef(matched_bets.service());
         mocks.OnCall(dbs_services, data_service_factory_i::dynamic_global_property_service)
             .ReturnByRef(dgp_service.service());
         mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
@@ -88,7 +85,6 @@ public:
     account_service_wrapper account_service;
     game_service_wrapper games;
     pending_bet_service_wrapper pending_bets;
-    matched_service_wrapper matched_bets;
     dynamic_global_property_service_wrapper dgp_service;
 };
 

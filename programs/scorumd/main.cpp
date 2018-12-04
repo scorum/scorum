@@ -62,6 +62,8 @@ void wait_stop()
 
 int main(int argc, char** argv)
 {
+    fc::logging_config::configure_logging(fc::logging_config::default_config());
+
     scorum::plugin::initialize_plugin_factories();
     app::application* node = new app::application();
     fc::oexception unhandled_exception;

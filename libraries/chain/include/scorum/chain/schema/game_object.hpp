@@ -5,7 +5,9 @@
 #include <scorum/protocol/betting/market.hpp>
 #include <scorum/protocol/betting/game_status.hpp>
 #include <scorum/chain/schema/scorum_object_types.hpp>
+
 #include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/composite_key.hpp>
 
 namespace scorum {
 namespace chain {
@@ -76,20 +78,36 @@ using game_index
                                                              member<game_object,
                                                                     game_object::id_type,
                                                                     &game_object::id>>,
+
                                               hashed_unique<tag<by_uuid>,
                                                             member<game_object, uuid_type, &game_object::uuid>>,
-                                              ordered_non_unique<tag<by_auto_resolve_time>,
-                                                                 member<game_object,
-                                                                        time_point_sec,
-                                                                        &game_object::auto_resolve_time>>,
-                                              ordered_non_unique<tag<by_bets_resolve_time>,
-                                                                 member<game_object,
-                                                                        time_point_sec,
-                                                                        &game_object::bets_resolve_time>>,
-                                              ordered_non_unique<tag<by_start_time>,
-                                                                 member<game_object,
-                                                                        fc::time_point_sec,
-                                                                        &game_object::start_time>>>>;
+
+                                              ordered_unique<tag<by_auto_resolve_time>,
+                                                             composite_key<game_object,
+                                                                           member<game_object,
+                                                                                  time_point_sec,
+                                                                                  &game_object::auto_resolve_time>,
+                                                                           member<game_object,
+                                                                                  game_object::id_type,
+                                                                                  &game_object::id>>>,
+
+                                              ordered_unique<tag<by_bets_resolve_time>,
+                                                             composite_key<game_object,
+                                                                           member<game_object,
+                                                                                  time_point_sec,
+                                                                                  &game_object::bets_resolve_time>,
+                                                                           member<game_object,
+                                                                                  game_object::id_type,
+                                                                                  &game_object::id>>>,
+
+                                              ordered_unique<tag<by_start_time>,
+                                                             composite_key<game_object,
+                                                                           member<game_object,
+                                                                                  fc::time_point_sec,
+                                                                                  &game_object::start_time>,
+                                                                           member<game_object,
+                                                                                  game_object::id_type,
+                                                                                  &game_object::id>>>>>;
 }
 }
 
@@ -97,8 +115,20 @@ FC_REFLECT(scorum::chain::game_uuid_history_object, (id)(uuid))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_uuid_history_object, scorum::chain::game_uuid_history_index)
 
+// clang-format off
 FC_REFLECT(scorum::chain::game_object,
-           (id)(uuid)(json_metadata)(start_time)(original_start_time)(last_update)(bets_resolve_time)(
-               auto_resolve_time)(status)(game)(markets)(results))
+           (id)
+           (uuid)
+           (json_metadata)
+           (start_time)
+           (original_start_time)
+           (last_update)
+           (bets_resolve_time)
+           (auto_resolve_time)
+           (status)
+           (game)
+           (markets)
+           (results))
+// clang-format on
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_object, scorum::chain::game_index)
