@@ -1,0 +1,1341 @@
+diff --git a/libraries/chain/betting/betting_matcher.cpp b/libraries/chain/betting/betting_matcher.cpp
+index 062b37d..7445dfe 100644
+--- a/libraries/chain/betting/betting_matcher.cpp
++++ b/libraries/chain/betting/betting_matcher.cpp
+@@ -10,6 +10,229 @@
+ namespace scorum {
+ namespace chain {
+ 
++//    [
++//        "5c502d1a-8d9a-4c03-a2c0-3e696faae710",
++//        [
++//            "a6fa6583-5f99-48eb-87d8-b55853f5ed37",
++//            "dd766110-d6cb-4a50-bf0b-780b81268650"
++//        ]
++//    ],
++//    [
++//        "574caa19-14e6-4dce-a05d-ee6bd6bcd389",
++//        [
++//            "04758fe6-f6df-4910-b5df-7a97771097cc",
++//            "a4b6c3aa-10cf-4997-932b-5bacab8643e4"
++//        ]
++//    ],
++//    [
++//        "af343ea7-c582-4b03-b28d-c3bee1705626",
++//        [
++//            "35c2652e-4f45-4727-99df-96e035847a9e",
++//            "b086d5b4-7c3f-497b-b3c9-b3f4475b4d5a"
++//        ]
++//    ],
++//    [
++//        "a3b696f3-661d-4341-92e6-9d17825edb4a",
++//        [
++//            "a07a51a2-e5ed-4c06-aca8-b7c4f11a3e89",
++//            "3e22f670-e35c-4041-82bb-f3425bff5093"
++//        ]
++//    ],
++
++static const std::string matching_fix = R"([
++    [
++        "84911b2d-91d9-4375-80c3-8ccbc078e992",
++        [
++            "87e01c87-facd-4c68-93da-4e2dd4e1f546",
++            "26e1f127-5d27-4c40-b551-f36e8e2a1ad2",
++            "be0a2d8c-c525-42a2-a537-a7eab03aa319"
++        ]
++    ],
++    [
++        "c2dd413d-59a5-4bc8-b9f8-4efefb848cc7",
++        [
++            "c4193c3e-3ad9-4aa9-a2d5-df2637b23d32",
++            "2da620fc-40bf-41b3-950b-89d509adf7cf"
++        ]
++    ],
++    [
++        "8256c36f-7399-4c01-967a-888f3730ec02",
++        [
++            "d0934027-e040-4f25-9202-c3e45b00bdd2"
++        ]
++    ],
++    [
++        "b4d3a62a-3ed2-48ee-8880-b23e6af9954b",
++        [
++            "bddff0ce-2e45-4f75-a9a6-dfbca27acd61"
++        ]
++    ],
++    [
++        "f45e1c57-64f4-4d18-a6f4-898df5a06b74",
++        [
++            "d26688cc-4d7b-49fa-801a-b6a3173ab0d3"
++        ]
++    ],
++    [
++        "11d1cd20-5809-481a-b07e-2017ecc5e5f8",
++        [
++            "d26688cc-4d7b-49fa-801a-b6a3173ab0d3"
++        ]
++    ],
++    [
++        "ba75d8ec-f800-414d-a9e1-8d90a6f443b7",
++        [
++            "d458ba6c-61b4-4cca-889d-8f10398bf232",
++            "d26688cc-4d7b-49fa-801a-b6a3173ab0d3"
++        ]
++    ],
++    [
++        "bcda6311-9b6f-43ab-b834-ff04d90f31ea",
++        [
++            "10dc5d25-d690-4429-971f-8a7c1d0eec8f"
++        ]
++    ],
++    [
++        "7fc9e455-dd36-46b9-8534-8b230fa5c8b9",
++        [
++            "10dc5d25-d690-4429-971f-8a7c1d0eec8f"
++        ]
++    ],
++    [
++        "de35cb6b-fa81-4f4a-a0ae-86566162b744",
++        [
++            "ffb58868-1a17-471d-bf2c-e22c56111480",
++            "605312d9-3c72-4552-8134-8e25974cbccd"
++        ]
++    ],
++    [
++        "d522f55f-db34-4be9-920d-4b82b8b7c635",
++        [
++            "10121a46-8178-478b-a80d-e265dc183560",
++            "54cc0f28-0bc1-429b-ac98-3c543b64e3cd"
++        ]
++    ],
++    [
++        "a1a1f581-c614-440f-a599-b6f0cc3f997d",
++        [
++            "cd6ea2db-6a39-449f-9d1d-ab994cdc491d",
++            "3eedea83-ccef-4797-8519-18bbd9c893fd"
++        ]
++    ],
++    [
++        "29fba9fc-edf7-4a3e-ba97-4429196e7e6c",
++        [
++            "c549c186-b3b2-4280-9e4b-4d5d029830ac",
++            "f1990e32-0bfa-46c9-9bb6-ef14c3ce6bf3"
++        ]
++    ],
++    [
++        "dcfe2858-9599-4606-840b-25219d87816d",
++        [
++            "491f5618-14eb-4d61-91e6-090b247e0be0",
++            "e15738c5-036c-4376-881d-6f35ce8fee50"
++        ]
++    ],
++    [
++        "a58fc953-7e7e-4d54-a0c1-a2a21f7d2f96",
++        [
++            "8a938b00-819a-45b9-a3e3-913f5b12b42c",
++            "299396a3-6f29-4cb5-b13f-09ad4bbce295"
++        ]
++    ],
++    [
++        "8765a564-daaf-4971-b265-f43e6188b7aa",
++        [
++            "24494b24-407d-4c40-a742-9d2fadab55a5",
++            "9bbc2474-bbf1-4a3a-93e2-28e484d6899e"
++        ]
++    ],
++    [
++        "72437504-9062-4730-974b-1ebcc66fd4e3",
++        [
++            "b660383c-9fd3-4f03-a1ac-c80ebb6e0826",
++            "d6a616f5-803b-4c4a-8fb4-27873f95a2c2"
++        ]
++    ],
++    [
++        "5aed38ca-8a81-40de-890e-863cf27c0aee",
++        [
++            "c55e1f47-1e6d-44ec-9b37-12df4f6605ea",
++            "2d88eb1c-bf49-482f-a3fa-11d324b24c27"
++        ]
++    ],
++    [
++        "a34d64cd-6a7f-4447-89d3-46dd8b60f012",
++        [
++            "76031c54-0856-4af5-8680-169ef19c4845",
++            "e381cdff-7e4f-4aaf-b2a7-606b5eac2718"
++        ]
++    ],
++    [
++        "c7540a6f-4dd9-4d1c-8693-e009116c55e7",
++        [
++            "0460535a-7284-4dee-802b-1e3e634ee688"
++        ]
++    ],
++    [
++        "ef23721e-1134-4d07-be02-1cd3b6880f83",
++        [
++            "0460535a-7284-4dee-802b-1e3e634ee688"
++        ]
++    ],
++    [
++        "10976313-8081-4023-818f-30d9e6ffedc9",
++        [
++            "0460535a-7284-4dee-802b-1e3e634ee688"
++        ]
++    ],
++    [
++        "fe30cb81-0e8f-4ed5-b260-38c9e44a4725",
++        [
++            "0460535a-7284-4dee-802b-1e3e634ee688"
++        ]
++    ],
++    [
++        "9effbf85-ab41-468a-8c4a-991ea23a8a50",
++        [
++            "0460535a-7284-4dee-802b-1e3e634ee688"
++        ]
++    ],
++    [
++        "3568f452-47d9-456c-b085-c8ba83603016",
++        [
++            "d249b968-9359-42d8-a4aa-13af57bd6bae",
++            "25a10696-58f2-4884-96d0-19ac235c04c8"
++        ]
++    ],
++    [
++        "bb1374e9-d014-4245-b2cd-e1ee0a0ca36b",
++        [
++            "0460535a-7284-4dee-802b-1e3e634ee688"
++        ]
++    ],
++    [
++        "d8ca2fcc-f6d0-4a06-b8d8-257424878b69",
++        [
++            "0460535a-7284-4dee-802b-1e3e634ee688"
++        ]
++    ],
++    [
++        "4de53ab4-eb14-4d5b-a02b-774c8d93c209",
++        [
++            "0460535a-7284-4dee-802b-1e3e634ee688"
++        ]
++    ],
++    [
++        "f59e6dc1-1d41-451e-8239-f9aaee629111",
++        [
++            "5c29e81d-4fd9-4f20-ba3b-03ab01d3c70f"
++        ]
++    ]
++])";
++
++// clang-format on
++
+ bool can_be_matched(const pending_bet_object& bet)
+ {
+     return bet.data.stake * bet.data.odds > bet.data.stake;
+@@ -28,6 +251,64 @@ betting_matcher::betting_matcher(database_virtual_operations_emmiter_i& virt_op_
+     , _matched_bet_dba(matched_bet_dba)
+     , _dprop_dba(dprop_dba)
+ {
++    _bets_matching_fix = fc::json::from_string(matching_fix).as<matching_fix_list>();
++}
++
++auto get_pending_bets(const matching_fix_list& matching_fix,
++                      dba::db_accessor<pending_bet_object>& _pending_bet_dba,
++                      dba::db_accessor<dynamic_global_property_object>& _dprop_dba,
++                      uuid_type game_uuid,
++                      wincase_type wincase,
++                      uuid_type bet_uuid)
++{
++    auto key = std::make_tuple(game_uuid, wincase);
++
++    const auto head_block_number = _dprop_dba.get().head_block_number;
++
++    auto b = _pending_bet_dba.get_range_by<by_game_uuid_wincase_asc>(key);
++
++    if (matching_fix.find(bet_uuid) != matching_fix.end())
++    {
++        ilog("process ${0}", ("0", head_block_number));
++
++        ilog("bet ${0}", ("0", bet_uuid));
++
++        std::vector<std::reference_wrapper<const pending_bet_object>> bets;
++
++        for (auto uuid : matching_fix.at(bet_uuid))
++        {
++            bets.push_back(_pending_bet_dba.get_by<by_uuid>(uuid));
++            ilog("+ ${0}", ("0", uuid));
++        }
++
++        size_t index = 0;
++        bool good = true;
++        for (auto& bet : b)
++        {
++            if (bet.data.uuid != bets[index].get().data.uuid)
++            {
++                good = false;
++                break;
++            }
++
++            index += 1;
++
++            if (index >= bets.size())
++            {
++                break;
++            }
++        }
++
++        if (good)
++        {
++            ilog("order for bet ${0} is ok.", ("0", bet_uuid));
++        }
++
++        return bets;
++    }
++
++    std::vector<std::reference_wrapper<const pending_bet_object>> bets(b.begin(), b.end());
++    return bets;
+ }
+ 
+ std::vector<std::reference_wrapper<const pending_bet_object>> betting_matcher::match(const pending_bet_object& bet2)
+@@ -36,11 +317,12 @@ std::vector<std::reference_wrapper<const pending_bet_object>> betting_matcher::m
+     {
+         std::vector<std::reference_wrapper<const pending_bet_object>> bets_to_cancel;
+ 
+-        auto key = std::make_tuple(bet2.game_uuid, create_opposite(bet2.get_wincase()));
+-        auto pending_bets = _pending_bet_dba.get_range_by<by_game_uuid_wincase>(key);
++        auto pending_bets = get_pending_bets(_bets_matching_fix, _pending_bet_dba, _dprop_dba, bet2.game_uuid,
++                                             create_opposite(bet2.get_wincase()), bet2.data.uuid);
+ 
+-        for (const auto& bet1 : pending_bets)
++        for (const auto& bet_ref : pending_bets)
+         {
++            const pending_bet_object& bet1 = bet_ref.get();
+             if (!is_bets_matched(bet1, bet2))
+                 continue;
+ 
+diff --git a/libraries/chain/data_service_factory.cpp b/libraries/chain/data_service_factory.cpp
+index 29758b7..5240c83 100644
+--- a/libraries/chain/data_service_factory.cpp
++++ b/libraries/chain/data_service_factory.cpp
+@@ -36,7 +36,6 @@
+ #include <scorum/chain/services/blocks_story.hpp>
+ #include <scorum/chain/services/advertising_property.hpp>
+ #include <scorum/chain/services/betting_property.hpp>
+-#include <scorum/chain/services/matched_bet.hpp>
+ #include <scorum/chain/services/pending_bet.hpp>
+ #include <scorum/chain/services/game.hpp>
+ 
+@@ -81,7 +80,6 @@ DATA_SERVICE_FACTORY_IMPL(
+         (blocks_story)
+         (advertising_property)
+         (betting_property)
+-        (matched_bet)
+         (pending_bet)
+         (game)
+         )
+diff --git a/libraries/chain/database/block_tasks/process_bets_auto_resolving.cpp b/libraries/chain/database/block_tasks/process_bets_auto_resolving.cpp
+index 13e5953..6d78131 100644
+--- a/libraries/chain/database/block_tasks/process_bets_auto_resolving.cpp
++++ b/libraries/chain/database/block_tasks/process_bets_auto_resolving.cpp
+@@ -33,7 +33,7 @@ void process_bets_auto_resolving::on_apply(block_task_context& ctx)
+     debug_log(ctx.get_block_info(), "process_bets_auto_resolving BEGIN");
+ 
+     auto head_time = _dprop_dba.get().time;
+-    auto games = _game_dba.get_range_by<by_auto_resolve_time>(unbounded, _x <= head_time);
++    auto games = _game_dba.get_range_by<by_auto_resolve_time>(unbounded, _x <= std::make_tuple(head_time, ALL_IDS));
+ 
+     utils::foreach_mut(games, [&](const game_object& game) {
+ 
+diff --git a/libraries/chain/database/block_tasks/process_bets_resolving.cpp b/libraries/chain/database/block_tasks/process_bets_resolving.cpp
+index f240fec..4a16585 100644
+--- a/libraries/chain/database/block_tasks/process_bets_resolving.cpp
++++ b/libraries/chain/database/block_tasks/process_bets_resolving.cpp
+@@ -8,6 +8,8 @@
+ #include <scorum/chain/dba/db_accessor.hpp>
+ #include <scorum/chain/dba/db_accessor_helpers.hpp>
+ 
++#include <scorum/chain/services/service_base.hpp>
++
+ #include <scorum/utils/algorithm/foreach_mut.hpp>
+ 
+ namespace scorum {
+@@ -34,7 +36,7 @@ void process_bets_resolving::on_apply(block_task_context& ctx)
+     debug_log(ctx.get_block_info(), "process_bets_resolving BEGIN");
+ 
+     auto head_time = _dprop_dba.get().time;
+-    auto games = _game_dba.get_range_by<by_bets_resolve_time>(unbounded, _x <= head_time);
++    auto games = _game_dba.get_range_by<by_bets_resolve_time>(unbounded, _x <= std::make_tuple(head_time, ALL_IDS));
+ 
+     utils::foreach_mut(games, [&](const game_object& game) {
+ 
+diff --git a/libraries/chain/evaluators/create_game_evaluator.cpp b/libraries/chain/evaluators/create_game_evaluator.cpp
+index 96de386..d70631f 100644
+--- a/libraries/chain/evaluators/create_game_evaluator.cpp
++++ b/libraries/chain/evaluators/create_game_evaluator.cpp
+@@ -36,8 +36,7 @@ void create_game_evaluator::do_apply(const operation_type& op)
+ 
+     fc::flat_set<market_type> markets(op.markets.begin(), op.markets.end());
+ 
+-    _game_svc.create_game(op.uuid, op.moderator, op.json_metadata, op.start_time, op.auto_resolve_delay_sec, op.game,
+-                          markets);
++    _game_svc.create_game(op.uuid, op.json_metadata, op.start_time, op.auto_resolve_delay_sec, op.game, markets);
+ }
+ }
+ }
+diff --git a/libraries/chain/include/scorum/chain/betting/betting_matcher.hpp b/libraries/chain/include/scorum/chain/betting/betting_matcher.hpp
+index 6e9fccf..0f8e8aa 100644
+--- a/libraries/chain/include/scorum/chain/betting/betting_matcher.hpp
++++ b/libraries/chain/include/scorum/chain/betting/betting_matcher.hpp
+@@ -3,6 +3,8 @@
+ #include <stdint.h>
+ #include <vector>
+ 
++#include <scorum/protocol/types.hpp>
++
+ namespace fc {
+ class time_point_sec;
+ }
+@@ -21,6 +23,8 @@ struct pending_bet_object;
+ struct matched_bet_object;
+ struct matched_stake_type;
+ 
++using matching_fix_list = std::map<scorum::uuid_type, std::vector<scorum::uuid_type>>;
++
+ struct betting_matcher_i
+ {
+     virtual ~betting_matcher_i();
+@@ -52,6 +56,8 @@ private:
+     dba::db_accessor<pending_bet_object>& _pending_bet_dba;
+     dba::db_accessor<matched_bet_object>& _matched_bet_dba;
+     dba::db_accessor<dynamic_global_property_object>& _dprop_dba;
++
++    matching_fix_list _bets_matching_fix;
+ };
+ }
+ }
+diff --git a/libraries/chain/include/scorum/chain/data_service_factory.hpp b/libraries/chain/include/scorum/chain/data_service_factory.hpp
+index eaf7441..ac5082f 100644
+--- a/libraries/chain/include/scorum/chain/data_service_factory.hpp
++++ b/libraries/chain/include/scorum/chain/data_service_factory.hpp
+@@ -41,7 +41,6 @@ DATA_SERVICE_FACTORY_DECLARE(
+         (blocks_story)
+         (advertising_property)
+         (betting_property)
+-        (matched_bet)
+         (pending_bet)
+         (game)
+         )
+diff --git a/libraries/chain/include/scorum/chain/schema/bet_objects.hpp b/libraries/chain/include/scorum/chain/schema/bet_objects.hpp
+index e94c8c6..a8417ca 100644
+--- a/libraries/chain/include/scorum/chain/schema/bet_objects.hpp
++++ b/libraries/chain/include/scorum/chain/schema/bet_objects.hpp
+@@ -92,112 +92,144 @@ public:
+ struct by_uuid;
+ struct by_game_uuid_kind;
+ struct by_game_uuid_market;
+-struct by_game_uuid_better;
+ struct by_game_uuid_created;
+-struct by_game_uuid_wincase;
+-
+-typedef shared_multi_index_container<bet_uuid_history_object,
+-                                     indexed_by<ordered_unique<tag<by_id>,
+-                                                               member<bet_uuid_history_object,
+-                                                                      bet_uuid_history_id_type,
+-                                                                      &bet_uuid_history_object::id>>,
+-                                                hashed_unique<tag<by_uuid>,
+-                                                              member<bet_uuid_history_object,
+-                                                                     uuid_type,
+-                                                                     &bet_uuid_history_object::uuid>>>>
+-    bet_uuid_history_index;
+-
+-typedef shared_multi_index_container<pending_bet_object,
+-                                     indexed_by<ordered_unique<tag<by_id>,
+-                                                               member<pending_bet_object,
+-                                                                      pending_bet_id_type,
+-                                                                      &pending_bet_object::id>>,
+-                                                hashed_unique<tag<by_uuid>,
+-                                                              const_mem_fun<pending_bet_object,
+-                                                                            uuid_type,
+-                                                                            &pending_bet_object::get_uuid>>,
+-
+-                                                ordered_non_unique<tag<by_game_uuid_wincase>,
+-                                                                   composite_key<pending_bet_object,
+-                                                                                 member<pending_bet_object,
+-                                                                                        uuid_type,
+-                                                                                        &pending_bet_object::game_uuid>,
+-                                                                                 const_mem_fun<pending_bet_object,
+-                                                                                               wincase_type,
+-                                                                                               &pending_bet_object::
+-                                                                                                   get_wincase>>>,
+-
+-                                                ordered_non_unique<tag<by_game_uuid_kind>,
+-                                                                   composite_key<pending_bet_object,
+-                                                                                 member<pending_bet_object,
+-                                                                                        uuid_type,
+-                                                                                        &pending_bet_object::game_uuid>,
+-                                                                                 const_mem_fun<pending_bet_object,
+-                                                                                               pending_bet_kind,
+-                                                                                               &pending_bet_object::
+-                                                                                                   get_kind>>>,
+-                                                ordered_non_unique<tag<by_game_uuid_market>,
+-                                                                   composite_key<pending_bet_object,
+-                                                                                 member<pending_bet_object,
+-                                                                                        uuid_type,
+-                                                                                        &pending_bet_object::game_uuid>,
+-                                                                                 member<pending_bet_object,
+-                                                                                        market_type,
+-                                                                                        &pending_bet_object::market>>>,
+-                                                ordered_non_unique<tag<by_game_uuid_better>,
+-                                                                   composite_key<pending_bet_object,
+-                                                                                 member<pending_bet_object,
+-                                                                                        uuid_type,
+-                                                                                        &pending_bet_object::game_uuid>,
+-                                                                                 const_mem_fun<pending_bet_object,
+-                                                                                               account_name_type,
+-                                                                                               &pending_bet_object::
+-                                                                                                   get_better>>>,
+-                                                ordered_non_unique<tag<by_game_uuid_created>,
+-                                                                   composite_key<pending_bet_object,
+-                                                                                 member<pending_bet_object,
+-                                                                                        uuid_type,
+-                                                                                        &pending_bet_object::game_uuid>,
+-                                                                                 const_mem_fun<pending_bet_object,
+-                                                                                               fc::time_point_sec,
+-                                                                                               &pending_bet_object::
+-                                                                                                   get_created>>>>>
+-    pending_bet_index;
++
++struct by_game_uuid_wincase_asc;
++
++using bet_uuid_history_index
++    = shared_multi_index_container<bet_uuid_history_object,
++                                   indexed_by<ordered_unique<tag<by_id>,
++                                                             member<bet_uuid_history_object,
++                                                                    bet_uuid_history_id_type,
++                                                                    &bet_uuid_history_object::id>>,
++                                              hashed_unique<tag<by_uuid>,
++                                                            member<bet_uuid_history_object,
++                                                                   uuid_type,
++                                                                   &bet_uuid_history_object::uuid>>>>;
++
++using pending_bet_index
++    = shared_multi_index_container<pending_bet_object,
++                                   indexed_by<ordered_unique<tag<by_id>,
++                                                             member<pending_bet_object,
++                                                                    pending_bet_id_type,
++                                                                    &pending_bet_object::id>>,
++
++                                              hashed_unique<tag<by_uuid>,
++                                                            const_mem_fun<pending_bet_object,
++                                                                          uuid_type,
++                                                                          &pending_bet_object::get_uuid>>,
++
++                                              ordered_unique<tag<by_game_uuid_wincase_asc>,
++                                                             composite_key<pending_bet_object,
++                                                                           member<pending_bet_object,
++                                                                                  uuid_type,
++                                                                                  &pending_bet_object::game_uuid>,
++                                                                           const_mem_fun<pending_bet_object,
++                                                                                         wincase_type,
++                                                                                         &pending_bet_object::
++                                                                                             get_wincase>,
++                                                                           const_mem_fun<pending_bet_object,
++                                                                                         fc::time_point_sec,
++                                                                                         &pending_bet_object::
++                                                                                             get_created>,
++                                                                           member<pending_bet_object,
++                                                                                  pending_bet_id_type,
++                                                                                  &pending_bet_object::id>>,
++                                                             composite_key_compare<std::less<uuid_type>,
++                                                                                   std::less<wincase_type>,
++                                                                                   std::less<time_point_sec>,
++                                                                                   std::less<pending_bet_id_type>>>,
++
++                                              ordered_unique<tag<by_game_uuid_kind>,
++                                                             composite_key<pending_bet_object,
++                                                                           member<pending_bet_object,
++                                                                                  uuid_type,
++                                                                                  &pending_bet_object::game_uuid>,
++                                                                           const_mem_fun<pending_bet_object,
++                                                                                         pending_bet_kind,
++                                                                                         &pending_bet_object::get_kind>,
++                                                                           member<pending_bet_object,
++                                                                                  pending_bet_id_type,
++                                                                                  &pending_bet_object::id>>>,
++
++                                              ordered_unique<tag<by_game_uuid_market>,
++                                                             composite_key<pending_bet_object,
++                                                                           member<pending_bet_object,
++                                                                                  uuid_type,
++                                                                                  &pending_bet_object::game_uuid>,
++                                                                           member<pending_bet_object,
++                                                                                  market_type,
++                                                                                  &pending_bet_object::market>,
++                                                                           member<pending_bet_object,
++                                                                                  pending_bet_id_type,
++                                                                                  &pending_bet_object::id>>>,
++
++                                              ordered_unique<tag<by_game_uuid_created>,
++                                                             composite_key<pending_bet_object,
++                                                                           member<pending_bet_object,
++                                                                                  uuid_type,
++                                                                                  &pending_bet_object::game_uuid>,
++                                                                           const_mem_fun<pending_bet_object,
++                                                                                         fc::time_point_sec,
++                                                                                         &pending_bet_object::
++                                                                                             get_created>,
++                                                                           member<pending_bet_object,
++                                                                                  pending_bet_id_type,
++                                                                                  &pending_bet_object::id>>>>>;
+ 
+ struct by_bet1_uuid;
+ struct by_bet2_uuid;
+ 
+-typedef shared_multi_index_container<matched_bet_object,
+-                                     indexed_by<ordered_unique<tag<by_id>,
+-                                                               member<matched_bet_object,
+-                                                                      matched_bet_id_type,
+-                                                                      &matched_bet_object::id>>,
+-                                                ordered_non_unique<tag<by_bet1_uuid>,
+-                                                                   const_mem_fun<matched_bet_object,
+-                                                                                 uuid_type,
+-                                                                                 &matched_bet_object::get_bet1_uuid>>,
+-                                                ordered_non_unique<tag<by_bet2_uuid>,
+-                                                                   const_mem_fun<matched_bet_object,
+-                                                                                 uuid_type,
+-                                                                                 &matched_bet_object::get_bet2_uuid>>,
+-                                                ordered_non_unique<tag<by_game_uuid_market>,
+-                                                                   composite_key<matched_bet_object,
+-                                                                                 member<matched_bet_object,
+-                                                                                        uuid_type,
+-                                                                                        &matched_bet_object::game_uuid>,
+-                                                                                 member<matched_bet_object,
+-                                                                                        market_type,
+-                                                                                        &matched_bet_object::market>>>,
+-                                                ordered_non_unique<tag<by_game_uuid_created>,
+-                                                                   composite_key<matched_bet_object,
+-                                                                                 member<matched_bet_object,
+-                                                                                        uuid_type,
+-                                                                                        &matched_bet_object::game_uuid>,
+-                                                                                 member<matched_bet_object,
+-                                                                                        fc::time_point_sec,
+-                                                                                        &matched_bet_object::
+-                                                                                            created>>>>>
+-    matched_bet_index;
++using matched_bet_index
++    = shared_multi_index_container<matched_bet_object,
++                                   indexed_by<ordered_unique<tag<by_id>,
++                                                             member<matched_bet_object,
++                                                                    matched_bet_id_type,
++                                                                    &matched_bet_object::id>>,
++
++                                              ordered_unique<tag<by_bet1_uuid>,
++                                                             composite_key<matched_bet_object,
++                                                                           const_mem_fun<matched_bet_object,
++                                                                                         uuid_type,
++                                                                                         &matched_bet_object::
++                                                                                             get_bet1_uuid>,
++                                                                           member<matched_bet_object,
++                                                                                  matched_bet_id_type,
++                                                                                  &matched_bet_object::id>>>,
++
++                                              ordered_unique<tag<by_bet2_uuid>,
++                                                             composite_key<matched_bet_object,
++                                                                           const_mem_fun<matched_bet_object,
++                                                                                         uuid_type,
++                                                                                         &matched_bet_object::
++                                                                                             get_bet2_uuid>,
++                                                                           member<matched_bet_object,
++                                                                                  matched_bet_id_type,
++                                                                                  &matched_bet_object::id>>>,
++
++                                              ordered_unique<tag<by_game_uuid_market>,
++                                                             composite_key<matched_bet_object,
++                                                                           member<matched_bet_object,
++                                                                                  uuid_type,
++                                                                                  &matched_bet_object::game_uuid>,
++                                                                           member<matched_bet_object,
++                                                                                  market_type,
++                                                                                  &matched_bet_object::market>,
++                                                                           member<matched_bet_object,
++                                                                                  matched_bet_id_type,
++                                                                                  &matched_bet_object::id>>>,
++
++                                              ordered_unique<tag<by_game_uuid_created>,
++                                                             composite_key<matched_bet_object,
++                                                                           member<matched_bet_object,
++                                                                                  uuid_type,
++                                                                                  &matched_bet_object::game_uuid>,
++                                                                           member<matched_bet_object,
++                                                                                  fc::time_point_sec,
++                                                                                  &matched_bet_object::created>,
++                                                                           member<matched_bet_object,
++                                                                                  matched_bet_id_type,
++                                                                                  &matched_bet_object::id>>>>>;
+ }
+ }
+ 
+diff --git a/libraries/chain/include/scorum/chain/schema/game_object.hpp b/libraries/chain/include/scorum/chain/schema/game_object.hpp
+index 21c44c9..1338a45 100644
+--- a/libraries/chain/include/scorum/chain/schema/game_object.hpp
++++ b/libraries/chain/include/scorum/chain/schema/game_object.hpp
+@@ -5,7 +5,9 @@
+ #include <scorum/protocol/betting/market.hpp>
+ #include <scorum/protocol/betting/game_status.hpp>
+ #include <scorum/chain/schema/scorum_object_types.hpp>
++
+ #include <boost/multi_index/hashed_index.hpp>
++#include <boost/multi_index/composite_key.hpp>
+ 
+ namespace scorum {
+ namespace chain {
+@@ -76,20 +78,36 @@ using game_index
+                                                              member<game_object,
+                                                                     game_object::id_type,
+                                                                     &game_object::id>>,
++
+                                               hashed_unique<tag<by_uuid>,
+                                                             member<game_object, uuid_type, &game_object::uuid>>,
+-                                              ordered_non_unique<tag<by_auto_resolve_time>,
+-                                                                 member<game_object,
+-                                                                        time_point_sec,
+-                                                                        &game_object::auto_resolve_time>>,
+-                                              ordered_non_unique<tag<by_bets_resolve_time>,
+-                                                                 member<game_object,
+-                                                                        time_point_sec,
+-                                                                        &game_object::bets_resolve_time>>,
+-                                              ordered_non_unique<tag<by_start_time>,
+-                                                                 member<game_object,
+-                                                                        fc::time_point_sec,
+-                                                                        &game_object::start_time>>>>;
++
++                                              ordered_unique<tag<by_auto_resolve_time>,
++                                                             composite_key<game_object,
++                                                                           member<game_object,
++                                                                                  time_point_sec,
++                                                                                  &game_object::auto_resolve_time>,
++                                                                           member<game_object,
++                                                                                  game_object::id_type,
++                                                                                  &game_object::id>>>,
++
++                                              ordered_unique<tag<by_bets_resolve_time>,
++                                                             composite_key<game_object,
++                                                                           member<game_object,
++                                                                                  time_point_sec,
++                                                                                  &game_object::bets_resolve_time>,
++                                                                           member<game_object,
++                                                                                  game_object::id_type,
++                                                                                  &game_object::id>>>,
++
++                                              ordered_unique<tag<by_start_time>,
++                                                             composite_key<game_object,
++                                                                           member<game_object,
++                                                                                  fc::time_point_sec,
++                                                                                  &game_object::start_time>,
++                                                                           member<game_object,
++                                                                                  game_object::id_type,
++                                                                                  &game_object::id>>>>>;
+ }
+ }
+ 
+@@ -97,8 +115,20 @@ FC_REFLECT(scorum::chain::game_uuid_history_object, (id)(uuid))
+ 
+ CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_uuid_history_object, scorum::chain::game_uuid_history_index)
+ 
++// clang-format off
+ FC_REFLECT(scorum::chain::game_object,
+-           (id)(uuid)(json_metadata)(start_time)(original_start_time)(last_update)(bets_resolve_time)(
+-               auto_resolve_time)(status)(game)(markets)(results))
++           (id)
++           (uuid)
++           (json_metadata)
++           (start_time)
++           (original_start_time)
++           (last_update)
++           (bets_resolve_time)
++           (auto_resolve_time)
++           (status)
++           (game)
++           (markets)
++           (results))
++// clang-format on
+ 
+ CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_object, scorum::chain::game_index)
+diff --git a/libraries/chain/include/scorum/chain/services/game.hpp b/libraries/chain/include/scorum/chain/services/game.hpp
+index dc9fdd2..e9d152b 100644
+--- a/libraries/chain/include/scorum/chain/services/game.hpp
++++ b/libraries/chain/include/scorum/chain/services/game.hpp
+@@ -17,7 +17,6 @@ struct game_service_i : public base_service_i<game_object>
+     using base_service_i<game_object>::is_exists;
+ 
+     virtual const game_object& create_game(const uuid_type& uuid,
+-                                           const account_name_type& moderator,
+                                            const std::string& json_metadata,
+                                            fc::time_point_sec start,
+                                            uint32_t auto_resolve_delay_sec,
+@@ -34,11 +33,7 @@ struct game_service_i : public base_service_i<game_object>
+     virtual const game_object& get_game(int64_t game_id) const = 0;
+     virtual const game_object& get_game(const uuid_type& uuid) const = 0;
+ 
+-    virtual view_type get_games() const = 0;
+     virtual std::vector<object_cref_type> get_games(fc::time_point_sec start) const = 0;
+-
+-    virtual std::vector<object_cref_type> get_games_to_resolve(fc::time_point_sec resolve_time) const = 0;
+-    virtual std::vector<object_cref_type> get_games_to_auto_resolve(fc::time_point_sec resolve_time) const = 0;
+ };
+ 
+ class dbs_game : public dbs_service_base<game_service_i>
+@@ -52,7 +47,6 @@ public:
+     using base_service_i<game_object>::is_exists;
+ 
+     virtual const game_object& create_game(const uuid_type& uuid,
+-                                           const account_name_type& moderator,
+                                            const std::string& json_metadata,
+                                            fc::time_point_sec start,
+                                            uint32_t auto_resolve_delay_sec,
+@@ -68,11 +62,6 @@ public:
+     virtual const game_object& get_game(const uuid_type& uuid) const override;
+     virtual std::vector<object_cref_type> get_games(fc::time_point_sec start) const override;
+ 
+-    virtual view_type get_games() const override;
+-
+-    std::vector<dbs_game::object_cref_type> get_games_to_resolve(fc::time_point_sec resolve_time) const override;
+-    std::vector<dbs_game::object_cref_type> get_games_to_auto_resolve(fc::time_point_sec resolve_time) const override;
+-
+ private:
+     dynamic_global_property_service_i& _dprops_service;
+     betting_property_service_i& _betting_props_service;
+diff --git a/libraries/chain/include/scorum/chain/services/matched_bet.hpp b/libraries/chain/include/scorum/chain/services/matched_bet.hpp
+index 1783a97..bca0e5f 100644
+--- a/libraries/chain/include/scorum/chain/services/matched_bet.hpp
++++ b/libraries/chain/include/scorum/chain/services/matched_bet.hpp
+@@ -4,27 +4,5 @@
+ 
+ namespace scorum {
+ namespace chain {
+-
+-struct matched_bet_service_i : public base_service_i<matched_bet_object>
+-{
+-    using matched_bet_call_type = std::function<void(const matched_bet_service_i::object_type&)>;
+-
+-    virtual const matched_bet_object& get_matched_bets(const matched_bet_id_type&) const = 0;
+-
+-    virtual view_type get_bets(matched_bet_id_type lower_bound) const = 0;
+-};
+-
+-class dbs_matched_bet : public dbs_service_base<matched_bet_service_i>
+-{
+-    friend class dbservice_dbs_factory;
+-
+-protected:
+-    explicit dbs_matched_bet(database& db);
+-
+-public:
+-    virtual const matched_bet_object& get_matched_bets(const matched_bet_id_type&) const override;
+-
+-    virtual view_type get_bets(matched_bet_id_type lower_bound) const override;
+-};
+ }
+ }
+diff --git a/libraries/chain/include/scorum/chain/services/pending_bet.hpp b/libraries/chain/include/scorum/chain/services/pending_bet.hpp
+index 70b780d..d254440 100644
+--- a/libraries/chain/include/scorum/chain/services/pending_bet.hpp
++++ b/libraries/chain/include/scorum/chain/services/pending_bet.hpp
+@@ -10,12 +10,8 @@ struct pending_bet_service_i : public base_service_i<pending_bet_object>
+     using pending_bet_call_type = std::function<bool(const base_service_i::object_type&)>;
+     using base_service_i<pending_bet_object>::is_exists;
+ 
+-    virtual bool is_exists(const pending_bet_id_type& id) const = 0;
+     virtual bool is_exists(const uuid_type& uuid) const = 0;
+-    virtual const pending_bet_object& get_pending_bet(const pending_bet_id_type&) const = 0;
+     virtual const pending_bet_object& get_pending_bet(const uuid_type&) const = 0;
+-
+-    virtual view_type get_bets(pending_bet_id_type lower_bound) const = 0;
+ };
+ 
+ class dbs_pending_bet : public dbs_service_base<pending_bet_service_i>
+@@ -28,12 +24,8 @@ protected:
+ public:
+     using base_service_i<pending_bet_object>::is_exists;
+ 
+-    bool is_exists(const pending_bet_id_type& id) const override;
+     bool is_exists(const uuid_type& uuid) const override;
+-    const pending_bet_object& get_pending_bet(const pending_bet_id_type&) const override;
+     const pending_bet_object& get_pending_bet(const uuid_type&) const override;
+-
+-    virtual view_type get_bets(pending_bet_id_type lower_bound) const override;
+ };
+ }
+ }
+diff --git a/libraries/chain/include/scorum/chain/services/service_base.hpp b/libraries/chain/include/scorum/chain/services/service_base.hpp
+index 92412cf..20062f1 100644
+--- a/libraries/chain/include/scorum/chain/services/service_base.hpp
++++ b/libraries/chain/include/scorum/chain/services/service_base.hpp
+@@ -7,14 +7,6 @@
+ 
+ #include <limits>
+ 
+-#include <boost/range/any_range.hpp>
+-
+-namespace scorum {
+-namespace utils {
+-template <typename TObject> using forward_range = boost::any_range<TObject, boost::forward_traversal_tag>;
+-}
+-}
+-
+ namespace scorum {
+ namespace chain {
+ 
+@@ -25,8 +17,6 @@ template <class T> struct base_service_i
+     using call_type = std::function<void(const object_type&)>;
+     using object_cref_type = std::reference_wrapper<const object_type>;
+ 
+-    using view_type = scorum::utils::forward_range<object_type>;
+-
+     virtual ~base_service_i()
+     {
+     }
+diff --git a/libraries/chain/services/game.cpp b/libraries/chain/services/game.cpp
+index c4dd4b9..1551dd5 100644
+--- a/libraries/chain/services/game.cpp
++++ b/libraries/chain/services/game.cpp
+@@ -17,7 +17,6 @@ dbs_game::dbs_game(database& db)
+ }
+ 
+ const game_object& dbs_game::create_game(const uuid_type& uuid,
+-                                         const account_name_type& moderator,
+                                          const std::string& json_metadata,
+                                          fc::time_point_sec start,
+                                          uint32_t auto_resolve_delay_sec,
+@@ -89,23 +88,8 @@ const game_object& dbs_game::get_game(const uuid_type& uuid) const
+ 
+ std::vector<dbs_game::object_cref_type> dbs_game::get_games(fc::time_point_sec start) const
+ {
+-    return get_range_by<by_start_time>(boost::multi_index::unbounded, boost::lambda::_1 <= start);
+-}
+-
+-dbs_game::view_type dbs_game::get_games() const
+-{
+-    auto& idx = db_impl().get_index<game_index, by_id>();
+-    return { idx.begin(), idx.end() };
+-}
+-
+-std::vector<dbs_game::object_cref_type> dbs_game::get_games_to_resolve(fc::time_point_sec resolve_time) const
+-{
+-    return get_range_by<by_bets_resolve_time>(boost::multi_index::unbounded, boost::lambda::_1 <= resolve_time);
+-}
+-
+-std::vector<dbs_game::object_cref_type> dbs_game::get_games_to_auto_resolve(fc::time_point_sec resolve_time) const
+-{
+-    return get_range_by<by_auto_resolve_time>(boost::multi_index::unbounded, boost::lambda::_1 <= resolve_time);
++    return get_range_by<by_start_time>(::boost::multi_index::unbounded,
++                                       ::boost::lambda::_1 <= std::make_tuple(start, ALL_IDS));
+ }
+ 
+ } // namespace scorum
+diff --git a/libraries/chain/services/matched_bet.cpp b/libraries/chain/services/matched_bet.cpp
+index fad2cdd..0d6371c 100644
+--- a/libraries/chain/services/matched_bet.cpp
++++ b/libraries/chain/services/matched_bet.cpp
+@@ -8,24 +8,5 @@
+ namespace scorum {
+ namespace chain {
+ 
+-dbs_matched_bet::dbs_matched_bet(database& db)
+-    : base_service_type(db)
+-{
+-}
+-
+-const matched_bet_object& dbs_matched_bet::get_matched_bets(const matched_bet_id_type& obj_id) const
+-{
+-    try
+-    {
+-        return get_by<by_id>(obj_id);
+-    }
+-    FC_CAPTURE_LOG_AND_RETHROW((obj_id))
+-}
+-
+-dbs_matched_bet::view_type dbs_matched_bet::get_bets(matched_bet_id_type lower_bound) const
+-{
+-    auto& idx = db_impl().get_index<matched_bet_index, by_id>();
+-    return { idx.lower_bound(lower_bound), idx.end() };
+-}
+ } // namespace chain
+ } // namespace scorum
+diff --git a/libraries/chain/services/pending_bet.cpp b/libraries/chain/services/pending_bet.cpp
+index 9134769..6fcddba 100644
+--- a/libraries/chain/services/pending_bet.cpp
++++ b/libraries/chain/services/pending_bet.cpp
+@@ -9,26 +9,11 @@ dbs_pending_bet::dbs_pending_bet(database& db)
+ {
+ }
+ 
+-
+-bool dbs_pending_bet::is_exists(const pending_bet_id_type& id) const
+-{
+-    return find_by<by_id>(id) != nullptr;
+-}
+-
+ bool dbs_pending_bet::is_exists(const uuid_type& uuid) const
+ {
+     return find_by<by_uuid>(uuid) != nullptr;
+ }
+ 
+-const pending_bet_object& dbs_pending_bet::get_pending_bet(const pending_bet_id_type& obj_id) const
+-{
+-    try
+-    {
+-        return get_by<by_id>(obj_id);
+-    }
+-    FC_CAPTURE_LOG_AND_RETHROW((obj_id))
+-}
+-
+ const pending_bet_object& dbs_pending_bet::get_pending_bet(const uuid_type& uuid) const
+ {
+     try
+@@ -38,11 +23,5 @@ const pending_bet_object& dbs_pending_bet::get_pending_bet(const uuid_type& uuid
+     FC_CAPTURE_LOG_AND_RETHROW((uuid))
+ }
+ 
+-dbs_pending_bet::view_type dbs_pending_bet::get_bets(pending_bet_id_type lower_bound) const
+-{
+-    auto& idx = db_impl().get_index<pending_bet_index, by_id>();
+-    return { idx.lower_bound(lower_bound), idx.end() };
+-}
+-
+ } // namespace chain
+ } // namespace scorum
+diff --git a/programs/scorumd/main.cpp b/programs/scorumd/main.cpp
+index 9f73f0e..95eaac1 100644
+--- a/programs/scorumd/main.cpp
++++ b/programs/scorumd/main.cpp
+@@ -62,6 +62,8 @@ void wait_stop()
+ 
+ int main(int argc, char** argv)
+ {
++    fc::logging_config::configure_logging(fc::logging_config::default_config());
++
+     scorum::plugin::initialize_plugin_factories();
+     app::application* node = new app::application();
+     fc::oexception unhandled_exception;
+diff --git a/tests/ucommon/service_wrappers.hpp b/tests/ucommon/service_wrappers.hpp
+index 27628d5..a713942 100644
+--- a/tests/ucommon/service_wrappers.hpp
++++ b/tests/ucommon/service_wrappers.hpp
+@@ -471,31 +471,6 @@ public:
+     }
+ };
+ 
+-class matched_service_wrapper : public service_base_wrapper<matched_bet_service_i>
+-{
+-    using base_class = service_base_wrapper<matched_bet_service_i>;
+-
+-public:
+-    template <typename C>
+-    matched_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_, C&& constructor)
+-        : base_class(shm_fixture, mocks_, constructor)
+-    {
+-        init_extension();
+-    }
+-
+-    matched_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)
+-        : base_class(shm_fixture, mocks_)
+-    {
+-        init_extension();
+-    }
+-
+-    void init_extension()
+-    {
+-        _mocks.OnCall(_service, matched_bet_service_i::get_matched_bets)
+-            .Do([this](const matched_bet_id_type& obj_id) -> const matched_bet_object& { return this->get(obj_id); });
+-    }
+-};
+-
+ class game_service_wrapper : public service_base_wrapper<game_service_i>
+ {
+     using base_class = service_base_wrapper<game_service_i>;
+diff --git a/tests/utests/betting/betting_common.hpp b/tests/utests/betting/betting_common.hpp
+index a933858..d0beb85 100644
+--- a/tests/utests/betting/betting_common.hpp
++++ b/tests/utests/betting/betting_common.hpp
+@@ -38,7 +38,6 @@ protected:
+         , account_service(*this, mocks)
+         , games(*this, mocks)
+         , pending_bets(*this, mocks)
+-        , matched_bets(*this, mocks)
+         , dgp_service(*this, mocks, [&](dynamic_global_property_object& p) {
+             p.time = fc::time_point_sec::from_iso_string("2018-07-01T00:00:00");
+             p.head_block_number = 1;
+@@ -49,7 +48,6 @@ protected:
+         mocks.OnCall(dbs_services, data_service_factory_i::account_service).ReturnByRef(account_service.service());
+         mocks.OnCall(dbs_services, data_service_factory_i::game_service).ReturnByRef(games.service());
+         mocks.OnCall(dbs_services, data_service_factory_i::pending_bet_service).ReturnByRef(pending_bets.service());
+-        mocks.OnCall(dbs_services, data_service_factory_i::matched_bet_service).ReturnByRef(matched_bets.service());
+         mocks.OnCall(dbs_services, data_service_factory_i::dynamic_global_property_service)
+             .ReturnByRef(dgp_service.service());
+         mocks.OnCall(virt_op_emitter, database_virtual_operations_emmiter_i::push_virtual_operation);
+@@ -88,7 +86,6 @@ public:
+     account_service_wrapper account_service;
+     game_service_wrapper games;
+     pending_bet_service_wrapper pending_bets;
+-    matched_service_wrapper matched_bets;
+     dynamic_global_property_service_wrapper dgp_service;
+ };
+ 
+diff --git a/tests/utests/betting/betting_matcher_tests.cpp b/tests/utests/betting/betting_matcher_tests.cpp
+index 5184b7f..5e5dfeb 100644
+--- a/tests/utests/betting/betting_matcher_tests.cpp
++++ b/tests/utests/betting/betting_matcher_tests.cpp
+@@ -1,5 +1,7 @@
+ #include <boost/test/unit_test.hpp>
+ 
++#include <boost/uuid/uuid_generators.hpp>
++
+ #include <scorum/chain/database/database_virtual_operations.hpp>
+ 
+ #include <scorum/chain/betting/betting_matcher.hpp>
+@@ -13,6 +15,8 @@
+ 
+ #include <scorum/chain/dba/db_accessor.hpp>
+ 
++#include <scorum/protocol/types.hpp>
++
+ #include "detail.hpp"
+ #include "db_mock.hpp"
+ #include "defines.hpp"
+@@ -84,7 +88,7 @@ public:
+ 
+ BOOST_AUTO_TEST_SUITE(betting_matcher_tests)
+ 
+-BOOST_FIXTURE_TEST_CASE(add_bet_with_no_stake_to_the_close_list, no_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(add_bet_with_no_stake_to_the_close_list, no_bets_fixture)
+ {
+     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
+         bet.data.stake = ASSET_SCR(10);
+@@ -103,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(add_bet_with_no_stake_to_the_close_list, no_bets_fixture
+     BOOST_CHECK_EQUAL(1u, bets_to_cancel.size());
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(dont_create_matched_bet_when_stake_is_zero, no_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(dont_create_matched_bet_when_stake_is_zero, no_bets_fixture)
+ {
+     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
+         bet.data.stake = ASSET_SCR(10);
+@@ -122,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(dont_create_matched_bet_when_stake_is_zero, no_bets_fixt
+     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(dont_add_bet_with_no_stake_to_the_close_list, no_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(dont_add_bet_with_no_stake_to_the_close_list, no_bets_fixture)
+ {
+     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
+         bet.data.stake = ASSET_SCR(0);
+@@ -135,7 +139,7 @@ BOOST_FIXTURE_TEST_CASE(dont_add_bet_with_no_stake_to_the_close_list, no_bets_fi
+     BOOST_CHECK_EQUAL(0u, bets_to_cancel.size());
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_wincase, no_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_wincase, no_bets_fixture)
+ {
+     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
+         bet.data.stake = ASSET_SCR(10);
+@@ -154,7 +158,7 @@ BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_wincase, no_bets_fixture)
+     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_odds, no_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_odds, no_bets_fixture)
+ {
+     const auto& bet1 = create_bet([&](pending_bet_object& bet) {
+         bet.data.stake = ASSET_SCR(10);
+@@ -173,7 +177,7 @@ BOOST_FIXTURE_TEST_CASE(dont_match_bets_with_the_same_odds, no_bets_fixture)
+     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(match_with_two_bets, no_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(match_with_two_bets, no_bets_fixture)
+ {
+     const auto one_point_five = odds(3, 2);
+     const auto total_over_1 = total::over({ 1 });
+@@ -226,7 +230,7 @@ public:
+     }
+ };
+ 
+-BOOST_FIXTURE_TEST_CASE(add_fully_matched_bet_to_cancel_list, two_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(add_fully_matched_bet_to_cancel_list, two_bets_fixture)
+ {
+     auto bets_to_cancel = matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid));
+ 
+@@ -235,7 +239,7 @@ BOOST_FIXTURE_TEST_CASE(add_fully_matched_bet_to_cancel_list, two_bets_fixture)
+     BOOST_CHECK(bets_to_cancel.front().get().data.uuid == bet1.uuid);
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(expect_virtual_operation_call_on_bets_matching, two_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(expect_virtual_operation_call_on_bets_matching, two_bets_fixture)
+ {
+     using namespace scorum::protocol;
+ 
+@@ -254,14 +258,14 @@ BOOST_FIXTURE_TEST_CASE(expect_virtual_operation_call_on_bets_matching, two_bets
+     BOOST_CHECK(ops[2].which() == operation::tag<bets_matched_operation>::value);
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(create_one_matched_bet, two_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(create_one_matched_bet, two_bets_fixture)
+ {
+     matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid));
+ 
+     BOOST_CHECK_EQUAL(1u, count<matched_bet_index>());
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(check_bets_matched_stake, two_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(check_bets_matched_stake, two_bets_fixture)
+ {
+     matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid));
+ 
+@@ -269,14 +273,14 @@ BOOST_FIXTURE_TEST_CASE(check_bets_matched_stake, two_bets_fixture)
+     BOOST_CHECK_EQUAL(5u, matched_dba.get_by<by_id>(0u).bet2_data.stake.amount);
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(second_bet_matched_on_five_tockens, two_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(second_bet_matched_on_five_tockens, two_bets_fixture)
+ {
+     matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid));
+ 
+     BOOST_CHECK_EQUAL(5u, pending_dba.get_by<by_uuid>(bet2.uuid).data.stake.amount);
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(first_bet_matched_on_hole_stake, two_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(first_bet_matched_on_hole_stake, two_bets_fixture)
+ {
+     matcher.match(pending_dba.get_by<by_uuid>(bet2.uuid));
+ 
+@@ -319,14 +323,14 @@ struct three_bets_fixture : public no_bets_fixture
+     }
+ };
+ 
+-BOOST_FIXTURE_TEST_CASE(dont_match_bets_when_odds_dont_match, three_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(dont_match_bets_when_odds_dont_match, three_bets_fixture)
+ {
+     matcher.match(pending_dba.get_by<by_uuid>(bet3.uuid));
+ 
+     BOOST_CHECK_EQUAL(0u, count<matched_bet_index>());
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(dont_change_pending_bet_stake_when_matching_dont_occur, three_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(dont_change_pending_bet_stake_when_matching_dont_occur, three_bets_fixture)
+ {
+     matcher.match(pending_dba.get_by<by_uuid>(bet3.uuid));
+ 
+@@ -335,7 +339,7 @@ BOOST_FIXTURE_TEST_CASE(dont_change_pending_bet_stake_when_matching_dont_occur,
+     BOOST_CHECK(compare_bet_data(bet3, pending_dba.get_by<by_uuid>(bet3.uuid).data));
+ }
+ 
+-BOOST_FIXTURE_TEST_CASE(stop_matching_when_stake_is_spent, three_bets_fixture)
++SCORUM_FIXTURE_TEST_CASE(stop_matching_when_stake_is_spent, three_bets_fixture)
+ {
+     const auto& bet4 = create_bet([&](pending_bet_object& bet) {
+         bet.data.stake = ASSET_SCR(1);
+@@ -353,4 +357,69 @@ BOOST_FIXTURE_TEST_CASE(stop_matching_when_stake_is_spent, three_bets_fixture)
+ }
+ 
+ BOOST_AUTO_TEST_SUITE_END()
++
++SCORUM_TEST_CASE(matching_fix_list_from_string_test)
++{
++    static const std::string str
++        = R"([["01000000-0000-0000-0000-000000000000",["02000000-0000-0000-0000-000000000000","03000000-0000-0000-0000-000000000000"]]])";
++
++    auto matched_bets = fc::json::from_string(str).as<matching_fix_list>();
++
++    BOOST_CHECK_EQUAL(str, fc::json::to_string(matched_bets));
++}
++
++SCORUM_TEST_CASE(matching_fix_list_to_string_test)
++{
++    matching_fix_list fix;
++    fix.insert(std::make_pair<uuid_type, std::vector<uuid_type>>({ { 1 } }, { { { 2 } }, { { 3 } } }));
++
++    BOOST_CHECK_EQUAL(
++        R"([["01000000-0000-0000-0000-000000000000",["02000000-0000-0000-0000-000000000000","03000000-0000-0000-0000-000000000000"]]])",
++        fc::json::to_string(fix));
++}
++
++SCORUM_TEST_CASE(by_game_uuid_wincase_asc_sorting_test)
++{
++    db_mock db;
++    db.add_index<pending_bet_index>();
++
++    dba::db_accessor<pending_bet_object> pending_dba(db);
++
++    boost::uuids::uuid game_uuid = { { 7 } };
++
++    auto wincase = total::over({ 1000 });
++
++    pending_dba.create([&](pending_bet_object& bet) { //
++        bet.data.uuid = { { 1 } };
++        bet.game_uuid = game_uuid;
++        bet.data.wincase = wincase;
++        bet.data.created = fc::time_point_sec::from_iso_string("2018-11-25T12:00:00");
++    });
++
++    pending_dba.create([&](pending_bet_object& bet) { //
++        bet.data.uuid = { { 3 } };
++        bet.game_uuid = game_uuid;
++        bet.data.wincase = wincase;
++        bet.data.created = fc::time_point_sec::from_iso_string("2018-11-25T12:02:00");
++    });
++
++    pending_dba.create([&](pending_bet_object& bet) { //
++        bet.data.uuid = { { 2 } };
++        bet.game_uuid = game_uuid;
++        bet.data.wincase = wincase;
++        bet.data.created = fc::time_point_sec::from_iso_string("2018-11-25T12:01:00");
++    });
++
++    auto key = std::make_tuple(game_uuid, wincase);
++
++    auto pending_bets = pending_dba.get_range_by<by_game_uuid_wincase_asc>(key);
++
++    std::vector<pending_bet_object> bets(pending_bets.begin(), pending_bets.end());
++
++    BOOST_REQUIRE_EQUAL(3u, bets.size());
++
++    BOOST_CHECK(bets[0].data.uuid == boost::uuids::uuid({ { 1 } }));
++    BOOST_CHECK(bets[1].data.uuid == boost::uuids::uuid({ { 2 } }));
++    BOOST_CHECK(bets[2].data.uuid == boost::uuids::uuid({ { 3 } }));
++}
+ }
+diff --git a/tests/utests/betting/create_matched_bet_tests.cpp b/tests/utests/betting/create_matched_bet_tests.cpp
+index 31a63f3..e44f8e0 100644
+--- a/tests/utests/betting/create_matched_bet_tests.cpp
++++ b/tests/utests/betting/create_matched_bet_tests.cpp
+@@ -61,7 +61,7 @@ template <typename Wincase>
+ auto get_range(const dba::db_accessor<pending_bet_object>& accessor, scorum::uuid_type id, Wincase w)
+ {
+     auto key = std::make_tuple(id, w);
+-    return accessor.get_range_by<by_game_uuid_wincase>(key);
++    return accessor.get_range_by<by_game_uuid_wincase_asc>(key);
+ }
+ 
+ SCORUM_TEST_CASE(check_order_in_range_of_bets_with_equal_game_id_and_wincase)
+diff --git a/tests/utests/betting/evaluators/create_game_tests.cpp b/tests/utests/betting/evaluators/create_game_tests.cpp
+index 15b0390..b23b954 100644
+--- a/tests/utests/betting/evaluators/create_game_tests.cpp
++++ b/tests/utests/betting/evaluators/create_game_tests.cpp
+@@ -30,7 +30,6 @@ struct game_evaluator_fixture : public shared_memory_fixture
+ 
+     using exists_by_id_ptr = bool (game_service_i::*)(const scorum::uuid_type&) const;
+     using create_game_ptr = const game_object& (game_service_i::*)(const scorum::uuid_type&,
+-                                                                   const account_name_type&,
+                                                                    const std::string&,
+                                                                    fc::time_point_sec,
+                                                                    const game_type&,
+@@ -120,7 +119,7 @@ SCORUM_TEST_CASE(game_should_be_created)
+     auto game_obj = create_object<game_object>(shm, [](game_object& o) {});
+ 
+     mocks.ExpectCallOverload(game_service, (create_game_ptr)&game_service_i::create_game)
+-        .With(_, "cartman", "{}", _, _, _)
++        .With(_, "{}", _, _, _)
+         .ReturnByRef(game_obj);
+ 
+     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
