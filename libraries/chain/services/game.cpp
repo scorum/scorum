@@ -17,7 +17,6 @@ dbs_game::dbs_game(database& db)
 }
 
 const game_object& dbs_game::create_game(const uuid_type& uuid,
-                                         const account_name_type& moderator,
                                          const std::string& json_metadata,
                                          fc::time_point_sec start,
                                          uint32_t auto_resolve_delay_sec,
@@ -89,23 +88,8 @@ const game_object& dbs_game::get_game(const uuid_type& uuid) const
 
 std::vector<dbs_game::object_cref_type> dbs_game::get_games(fc::time_point_sec start) const
 {
-    return get_range_by<by_start_time>(boost::multi_index::unbounded, boost::lambda::_1 <= start);
-}
-
-dbs_game::view_type dbs_game::get_games() const
-{
-    auto& idx = db_impl().get_index<game_index, by_id>();
-    return { idx.begin(), idx.end() };
-}
-
-std::vector<dbs_game::object_cref_type> dbs_game::get_games_to_resolve(fc::time_point_sec resolve_time) const
-{
-    return get_range_by<by_bets_resolve_time>(boost::multi_index::unbounded, boost::lambda::_1 <= resolve_time);
-}
-
-std::vector<dbs_game::object_cref_type> dbs_game::get_games_to_auto_resolve(fc::time_point_sec resolve_time) const
-{
-    return get_range_by<by_auto_resolve_time>(boost::multi_index::unbounded, boost::lambda::_1 <= resolve_time);
+    return get_range_by<by_start_time>(::boost::multi_index::unbounded,
+                                       ::boost::lambda::_1 <= std::make_tuple(start, ALL_IDS));
 }
 
 } // namespace scorum

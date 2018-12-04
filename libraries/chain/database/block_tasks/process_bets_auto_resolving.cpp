@@ -33,7 +33,7 @@ void process_bets_auto_resolving::on_apply(block_task_context& ctx)
     debug_log(ctx.get_block_info(), "process_bets_auto_resolving BEGIN");
 
     auto head_time = _dprop_dba.get().time;
-    auto games = _game_dba.get_range_by<by_auto_resolve_time>(unbounded, _x <= head_time);
+    auto games = _game_dba.get_range_by<by_auto_resolve_time>(unbounded, _x <= std::make_tuple(head_time, ALL_IDS));
 
     utils::foreach_mut(games, [&](const game_object& game) {
 

@@ -30,7 +30,6 @@ struct game_evaluator_fixture : public shared_memory_fixture
 
     using exists_by_id_ptr = bool (game_service_i::*)(const scorum::uuid_type&) const;
     using create_game_ptr = const game_object& (game_service_i::*)(const scorum::uuid_type&,
-                                                                   const account_name_type&,
                                                                    const std::string&,
                                                                    fc::time_point_sec,
                                                                    const game_type&,
@@ -120,7 +119,7 @@ SCORUM_TEST_CASE(game_should_be_created)
     auto game_obj = create_object<game_object>(shm, [](game_object& o) {});
 
     mocks.ExpectCallOverload(game_service, (create_game_ptr)&game_service_i::create_game)
-        .With(_, "cartman", "{}", _, _, _)
+        .With(_, "{}", _, _, _)
         .ReturnByRef(game_obj);
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));

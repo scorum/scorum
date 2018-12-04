@@ -36,8 +36,7 @@ void create_game_evaluator::do_apply(const operation_type& op)
 
     fc::flat_set<market_type> markets(op.markets.begin(), op.markets.end());
 
-    _game_svc.create_game(op.uuid, op.moderator, op.json_metadata, op.start_time, op.auto_resolve_delay_sec, op.game,
-                          markets);
+    _game_svc.create_game(op.uuid, op.json_metadata, op.start_time, op.auto_resolve_delay_sec, op.game, markets);
 }
 }
 }
