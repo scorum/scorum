@@ -27,6 +27,21 @@ BOOST_AUTO_TEST_CASE(serialize_proposal_create_operation_to_json)
         fc::json::to_string(op));
 }
 
+BOOST_AUTO_TEST_CASE(serialize_devpool_proposal_create_operation_to_json)
+{
+    development_committee_withdraw_vesting_operation withdraw_vesting_op;
+    withdraw_vesting_op.vesting_shares = asset(10000000000, SP_SYMBOL);
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.operation = withdraw_vesting_op;
+    proposal_create_op.creator = "initdelegate";
+    proposal_create_op.lifetime_sec = 86400;
+
+    BOOST_CHECK_EQUAL(
+        R"({"creator":"initdelegate","lifetime_sec":86400,"operation":["development_committee_withdraw_vesting",{"vesting_shares":"10.000000000 SP"}]})",
+        fc::json::to_string(proposal_create_op));
+}
+
 BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_json)
 {
     fc::variant v = fc::json::from_string(
@@ -52,6 +67,66 @@ BOOST_AUTO_TEST_CASE(serialize_proposal_create_operation_to_hex)
     scorum::protocol::operation op = proposal_create_op;
 
     BOOST_CHECK_EQUAL("1d00000000000005616c696365", to_hex(op));
+}
+
+BOOST_AUTO_TEST_CASE(serialize_devpool_proposal_create_operation_to_hex)
+{
+    development_committee_withdraw_vesting_operation withdraw_vesting_op;
+    withdraw_vesting_op.vesting_shares = asset(10000000000, SP_SYMBOL);
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.operation = withdraw_vesting_op;
+    proposal_create_op.creator = "initdelegate";
+    proposal_create_op.lifetime_sec = 86400;
+
+    scorum::protocol::operation op = proposal_create_op;
+
+    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000600e40b54020000000953500000000000", to_hex(op));
+}
+
+BOOST_AUTO_TEST_CASE(serialize_development_committee_empower_advertising_moderator_operation_to_hex)
+{
+    development_committee_empower_advertising_moderator_operation empower_moderator_op;
+    empower_moderator_op.account = "alice";
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.operation = empower_moderator_op;
+    proposal_create_op.creator = "initdelegate";
+    proposal_create_op.lifetime_sec = 86400;
+
+    scorum::protocol::operation op = proposal_create_op;
+
+    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000805616c696365", to_hex(op));
+}
+
+BOOST_AUTO_TEST_CASE(serialize_development_committee_empower_betting_moderator_operation_to_hex)
+{
+    development_committee_empower_betting_moderator_operation empower_moderator_op;
+    empower_moderator_op.account = "alice";
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.operation = empower_moderator_op;
+    proposal_create_op.creator = "initdelegate";
+    proposal_create_op.lifetime_sec = 86400;
+
+    scorum::protocol::operation op = proposal_create_op;
+
+    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000b05616c696365", to_hex(op));
+}
+
+BOOST_AUTO_TEST_CASE(serialize_development_committee_change_betting_resolve_delay_operation_to_hex)
+{
+    development_committee_change_betting_resolve_delay_operation resolve_delay_op;
+    resolve_delay_op.delay_sec = 10;
+
+    proposal_create_operation proposal_create_op;
+    proposal_create_op.operation = resolve_delay_op;
+    proposal_create_op.creator = "initdelegate";
+    proposal_create_op.lifetime_sec = 86400;
+
+    scorum::protocol::operation op = proposal_create_op;
+
+    BOOST_CHECK_EQUAL("1d0c696e697464656c6567617465805101000c0a000000", to_hex(op));
 }
 
 BOOST_AUTO_TEST_CASE(deserialize_proposal_create_operation_from_hex)

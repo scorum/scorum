@@ -73,8 +73,6 @@ namespace detail {
 
         const uint8_t scorum_hardfork_required_witnesses;
 
-        const share_type min_bet_stake;
-
         enum test_mode { test };
 
         explicit config(test_mode);
@@ -90,7 +88,7 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 4, 0) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 4, 1) )
 
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
@@ -118,8 +116,6 @@ namespace detail {
 #define SCORUM_MIN_COMMENT_PAYOUT_SHARE        share_type(5)
 
 #define SCORUM_MIN_PER_BLOCK_REWARD            share_type(1)
-
-#define SCORUM_MIN_STAKE_FOR_MATCHING          share_type(1)
 
 #define SCORUM_CREATE_ACCOUNT_WITH_SCORUM_MODIFIER  30
 
@@ -162,8 +158,6 @@ namespace detail {
 #define SCORUM_MIN_VOTE_INTERVAL_SEC            (scorum::protocol::detail::get_config().min_vote_interval_sec)
 
 #define SCORUM_DB_FREE_MEMORY_THRESHOLD_MB      (scorum::protocol::detail::get_config().db_free_memory_threshold_mb)
-
-#define SCORUM_MIN_BET_STAKE                    (scorum::protocol::detail::get_config().min_bet_stake)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -288,10 +282,13 @@ namespace detail {
 #define SCORUM_EXPIRATON_FOR_REGISTRATION_BONUS        (scorum::protocol::detail::get_config().expiraton_for_registration_bonus)
 #define SCORUM_WITNESS_REWARD_MIGRATION_DATE           (scorum::protocol::detail::get_config().witness_reward_migration_date)
 
-#define SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC      (scorum::protocol::detail::get_config().advertising_cashout_period_sec)
+#define SCORUM_ADVERTISING_CASHOUT_PERIOD_SEC          (scorum::protocol::detail::get_config().advertising_cashout_period_sec)
 
-#define SCORUM_MAX_ODDS_NUMERATOR (999999)
-#define SCORUM_MAX_ODDS_DENUMERATOR (1000)
+#define SCORUM_MIN_ODDS                                (scorum::protocol::odds(1001, 1000)) // min: 1.001  &&  max: 1001
+#define SCORUM_MIN_STAKE_FOR_MATCHING                  (share_type(1))
+#define SCORUM_MIN_BET_STAKE                           (scorum::protocol::asset(1'000'000, SCORUM_SYMBOL)) // 0.001'000'000 SCR
+
+#define SCORUM_MAX_BET_STAKE                           (scorum::protocol::asset(9214157878975800, SCORUM_SYMBOL))
 
 #ifdef IS_LOW_MEM
 #define SCORUM_LOW_MEMORY_NODE (true)

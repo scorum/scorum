@@ -398,22 +398,32 @@ void post_bet_operation::validate() const
 {
     validate_account_name(better);
     validate_wincase(wincase);
+
     FC_ASSERT(is_asset_type(stake, SCORUM_SYMBOL), "Stake must be SCR");
-    auto min_stake = asset(SCORUM_MIN_BET_STAKE, SCORUM_SYMBOL);
-    FC_ASSERT(stake >= min_stake, "Stake must be greater  or equal then ${s}", ("s", min_stake));
+    FC_ASSERT(stake >= SCORUM_MIN_BET_STAKE, "Stake must be greater  or equal then ${s}", ("s", SCORUM_MIN_BET_STAKE));
     FC_ASSERT(odds.numerator > 0, "odds numerator must be greater then zero");
     FC_ASSERT(odds.denominator > 0, "odds denominator must be greater then zero");
     FC_ASSERT(odds.numerator > odds.denominator, "odds must be greater then one");
 
+    const auto min = SCORUM_MIN_ODDS.base();
+    const auto max = SCORUM_MIN_ODDS.inverted();
+
     boost::rational<odds_value_type> bet_odds(odds.numerator, odds.denominator);
-    boost::rational<odds_value_type> max_odds(SCORUM_MAX_ODDS_NUMERATOR, SCORUM_MAX_ODDS_DENUMERATOR);
+    boost::rational<odds_value_type> min_odds(min.numerator, min.denominator);
+    boost::rational<odds_value_type> max_odds(max.numerator, max.denominator);
 
     // clang-format off
     FC_ASSERT(bet_odds <= max_odds, "Invalid odds value",
               ("numerator", odds.numerator)
               ("denominator", odds.denominator)
-              ("SCORUM_MAX_ODDS_NUMERATOR", SCORUM_MAX_ODDS_NUMERATOR)
-              ("SCORUM_MAX_ODDS_DENUMERATOR", SCORUM_MAX_ODDS_DENUMERATOR));
+              ("min_odds", protocol::odds(min).to_string())
+              ("max_odds", protocol::odds(max).to_string()));
+
+    FC_ASSERT(bet_odds >= min_odds, "Invalid odds value",
+              ("numerator", odds.numerator)
+              ("denominator", odds.denominator)
+              ("min_odds", protocol::odds(min).to_string())
+              ("max_odds", protocol::odds(max).to_string()));
     // clang-format on
 }
 

@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include <defines.hpp>
+#include <detail.hpp>
 #include <db_mock.hpp>
 
 #include <scorum/chain/evaluators/delegate_sp_from_reg_pool_evaluator.hpp>
@@ -21,6 +22,7 @@ namespace {
 using namespace scorum;
 using namespace scorum::chain;
 using namespace scorum::protocol;
+using ::detail::to_hex;
 
 struct delegate_sp_fixture
 {
@@ -300,6 +302,19 @@ SCORUM_TEST_CASE(delegated_sp_upper_bound_test)
     op.scorumpower.amount += 1;
 
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, "Delegation cannot be more than 10.000000000 SP");
+}
+
+SCORUM_TEST_CASE(serialize_delegate_sp_from_reg_pool_to_hex)
+{
+    delegate_sp_from_reg_pool_operation op;
+    op.reg_committee_member = "initdelegate";
+    op.delegatee = "alice";
+    op.scorumpower = ASSET_SP(10'000'000'000);
+
+    scorum::protocol::operation ops = op;
+    auto hex = to_hex(ops);
+
+    BOOST_CHECK_EQUAL(hex, "2a0c696e697464656c656761746505616c69636500e40b54020000000953500000000000");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

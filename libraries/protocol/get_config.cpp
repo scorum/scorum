@@ -169,8 +169,8 @@ fc::variant_object get_config()
 
     result["SCORUM_WITNESS_REWARD_MIGRATION_DATE"] = SCORUM_WITNESS_REWARD_MIGRATION_DATE;
 
-    result["SCORUM_MAX_ODDS_NUMERATOR"] = SCORUM_MAX_ODDS_NUMERATOR;
-    result["SCORUM_MAX_ODDS_DENUMERATOR"] = SCORUM_MAX_ODDS_DENUMERATOR;
+    result["SCORUM_MIN_ODDS"] = SCORUM_MIN_ODDS.to_string();
+    result["SCORUM_MAX_BET_STAKE"] = SCORUM_MAX_BET_STAKE.to_string();
 
     return result;
 }

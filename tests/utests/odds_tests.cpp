@@ -4,6 +4,8 @@
 
 #include "defines.hpp"
 
+#include <scorum/protocol/config.hpp>
+
 #include <limits>
 
 namespace odds_tests {
@@ -93,6 +95,20 @@ BOOST_AUTO_TEST_CASE(odds_empty_check)
 
     BOOST_CHECK_NE(k, odds(2, 1));
     BOOST_CHECK_EQUAL(k, odds());
+}
+
+BOOST_AUTO_TEST_CASE(min_odds_to_string)
+{
+    odds k = SCORUM_MIN_ODDS;
+
+    BOOST_CHECK_EQUAL("1001/1000", k.to_string());
+}
+
+BOOST_AUTO_TEST_CASE(max_odds_to_string)
+{
+    odds k = SCORUM_MIN_ODDS.inverted();
+
+    BOOST_CHECK_EQUAL("1001/1", k.to_string());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

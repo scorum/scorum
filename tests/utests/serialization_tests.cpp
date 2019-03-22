@@ -27,20 +27,26 @@
 #include <scorum/protocol/version.hpp>
 
 #include <scorum/protocol/transaction.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
 #include <boost/uuid/uuid_generators.hpp>
 #include <fc/io/json.hpp>
 
+#include "utils.hpp"
 #include "detail.hpp"
 #include "defines.hpp"
 
 using scorum::protocol::asset;
 using scorum::protocol::version;
+using scorum::protocol::operation;
 using scorum::protocol::extended_private_key_type;
 using scorum::protocol::extended_public_key_type;
 using scorum::protocol::hardfork_version;
 
 using scorum::protocol::create_budget_operation;
+using scorum::protocol::update_budget_operation;
+using scorum::protocol::close_budget_operation;
+using scorum::protocol::close_budget_by_advertising_moderator_operation;
 
 BOOST_AUTO_TEST_SUITE(serialization_tests)
 

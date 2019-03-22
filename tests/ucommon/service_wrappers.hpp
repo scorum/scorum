@@ -7,7 +7,6 @@
 #include <scorum/chain/services/budgets.hpp>
 #include <scorum/chain/schema/budget_objects.hpp>
 #include <scorum/chain/services/pending_bet.hpp>
-#include <scorum/chain/services/matched_bet.hpp>
 #include <scorum/chain/services/game.hpp>
 
 #include <fc/optional.hpp>
@@ -468,31 +467,6 @@ public:
                                              [&](const auto& pair) { return pair.second.data.uuid == uuid; });
                 return found_it->second;
             });
-    }
-};
-
-class matched_service_wrapper : public service_base_wrapper<matched_bet_service_i>
-{
-    using base_class = service_base_wrapper<matched_bet_service_i>;
-
-public:
-    template <typename C>
-    matched_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_, C&& constructor)
-        : base_class(shm_fixture, mocks_, constructor)
-    {
-        init_extension();
-    }
-
-    matched_service_wrapper(shared_memory_fixture& shm_fixture, MockRepository& mocks_)
-        : base_class(shm_fixture, mocks_)
-    {
-        init_extension();
-    }
-
-    void init_extension()
-    {
-        _mocks.OnCall(_service, matched_bet_service_i::get_matched_bets)
-            .Do([this](const matched_bet_id_type& obj_id) -> const matched_bet_object& { return this->get(obj_id); });
     }
 };
 

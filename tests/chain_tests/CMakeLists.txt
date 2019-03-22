@@ -73,6 +73,7 @@ set( SOURCES
     betting/bet_operations_tests.cpp
     betting/bet_resolving_tests.cpp
     betting/game_operations_tests.cpp
+    betting/post_bet_tests.cpp
 )
 
 add_executable(chain_tests

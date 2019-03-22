@@ -90,8 +90,6 @@ config::config() /// production config
     /// 17 of the 21 dpos witnesses (20 elected and 1 virtual time) required for hardfork. This guarantees 75%
     /// participation on all subsequent rounds.
     , scorum_hardfork_required_witnesses(17)
-
-    , min_bet_stake(share_type(10 ^ 7)) // 0.01 SCR
 {
     FC_ASSERT(blogging_start_date + cashout_window_seconds < fifa_world_cup_2018_bounty_cashout_date,
               "Required: fifa_world_cup_2018_bounty_cashout_date >= blogging_start_date + cashout_window_seconds.");
@@ -156,8 +154,6 @@ config::config(test_mode) /// test config
     , scorum_max_voted_witnesses(2)
 
     , scorum_hardfork_required_witnesses(2)
-
-    , min_bet_stake(share_type(1))
 {
     FC_ASSERT(scorum_max_witnesses <= SCORUM_MAX_WITNESSES_LIMIT);
     FC_ASSERT(scorum_max_witnesses > scorum_max_voted_witnesses, "No place for runner");
