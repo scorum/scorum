@@ -248,11 +248,31 @@ dynamic_global_property_api_obj database_api_impl::get_dynamic_global_properties
         }
     }
 
-    gpao.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
-    gpao.fund_budget_balance = _db.obtain_service<dbs_fund_budget>().get().balance;
-    gpao.reward_pool_balance = _db.obtain_service<dbs_content_reward_scr>().get().balance;
-    gpao.content_reward_scr_balance = _db.obtain_service<dbs_content_reward_fund_scr>().get().activity_reward_balance;
-    gpao.content_reward_sp_balance = _db.obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance;
+    if (_db.obtain_service<dbs_registration_pool>().is_exists())
+    {
+        gpao.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
+    }
+
+    if (_db.obtain_service<dbs_fund_budget>().is_exists())
+    {
+        gpao.fund_budget_balance = _db.obtain_service<dbs_fund_budget>().get().balance;
+    }
+
+    if (_db.obtain_service<dbs_fund_budget>().is_exists())
+    {
+        gpao.reward_pool_balance = _db.obtain_service<dbs_content_reward_scr>().get().balance;
+    }
+
+    if (_db.obtain_service<dbs_content_reward_fund_scr>().is_exists())
+    {
+        gpao.content_reward_scr_balance
+            = _db.obtain_service<dbs_content_reward_fund_scr>().get().activity_reward_balance;
+    }
+
+    if (_db.obtain_service<dbs_content_reward_fund_scr>().is_exists())
+    {
+        gpao.content_reward_sp_balance = _db.obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance;
+    }
 
     return gpao;
 }
