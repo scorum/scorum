@@ -123,20 +123,45 @@ chain_capital_api_obj chain_api::get_chain_capital() const
         capital.total_witness_reward_scr = dpo.total_witness_reward_scr;
         capital.total_witness_reward_sp = dpo.total_witness_reward_sp;
 
-        capital.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
-        capital.registration_pool_delegated = _db.obtain_service<dbs_registration_pool>().get().delegated;
+        if (_db.obtain_service<dbs_registration_pool>().is_exists())
+        {
+            capital.registration_pool_balance = _db.obtain_service<dbs_registration_pool>().get().balance;
+            capital.registration_pool_delegated = _db.obtain_service<dbs_registration_pool>().get().delegated;
+        }
 
-        capital.fund_budget_balance = _db.obtain_service<dbs_fund_budget>().get().balance;
+        if (_db.obtain_service<dbs_fund_budget>().is_exists())
+        {
+            capital.fund_budget_balance = _db.obtain_service<dbs_fund_budget>().get().balance;
+        }
 
         capital.dev_pool_scr_balance = _db.obtain_service<dbs_development_committee>().get().scr_balance;
         capital.dev_pool_sp_balance = _db.obtain_service<dbs_development_committee>().get().sp_balance;
 
-        capital.content_balancer_scr = _db.obtain_service<dbs_content_reward_scr>().get().balance;
-        capital.active_voters_balancer_scr = _db.obtain_service<dbs_voters_reward_scr>().get().balance;
-        capital.active_voters_balancer_sp = _db.obtain_service<dbs_voters_reward_sp>().get().balance;
+        if (_db.obtain_service<dbs_content_reward_scr>().is_exists())
+        {
+            capital.content_balancer_scr = _db.obtain_service<dbs_content_reward_scr>().get().balance;
+        }
 
-        capital.content_reward_fund_scr_balance = _db.obtain_service<dbs_content_reward_fund_scr>().get().activity_reward_balance;
-        capital.content_reward_fund_sp_balance = _db.obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance;
+        if (_db.obtain_service<dbs_voters_reward_scr>().is_exists())
+        {
+            capital.active_voters_balancer_scr = _db.obtain_service<dbs_voters_reward_scr>().get().balance;
+        }
+
+        if (_db.obtain_service<dbs_voters_reward_sp>().is_exists())
+        {
+            capital.active_voters_balancer_sp = _db.obtain_service<dbs_voters_reward_sp>().get().balance;
+        }
+
+        if (_db.obtain_service<dbs_content_reward_fund_scr>().is_exists())
+        {
+            capital.content_reward_fund_scr_balance = _db.obtain_service<dbs_content_reward_fund_scr>().get().activity_reward_balance;
+        }
+
+        if (_db.obtain_service<dbs_content_reward_fund_sp>().is_exists())
+        {
+            capital.content_reward_fund_sp_balance = _db.obtain_service<dbs_content_reward_fund_sp>().get().activity_reward_balance;
+        }
+
 
         const auto& fifa_world_cup_2018_bounty_fund_service = _db.obtain_service<dbs_content_fifa_world_cup_2018_bounty_reward_fund>();
         if (fifa_world_cup_2018_bounty_fund_service.is_exists())
