@@ -21,12 +21,12 @@ namespace wallet {
 using namespace scorum::app;
 using namespace scorum::chain;
 
-using scorum::blockchain_history::block_api_object;
-using scorum::blockchain_history::applied_operation;
-using scorum::blockchain_history::applied_withdraw_operation;
-using scorum::blockchain_history::applied_operation_type;
-using scorum::blockchain_history::signed_block_api_obj;
 using scorum::app::chain_capital_api_obj;
+using scorum::blockchain_history::applied_operation;
+using scorum::blockchain_history::applied_operation_type;
+using scorum::blockchain_history::applied_withdraw_operation;
+using scorum::blockchain_history::block_api_object;
+using scorum::blockchain_history::signed_block_api_obj;
 
 using transaction_handle_type = uint16_t;
 
@@ -175,13 +175,13 @@ public:
     get_ops_history(uint32_t from_op, uint32_t limit, applied_operation_type type_of_operation) const;
 
     /**
-    *  This method returns all operations in timestamp range [from, to] by pages [from_op-limit, from_op]
-    *
-    *  @param from - the time from start searching operations
-    *  @param to - the time until end searching operations
-    *  @param from_op - the operation number, -1 means most recent, limit is the number of operations before from.
-    *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
-    */
+     *  This method returns all operations in timestamp range [from, to] by pages [from_op-limit, from_op]
+     *
+     *  @param from - the time from start searching operations
+     *  @param to - the time until end searching operations
+     *  @param from_op - the operation number, -1 means most recent, limit is the number of operations before from.
+     *  @param limit - the maximum number of items that can be queried (0 to 100], must be less than from
+     */
     std::map<uint32_t, applied_operation> get_ops_history_by_time(const fc::time_point_sec& from,
                                                                   const fc::time_point_sec& to,
                                                                   uint32_t from_op,
@@ -495,13 +495,28 @@ public:
                                                                     const public_key_type& posting,
                                                                     const public_key_type& memo,
                                                                     bool broadcast) const;
+    /**
+     *  This method will generate new owner, active, and memo keys for the new account which
+     *  will be controllable by this wallet. There is a fee associated with account creation
+     *  that is paid by the creator. The current account creation fee can be found with the
+     *  'info' wallet command.
+     *
+     *  @param creator The account creating the new account
+     *  @param newname The name of the new account
+     *  @param json_meta JSON Metadata associated with the new account
+     *  @param broadcast true if you wish to broadcast the transaction
+     */
+    annotated_signed_transaction create_account_by_committee(const std::string& creator,
+                                                             const std::string& newname,
+                                                             const std::string& json_meta,
+                                                             bool broadcast);
 
     /**
      * This method is used by faucets to create new accounts for other users which must
      * provide their desired keys. The resulting account accepts bonus from registration pool.
      * Creator must belong registration committee.
      *
-     * @param creator The committee memeber creating the new account
+     * @param creator The committee member creating the new account
      * @param newname The name of the new account
      * @param json_meta JSON Metadata associated with the new account
      * @param owner public owner key of the new account
@@ -510,14 +525,14 @@ public:
      * @param memo public memo key of the new account
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction create_account_by_committee(const std::string& creator,
-                                                             const std::string& newname,
-                                                             const std::string& json_meta,
-                                                             const public_key_type& owner,
-                                                             const public_key_type& active,
-                                                             const public_key_type& posting,
-                                                             const public_key_type& memo,
-                                                             bool broadcast) const;
+    annotated_signed_transaction create_account_by_committee_with_keys(const std::string& creator,
+                                                                       const std::string& newname,
+                                                                       const std::string& json_meta,
+                                                                       const public_key_type& owner,
+                                                                       const public_key_type& active,
+                                                                       const public_key_type& posting,
+                                                                       const public_key_type& memo,
+                                                                       bool broadcast) const;
     /**
      * This method updates the keys of an existing account.
      *
@@ -1345,16 +1360,16 @@ public:
                                                                                      bool broadcast);
 
     /**
-    * Create proposal for set up the betting moderator.
-    */
+     * Create proposal for set up the betting moderator.
+     */
     annotated_signed_transaction development_committee_empower_betting_moderator(const std::string& initiator,
                                                                                  const std::string& moderator,
                                                                                  uint32_t lifetime_sec,
                                                                                  bool broadcast);
 
     /**
-    * Create proposal for changing delay after game was finished before bets will be resolved.
-    */
+     * Create proposal for changing delay after game was finished before bets will be resolved.
+     */
     annotated_signed_transaction development_committee_change_betting_resolve_delay(const std::string& initiator,
                                                                                     uint32_t delay_sec,
                                                                                     uint32_t lifetime_sec,
@@ -1661,10 +1676,10 @@ public:
     betting_property_api_object get_betting_properties() const;
 
     /**
-    * @brief Returns bets with draw status
-    * @param game_uuid Game UUID
-    * @return array of matched_bet_object's
-    */
+     * @brief Returns bets with draw status
+     * @param game_uuid Game UUID
+     * @return array of matched_bet_object's
+     */
     std::vector<matched_bet_api_object> get_game_returns(const uuid_type& game_uuid) const;
 
     /**
@@ -1687,6 +1702,27 @@ public:
      * @return array of pending_bet_api_object's
      */
     std::vector<pending_bet_api_object> get_game_pending_bets(const uuid_type& uuid) const;
+
+    annotated_signed_transaction create_nft(const uuid_type& uuid,
+                                            const std::string& owner,
+                                            const std::string& name,
+                                            share_type power,
+                                            const std::string& json_meta,
+                                            bool broadcast) const;
+
+    annotated_signed_transaction update_nft_meta(const uuid_type& uuid,
+                                                 const std::string& moderator,
+                                                 int64_t id,
+                                                 const std::string& json_meta,
+                                                 bool broadcast) const;
+
+    annotated_signed_transaction increase_nft_power(
+        const uuid_type& uuid, const std::string& moderator, int64_t id, share_type power, bool broadcast) const;
+
+    nft_api_obj get_nft_by_id(nft_id_type id) const;
+    nft_api_obj get_nft_by_name(const account_name_type& name) const;
+    nft_api_obj get_nft_by_uuid(const uuid_type& name) const;
+    std::vector<nft_api_obj> lookup_nft(nft_id_type id, uint32_t limit) const;
 
     /** @}*/
 
@@ -1771,6 +1807,7 @@ FC_API( scorum::wallet::wallet_api,
         (create_account_delegated)
         (create_account_with_keys_delegated)
         (create_account_by_committee)
+        (create_account_by_committee_with_keys)
         (update_account)
         (update_account_auth_key)
         (update_account_auth_account)
@@ -1873,6 +1910,15 @@ FC_API( scorum::wallet::wallet_api,
         (get_game_winners)
         (get_game_matched_bets)
         (get_game_pending_bets)
+
+        // nft
+        (create_nft)
+        (update_nft_meta)
+        (increase_nft_power)
+        (get_nft_by_id)
+        (get_nft_by_name)
+        (get_nft_by_uuid)
+        (lookup_nft)
 
         // helper api
         (get_prototype_operation)

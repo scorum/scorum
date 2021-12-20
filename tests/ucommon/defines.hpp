@@ -70,6 +70,9 @@ template <class T> T make_test_index_object()
          << req_throw_info << std::endl;                  \
 }*/
 
+#define SCORUM_CHECK_MESSAGE(P, FORMAT, ...)                                                                           \
+    BOOST_CHECK_MESSAGE(P, fc::format_string(FORMAT, fc::mutable_variant_object() __VA_ARGS__))
+
 #define SCORUM_CHECK_EXCEPTION(test_code, exception, message)                                                          \
     try                                                                                                                \
     {                                                                                                                  \
@@ -78,11 +81,21 @@ template <class T> T make_test_index_object()
     }                                                                                                                  \
     catch (exception & e)                                                                                              \
     {                                                                                                                  \
-        BOOST_REQUIRE(e.get_log().size() >= 1);                                                                        \
-        bool check_exception_message = e.get_log().front().get_message().find(message) != std::string::npos;           \
-        if (!check_exception_message)                                                                                  \
-            std::cout << "EXCEPTION:" << e.get_log().front().get_message() << std::endl;                               \
-        BOOST_CHECK(check_exception_message);                                                                          \
+        BOOST_REQUIRE(!e.get_log().empty());                                                                           \
+                                                                                                                       \
+        const std::string expected(message);                                                                           \
+        const std::string actual = e.get_log().front().get_message();                                                  \
+                                                                                                                       \
+        if (expected.empty())                                                                                          \
+        {                                                                                                              \
+            SCORUM_CHECK_MESSAGE(actual.empty(), R"("${actual}" != "${expected}")",                                    \
+                                 ("actual", actual)("expected", expected));                                            \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            SCORUM_CHECK_MESSAGE(actual.find(expected) != std::string::npos, R"("${actual}" != "${expected}")",        \
+                                 ("actual", actual)("expected", expected));                                            \
+        }                                                                                                              \
     }
 
 #define SCORUM_REQUIRE_THROW(expr, exc_type) BOOST_REQUIRE_THROW(expr, exc_type);

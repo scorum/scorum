@@ -434,5 +434,29 @@ void cancel_pending_bets_operation::validate() const
 
     validate_account_name(better);
 }
+
+void create_nft_operation::validate() const
+{
+    FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");
+    validate_account_name(owner);
+    validate_json_metadata(json_metadata);
+
+    FC_ASSERT(power > 0, "Cannot create nft with zero or negative power");
+}
+
+void update_nft_meta_operation::validate() const
+{
+    FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");
+    FC_ASSERT(moderator == SCORUM_NFT_MODERATOR, "invalid moderator account");
+    validate_json_metadata(json_metadata);
+}
+
+void increase_nft_power_operation::validate() const
+{
+    FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");
+    FC_ASSERT(moderator == SCORUM_NFT_MODERATOR, "invalid moderator account");
+    FC_ASSERT(power > 0, "power should be greater than zero");
+}
+
 } // namespace protocol
 } // namespace scorum

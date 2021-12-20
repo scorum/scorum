@@ -171,6 +171,7 @@ fc::variant_object get_config()
 
     result["SCORUM_MIN_ODDS"] = SCORUM_MIN_ODDS.to_string();
     result["SCORUM_MAX_BET_STAKE"] = SCORUM_MAX_BET_STAKE.to_string();
+    result["SCORUM_NFT_MODERATOR"] = SCORUM_NFT_MODERATOR;
 
     return result;
 }

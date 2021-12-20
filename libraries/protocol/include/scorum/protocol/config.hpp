@@ -88,7 +88,7 @@ namespace detail {
 
 #define DAYS_TO_SECONDS(X)                     (60u*60u*24u*X)
 
-#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 4, 1) )
+#define SCORUM_BLOCKCHAIN_VERSION              ( version(0, 5, 0) )
 
 #define SCORUM_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( SCORUM_BLOCKCHAIN_VERSION ) )
 
@@ -289,6 +289,8 @@ namespace detail {
 #define SCORUM_MIN_BET_STAKE                           (scorum::protocol::asset(1'000'000, SCORUM_SYMBOL)) // 0.001'000'000 SCR
 
 #define SCORUM_MAX_BET_STAKE                           (scorum::protocol::asset(9214157878975800, SCORUM_SYMBOL))
+
+#define SCORUM_NFT_MODERATOR                           account_name_type("nft-moderator")
 
 #ifdef IS_LOW_MEM
 #define SCORUM_LOW_MEMORY_NODE (true)

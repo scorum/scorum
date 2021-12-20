@@ -1,6 +1,9 @@
+#include <scorum/app/database_api.hpp>
+
+#include "scorum/chain/dba/db_accessor.hpp"
+
 #include <scorum/app/api_context.hpp>
 #include <scorum/app/application.hpp>
-#include <scorum/app/database_api.hpp>
 
 #include <scorum/protocol/get_config.hpp>
 
@@ -30,6 +33,7 @@
 #include <scorum/chain/schema/reward_balancer_objects.hpp>
 #include <scorum/chain/schema/scorum_objects.hpp>
 #include <scorum/chain/schema/advertising_property_object.hpp>
+#include <scorum/chain/schema/nft_object.hpp>
 
 #include <scorum/common_api/config_api.hpp>
 
@@ -308,8 +312,9 @@ std::vector<std::set<std::string>> database_api::get_key_references(std::vector<
  */
 std::vector<std::set<std::string>> database_api_impl::get_key_references(std::vector<public_key_type> keys) const
 {
-    FC_ASSERT(false, "database_api::get_key_references has been deprecated. Please use "
-                     "account_by_key_api::get_key_references instead.");
+    FC_ASSERT(false,
+              "database_api::get_key_references has been deprecated. Please use "
+              "account_by_key_api::get_key_references instead.");
     std::vector<std::set<std::string>> final_result;
     return final_result;
 }
@@ -331,7 +336,9 @@ std::vector<extended_account> database_api_impl::get_accounts(const std::vector<
     const auto& vidx = _db.get_index<witness_vote_index>().indices().get<by_account_witness>();
     std::vector<extended_account> results;
 
-    for (auto name : names)
+    auto& dprop = _db.obtain_service<dbs_dynamic_global_property>().get();
+
+    for (auto& name : names)
     {
         auto itr = idx.find(name);
         if (itr != idx.end())
@@ -339,6 +346,12 @@ std::vector<extended_account> database_api_impl::get_accounts(const std::vector<
             extended_account api_obj(*itr, _db);
             api_obj.voting_power = rewards_math::calculate_restoring_power(
                 api_obj.voting_power, _db.head_block_time(), api_obj.last_vote_time, SCORUM_VOTE_REGENERATION_SECONDS);
+
+            api_obj.head_block_number = dprop.head_block_number;
+            api_obj.last_irreversible_block_num = dprop.last_irreversible_block_num;
+            api_obj.head_block_id = dprop.head_block_id;
+            api_obj.time = dprop.time;
+
             results.push_back(std::move(api_obj));
 
             auto vitr = vidx.lower_bound(boost::make_tuple(itr->id, witness_id_type()));
@@ -822,17 +835,18 @@ bool database_api::verify_authority(const signed_transaction& trx) const
 
 bool database_api_impl::verify_authority(const signed_transaction& trx) const
 {
-    trx.verify_authority(get_chain_id(),
-                         [&](const std::string& account_name) {
-                             return authority(_db.get<account_authority_object, by_account>(account_name).active);
-                         },
-                         [&](const std::string& account_name) {
-                             return authority(_db.get<account_authority_object, by_account>(account_name).owner);
-                         },
-                         [&](const std::string& account_name) {
-                             return authority(_db.get<account_authority_object, by_account>(account_name).posting);
-                         },
-                         SCORUM_MAX_SIG_CHECK_DEPTH);
+    trx.verify_authority(
+        get_chain_id(),
+        [&](const std::string& account_name) {
+            return authority(_db.get<account_authority_object, by_account>(account_name).active);
+        },
+        [&](const std::string& account_name) {
+            return authority(_db.get<account_authority_object, by_account>(account_name).owner);
+        },
+        [&](const std::string& account_name) {
+            return authority(_db.get<account_authority_object, by_account>(account_name).posting);
+        },
+        SCORUM_MAX_SIG_CHECK_DEPTH);
     return true;
 }
 
@@ -1046,6 +1060,38 @@ std::vector<scorumpower_delegation_expiration_api_obj> database_api::get_expirin
         {
             result.push_back(*itr);
             ++itr;
+        }
+
+        return result;
+    });
+}
+
+nft_api_obj database_api::get_nft_by_id(nft_id_type id) const
+{
+    return my->_db.with_read_lock([&]() { return my->_db.get_dba<nft_object>().get_by<by_id>(id); });
+}
+
+nft_api_obj database_api::get_nft_by_name(const account_name_type& name) const
+{
+    return my->_db.with_read_lock([&]() { return my->_db.get_dba<nft_object>().get_by<by_name>(name); });
+}
+
+nft_api_obj database_api::get_nft_by_uuid(const uuid_type& uuid) const
+{
+    return my->_db.with_read_lock([&]() { return my->_db.get_dba<nft_object>().get_by<by_uuid>(uuid); });
+}
+
+std::vector<nft_api_obj> database_api::lookup_nft(nft_id_type id, uint32_t limit) const
+{
+    return my->_db.with_read_lock([&]() {
+        FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
+
+        const auto& index = my->_db.get_index<nft_index>().indices().get<by_id>();
+        std::vector<nft_api_obj> result;
+
+        for (auto itr = index.lower_bound(id); limit-- && itr != index.end(); ++itr)
+        {
+            result.emplace_back(*itr);
         }
 
         return result;

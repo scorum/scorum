@@ -16,32 +16,32 @@ if [[ ! "$CONF_TYPE" =~ ^(rpc|full|witness|seed)$ ]]; then
 fi
 
 if [[ "$CONF_TYPE" =~ ^(rpc|full)$ ]]; then
-    SCORUMD="/usr/local/scorumd-full/bin/scorumd"
+    SCORUMD="/usr/local/bin/scorumd-full"
 else
-    SCORUMD="/usr/local/scorumd-default/bin/scorumd"
+    SCORUMD="/usr/local/bin/scorumd"
 fi
 
 chown -R scorumd:scorumd $HOME
 
-if [ ! -f "${HOME}/config.ini" ]; then
+if [[ ! -f "${HOME}/config.ini" ]]; then
     echo "Config ${HOME}/config.ini file not found. Using default"
     if [[ $CONF_TYPE = "rpc" ]]; then
-        cp /etc/scorumd/config.ini.rpc "${HOME}/config.ini"
+        cp /etc/scorumd/config.rpc.ini "${HOME}/config.ini"
     elif [[ $CONF_TYPE = "seed" ]]; then
-        cp /etc/scorumd/config.ini.witness "${HOME}/config.ini"
+        cp /etc/scorumd/config.witness.ini "${HOME}/config.ini"
     elif [[ $CONF_TYPE = "witness" ]]; then
-        cp /etc/scorumd/config.ini.witness "${HOME}/config.ini"
+        cp /etc/scorumd/config.witness.ini "${HOME}/config.ini"
     else
         # witness is default configuration
-        cp /etc/scorumd/config.ini.witness "${HOME}/config.ini"
+        cp /etc/scorumd/config.witness.ini "${HOME}/config.ini"
     fi
 
     chown scorumd:scorumd "${HOME}/config.ini"
 
-    if [ $LIVE_TESTNET = ON ]; then
-        cat /etc/scorumd/seeds.ini.testnet >> "${HOME}/config.ini" || exit 1
+    if [[ $LIVE_TESTNET = "ON" ]]; then
+        cat /etc/scorumd/seeds.testnet.ini >> "${HOME}/config.ini" || exit 1
     else
-        cat /etc/scorumd/seeds.ini.mainnet >> "${HOME}/config.ini" || exit 1
+        cat /etc/scorumd/seeds.mainnet.ini >> "${HOME}/config.ini" || exit 1
     fi
 fi
 

@@ -1155,6 +1155,47 @@ struct cancel_pending_bets_operation : public base_operation
     /// @endcond
 };
 
+struct create_nft_operation : public base_operation
+{
+    uuid_type uuid = boost::uuids::nil_uuid();
+    account_name_type owner;
+    account_name_type name;
+    std::string json_metadata;
+    share_type power = 0;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
+};
+
+struct update_nft_meta_operation : public base_operation
+{
+    uuid_type uuid = boost::uuids::nil_uuid();
+    account_name_type moderator;
+    std::string json_metadata;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+};
+
+struct increase_nft_power_operation : public base_operation
+{
+    uuid_type uuid = boost::uuids::nil_uuid();
+    account_name_type moderator;
+    share_type power;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+};
+
 /// @}
 
 /// bets list that is being canceling
@@ -1271,4 +1312,22 @@ FC_REFLECT( scorum::protocol::post_bet_operation,
 FC_REFLECT( scorum::protocol::cancel_pending_bets_operation,
            (bet_uuids)
            (better))
+
+FC_REFLECT( scorum::protocol::create_nft_operation,
+            (uuid)
+            (owner)
+            (name)
+            (json_metadata)
+            (power))
+
+FC_REFLECT( scorum::protocol::update_nft_meta_operation,
+            (uuid)
+            (moderator)
+            (json_metadata))
+
+FC_REFLECT( scorum::protocol::increase_nft_power_operation,
+            (uuid)
+            (moderator)
+            (power))
+
 // clang-format on

@@ -45,6 +45,7 @@
 #include <scorum/chain/schema/betting_property_object.hpp>
 #include <scorum/chain/schema/bet_objects.hpp>
 #include <scorum/chain/schema/game_object.hpp>
+#include <scorum/chain/schema/nft_object.hpp>
 
 #include <scorum/chain/services/account.hpp>
 #include <scorum/chain/services/atomicswap.hpp>
@@ -94,6 +95,9 @@
 #include <scorum/chain/evaluators/post_bet_evalulator.hpp>
 #include <scorum/chain/evaluators/cancel_pending_bets_evaluator.hpp>
 #include <scorum/chain/evaluators/delegate_sp_from_reg_pool_evaluator.hpp>
+#include <scorum/chain/evaluators/create_nft_evaluator.hpp>
+#include <scorum/chain/evaluators/update_nft_meta_evaluator.hpp>
+#include <scorum/chain/evaluators/increase_nft_power_evaluator.hpp>
 
 #include <cmath>
 
@@ -794,7 +798,7 @@ signed_block database::generate_block(fc::time_point_sec when,
                                       const account_name_type& witness_owner,
                                       const fc::ecc::private_key& block_signing_private_key,
                                       uint32_t skip /* = 0 */
-                                      )
+)
 {
     block_info ctx(when, witness_owner);
 
@@ -1312,6 +1316,12 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator(new delegate_sp_from_reg_pool_evaluator(
         *this, account_service(), get_dba<registration_pool_object>(), get_dba<registration_committee_member_object>(),
         get_dba<reg_pool_sp_delegation_object>()));
+    _my->_evaluator_registry.register_evaluator(
+        new create_nft_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
+    _my->_evaluator_registry.register_evaluator(
+        new update_nft_meta_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
+    _my->_evaluator_registry.register_evaluator(
+        new increase_nft_power_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
 }
 
 void database::initialize_indexes()
@@ -1371,6 +1381,7 @@ void database::initialize_indexes()
 
     add_index<bet_uuid_history_index>();
     add_index<game_uuid_history_index>();
+    add_index<nft_index>();
 
     _plugin_index_signal();
 }
@@ -1411,7 +1422,8 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
 
             if (_checkpoints.rbegin()->first >= block_num)
                 skip = skip_witness_signature | skip_transaction_signatures | skip_transaction_dupe_check | skip_fork_db
-                    | skip_block_size_check | skip_tapos_check | skip_authority_check
+                    | skip_block_size_check | skip_tapos_check
+                    | skip_authority_check
                     /* | skip_merkle_check While blockchain is being downloaded, txs need to be validated against block
                        headers */
                     | skip_undo_history_check | skip_witness_schedule_check | skip_validate | skip_validate_invariants;
@@ -2067,6 +2079,10 @@ void database::init_hardforks(time_point_sec genesis_time)
     FC_ASSERT(SCORUM_HARDFORK_0_4 == 4, "Invalid hardfork #4 configuration");
     _hardfork_times[SCORUM_HARDFORK_0_4] = fc::time_point_sec(SCORUM_HARDFORK_0_4_TIME);
     _hardfork_versions[SCORUM_HARDFORK_0_4] = SCORUM_HARDFORK_0_4_VERSION;
+
+    FC_ASSERT(SCORUM_HARDFORK_0_5 == 5, "Invalid hardfork #5 configuration");
+    _hardfork_times[SCORUM_HARDFORK_0_5] = fc::time_point_sec(SCORUM_HARDFORK_0_5_TIME);
+    _hardfork_versions[SCORUM_HARDFORK_0_5] = SCORUM_HARDFORK_0_5_VERSION;
 
     const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",

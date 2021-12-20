@@ -50,6 +50,11 @@ struct extended_account : public account_api_obj
 
     optional<std::vector<std::string>> comments; /// permlinks for this user
     optional<std::vector<std::string>> recent_replies; /// blog posts for this user
+
+    uint32_t head_block_number = 0;
+    uint32_t last_irreversible_block_num = 0;
+    block_id_type head_block_id;
+    time_point_sec time;
 };
 
 } // namespace app
@@ -62,7 +67,11 @@ FC_REFLECT_DERIVED(scorum::app::extended_account,
                    (witness_votes)
                    (tags_usage)
                    (comments)
-                   (recent_replies))
+                   (recent_replies)
+                   (head_block_number)
+                   (last_irreversible_block_num)
+                   (head_block_id)
+                   (time))
 
 FC_REFLECT(scorum::app::vote_state,
            (voter)

@@ -85,6 +85,8 @@ set(SOURCES
     db_accessors/db_accessors_tests.cpp
     odds_tests.cpp
     create_account_by_committee_evaluator_tests.cpp
+    nft/nft_evaluators_tests.cpp
+    nft/nft_operations_tests.cpp
 )
 
 add_executable(utests

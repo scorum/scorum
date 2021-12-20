@@ -10,6 +10,7 @@
 #include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/comment_objects.hpp>
+#include <scorum/chain/schema/nft_object.hpp>
 
 // clang-format off
 #define DB_TYPES                                                                                                       \
@@ -26,7 +27,8 @@
     (chain_property_object)                                                                                            \
     (dynamic_global_property_object)                                                                                   \
     (account_object)                                                                                                   \
-    (comment_object)
+    (comment_object)                                                                                                   \
+    (nft_object)
 // clang-format on
 
 #define INSTANTIATE_DBA_FACTORY_METHODS(_1, _2, TYPE)                                                                  \
@@ -49,6 +51,6 @@ template <typename TObject> db_accessor<TObject>& db_accessor_factory::get_dba()
 }
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_DBA_FACTORY_METHODS, , DB_TYPES)
-}
-}
-}
+} // namespace dba
+} // namespace chain
+} // namespace scorum

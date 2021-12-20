@@ -60,6 +60,8 @@ public:
     asset delegated_scorumpower =    asset(0, SP_SYMBOL);
     asset received_scorumpower =     asset(0, SP_SYMBOL);
 
+    asset nft_spend_scorumpower = asset(0, SP_SYMBOL);
+
     fc::array<share_type, SCORUM_MAX_PROXY_RECURSION_DEPTH> proxied_vsf_votes; // = std::vector<share_type>(SCORUM_MAX_PROXY_RECURSION_DEPTH, 0 );
                                                                                ///< the total VFS votes proxied to this account
 
@@ -223,7 +225,7 @@ struct by_smp_balance;
 struct by_created_by_genesis;
 struct by_voting_power_restoring_time;
 struct by_active_sp_holders_cashout_time;
-
+// clang-format off
 /**
  * @ingroup object_index
  */
@@ -559,7 +561,7 @@ typedef shared_multi_index_container<account_registration_bonus_object,
                                                                                     &account_registration_bonus_object::
                                                                                         id>>>>>
     account_registration_bonus_index;
-
+// clang-format on
 } // namespace chain
 } // namespace scorum
 
@@ -570,7 +572,7 @@ FC_REFLECT( scorum::chain::account_object,
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (can_vote)(voting_power)(last_vote_time)(voting_power_restoring_time)(vote_reward_competitive_sp)
              (balance)
-             (scorumpower)(delegated_scorumpower)(received_scorumpower)
+             (scorumpower)(delegated_scorumpower)(received_scorumpower)(nft_spend_scorumpower)
              (proxied_vsf_votes)(witnesses_voted_for)
              (last_post)(last_root_post)
              (active_sp_holders_cashout_time)

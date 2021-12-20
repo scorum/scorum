@@ -276,6 +276,15 @@ public:
     std::vector<account_vote> get_account_votes(const std::string& voter) const;
 
     ////////////////////////////
+    // NFT                    //
+    ////////////////////////////
+
+    nft_api_obj get_nft_by_id(nft_id_type id) const;
+    nft_api_obj get_nft_by_name(const account_name_type& name) const;
+    nft_api_obj get_nft_by_uuid(const uuid_type& uuid) const;
+    std::vector<nft_api_obj> lookup_nft(nft_id_type id, uint32_t limit) const;
+
+    ////////////////////////////
     // Handlers - not exposed //
     ////////////////////////////
     void on_api_startup();
@@ -355,6 +364,12 @@ FC_API(scorum::app::database_api,
     // Atomic Swap
    (get_atomicswap_contracts)
    (get_atomicswap_contract)
+
+    // NFT
+    (get_nft_by_id)
+    (get_nft_by_name)
+    (get_nft_by_uuid)
+    (lookup_nft)
 )
 
 // clang-format on

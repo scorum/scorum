@@ -86,6 +86,9 @@ add_library( scorum_chain
              evaluators/cancel_pending_bets_evaluator.cpp
              evaluators/vote_evaluator.cpp
              evaluators/delegate_sp_from_reg_pool_evaluator.cpp
+             evaluators/create_nft_evaluator.cpp
+             evaluators/update_nft_meta_evaluator.cpp
+             evaluators/increase_nft_power_evaluator.cpp
 
              schema/shared_authority.cpp
              schema/advertising_property_object.cpp

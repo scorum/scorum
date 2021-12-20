@@ -12,7 +12,7 @@ moc_*
 hardfork.hpp
 build-release
 build-debug
-cmake-build-debug
+cmake-build-*
 build
 
 lcov
@@ -42,8 +42,6 @@ tests/performance_test
 
 doxygen
 
-build
-
 wallet.json
 witness_node_data_dir
 
@@ -64,3 +62,6 @@ witness_node_data_dir
 .vs/
 *.vcxproj*
 *.cbp
+
+.devcontainer
+genesis.json

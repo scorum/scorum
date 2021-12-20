@@ -1,12 +1,7 @@
-FROM phusion/baseimage:0.9.19
+FROM phusion/baseimage:0.9.19 as builder
 
 ARG BRANCH_NAME
 ARG GIT_COMMIT
-ARG AZURE_UPLOAD
-ARG AZURE_STORAGE_ACCOUNT
-ARG AZURE_STORAGE_ACCESS_KEY
-ARG AZURE_STORAGE_CONNECTION_STRING
-ARG UPLOAD_PATH
 ARG BUILD_VERSION
 ARG LIVE_TESTNET
 
@@ -48,8 +43,7 @@ RUN \
         && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-        pip3 install gcovr && \
-        pip install azure-cli
+        pip3 install gcovr
 
 ADD . /usr/local/src/scorum
 
@@ -123,72 +117,34 @@ RUN \
     cd / && \
     rm -rf /usr/local/src/scorum
 
-RUN \
-    ( /usr/local/scorumd-default/bin/scorumd --version \
-      | grep -o '[0-9]*\.[0-9]*\.[0-9]*' \
-      && echo '_' \
-      && git rev-parse --short HEAD ) \
-      | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n//g' \
-      > /etc/scorumdversion && \
-    cat /etc/scorumdversion
+FROM phusion/baseimage:0.9.19 as runtime
 
 RUN \
-        apt-get remove -y \
-            automake \
-            autotools-dev \
-            bsdmainutils \
-            build-essential \
-            cmake \
-            doxygen \
-            dpkg-dev \
-            git \
-            libicu-dev \
-            libboost-all-dev \
-            libc6-dev \
-            libexpat1-dev \
-            libgcc-5-dev \
-            libhwloc-dev \
-            libibverbs-dev \
-            libicu-dev \
-            libltdl-dev \
-            libncurses5-dev \
-            libnuma-dev \
-            libopenmpi-dev \
-            libpython-dev \
-            libpython2.7-dev \
-            libreadline-dev \
-            libreadline6-dev \
-            libssl-dev \
-            libstdc++-5-dev \
-            libtinfo-dev \
-            libtool \
-            linux-libc-dev \
-            m4 \
-            make \
-            manpages \
-            manpages-dev \
-            mpi-default-dev \
-            python-dev \
-            python2.7-dev \
-            python3-dev \
-        && \
-        apt-get autoremove -y && \
-        rm -rf \
-            /var/lib/apt/lists/* \
-            /tmp/* \
-            /var/tmp/* \
-            /var/cache/* \
-            /usr/include \
-            /usr/local/include
+    apt-get update && \
+    apt-get install -y libicu55 libreadline6 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN useradd -s /bin/bash -m -d /var/lib/scorumd scorumd
+COPY --from=builder /usr/local/scorumd-full/bin/scorumd /usr/local/bin/scorumd-full
+COPY --from=builder /usr/local/scorumd-full/bin/cli_wallet /usr/local/bin/cli_wallet
+COPY --from=builder /usr/local/scorumd-default/bin/scorumd /usr/local/bin/scorumd
 
-RUN mkdir /var/cache/scorumd && \
-          chown scorumd:scorumd -R /var/cache/scorumd
+ADD contrib/config.witness.ini /etc/scorumd/config.witness.ini
+ADD contrib/config.rpc.ini /etc/scorumd/config.rpc.ini
+ADD contrib/seeds.mainnet.ini /etc/scorumd/seeds.mainnet.ini
+ADD contrib/seeds.testnet.ini /etc/scorumd/seeds.testnet.ini
+ADD contrib/scorumdentrypoint.sh /usr/local/bin/scorumdentrypoint.sh
+
+RUN chmod +x /usr/local/bin/scorumdentrypoint.sh
+
+# not sure that /var/lib/scorumd and /var/cache/scorumd is needed at all
+RUN \
+    useradd -s /bin/bash -m -d /var/lib/scorumd scorumd && \
+    mkdir /var/cache/scorumd && \
+    chown scorumd:scorumd -R /var/cache/scorumd && \
+    chown scorumd:scorumd -R /var/lib/scorumd
 
 ENV HOME /var/lib/scorumd
-RUN chown scorumd:scorumd -R /var/lib/scorumd
-
 VOLUME ["/var/lib/scorumd"]
 
 # rpc service:
@@ -196,21 +152,4 @@ EXPOSE 8001
 # p2p service:
 EXPOSE 2001
 
-# the following adds lots of logging info to stdout
-ADD contrib/config.ini.witness /etc/scorumd/config.ini.witness
-ADD contrib/config.ini.rpc /etc/scorumd/config.ini.rpc
-ADD contrib/seeds.ini.mainnet /etc/scorumd/seeds.ini.mainnet
-ADD contrib/seeds.ini.testnet /etc/scorumd/seeds.ini.testnet
-
-# upload archive to azure
-ADD contrib/azure_upload.sh /usr/local/bin/azure_upload.sh
-RUN chmod +x /usr/local/bin/azure_upload.sh
-RUN /usr/local/bin/azure_upload.sh
-
-# new entrypoint for all instances
-# this enables exitting of the container when the writer node dies
-# for PaaS mode (elasticbeanstalk, etc)
-# AWS EB Docker requires a non-daemonized entrypoint
-ADD contrib/scorumdentrypoint.sh /usr/local/bin/scorumdentrypoint.sh
-RUN chmod +x /usr/local/bin/scorumdentrypoint.sh
 CMD ["/bin/bash", "/usr/local/bin/scorumdentrypoint.sh"]

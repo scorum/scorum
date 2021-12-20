@@ -99,7 +99,11 @@ using operation = fc::static_variant<vote_operation,
                                      bet_resolved_operation,
                                      bet_cancelled_operation,
                                      bet_restored_operation,
-                                     bet_updated_operation>;
+                                     bet_updated_operation,
+
+                                     create_nft_operation,
+                                     update_nft_meta_operation,
+                                     increase_nft_power_operation>;
 
 /*void operation_get_required_authorities( const operation& op,
                                          flat_set<string>& active,

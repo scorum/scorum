@@ -621,18 +621,18 @@ public:
             return it->second;
         };
 
-        auto minimal_signing_keys
-            = tx.minimize_required_signatures(_chain_id, available_keys,
-                                              [&](const std::string& account_name) -> const authority& {
-                                                  return (get_account_from_lut(account_name).active);
-                                              },
-                                              [&](const std::string& account_name) -> const authority& {
-                                                  return (get_account_from_lut(account_name).owner);
-                                              },
-                                              [&](const std::string& account_name) -> const authority& {
-                                                  return (get_account_from_lut(account_name).posting);
-                                              },
-                                              SCORUM_MAX_SIG_CHECK_DEPTH);
+        auto minimal_signing_keys = tx.minimize_required_signatures(
+            _chain_id, available_keys,
+            [&](const std::string& account_name) -> const authority& {
+                return (get_account_from_lut(account_name).active);
+            },
+            [&](const std::string& account_name) -> const authority& {
+                return (get_account_from_lut(account_name).owner);
+            },
+            [&](const std::string& account_name) -> const authority& {
+                return (get_account_from_lut(account_name).posting);
+            },
+            SCORUM_MAX_SIG_CHECK_DEPTH);
 
         for (const public_key_type& k : minimal_signing_keys)
         {
@@ -1451,14 +1451,14 @@ annotated_signed_transaction wallet_api::create_account_with_keys_delegated(cons
     FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta)(owner)(active)(posting)(memo)(broadcast))
 }
 
-annotated_signed_transaction wallet_api::create_account_by_committee(const std::string& creator,
-                                                                     const std::string& newname,
-                                                                     const std::string& json_meta,
-                                                                     const public_key_type& owner,
-                                                                     const public_key_type& active,
-                                                                     const public_key_type& posting,
-                                                                     const public_key_type& memo,
-                                                                     bool broadcast) const
+annotated_signed_transaction wallet_api::create_account_by_committee_with_keys(const std::string& creator,
+                                                                               const std::string& newname,
+                                                                               const std::string& json_meta,
+                                                                               const public_key_type& owner,
+                                                                               const public_key_type& active,
+                                                                               const public_key_type& posting,
+                                                                               const public_key_type& memo,
+                                                                               bool broadcast) const
 {
     try
     {
@@ -1479,6 +1479,33 @@ annotated_signed_transaction wallet_api::create_account_by_committee(const std::
         return my->sign_transaction(tx, broadcast);
     }
     FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta)(owner)(active)(posting)(memo)(broadcast))
+}
+
+/**
+ *  This method will generate new owner, active, and memo keys for the new account which
+ *  will be controllable by this wallet.
+ */
+annotated_signed_transaction wallet_api::create_account_by_committee(const std::string& creator,
+                                                                     const std::string& newname,
+                                                                     const std::string& json_meta,
+                                                                     bool broadcast)
+{
+    try
+    {
+        FC_ASSERT(!is_locked());
+        auto owner = suggest_brain_key();
+        auto active = suggest_brain_key();
+        auto posting = suggest_brain_key();
+        auto memo = suggest_brain_key();
+        import_key(owner.wif_priv_key);
+        import_key(active.wif_priv_key);
+        import_key(posting.wif_priv_key);
+        import_key(memo.wif_priv_key);
+
+        return create_account_by_committee_with_keys(creator, newname, json_meta, owner.pub_key, active.pub_key,
+                                                     posting.pub_key, memo.pub_key, broadcast);
+    }
+    FC_CAPTURE_AND_RETHROW((creator)(newname)(json_meta))
 }
 
 annotated_signed_transaction wallet_api::request_account_recovery(const std::string& recovery_account,
@@ -3440,6 +3467,90 @@ std::vector<pending_bet_api_object> wallet_api::get_game_pending_bets(const uuid
     auto api = my->_remote_api->get_api_by_name(API_BETTING)->as<betting_api>();
 
     return api->get_game_pending_bets(uuid);
+}
+
+annotated_signed_transaction wallet_api::create_nft(const uuid_type& uuid,
+                                                    const std::string& owner,
+                                                    const std::string& name,
+                                                    share_type power,
+                                                    const std::string& json_meta,
+                                                    bool broadcast) const
+{
+    FC_ASSERT(!is_locked());
+
+    create_nft_operation op;
+    op.uuid = uuid;
+    op.owner = owner;
+    op.name = name;
+    op.power = power;
+    op.json_metadata = json_meta;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::update_nft_meta(const uuid_type& uuid,
+                                                         const std::string& moderator,
+                                                         int64_t nft_id,
+                                                         const std::string& json_meta,
+                                                         bool broadcast) const
+{
+    FC_ASSERT(!is_locked());
+
+    update_nft_meta_operation op;
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.json_metadata = json_meta;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::increase_nft_power(
+    const uuid_type& uuid, const std::string& moderator, int64_t nft_id, share_type power, bool broadcast) const
+{
+    FC_ASSERT(!is_locked());
+
+    increase_nft_power_operation op;
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.power = power;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+nft_api_obj wallet_api::get_nft_by_id(nft_id_type id) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_DATABASE)->as<database_api>();
+    return api->get_nft_by_id(id);
+}
+
+nft_api_obj wallet_api::get_nft_by_name(const account_name_type& name) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_DATABASE)->as<database_api>();
+    return api->get_nft_by_name(name);
+}
+
+nft_api_obj wallet_api::get_nft_by_uuid(const uuid_type& uuid) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_DATABASE)->as<database_api>();
+    return api->get_nft_by_uuid(uuid);
+}
+
+std::vector<nft_api_obj> wallet_api::lookup_nft(nft_id_type id, uint32_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_DATABASE)->as<database_api>();
+    return api->lookup_nft(id, limit);
 }
 
 } // namespace wallet
