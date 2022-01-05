@@ -35,11 +35,15 @@ void create_nft_evaluator::do_apply(const operation_type& op)
     const account_object& account = _account_dba.get_by<by_name>(op.owner);
     const auto available_power = account.scorumpower - account.nft_spend_scorumpower;
 
-    FC_ASSERT(available_power.amount >= op.power,
-              R"(Account available power "${available_power}" is less than requested "${power}".)",
-              ("available_power", available_power.amount)("power", op.power));
+    share_type requested_sp = op.power * pow(10, SCORUM_CURRENCY_PRECISION);
 
-    _account_dba.update(account, [&](auto& obj) { obj.nft_spend_scorumpower.amount += op.power; });
+    FC_ASSERT(available_power.amount >= requested_sp,
+              R"(Account available power "${available_power}" is less than requested "${requested_sp}".)",
+              ("available_power", available_power.amount)("requested_sp", requested_sp));
+
+    _account_dba.update(account, [&](auto& obj) {
+        obj.nft_spend_scorumpower.amount += requested_sp;
+    });
 
     _nft_dba.create([&](auto& obj) {
         obj.uuid = op.uuid;

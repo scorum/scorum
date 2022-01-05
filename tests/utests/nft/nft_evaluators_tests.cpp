@@ -60,7 +60,7 @@ SCORUM_TEST_CASE(create_nft)
     dprop_service.create([&](auto& dprop) { dprop.time = fc::time_point_sec::from_iso_string("2018-01-01T00:00:00"); });
     account_dba.create([&](auto& obj) {
         obj.name = "user";
-        obj.scorumpower = asset(10, SP_SYMBOL);
+        obj.scorumpower = asset::from_string("10.000000000 SP");
     });
 
     create_nft_evaluator ev(*services, account_dba, nft_dba);
@@ -84,8 +84,8 @@ SCORUM_TEST_CASE(create_nft)
 #endif
 
     auto& user = account_dba.get_by<by_name>("user");
-    BOOST_REQUIRE_EQUAL(9, user.nft_spend_scorumpower.amount);
-    BOOST_REQUIRE_EQUAL(10, user.scorumpower.amount);
+    BOOST_REQUIRE_EQUAL("9.000000000 SP", user.nft_spend_scorumpower.to_string());
+    BOOST_REQUIRE_EQUAL("10.000000000 SP", user.scorumpower.to_string());
 }
 
 SCORUM_TEST_CASE(create_nft_fail_when_nft_exists)
@@ -115,7 +115,7 @@ SCORUM_TEST_CASE(create_nft_fail_when_not_enough_scorumpower)
 {
     account_dba.create([&](auto& account) {
         account.name = "user";
-        account.scorumpower = asset(10, SP_SYMBOL);
+        account.scorumpower = asset::from_string("10.000000000 SP");
     });
 
     create_nft_evaluator ev(*services, account_dba, nft_dba);
@@ -126,7 +126,7 @@ SCORUM_TEST_CASE(create_nft_fail_when_not_enough_scorumpower)
     op.power = 11;
 
     SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception,
-                           R"(Account available power "10" is less than requested "11".)")
+                           R"(Account available power "10000000000" is less than requested "11000000000".)")
 }
 
 SCORUM_TEST_CASE(create_second_nft_fail_when_not_enough_scorumpower)
@@ -134,7 +134,7 @@ SCORUM_TEST_CASE(create_second_nft_fail_when_not_enough_scorumpower)
     dprop_service.create([&](auto& dprop) { dprop.time = fc::time_point_sec::from_iso_string("2018-01-01T00:00:00"); });
     account_dba.create([&](auto& obj) {
         obj.name = "user";
-        obj.scorumpower = asset(10, SP_SYMBOL);
+        obj.scorumpower = asset::from_string("10.000000000 SP");
     });
 
     create_nft_evaluator ev(*services, account_dba, nft_dba);
@@ -155,11 +155,11 @@ SCORUM_TEST_CASE(create_second_nft_fail_when_not_enough_scorumpower)
     op2.power = 2;
     op2.json_metadata = "{}";
 
-    SCORUM_CHECK_EXCEPTION(ev.do_apply(op2), fc::assert_exception, R"(Account available power "1" is less than requested "2".)")
+    SCORUM_CHECK_EXCEPTION(ev.do_apply(op2), fc::assert_exception, R"(Account available power "1000000000" is less than requested "2000000000".)")
 
     auto& user = account_dba.get_by<by_name>("user");
-    BOOST_REQUIRE_EQUAL(9, user.nft_spend_scorumpower.amount);
-    BOOST_REQUIRE_EQUAL(10, user.scorumpower.amount);
+    BOOST_REQUIRE_EQUAL("9.000000000 SP", user.nft_spend_scorumpower.to_string());
+    BOOST_REQUIRE_EQUAL("10.000000000 SP", user.scorumpower.to_string());
 }
 
 SCORUM_TEST_CASE(create_second_nft)
@@ -167,7 +167,7 @@ SCORUM_TEST_CASE(create_second_nft)
     dprop_service.create([&](auto& dprop) { dprop.time = fc::time_point_sec::from_iso_string("2018-01-01T00:00:00"); });
     account_dba.create([&](auto& obj) {
         obj.name = "user";
-        obj.scorumpower = asset(10, SP_SYMBOL);
+        obj.scorumpower = asset::from_string("10.000000000 SP");
     });
 
     create_nft_evaluator ev(*services, account_dba, nft_dba);
@@ -191,8 +191,8 @@ SCORUM_TEST_CASE(create_second_nft)
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op2));
 
     auto& user = account_dba.get_by<by_name>("user");
-    BOOST_REQUIRE_EQUAL(10, user.nft_spend_scorumpower.amount);
-    BOOST_REQUIRE_EQUAL(10, user.scorumpower.amount);
+    BOOST_REQUIRE_EQUAL("10.000000000 SP", user.nft_spend_scorumpower.to_string());
+    BOOST_REQUIRE_EQUAL("10.000000000 SP", user.scorumpower.to_string());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
