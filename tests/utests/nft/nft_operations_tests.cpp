@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <scorum/chain/evaluators/increase_nft_power_evaluator.hpp>
+#include <scorum/protocol/scorum_operations.hpp>
 
 #include <defines.hpp>
 #include "detail.hpp"
@@ -95,48 +95,6 @@ SCORUM_TEST_CASE(update_nft_meta_fail_when_json_meta_invalid)
     op.moderator = SCORUM_NFT_MODERATOR;
     op.json_metadata = "abc";
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(Unexpected char '97' in "abc")")
-}
-
-SCORUM_TEST_CASE(increase_nft_power)
-{
-    increase_nft_power_operation op;
-    op.uuid = gen_uuid("nft");
-    op.moderator = SCORUM_NFT_MODERATOR;
-    op.power = 1;
-    BOOST_CHECK_NO_THROW(op.validate());
-}
-
-SCORUM_TEST_CASE(increase_nft_power_fail_when_uuid_is_nil)
-{
-    increase_nft_power_operation op;
-    SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(uuid must not be nil)")
-}
-
-SCORUM_TEST_CASE(increase_nft_power_fail_when_moderator_is_not_set)
-{
-    increase_nft_power_operation op;
-    op.uuid = gen_uuid("nft");
-    SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(invalid moderator account)")
-
-    op.moderator = "moderator";
-    SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(invalid moderator account)")
-}
-
-SCORUM_TEST_CASE(increase_nft_power_fail_when_power_is_zero)
-{
-    increase_nft_power_operation op;
-    op.uuid = gen_uuid("nft");
-    op.moderator = SCORUM_NFT_MODERATOR;
-    SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(power should be greater than zero)")
-}
-
-SCORUM_TEST_CASE(increase_nft_power_fail_when_power_is_negative)
-{
-    increase_nft_power_operation op;
-    op.uuid = gen_uuid("nft");
-    op.moderator = SCORUM_NFT_MODERATOR;
-    op.power = -1;
-    SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(power should be greater than zero)")
 }
 
 SCORUM_TEST_CASE(create_game_round_operation_fail_uuid_is_nil)

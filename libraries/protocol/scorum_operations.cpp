@@ -451,14 +451,6 @@ void update_nft_meta_operation::validate() const
     validate_json_metadata(json_metadata);
 }
 
-void increase_nft_power_operation::validate() const
-{
-    FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");
-    FC_ASSERT(moderator == SCORUM_NFT_MODERATOR, "invalid moderator account");
-    FC_ASSERT(power > 0, "power should be greater than zero");
-}
-
-
 void create_game_round_operation::validate() const
 {
     FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");

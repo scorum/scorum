@@ -1183,19 +1183,6 @@ struct update_nft_meta_operation : public base_operation
     }
 };
 
-struct increase_nft_power_operation : public base_operation
-{
-    uuid_type uuid = boost::uuids::nil_uuid();
-    account_name_type moderator;
-    share_type power;
-
-    void validate() const;
-    void get_required_active_authorities(flat_set<account_name_type>& a) const
-    {
-        a.insert(moderator);
-    }
-};
-
 struct create_game_round_operation : public base_operation
 {
     account_name_type owner;
@@ -1353,11 +1340,6 @@ FC_REFLECT( scorum::protocol::update_nft_meta_operation,
             (uuid)
             (moderator)
             (json_metadata))
-
-FC_REFLECT( scorum::protocol::increase_nft_power_operation,
-            (uuid)
-            (moderator)
-            (power))
 
 FC_REFLECT( scorum::protocol::create_game_round_operation,
             (owner)

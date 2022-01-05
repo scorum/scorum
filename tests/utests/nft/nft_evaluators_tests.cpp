@@ -12,7 +12,6 @@
 
 #include <scorum/chain/evaluators/create_nft_evaluator.hpp>
 #include <scorum/chain/evaluators/update_nft_meta_evaluator.hpp>
-#include <scorum/chain/evaluators/increase_nft_power_evaluator.hpp>
 
 #include <db_mock.hpp>
 #include <hippomocks.h>
@@ -257,68 +256,6 @@ SCORUM_TEST_CASE(update_nft_meta_fail_when_account_does_not_exists)
 #ifndef IS_LOW_MEM
     op.json_metadata = "metadata";
 #endif
-
-    SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception, R"(Account "moderator" must exist.)")
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_FIXTURE_TEST_SUITE(increase_nft_power_evaluator_test, nft_evaluator_fixture)
-
-SCORUM_TEST_CASE(increase_nft_power)
-{
-    auto expected_nft = nft_dba.create([&](auto& nft) {
-        nft.uuid = gen_uuid("nft");
-        nft.name = "plane";
-        nft.owner = "user";
-    });
-
-    account_dba.create([&](auto& obj) {
-        obj.name = "moderator";
-        obj.scorumpower = asset(10, SP_SYMBOL);
-    });
-
-    increase_nft_power_evaluator ev(*services, account_dba, nft_dba);
-
-    increase_nft_power_operation op;
-    op.uuid = expected_nft.uuid;
-    op.moderator = "moderator";
-    op.power = 100;
-
-    BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
-
-    auto& nft = nft_dba.get_by<by_uuid>(op.uuid);
-    BOOST_REQUIRE_EQUAL("plane", nft.name);
-    BOOST_REQUIRE_EQUAL("user", nft.owner);
-    BOOST_REQUIRE_EQUAL(100, nft.power);
-}
-
-SCORUM_TEST_CASE(increase_nft_power_fail_when_nft_does_not_exists)
-{
-    increase_nft_power_evaluator ev(*services, account_dba, nft_dba);
-    increase_nft_power_operation op;
-
-    SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception,
-                           R"(NFT with uuid "00000000-0000-0000-0000-000000000000" must exist.)")
-
-    op.uuid = gen_uuid("nft");
-
-    SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception,
-                           R"(NFT with uuid "de53e30d-d502-5cc0-b25f-a6f0579f271c" must exist.)")
-}
-
-SCORUM_TEST_CASE(increase_nft_power_fail_when_account_does_not_exists)
-{
-    auto& expected_nft = nft_dba.create([&](auto& nft) {
-        nft.uuid = gen_uuid("nft");
-        nft.name = "plane";
-        nft.owner = "user";
-    });
-    increase_nft_power_evaluator ev(*services, account_dba, nft_dba);
-
-    increase_nft_power_operation op;
-    op.uuid = expected_nft.uuid;
-    op.moderator = "moderator";
 
     SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception, R"(Account "moderator" must exist.)")
 }

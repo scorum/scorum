@@ -1716,9 +1716,6 @@ public:
                                                  const std::string& json_meta,
                                                  bool broadcast) const;
 
-    annotated_signed_transaction increase_nft_power(
-        const uuid_type& uuid, const std::string& moderator, int64_t id, share_type power, bool broadcast) const;
-
     nft_api_obj get_nft_by_id(nft_id_type id) const;
     nft_api_obj get_nft_by_name(const account_name_type& name) const;
     nft_api_obj get_nft_by_uuid(const uuid_type& uuid) const;
@@ -1917,7 +1914,6 @@ FC_API( scorum::wallet::wallet_api,
         // nft
         (create_nft)
         (update_nft_meta)
-        (increase_nft_power)
         (get_nft_by_id)
         (get_nft_by_name)
         (get_nft_by_uuid)

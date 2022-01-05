@@ -3512,23 +3512,6 @@ annotated_signed_transaction wallet_api::update_nft_meta(const uuid_type& uuid,
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::increase_nft_power(
-    const uuid_type& uuid, const std::string& moderator, int64_t nft_id, share_type power, bool broadcast) const
-{
-    FC_ASSERT(!is_locked());
-
-    increase_nft_power_operation op;
-    op.uuid = uuid;
-    op.moderator = moderator;
-    op.power = power;
-
-    signed_transaction tx;
-    tx.operations.push_back(op);
-    tx.validate();
-
-    return my->sign_transaction(tx, broadcast);
-}
-
 nft_api_obj wallet_api::get_nft_by_id(nft_id_type id) const
 {
     auto api = my->_remote_api->get_api_by_name(API_DATABASE)->as<database_api>();
