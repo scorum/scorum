@@ -18,7 +18,7 @@ namespace chain {
 class nft_object : public object<nft_object_type, nft_object>
 {
 public:
-    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(nft_object, (json_metadata))
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(nft_object, (json_metadata));
 
     id_type id;
     uuid_type uuid;
@@ -33,7 +33,7 @@ public:
 class game_round_object : public object<game_round_object_type, game_round_object>
 {
 public:
-    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(game_round_object, (seed)(verification_key)(vrf)(proof))
+    CHAINBASE_DEFAULT_DYNAMIC_CONSTRUCTOR(game_round_object, (seed)(verification_key)(vrf)(proof));
 
     id_type id;
     uuid_type uuid;
