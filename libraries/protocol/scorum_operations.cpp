@@ -458,5 +458,23 @@ void increase_nft_power_operation::validate() const
     FC_ASSERT(power > 0, "power should be greater than zero");
 }
 
+
+void create_game_round_operation::validate() const
+{
+    FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");
+//    FC_ASSERT(account == SCORUM_NFT_MODERATOR, "invalid moderator account");
+    FC_ASSERT(verification_key.size() == 64, "verification_key should have 64 symbols length");
+    FC_ASSERT(seed.size() == 64, "seed should have 64 symbols length");
+}
+
+void game_round_result_operation::validate() const
+{
+    FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");
+//    FC_ASSERT(account == SCORUM_NFT_MODERATOR, "invalid moderator account");
+    FC_ASSERT(proof.size() == 160, "proof should have 160 symbols length");
+    FC_ASSERT(vrf.size() == 128, "vrf should have 128 symbols length");
+    FC_ASSERT(result >= 100, "result should be greater or equal 100");
+}
+
 } // namespace protocol
 } // namespace scorum

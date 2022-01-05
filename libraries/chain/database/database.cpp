@@ -98,6 +98,8 @@
 #include <scorum/chain/evaluators/create_nft_evaluator.hpp>
 #include <scorum/chain/evaluators/update_nft_meta_evaluator.hpp>
 #include <scorum/chain/evaluators/increase_nft_power_evaluator.hpp>
+#include <scorum/chain/evaluators/create_game_round_evaluator.hpp>
+#include <scorum/chain/evaluators/game_round_result_evaluator.hpp>
 
 #include <cmath>
 
@@ -1322,6 +1324,10 @@ void database::initialize_evaluators()
         new update_nft_meta_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
     _my->_evaluator_registry.register_evaluator(
         new increase_nft_power_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
+    _my->_evaluator_registry.register_evaluator(
+        new create_game_round_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
+    _my->_evaluator_registry.register_evaluator(
+        new game_round_result_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
 }
 
 void database::initialize_indexes()
@@ -1382,6 +1388,7 @@ void database::initialize_indexes()
     add_index<bet_uuid_history_index>();
     add_index<game_uuid_history_index>();
     add_index<nft_index>();
+    add_index<game_round_index>();
 
     _plugin_index_signal();
 }

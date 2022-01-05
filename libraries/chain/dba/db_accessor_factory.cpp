@@ -28,7 +28,8 @@
     (dynamic_global_property_object)                                                                                   \
     (account_object)                                                                                                   \
     (comment_object)                                                                                                   \
-    (nft_object)
+    (nft_object)                                                                                                       \
+    (game_round_object)
 // clang-format on
 
 #define INSTANTIATE_DBA_FACTORY_METHODS(_1, _2, TYPE)                                                                  \

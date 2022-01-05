@@ -266,6 +266,35 @@ struct nft_api_obj
     std::string json_metadata;
 };
 
+struct game_round_api_obj
+{
+    game_round_api_obj(const chain::game_round_object& o)
+        : id(o.id)
+        , uuid(o.uuid)
+        , owner(o.owner)
+        , seed(fc::to_string(o.seed))
+        , verification_key(fc::to_string(o.verification_key))
+        , vrf(fc::to_string(o.vrf))
+        , proof(fc::to_string(o.proof))
+        , result(o.result)
+    {
+    }
+
+    game_round_api_obj()
+    {
+    }
+
+    game_round_id_type id;
+    uuid_type uuid;
+    account_name_type owner;
+
+    std::string seed;
+    std::string verification_key;
+    std::string vrf;
+    std::string proof;
+    share_type result;
+};
+
 struct witness_api_obj
 {
     witness_api_obj(const chain::witness_object& w)
@@ -620,5 +649,15 @@ FC_REFLECT(scorum::app::nft_api_obj,
                         (created)
                         (power)
                         (json_metadata))
+
+FC_REFLECT(scorum::app::game_round_api_obj,
+                (id)
+                (uuid)
+                (owner)
+                (seed)
+                (verification_key)
+                (vrf)
+                (proof)
+                (result))
 
 // clang-format on

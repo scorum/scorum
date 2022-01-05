@@ -1196,6 +1196,35 @@ struct increase_nft_power_operation : public base_operation
     }
 };
 
+struct create_game_round_operation : public base_operation
+{
+    account_name_type owner;
+    uuid_type uuid = boost::uuids::nil_uuid();
+    std::string verification_key;
+    std::string seed;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
+};
+
+struct game_round_result_operation : public base_operation
+{
+    account_name_type owner;
+    uuid_type uuid = boost::uuids::nil_uuid();
+    std::string proof;
+    std::string vrf;
+    share_type result;
+
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
+};
+
 /// @}
 
 /// bets list that is being canceling
@@ -1329,5 +1358,18 @@ FC_REFLECT( scorum::protocol::increase_nft_power_operation,
             (uuid)
             (moderator)
             (power))
+
+FC_REFLECT( scorum::protocol::create_game_round_operation,
+            (owner)
+            (uuid)
+            (verification_key)
+            (seed))
+
+FC_REFLECT( scorum::protocol::game_round_result_operation,
+            (owner)
+            (uuid)
+            (proof)
+            (vrf)
+            (result))
 
 // clang-format on

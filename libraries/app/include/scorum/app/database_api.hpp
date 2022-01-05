@@ -284,6 +284,9 @@ public:
     nft_api_obj get_nft_by_uuid(const uuid_type& uuid) const;
     std::vector<nft_api_obj> lookup_nft(nft_id_type id, uint32_t limit) const;
 
+    game_round_api_obj get_game_round_by_uuid(const uuid_type& uuid) const;
+    std::vector<game_round_api_obj> lookup_game_round(game_round_id_type id, uint32_t limit) const;
+
     ////////////////////////////
     // Handlers - not exposed //
     ////////////////////////////
@@ -370,6 +373,8 @@ FC_API(scorum::app::database_api,
     (get_nft_by_name)
     (get_nft_by_uuid)
     (lookup_nft)
+    (get_game_round_by_uuid)
+    (lookup_game_round)
 )
 
 // clang-format on

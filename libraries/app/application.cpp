@@ -105,6 +105,14 @@ namespace detail {
 using plugins_type = std::map<std::string, std::shared_ptr<abstract_plugin>>;
 using plugin_names_type = std::set<std::string>;
 
+bool get_options_bool(const bpo::variables_map* options, const std::string& name) {
+    if (options->count(name)) {
+        return options->at(name).as<bool>();
+    }
+
+    return false;
+}
+
 class application_impl : public graphene::net::node_delegate
 {
 public:
@@ -366,7 +374,7 @@ public:
                 ilog("Starting Scorum node in write mode.");
                 _max_block_age = _options->at("max-block-age").as<int32_t>();
 
-                if (_options->count("resync-blockchain"))
+                if (get_options_bool(_options, "resync-blockchain"))
                 {
                     _chain_db->wipe(block_log_dir, _shared_dir, true);
                 }
@@ -386,7 +394,7 @@ public:
                 }
                 _chain_db->add_checkpoints(loaded_checkpoints);
 
-                if (_options->count("replay-blockchain") && !_options->count("resync-blockchain"))
+                if (get_options_bool(_options,"replay-blockchain") && !get_options_bool(_options, "resync-blockchain"))
                 {
                     ilog("Replaying blockchain on user request.");
 

@@ -3553,5 +3553,17 @@ std::vector<nft_api_obj> wallet_api::lookup_nft(nft_id_type id, uint32_t limit) 
     return api->lookup_nft(id, limit);
 }
 
+game_round_api_obj wallet_api::get_game_round_by_uuid(const uuid_type& uuid) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_DATABASE)->as<database_api>();
+    return api->get_game_round_by_uuid(uuid);
+}
+
+std::vector<game_round_api_obj> wallet_api::lookup_game_round(game_round_id_type id, uint32_t limit) const
+{
+    auto api = my->_remote_api->get_api_by_name(API_DATABASE)->as<database_api>();
+    return api->lookup_game_round(id, limit);
+}
+
 } // namespace wallet
 } // namespace scorum

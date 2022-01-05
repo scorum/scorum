@@ -87,7 +87,8 @@ enum object_type
     reg_pool_sp_delegation_object_type,
     bet_uuid_history_object_type,
     game_uuid_history_object_type,
-    nft_object_type
+    nft_object_type,
+    game_round_object_type
 };
 
 using account_authority_id_type = oid<account_authority_object>;
@@ -131,6 +132,7 @@ using matched_bet_id_type = oid<matched_bet_object>;
 using bet_uuid_history_id_type = oid<bet_uuid_history_object>;
 using game_uuid_history_id_type = oid<game_uuid_history_object>;
 using nft_id_type = oid<nft_object>;
+using game_round_id_type = oid<game_round_object>;
 
 using withdrawable_id_type = fc::static_variant<account_id_type, dev_committee_id_type>;
 
@@ -201,7 +203,8 @@ FC_REFLECT_ENUM(scorum::chain::object_type,
                 (reg_pool_sp_delegation_object_type)
                 (bet_uuid_history_object_type)
                 (game_uuid_history_object_type)
-                (nft_object_type))
+                (nft_object_type)
+                (game_round_object_type))
 
 FC_REFLECT_ENUM( scorum::chain::bandwidth_type, (post)(forum)(market) )
 

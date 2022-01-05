@@ -45,5 +45,6 @@ class game_object;
 class bet_uuid_history_object;
 class game_uuid_history_object;
 class nft_object;
+class game_round_object;
 }
 }

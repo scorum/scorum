@@ -68,6 +68,13 @@ using operation = fc::static_variant<vote_operation,
 
                                      delegate_sp_from_reg_pool_operation,
 
+                                     create_nft_operation,
+                                     update_nft_meta_operation,
+                                     increase_nft_power_operation,
+
+                                     create_game_round_operation,
+                                     game_round_result_operation,
+
                                      /// virtual operations
                                      author_reward_operation,
                                      comment_benefficiary_reward_operation,
@@ -99,11 +106,9 @@ using operation = fc::static_variant<vote_operation,
                                      bet_resolved_operation,
                                      bet_cancelled_operation,
                                      bet_restored_operation,
-                                     bet_updated_operation,
+                                     bet_updated_operation
 
-                                     create_nft_operation,
-                                     update_nft_meta_operation,
-                                     increase_nft_power_operation>;
+                                     >;
 
 /*void operation_get_required_authorities( const operation& op,
                                          flat_set<string>& active,

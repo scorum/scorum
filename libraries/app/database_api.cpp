@@ -1098,5 +1098,28 @@ std::vector<nft_api_obj> database_api::lookup_nft(nft_id_type id, uint32_t limit
     });
 }
 
+game_round_api_obj database_api::get_game_round_by_uuid(const uuid_type& uuid) const
+{
+    return my->_db.with_read_lock([&]() { return my->_db.get_dba<game_round_object>().get_by<by_uuid>(uuid); });
+}
+
+std::vector<game_round_api_obj> database_api::lookup_game_round(game_round_id_type id, uint32_t limit) const
+{
+    return my->_db.with_read_lock([&]() {
+        FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
+
+        const auto& index = my->_db.get_index<game_round_index>().indices().get<by_id>();
+        std::vector<game_round_api_obj> result;
+
+        for (auto itr = index.lower_bound(id); limit-- && itr != index.end(); ++itr)
+        {
+            result.emplace_back(*itr);
+        }
+
+        return result;
+    });
+}
+
+
 } // namespace app
 } // namespace scorum
