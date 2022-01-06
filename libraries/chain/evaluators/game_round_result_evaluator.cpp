@@ -31,7 +31,7 @@ void game_round_result_evaluator::do_apply(const operation_type& op)
 
     const auto round = _game_round_dba.get_by<by_uuid>(op.uuid);
 
-    FC_ASSERT(round.owner == op.owner, "${round.owner} != ${operation.owner}", ("round.owner", round.uuid)("operation.owner", op.uuid));
+    FC_ASSERT(round.owner == op.owner, "${round.owner} != ${operation.owner}", ("round.owner", round.owner)("operation.owner", op.owner));
 
     _game_round_dba.update([&](auto& obj){
         obj.result = op.result;

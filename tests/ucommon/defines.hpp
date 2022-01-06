@@ -98,6 +98,22 @@ template <class T> T make_test_index_object()
         }                                                                                                              \
     }
 
+#define SCORUM_REQUIRE_NO_THROW(test_code)                                                                             \
+    try                                                                                                                \
+    {                                                                                                                  \
+        test_code;                                                                                                     \
+    }                                                                                                                  \
+    catch (fc::exception & e)                                                                                          \
+    {                                                                                                                  \
+        BOOST_REQUIRE(!e.get_log().empty());                                                                           \
+        SCORUM_MESSAGE(e.get_log().front().get_message());                                                             \
+        BOOST_FAIL("exception wasn't expected.");                                                                      \
+    }                                                                                                                  \
+    catch (...)                                                                                                        \
+    {                                                                                                                  \
+        BOOST_FAIL("exception wasn't expected.");                                                                      \
+    }
+
 #define SCORUM_REQUIRE_THROW(expr, exc_type) BOOST_REQUIRE_THROW(expr, exc_type);
 
 #define SCORUM_CHECK_THROW(expr, exc_type)                                                                             \

@@ -1,7 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
-#include <scorum/chain/schema/dynamic_global_property_object.hpp>
 #include <scorum/chain/schema/nft_object.hpp>
 
 #include <scorum/chain/dba/db_accessor.hpp>
@@ -138,10 +137,18 @@ SCORUM_TEST_CASE(game_round_result_fail_when_owner_does_not_exist)
 
 SCORUM_TEST_CASE(game_round_result)
 {
-    game_round_dba.create([&](auto& obj) { obj.uuid = gen_uuid("first"); });
+    account_dba.create([&](auto& obj) {
+        obj.name = "operator";
+    });
+
+    game_round_dba.create([&](auto& obj) {
+        obj.owner = "operator";
+        obj.uuid = gen_uuid("first");
+    });
 
     game_round_result_evaluator ev(*services, account_dba, game_round_dba);
     game_round_result_operation op;
+    op.owner = "operator";
     op.uuid = gen_uuid("first");
     op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70c"
                "aca0d9b4028f75121d030f80a5a4bcf97b36a868ea9a4c2aaa9013200";
@@ -149,7 +156,7 @@ SCORUM_TEST_CASE(game_round_result)
              "5d0188bbc9bcc6a80d7f91c";
     op.result = 100;
 
-    BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
+    SCORUM_REQUIRE_NO_THROW(ev.do_apply(op));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
