@@ -1703,16 +1703,15 @@ public:
      */
     std::vector<pending_bet_api_object> get_game_pending_bets(const uuid_type& uuid) const;
 
-    annotated_signed_transaction create_nft(const uuid_type& uuid,
-                                            const std::string& owner,
+    annotated_signed_transaction create_nft(const std::string& owner,
+                                            const uuid_type& uuid,
                                             const std::string& name,
                                             share_type power,
                                             const std::string& json_meta,
                                             bool broadcast) const;
 
-    annotated_signed_transaction update_nft_meta(const uuid_type& uuid,
-                                                 const std::string& moderator,
-                                                 int64_t id,
+    annotated_signed_transaction update_nft_meta(const std::string& moderator,
+                                                 const uuid_type& uuid,
                                                  const std::string& json_meta,
                                                  bool broadcast) const;
 
@@ -1720,6 +1719,16 @@ public:
     nft_api_obj get_nft_by_name(const account_name_type& name) const;
     nft_api_obj get_nft_by_uuid(const uuid_type& uuid) const;
     std::vector<nft_api_obj> lookup_nft(nft_id_type id, uint32_t limit) const;
+
+    annotated_signed_transaction create_game_round(
+        account_name_type owner, uuid_type uuid, std::string verification_key, std::string seed, bool broadcast) const;
+
+    annotated_signed_transaction game_round_result(account_name_type owner,
+                                                   uuid_type uuid,
+                                                   std::string proof,
+                                                   std::string vrf,
+                                                   share_type result,
+                                                   bool broadcast) const;
 
     game_round_api_obj get_game_round_by_uuid(const uuid_type& uuid) const;
     std::vector<game_round_api_obj> lookup_game_round(game_round_id_type id, uint32_t limit) const;
@@ -1919,6 +1928,8 @@ FC_API( scorum::wallet::wallet_api,
         (get_nft_by_uuid)
         (lookup_nft)
 
+        (create_game_round)
+        (game_round_result)
         (get_game_round_by_uuid)
         (lookup_game_round)
 

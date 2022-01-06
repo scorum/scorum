@@ -142,7 +142,7 @@ struct account_api_obj
     asset active_sp_holders_pending_scr_reward = asset(0, SCORUM_SYMBOL);
     asset active_sp_holders_pending_sp_reward = asset(0, SP_SYMBOL);
 
-    share_type nft_spend_scorumpower = 0;
+    asset nft_spend_scorumpower;
 
 private:
     inline void set_account(const chain::account_object&);
@@ -243,6 +243,7 @@ struct nft_api_obj
 {
     nft_api_obj(const chain::nft_object& n)
         : id(n.id)
+        , uuid(n.uuid)
         , name(n.name)
         , owner(n.owner)
         , created(n.created)
@@ -259,6 +260,7 @@ struct nft_api_obj
     }
 
     nft_id_type id;
+    uuid_type uuid;
     account_name_type name;
     account_name_type owner;
     time_point_sec created;
@@ -644,6 +646,7 @@ FC_REFLECT( scorum::app::atomicswap_contract_result_api_obj,
 
 FC_REFLECT(scorum::app::nft_api_obj,
                         (id)
+                        (uuid)
                         (name)
                         (owner)
                         (created)

@@ -1157,8 +1157,8 @@ struct cancel_pending_bets_operation : public base_operation
 
 struct create_nft_operation : public base_operation
 {
-    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type owner;
+    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type name;
     std::string json_metadata;
     share_type power = 0;
@@ -1172,8 +1172,8 @@ struct create_nft_operation : public base_operation
 
 struct update_nft_meta_operation : public base_operation
 {
-    uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type moderator;
+    uuid_type uuid = boost::uuids::nil_uuid();
     std::string json_metadata;
 
     void validate() const;
@@ -1330,15 +1330,15 @@ FC_REFLECT( scorum::protocol::cancel_pending_bets_operation,
            (better))
 
 FC_REFLECT( scorum::protocol::create_nft_operation,
-            (uuid)
             (owner)
+            (uuid)
             (name)
             (json_metadata)
             (power))
 
 FC_REFLECT( scorum::protocol::update_nft_meta_operation,
-            (uuid)
             (moderator)
+            (uuid)
             (json_metadata))
 
 FC_REFLECT( scorum::protocol::create_game_round_operation,

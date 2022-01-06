@@ -110,11 +110,13 @@ SCORUM_TEST_CASE(game_round_result_fail_when_round_does_not_exist)
     game_round_result_evaluator ev(*services, account_dba, game_round_dba);
     game_round_result_operation op;
 
-    SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception, R"(Round "00000000-0000-0000-0000-000000000000" must exist.)")
+    SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception,
+                           R"(Round "00000000-0000-0000-0000-000000000000" must exist.)")
 
     op.uuid = gen_uuid("first");
 
-    SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception, R"(Round "aa3b2bdc-176e-5e8a-9b48-7dba3aa10044" must exist.)")
+    SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception,
+                           R"(Round "aa3b2bdc-176e-5e8a-9b48-7dba3aa10044" must exist.)")
 }
 
 SCORUM_TEST_CASE(game_round_result_fail_when_owner_does_not_exist)
@@ -132,6 +134,22 @@ SCORUM_TEST_CASE(game_round_result_fail_when_owner_does_not_exist)
     op.owner = "operator";
 
     SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception, R"(Account "operator" must exist.)")
+}
+
+SCORUM_TEST_CASE(game_round_result)
+{
+    game_round_dba.create([&](auto& obj) { obj.uuid = gen_uuid("first"); });
+
+    game_round_result_evaluator ev(*services, account_dba, game_round_dba);
+    game_round_result_operation op;
+    op.uuid = gen_uuid("first");
+    op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70c"
+               "aca0d9b4028f75121d030f80a5a4bcf97b36a868ea9a4c2aaa9013200";
+    op.vrf = "6a196a14e4f9fce66112b1b7ac98f2bcd73352b918d298e0b9f894519a65202dba03ddaa5183190bf2b5cd551f9ef14c8d8b02cf1"
+             "5d0188bbc9bcc6a80d7f91c";
+    op.result = 100;
+
+    BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

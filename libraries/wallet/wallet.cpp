@@ -3469,8 +3469,8 @@ std::vector<pending_bet_api_object> wallet_api::get_game_pending_bets(const uuid
     return api->get_game_pending_bets(uuid);
 }
 
-annotated_signed_transaction wallet_api::create_nft(const uuid_type& uuid,
-                                                    const std::string& owner,
+annotated_signed_transaction wallet_api::create_nft(const std::string& owner,
+                                                    const uuid_type& uuid,
                                                     const std::string& name,
                                                     share_type power,
                                                     const std::string& json_meta,
@@ -3492,9 +3492,8 @@ annotated_signed_transaction wallet_api::create_nft(const uuid_type& uuid,
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::update_nft_meta(const uuid_type& uuid,
-                                                         const std::string& moderator,
-                                                         int64_t nft_id,
+annotated_signed_transaction wallet_api::update_nft_meta(const std::string& moderator,
+                                                         const uuid_type& uuid,
                                                          const std::string& json_meta,
                                                          bool broadcast) const
 {
@@ -3534,6 +3533,47 @@ std::vector<nft_api_obj> wallet_api::lookup_nft(nft_id_type id, uint32_t limit) 
 {
     auto api = my->_remote_api->get_api_by_name(API_DATABASE)->as<database_api>();
     return api->lookup_nft(id, limit);
+}
+
+annotated_signed_transaction wallet_api::create_game_round(
+    account_name_type owner, uuid_type uuid, std::string verification_key, std::string seed, bool broadcast) const
+{
+    FC_ASSERT(!is_locked());
+
+    create_game_round_operation op;
+    op.owner = owner;
+    op.uuid = uuid;
+    op.verification_key = verification_key;
+    op.seed = seed;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
+annotated_signed_transaction wallet_api::game_round_result(account_name_type owner,
+                                                           uuid_type uuid,
+                                                           std::string proof,
+                                                           std::string vrf,
+                                                           share_type result,
+                                                           bool broadcast) const
+{
+    FC_ASSERT(!is_locked());
+
+    game_round_result_operation op;
+    op.owner = owner;
+    op.uuid = uuid;
+    op.proof = proof;
+    op.vrf = vrf;
+    op.result = result;
+
+    signed_transaction tx;
+    tx.operations.push_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
 }
 
 game_round_api_obj wallet_api::get_game_round_by_uuid(const uuid_type& uuid) const

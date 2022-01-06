@@ -59,7 +59,7 @@ void account_api_obj::set_account(const chain::account_object& a)
     active_sp_holders_cashout_time = a.active_sp_holders_cashout_time;
     active_sp_holders_pending_scr_reward = a.active_sp_holders_pending_scr_reward;
     active_sp_holders_pending_sp_reward = a.active_sp_holders_pending_sp_reward;
-    nft_spend_scorumpower = a.nft_spend_scorumpower.amount;
+    nft_spend_scorumpower = a.nft_spend_scorumpower;
 }
 
 void account_api_obj::set_account_blogging_statistic(const chain::account_blogging_statistic_object& s)
@@ -109,5 +109,5 @@ void account_api_obj::initialize(const chain::account_object& a, const chain::da
         }
     }
 }
-}
-}
+} // namespace app
+} // namespace scorum
