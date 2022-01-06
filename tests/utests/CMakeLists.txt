@@ -88,6 +88,7 @@ set(SOURCES
     nft/nft_evaluators_tests.cpp
     nft/nft_operations_tests.cpp
     nft/game_round_evaluators_tests.cpp
+    nft/marshal_operation_tests.cpp
 )
 
 add_executable(utests
