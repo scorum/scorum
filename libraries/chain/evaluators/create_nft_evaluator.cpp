@@ -32,7 +32,7 @@ void create_nft_evaluator::do_apply(const operation_type& op)
               ("uuid", op.uuid));
     FC_ASSERT(_account_dba.is_exists_by<by_name>(op.owner), R"(Account "${owner}" must exist.)", ("owner", op.owner));
 
-    const account_object& account = _account_dba.get_by<by_name>(op.owner);
+    auto& account = _account_dba.get_by<by_name>(op.owner);
     const auto available_power = account.scorumpower - account.nft_spend_scorumpower;
 
     share_type requested_sp = op.power * pow(10, SCORUM_CURRENCY_PRECISION);

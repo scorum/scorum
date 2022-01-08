@@ -67,6 +67,7 @@ SCORUM_TEST_CASE(create_nft)
 
     create_nft_operation op;
     op.name = "plane";
+    op.uuid = gen_uuid("first");
     op.owner = "user";
     op.power = 9;
     op.json_metadata = "{}";
@@ -75,6 +76,7 @@ SCORUM_TEST_CASE(create_nft)
 
     auto& nft = nft_dba.get_by<by_name>(op.name);
     BOOST_REQUIRE_EQUAL(op.name, nft.name);
+    BOOST_REQUIRE_EQUAL(true, op.uuid == nft.uuid);
     BOOST_REQUIRE_EQUAL(op.owner, nft.owner);
     BOOST_REQUIRE_EQUAL(op.power, nft.power);
     BOOST_REQUIRE_EQUAL("2018-01-01T00:00:00", nft.created.to_iso_string());
@@ -222,6 +224,7 @@ SCORUM_TEST_CASE(update_nft_meta)
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
 
     auto& nft = nft_dba.get_by<by_uuid>(op.uuid);
+    BOOST_REQUIRE_EQUAL(true, op.uuid == nft.uuid);
     BOOST_REQUIRE_EQUAL("plane", nft.name);
     BOOST_REQUIRE_EQUAL("user", nft.owner);
 

@@ -157,6 +157,49 @@ SCORUM_TEST_CASE(game_round_result)
     op.result = 100;
 
     SCORUM_REQUIRE_NO_THROW(ev.do_apply(op));
+
+    auto round = game_round_dba.get_by<by_uuid>(op.uuid);
+    BOOST_CHECK_EQUAL(op.owner, round.owner);
+    BOOST_REQUIRE_EQUAL(true, op.uuid == round.uuid);
+    BOOST_CHECK_EQUAL(op.proof, fc::to_string(round.proof));
+    BOOST_CHECK_EQUAL(op.vrf, fc::to_string(round.vrf));
+    BOOST_CHECK_EQUAL(op.result, round.result);
+}
+
+SCORUM_TEST_CASE(game_round_result_update_second_gameround)
+{
+    account_dba.create([&](auto& obj) {
+        obj.name = "operator";
+    });
+
+    game_round_dba.create([&](auto& obj) {
+        obj.owner = "operator";
+        obj.uuid = gen_uuid("first");
+    });
+
+    game_round_dba.create([&](auto& obj) {
+        obj.owner = "operator";
+        obj.uuid = gen_uuid("second");
+    });
+
+    game_round_result_evaluator ev(*services, account_dba, game_round_dba);
+    game_round_result_operation op;
+    op.owner = "operator";
+    op.uuid = gen_uuid("second");
+    op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70c"
+               "aca0d9b4028f75121d030f80a5a4bcf97b36a868ea9a4c2aaa9013200";
+    op.vrf = "6a196a14e4f9fce66112b1b7ac98f2bcd73352b918d298e0b9f894519a65202dba03ddaa5183190bf2b5cd551f9ef14c8d8b02cf1"
+             "5d0188bbc9bcc6a80d7f91c";
+    op.result = 100;
+
+    SCORUM_REQUIRE_NO_THROW(ev.do_apply(op));
+
+    auto round = game_round_dba.get_by<by_uuid>(op.uuid);
+    BOOST_CHECK_EQUAL(op.owner, round.owner);
+    BOOST_REQUIRE_EQUAL(true, op.uuid == round.uuid);
+    BOOST_CHECK_EQUAL(op.proof, fc::to_string(round.proof));
+    BOOST_CHECK_EQUAL(op.vrf, fc::to_string(round.vrf));
+    BOOST_CHECK_EQUAL(op.result, round.result);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
