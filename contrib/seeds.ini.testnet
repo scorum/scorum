@@ -1,2 +1,2 @@
-seed-node = seed1-testnet-v2.scorum.com:2001
-seed-node = seed2-testnet-v2.scorum.com:2001
+seed-node = seed1-testnet.scorum.work:2001
+seed-node = seed2-testnet.scorum.work:2001
