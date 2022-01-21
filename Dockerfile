@@ -41,6 +41,9 @@ RUN \
             wget \
             gdb \
         && \
+        apt-get install -y libicu55 libreadline6 && \
+        apt-get install -y curl apt-transport-https ca-certificates && \
+        apt-get --only-upgrade install -y libgnutls-openssl27 libgnutls30 ubuntu-advantage-tools && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
         pip3 install gcovr
@@ -122,6 +125,8 @@ FROM phusion/baseimage:0.9.19 as runtime
 RUN \
     apt-get update && \
     apt-get install -y libicu55 libreadline6 && \
+    apt-get install -y curl apt-transport-https ca-certificates && \
+    apt-get --only-upgrade install -y libgnutls-openssl27 libgnutls30 ubuntu-advantage-tools && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
