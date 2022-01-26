@@ -58,6 +58,9 @@ class database_api_impl;
  * This API exposes accessors on the database which query state tracked by a blockchain validating node. This API is
  * read-only; all modifications to the database must be performed via transactions. Transactions are broadcast via
  * the @ref network_broadcast_api.
+ *
+ * @ingroup api
+ * @addtogroup database_api Database API
  */
 class database_api
 {
@@ -65,17 +68,24 @@ public:
     database_api(const scorum::app::api_context& ctx);
     ~database_api();
 
-    ///////////////////
-    // Subscriptions //
-    ///////////////////
+    ////////////////////////////
+    // Handlers - not exposed //
+    ////////////////////////////
+    void on_api_startup();
+
+    /// @name Subscription
+    /// @addtogroup database_api
+    /// @{
+    ///
 
     void set_block_applied_callback(std::function<void(const variant& block_header)> cb);
 
-    std::vector<account_name_type> get_active_witnesses() const;
+    /// @}
 
-    /////////////
-    // Globals //
-    /////////////
+    /// @name Globals
+    /// @addtogroup database_api
+    /// @{
+    ///
 
     /**
      * @brief Retrieve compile-time constants
@@ -88,20 +98,25 @@ public:
     chain_id_type get_chain_id() const;
 
     /**
-     * @brief Retrieve the current @ref dynamic_global_property_object
+     * @brief Retrieve the current chain properties
+     * @return @ref dynamic_global_property_object
      */
     dynamic_global_property_api_obj get_dynamic_global_properties() const;
+
+    /**
+     * @brief Get witness schedule
+     * @return @ref witness_schedule_api_obj
+     */
     witness_schedule_api_obj get_witness_schedule() const;
 
-    //////////
-    // Keys //
-    //////////
+    /// @}
+
+    /// @name Accounts
+    /// @addtogroup database_api
+    /// @{
+    ///
 
     std::vector<std::set<std::string>> get_key_references(std::vector<public_key_type> key) const;
-
-    //////////////
-    // Accounts //
-    //////////////
 
     std::vector<extended_account> get_accounts(const std::vector<std::string>& names) const;
 
@@ -132,16 +147,6 @@ public:
      */
     uint64_t get_account_count() const;
 
-    std::vector<budget_api_obj> get_budgets(const budget_type, const std::set<std::string>& account_names) const;
-
-    std::set<std::string>
-    lookup_budget_owners(const budget_type, const std::string& lower_bound_name, uint32_t limit) const;
-
-    std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
-
-    atomicswap_contract_info_api_obj
-    get_atomicswap_contract(const std::string& from, const std::string& to, const std::string& secret_hash) const;
-
     std::vector<owner_authority_history_api_obj> get_owner_history(const std::string& account) const;
 
     optional<account_recovery_request_api_obj> get_recovery_request(const std::string& account) const;
@@ -154,14 +159,43 @@ public:
     optional<account_bandwidth_api_obj> get_account_bandwidth(const std::string& account,
                                                               witness::bandwidth_type type) const;
 
-    std::vector<scorumpower_delegation_api_obj>
-    get_scorumpower_delegations(const std::string& account, const std::string& from, uint32_t limit = 100) const;
-    std::vector<scorumpower_delegation_expiration_api_obj>
-    get_expiring_scorumpower_delegations(const std::string& account, time_point_sec from, uint32_t limit = 100) const;
+    std::vector<scorumpower_delegation_api_obj> get_scorumpower_delegations(const std::string& account,
+                                                                            const std::string& from,
+                                                                            uint32_t limit = 100) const;
 
-    ///////////////
-    // Witnesses //
-    ///////////////
+    std::vector<scorumpower_delegation_expiration_api_obj> get_expiring_scorumpower_delegations(
+        const std::string& account, time_point_sec from, uint32_t limit = 100) const;
+
+    /// @}
+
+    /// @name Budgets
+    /// @addtogroup database_api
+    /// @{
+    ///
+
+    std::vector<budget_api_obj> get_budgets(const budget_type, const std::set<std::string>& account_names) const;
+
+    std::set<std::string>
+    lookup_budget_owners(const budget_type, const std::string& lower_bound_name, uint32_t limit) const;
+
+    /// @}
+
+    /// @name Atomic swap
+    /// @addtogroup database_api
+    /// @{
+    ///
+
+    std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
+
+    atomicswap_contract_info_api_obj
+    get_atomicswap_contract(const std::string& from, const std::string& to, const std::string& secret_hash) const;
+
+    /// @}
+
+    /// @name Witnesses
+    /// @addtogroup database_api
+    /// @{
+    ///
 
     /**
      * @brief Get a list of witnesses by ID
@@ -193,6 +227,20 @@ public:
      * @return Map of witness names to corresponding IDs
      */
     std::set<account_name_type> lookup_witness_accounts(const std::string& lower_bound_name, uint32_t limit) const;
+
+    std::vector<account_name_type> get_active_witnesses() const;
+
+    /**
+     * @brief Get the total number of witnesses registered with the blockchain
+     */
+    uint64_t get_witness_count() const;
+
+    /// @}
+
+    /// @name Comittee
+    /// @addtogroup database_api
+    /// @{
+    ///
 
     /**
      * @brief Get account names in registration committee
@@ -226,18 +274,12 @@ public:
      */
     advertising_property_api_obj get_advertising_property() const;
 
-    /**
-     * @brief Get the total number of witnesses registered with the blockchain
-     */
-    uint64_t get_witness_count() const;
+    /// @}
 
-    ////////////
-    // Market //
-    ////////////
-
-    ////////////////////////////
-    // Authority / validation //
-    ////////////////////////////
+    /// @name Authority / validation
+    /// @addtogroup database_api
+    /// @{
+    ///
 
     /// @brief Get a hexdump of the serialized binary form of a transaction
     std::string get_transaction_hex(const signed_transaction& trx) const;
@@ -269,28 +311,71 @@ public:
      */
     bool verify_account_authority(const std::string& name_or_id, const flat_set<public_key_type>& signers) const;
 
+    /// @}
+
+    /// @name Votes
+    /// @addtogroup database_api
+    /// @{
+    ///
+
     /**
      *  if permlink is "" then it will return all votes for author
      */
     std::vector<vote_state> get_active_votes(const std::string& author, const std::string& permlink) const;
     std::vector<account_vote> get_account_votes(const std::string& voter) const;
 
-    ////////////////////////////
-    // NFT                    //
-    ////////////////////////////
+    /// @}
 
+    /// @name NFT API
+    /// @addtogroup database_api
+    /// @{
+    ///
+
+    /**
+    * @brief Get NFT object by id
+    * @param id
+    * @return @ref nft_api_obj
+    */
     nft_api_obj get_nft_by_id(nft_id_type id) const;
+
+    /**
+    * @brief Get NFT object by name
+    * @param name
+    * @return @ref nft_api_obj
+    */
     nft_api_obj get_nft_by_name(const account_name_type& name) const;
+
+    /**
+    * @brief Get NFT object by uuid
+    * @param uuid
+    * @return @ref nft_api_obj
+    */
     nft_api_obj get_nft_by_uuid(const uuid_type& uuid) const;
+
+    /**
+    * @brief Returns NFTs array
+    * @param id
+    * @param limit
+    * @return array of @ref nft_api_obj
+    */
     std::vector<nft_api_obj> lookup_nft(nft_id_type id, uint32_t limit) const;
 
+    /**
+    * @brief Get game round object by uuid
+    * @param uuid
+    * @return @ref game_round_api_obj
+     */
     game_round_api_obj get_game_round_by_uuid(const uuid_type& uuid) const;
+
+    /**
+    * @brief Returns game rounds array
+    * @param id
+    * @param limit
+    * @return array of @ref game_round_api_obj
+     */
     std::vector<game_round_api_obj> lookup_game_round(game_round_id_type id, uint32_t limit) const;
 
-    ////////////////////////////
-    // Handlers - not exposed //
-    ////////////////////////////
-    void on_api_startup();
+    /// @}
 
 private:
     std::shared_ptr<database_api_impl> my;
@@ -308,18 +393,14 @@ FC_API(scorum::app::database_api,
    // Subscriptions
    (set_block_applied_callback)
 
-
    // Globals
    (get_config)
    (get_chain_id)
    (get_dynamic_global_properties)
    (get_witness_schedule)
 
-
-   // Keys
-   (get_key_references)
-
    // Accounts
+   (get_key_references)
    (get_accounts)
    (get_account_references)
    (lookup_account_names)
@@ -349,8 +430,9 @@ FC_API(scorum::app::database_api,
    (get_witness_by_account)
    (get_witnesses_by_vote)
    (lookup_witness_accounts)
-   (get_witness_count)
+
    (get_active_witnesses)
+   (get_witness_count)
 
     // Budget
    (get_budgets)
