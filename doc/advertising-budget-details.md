@@ -1,4 +1,4 @@
-# Advertising details <a name="advdetails"></a>
+# Advertising details
 
 Here are some details and insights abount how advertising budgets work.
 
@@ -10,8 +10,6 @@ Here are some details and insights abount how advertising budgets work.
 * [What if budget's start_time equal deadline (start and end are within same block)?](#advstartendsameblock)
 * [How advertising auction works?](#advauction)
 * [Example](#advexample)
-
-<a name="advalignment"></a>
 
 ## How start_time and deadline will be aligned to blockchain interval?
 

@@ -1066,7 +1066,7 @@ std::vector<scorumpower_delegation_expiration_api_obj> database_api::get_expirin
     });
 }
 
-nft_api_obj database_api::get_nft_by_id(nft_id_type id) const
+nft_api_obj database_api::get_nft_by_id(int64_t id) const
 {
     return my->_db.with_read_lock([&]() { return my->_db.get_dba<nft_object>().get_by<by_id>(id); });
 }
@@ -1081,7 +1081,7 @@ nft_api_obj database_api::get_nft_by_uuid(const uuid_type& uuid) const
     return my->_db.with_read_lock([&]() { return my->_db.get_dba<nft_object>().get_by<by_uuid>(uuid); });
 }
 
-std::vector<nft_api_obj> database_api::lookup_nft(nft_id_type id, uint32_t limit) const
+std::vector<nft_api_obj> database_api::lookup_nft(int64_t id, uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
         FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);
@@ -1103,7 +1103,7 @@ game_round_api_obj database_api::get_game_round_by_uuid(const uuid_type& uuid) c
     return my->_db.with_read_lock([&]() { return my->_db.get_dba<game_round_object>().get_by<by_uuid>(uuid); });
 }
 
-std::vector<game_round_api_obj> database_api::lookup_game_round(game_round_id_type id, uint32_t limit) const
+std::vector<game_round_api_obj> database_api::lookup_game_round(int64_t id, uint32_t limit) const
 {
     return my->_db.with_read_lock([&]() {
         FC_ASSERT(limit <= get_api_config(API_DATABASE).lookup_limit);

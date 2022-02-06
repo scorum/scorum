@@ -4,6 +4,8 @@ use Text::Wrap;
 use IO::File;
 
 require 'doxygen/perlmod/DoxyDocs.pm';
+# require '/home/alex/projects/scorum/scorum/cmake-build-release-full-testnet/libraries/wallet/doxygen/perlmod/DoxyDocs.pm';
+
 
 my($outputFileName) = @ARGV;
 die "usage: $0 output_file_name" unless $outputFileName;
@@ -36,28 +38,26 @@ namespace scorum { namespace wallet {
 END
 $outFile->print($fileHeader);
 
-for my $class (@{$doxydocs->{classes}})
+for my $gr (@{$doxydocs->{groups}})
 {
-  if ($class->{name} eq 'scorum::wallet::wallet_api')
+  for my $member (@{$gr->{functions}->{members}})
   {
-    for my $member (@{$class->{public_methods}->{members}})
+    if ($member->{kind} eq 'function')
     {
-      if ($member->{kind} eq 'function')
+      my @params = map { join(' ', cleanupDoxygenType($_->{type}), $_->{declaration_name}) } @{$member->{parameters}};
+      my $briefDescription = sprintf("%40s %s(%s)\n", cleanupDoxygenType($member->{type}), $member->{name}, join(', ', @params));
+      my $escapedBriefDescription = "\"" . escapeStringForC($briefDescription) . "\"";
+      my %paramInfo = map { $_->{declaration_name} => { type => $_->{type}} } @{$member->{parameters}};
+      my $escapedDetailedDescription = "\"\"\n";
+      if ($member->{detailed}->{doc})
       {
-        my @params = map { join(' ', cleanupDoxygenType($_->{type}), $_->{declaration_name}) } @{$member->{parameters}};
-        my $briefDescription = sprintf("%40s %s(%s)\n", cleanupDoxygenType($member->{type}), $member->{name}, join(', ', @params));
-        my $escapedBriefDescription = "\"" . escapeStringForC($briefDescription) . "\"";
-        my %paramInfo = map { $_->{declaration_name} => { type => $_->{type}} } @{$member->{parameters}};
-        my $escapedDetailedDescription = "\"\"\n";
-        if ($member->{detailed}->{doc})
+        my $docString = formatDocComment($member->{detailed}->{doc}, \%paramInfo);
+        for my $line (split(/\n/, $docString))
         {
-          my $docString = formatDocComment($member->{detailed}->{doc}, \%paramInfo);
-          for my $line (split(/\n/, $docString))
-          {
-            $escapedDetailedDescription .=  "                \"" .  escapeStringForC($line . "\n") . "\"\n";
-          }
+          $escapedDetailedDescription .=  "                \"" .  escapeStringForC($line . "\n") . "\"\n";
         }
-        my $codeFragment = <<"END";
+      }
+      my $codeFragment = <<"END";
      {
         method_description this_method;
         this_method.method_name = "$member->{name}";
@@ -67,8 +67,7 @@ for my $class (@{$doxydocs->{classes}})
      }
 
 END
-        $outFile->print($codeFragment);
-      }
+      $outFile->print($codeFragment);
     }
   }
 }
@@ -94,6 +93,13 @@ sub cleanupDoxygenType
   my($type) = @_;
   $type =~ s/< /</g;
   $type =~ s/ >/>/g;
+
+  if ($type eq "const std::string &") { return "string"; }
+  if ($type eq "std::string") { return "string"; }
+  if ($type eq "uint32_t") { return "uint32"; }
+  if ($type eq "const account_name_type &") { return "account_name_type"; }
+  if ($type eq "const uuid_type &") { return "UUID"; }
+
   return $type;
 }
 

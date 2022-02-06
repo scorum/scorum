@@ -20,18 +20,6 @@ AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: false
 BinPackArguments: true
 BinPackParameters: false
-BraceWrapping:   
-  AfterClass:      true
-  AfterControlStatement: false
-  AfterEnum:       false
-  AfterFunction:   true
-  AfterNamespace:  false
-  AfterObjCDeclaration: false
-  AfterStruct:     false
-  AfterUnion:      false
-  BeforeCatch:     false
-  BeforeElse:      false
-  IndentBraces:    false
 BreakBeforeBinaryOperators: All
 BreakBeforeBraces: Custom
 BraceWrapping:   

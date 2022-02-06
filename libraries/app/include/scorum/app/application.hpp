@@ -38,17 +38,18 @@
 #define SCORUMD_CONFIG_FILE_NAME "config.ini"
 
 /**
- * @mainpage
+ * @defgroup operations Operations
+ * @brief List of operations
  *
- * - @subpage api
- * - @subpage plugins
- * - @subpage operations
+ * Operations which you could push with network_broadcast_api
  *
- */
-
-/**
+ *
+ * @defgroup wallet Wallet
+ * @brief CLI Wallet
+ *
+ *
  * @defgroup api APIs
- * @brief List of public APIs
+ * @brief List of public scorumd APIs
  *
  * Enable any of this apis by adding it in `enable-api` in the `config.ini` separating with space.
  *
@@ -56,9 +57,8 @@
  * ```
  * enable-api = database_api login_api
  * ```
- */
-
-/**
+ *
+ *
  * @defgroup plugins Plugins
  * @brief List of plugins
  *
@@ -68,14 +68,6 @@
  * ```
  * enable-plugins = witness node_monitoring
  * ```
- */
-
-/**
- * @defgroup operations Operations
- * @brief List of operations
- *
- * Operations which you could push with network_broadcast_api
- *
  */
 
 namespace scorum {

@@ -18,6 +18,10 @@ namespace scorum {
 namespace protocol {
 
 /**
+ * @addtogroup operations Scorum Operations
+ */
+
+/**
  * @ingroup operations
  *
  * @brief Creates new account.
@@ -1154,7 +1158,17 @@ struct cancel_pending_bets_operation : public base_operation
     }
     /// @endcond
 };
+/// @}
 
+/// @defgroup nft_operations NFT operations
+/// This is a set of nft operations
+/// @ingroup operations
+/// @{
+
+/**
+ * @ingroup operations
+ * @brief This operation create new NFT
+ */
 struct create_nft_operation : public base_operation
 {
     account_name_type owner;
@@ -1163,26 +1177,38 @@ struct create_nft_operation : public base_operation
     std::string json_metadata;
     share_type power = 0;
 
+    /// @cond DO_NOT_DOCUMENT
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
         a.insert(owner);
     }
+    /// @endcond
 };
 
+/**
+ * @ingroup operations
+ * @brief This operation update NFT metadata
+ */
 struct update_nft_meta_operation : public base_operation
 {
     account_name_type moderator;
     uuid_type uuid = boost::uuids::nil_uuid();
     std::string json_metadata;
 
+    /// @cond DO_NOT_DOCUMENT
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
         a.insert(moderator);
     }
+    /// @endcond
 };
 
+/**
+ * @ingroup operations
+ * @brief This operation create new game round
+ */
 struct create_game_round_operation : public base_operation
 {
     account_name_type owner;
@@ -1190,13 +1216,19 @@ struct create_game_round_operation : public base_operation
     std::string verification_key;
     std::string seed;
 
+    /// @cond DO_NOT_DOCUMENT
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
         a.insert(owner);
     }
+    /// @endcond
 };
 
+/**
+ * @ingroup operations
+ * @brief This operation update game round results
+ */
 struct game_round_result_operation : public base_operation
 {
     account_name_type owner;
@@ -1205,18 +1237,16 @@ struct game_round_result_operation : public base_operation
     std::string vrf;
     share_type result;
 
+    /// @cond DO_NOT_DOCUMENT
     void validate() const;
     void get_required_active_authorities(flat_set<account_name_type>& a) const
     {
         a.insert(owner);
     }
+    /// @endcond
 };
 
 /// @}
-
-/// bets list that is being canceling
-/// supervisor
-/// timepoint from that even matched stake is being canceling
 } // namespace protocol
 } // namespace scorum
 

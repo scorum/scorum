@@ -3,7 +3,7 @@
 Scorum platform has three core functions:
  - Blogging platform where authors and readers will be rewarded for creating and engaging with content
  - Statistical centers where fans can browse and authors can use Microsoft’s Power BI tool to integrate data-rich visuals into their content
-- Commission-free betting exchange where fans can place bets against each other using Scorum Coins (SCR)
+ - Commission-free betting exchange where fans can place bets against each other using Scorum Coins (SCR)
 Scorum’s blockchain protocol is built on the Graphene Framework and utilizes a delegated proof of stake consensus.
 
 # Public Announcement & Discussion

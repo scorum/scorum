@@ -1,5 +1,4 @@
-
-# Introduction
+# Curation curve introduction
 
 In this document we derive the approximate integer square root function used by Scorum for the curation curve
 

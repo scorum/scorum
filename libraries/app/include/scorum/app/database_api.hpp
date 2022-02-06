@@ -73,19 +73,19 @@ public:
     ////////////////////////////
     void on_api_startup();
 
-    /// @name Subscription
-    /// @addtogroup database_api
+    /// @brief Subscription
+    /// @defgroup subscription Subscription
+    /// @ingroup database_api
     /// @{
-    ///
 
     void set_block_applied_callback(std::function<void(const variant& block_header)> cb);
 
     /// @}
 
-    /// @name Globals
-    /// @addtogroup database_api
+    /// @brief Globals
+    /// @defgroup globals Globals
+    /// @ingroup database_api
     /// @{
-    ///
 
     /**
      * @brief Retrieve compile-time constants
@@ -111,10 +111,10 @@ public:
 
     /// @}
 
-    /// @name Accounts
-    /// @addtogroup database_api
+    /// @brief Accounts
+    /// @defgroup accounts Accounts
+    /// @ingroup database_api
     /// @{
-    ///
 
     std::vector<std::set<std::string>> get_key_references(std::vector<public_key_type> key) const;
 
@@ -168,8 +168,9 @@ public:
 
     /// @}
 
-    /// @name Budgets
-    /// @addtogroup database_api
+    /// @brief Budgets
+    /// @defgroup budgets Budgets
+    /// @ingroup database_api
     /// @{
     ///
 
@@ -180,10 +181,10 @@ public:
 
     /// @}
 
-    /// @name Atomic swap
-    /// @addtogroup database_api
+    /// @brief Atomic Swap
+    /// @defgroup atomic_swap Atomic Swap
+    /// @ingroup database_api
     /// @{
-    ///
 
     std::vector<atomicswap_contract_api_obj> get_atomicswap_contracts(const std::string& owner) const;
 
@@ -192,10 +193,10 @@ public:
 
     /// @}
 
-    /// @name Witnesses
-    /// @addtogroup database_api
+    /// @brief Witnesses
+    /// @defgroup witnesses Witnesses
+    /// @ingroup database_api
     /// @{
-    ///
 
     /**
      * @brief Get a list of witnesses by ID
@@ -237,8 +238,9 @@ public:
 
     /// @}
 
-    /// @name Comittee
-    /// @addtogroup database_api
+    /// @brief Committee
+    /// @defgroup committee Committee
+    /// @ingroup database_api
     /// @{
     ///
 
@@ -276,10 +278,10 @@ public:
 
     /// @}
 
-    /// @name Authority / validation
-    /// @addtogroup database_api
+    /// @brief Authority
+    /// @defgroup authority Authority
+    /// @ingroup database_api
     /// @{
-    ///
 
     /// @brief Get a hexdump of the serialized binary form of a transaction
     std::string get_transaction_hex(const signed_transaction& trx) const;
@@ -313,10 +315,10 @@ public:
 
     /// @}
 
-    /// @name Votes
-    /// @addtogroup database_api
+    /// @brief Votes
+    /// @defgroup votes Votes
+    /// @ingroup database_api
     /// @{
-    ///
 
     /**
      *  if permlink is "" then it will return all votes for author
@@ -326,54 +328,54 @@ public:
 
     /// @}
 
-    /// @name NFT API
-    /// @addtogroup database_api
+    /// @brief Database NFT API
+    /// @defgroup nft NFT
+    /// @ingroup database_api
     /// @{
-    ///
 
     /**
     * @brief Get NFT object by id
-    * @param id
+    * @param id id of the NFT object
     * @return @ref nft_api_obj
     */
-    nft_api_obj get_nft_by_id(nft_id_type id) const;
+    nft_api_obj get_nft_by_id(int64_t id) const;
 
     /**
     * @brief Get NFT object by name
-    * @param name
+    * @param name name of the NFT object
     * @return @ref nft_api_obj
     */
     nft_api_obj get_nft_by_name(const account_name_type& name) const;
 
     /**
     * @brief Get NFT object by uuid
-    * @param uuid
+    * @param uuid UUID of the NFT object
     * @return @ref nft_api_obj
     */
     nft_api_obj get_nft_by_uuid(const uuid_type& uuid) const;
 
     /**
-    * @brief Returns NFTs array
-    * @param id
-    * @param limit
+    * @brief Retrieve list of NFT objects  in range [from, from+limit-1]
+    * @param from lower bound NFT id
+    * @param limit limit number of objects in response
     * @return array of @ref nft_api_obj
     */
-    std::vector<nft_api_obj> lookup_nft(nft_id_type id, uint32_t limit) const;
+    std::vector<nft_api_obj> lookup_nft(int64_t from, uint32_t limit) const;
 
     /**
-    * @brief Get game round object by uuid
-    * @param uuid
+    * @brief Get game round by uuid object
+    * @param uuid UUID of the game round
     * @return @ref game_round_api_obj
      */
     game_round_api_obj get_game_round_by_uuid(const uuid_type& uuid) const;
 
     /**
-    * @brief Returns game rounds array
-    * @param id
-    * @param limit
+    * @brief Retrieve list of game rounds in range [from, from+limit-1]
+    * @param id lower bound game round id
+    * @param limit limit number of objects in response
     * @return array of @ref game_round_api_obj
      */
-    std::vector<game_round_api_obj> lookup_game_round(game_round_id_type id, uint32_t limit) const;
+    std::vector<game_round_api_obj> lookup_game_round(int64_t id, uint32_t limit) const;
 
     /// @}
 
