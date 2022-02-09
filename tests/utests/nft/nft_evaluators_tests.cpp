@@ -69,7 +69,7 @@ SCORUM_TEST_CASE(create_nft)
     op.name = "plane";
     op.uuid = gen_uuid("first");
     op.owner = "user";
-    op.power = 9;
+    op.initial_power = 9;
     op.json_metadata = "{}";
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
@@ -78,7 +78,7 @@ SCORUM_TEST_CASE(create_nft)
     BOOST_REQUIRE_EQUAL(op.name, nft.name);
     BOOST_REQUIRE_EQUAL(true, op.uuid == nft.uuid);
     BOOST_REQUIRE_EQUAL(op.owner, nft.owner);
-    BOOST_REQUIRE_EQUAL(op.power, nft.power);
+    BOOST_REQUIRE_EQUAL(op.initial_power, nft.initial_power);
     BOOST_REQUIRE_EQUAL("2018-01-01T00:00:00", nft.created.to_iso_string());
 
 #ifndef IS_LOW_MEM
@@ -125,7 +125,7 @@ SCORUM_TEST_CASE(create_nft_fail_when_not_enough_scorumpower)
     create_nft_operation op;
     op.name = "plane";
     op.owner = "user";
-    op.power = 11;
+    op.initial_power = 11;
 
     SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception,
                            R"(Account available power "10000000000" is less than requested "11000000000".)")
@@ -145,7 +145,7 @@ SCORUM_TEST_CASE(create_second_nft_fail_when_not_enough_scorumpower)
     op.uuid = gen_uuid("plane");
     op.name = "plane";
     op.owner = "user";
-    op.power = 9;
+    op.initial_power = 9;
     op.json_metadata = "{}";
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
@@ -154,7 +154,7 @@ SCORUM_TEST_CASE(create_second_nft_fail_when_not_enough_scorumpower)
     op2.uuid = gen_uuid("plane2");
     op2.name = "plane2";
     op2.owner = "user";
-    op2.power = 2;
+    op2.initial_power = 2;
     op2.json_metadata = "{}";
 
     SCORUM_CHECK_EXCEPTION(ev.do_apply(op2), fc::assert_exception, R"(Account available power "1000000000" is less than requested "2000000000".)")
@@ -178,7 +178,7 @@ SCORUM_TEST_CASE(create_second_nft)
     op.uuid = gen_uuid("plane");
     op.name = "plane";
     op.owner = "user";
-    op.power = 9;
+    op.initial_power = 9;
     op.json_metadata = "{}";
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op));
@@ -187,7 +187,7 @@ SCORUM_TEST_CASE(create_second_nft)
     op2.uuid = gen_uuid("plane2");
     op2.name = "plane2";
     op2.owner = "user";
-    op2.power = 1;
+    op2.initial_power = 1;
     op2.json_metadata = "{}";
 
     BOOST_REQUIRE_NO_THROW(ev.do_apply(op2));

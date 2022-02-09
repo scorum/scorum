@@ -24,7 +24,7 @@ public:
     uuid_type uuid;
     account_name_type owner;
     account_name_type name;
-    share_type power;
+    int32_t initial_power;
 
     fc::shared_string json_metadata;
     time_point_sec created;
@@ -43,10 +43,11 @@ public:
     fc::shared_string verification_key;
     fc::shared_string vrf;
     fc::shared_string proof;
-    share_type result;
+    int32_t result;
 };
 
 struct by_uuid;
+struct by_name;
 
 // clang-format off
 using nft_index = shared_multi_index_container<
@@ -71,7 +72,7 @@ FC_REFLECT(scorum::chain::nft_object,
     (uuid)
     (owner)
     (name)
-    (power)
+    (initial_power)
     (json_metadata)
     (created))
 

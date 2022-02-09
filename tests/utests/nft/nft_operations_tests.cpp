@@ -22,7 +22,7 @@ SCORUM_TEST_CASE(create_nft)
     create_nft_operation op;
     op.uuid = gen_uuid("nft");
     op.owner = "user";
-    op.power = 1;
+    op.initial_power = 1;
     op.json_metadata = "";
     BOOST_CHECK_NO_THROW(op.validate());
 
@@ -48,7 +48,8 @@ SCORUM_TEST_CASE(create_nft_fail_when_power_is_zero)
     create_nft_operation op;
     op.uuid = gen_uuid("nft");
     op.owner = "user";
-    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, R"(Cannot create nft with zero or negative power)")
+    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception,
+                           R"(Cannot create nft with zero or negative initial_power)")
 }
 
 SCORUM_TEST_CASE(create_nft_fail_when_meta_is_not_json)
@@ -129,31 +130,34 @@ SCORUM_TEST_CASE(create_game_round)
 
 SCORUM_TEST_CASE(game_round_result_operation_fail_uuid_is_nil)
 {
-    game_round_result_operation op;
+    update_game_round_result_operation op;
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(uuid must not be nil)")
 }
 
 SCORUM_TEST_CASE(game_round_result_operation_fail_when_verification_key_size_is_incorrect)
 {
-    game_round_result_operation op;
+    update_game_round_result_operation op;
     op.uuid = gen_uuid("nft");
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(proof should have 160 symbols length)")
 }
 
 SCORUM_TEST_CASE(game_round_result_operation_fail_when_seed_size_is_incorrect)
 {
-    game_round_result_operation op;
+    update_game_round_result_operation op;
     op.uuid = gen_uuid("nft");
-    op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70caca0d9b4028f75121d030f80a5a4bcf97b36a868ea9a4c2aaa9013200";
+    op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70c"
+               "aca0d9b4028f75121d030f80a5a4bcf97b36a868ea9a4c2aaa9013200";
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(vrf should have 128 symbols length)")
 }
 
 SCORUM_TEST_CASE(game_round_result_operation_fail_when_result_is_incorrect)
 {
-    game_round_result_operation op;
+    update_game_round_result_operation op;
     op.uuid = gen_uuid("nft");
-    op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70caca0d9b4028f75121d030f80a5a4bcf97b36a868ea9a4c2aaa9013200";
-    op.vrf = "6a196a14e4f9fce66112b1b7ac98f2bcd73352b918d298e0b9f894519a65202dba03ddaa5183190bf2b5cd551f9ef14c8d8b02cf15d0188bbc9bcc6a80d7f91c";
+    op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70c"
+               "aca0d9b4028f75121d030f80a5a4bcf97b36a868ea9a4c2aaa9013200";
+    op.vrf = "6a196a14e4f9fce66112b1b7ac98f2bcd73352b918d298e0b9f894519a65202dba03ddaa5183190bf2b5cd551f9ef14c8d8b02cf1"
+             "5d0188bbc9bcc6a80d7f91c";
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(result should be greater or equal 100)")
     op.result = 1;
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::exception, R"(result should be greater or equal 100)")
@@ -161,10 +165,12 @@ SCORUM_TEST_CASE(game_round_result_operation_fail_when_result_is_incorrect)
 
 SCORUM_TEST_CASE(game_round_result)
 {
-    game_round_result_operation op;
+    update_game_round_result_operation op;
     op.uuid = gen_uuid("nft");
-    op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70caca0d9b4028f75121d030f80a5a4bcf97b36a868ea9a4c2aaa9013200";
-    op.vrf = "6a196a14e4f9fce66112b1b7ac98f2bcd73352b918d298e0b9f894519a65202dba03ddaa5183190bf2b5cd551f9ef14c8d8b02cf15d0188bbc9bcc6a80d7f91c";
+    op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70c"
+               "aca0d9b4028f75121d030f80a5a4bcf97b36a868ea9a4c2aaa9013200";
+    op.vrf = "6a196a14e4f9fce66112b1b7ac98f2bcd73352b918d298e0b9f894519a65202dba03ddaa5183190bf2b5cd551f9ef14c8d8b02cf1"
+             "5d0188bbc9bcc6a80d7f91c";
     op.result = 100;
     BOOST_CHECK_NO_THROW(op.validate())
 }

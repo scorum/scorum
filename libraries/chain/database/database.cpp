@@ -98,7 +98,7 @@
 #include <scorum/chain/evaluators/create_nft_evaluator.hpp>
 #include <scorum/chain/evaluators/update_nft_meta_evaluator.hpp>
 #include <scorum/chain/evaluators/create_game_round_evaluator.hpp>
-#include <scorum/chain/evaluators/game_round_result_evaluator.hpp>
+#include <scorum/chain/evaluators/update_game_round_result_evaluator.hpp>
 
 #include <cmath>
 
@@ -1324,7 +1324,7 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator(
         new create_game_round_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
     _my->_evaluator_registry.register_evaluator(
-        new game_round_result_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
+        new update_game_round_result_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
 }
 
 void database::initialize_indexes()

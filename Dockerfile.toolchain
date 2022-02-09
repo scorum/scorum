@@ -1,5 +1,9 @@
 FROM ubuntu:16.04
 
+ARG USER_NAME=user
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=C
 
@@ -27,12 +31,13 @@ RUN \
             python3-jinja2 \
             python3-pip \
             python-pip \
-#            nginx \
-#            fcgiwrap \
             jq \
             wget \
             gdb \
             rsync \
+            gnupg2 \
+            openssh-server \
+            sudo \
         && \
         apt-get install -y curl apt-transport-https ca-certificates && \
         apt-get --only-upgrade install -y libgnutls-openssl27 libgnutls30 ubuntu-advantage-tools && \
@@ -40,4 +45,21 @@ RUN \
         rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
         pip3 install gcovr
 
-RUN useradd -m user && yes password | passwd user
+# Create the user
+RUN groupadd --gid $USER_GID $USER_NAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USER_NAME \
+    && echo $USER_NAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USER_NAME \
+    && chmod 0440 /etc/sudoers.d/$USER_NAME
+
+RUN mkdir /var/run/sshd
+
+RUN echo 'root:root' |chpasswd
+
+RUN sed -ri 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
+
+RUN mkdir /root/.ssh
+
+EXPOSE 22
+
+CMD    ["/usr/sbin/sshd", "-D"]

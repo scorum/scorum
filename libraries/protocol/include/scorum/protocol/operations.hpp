@@ -72,7 +72,7 @@ using operation = fc::static_variant<vote_operation,
                                      update_nft_meta_operation,
 
                                      create_game_round_operation,
-                                     game_round_result_operation,
+                                     update_game_round_result_operation,
 
                                      /// virtual operations
                                      author_reward_operation,

@@ -89,7 +89,7 @@ add_library( scorum_chain
              evaluators/create_nft_evaluator.cpp
              evaluators/update_nft_meta_evaluator.cpp
              evaluators/create_game_round_evaluator.cpp
-             evaluators/game_round_result_evaluator.cpp
+             evaluators/update_game_round_result_evaluator.cpp
 
              schema/shared_authority.cpp
              schema/advertising_property_object.cpp

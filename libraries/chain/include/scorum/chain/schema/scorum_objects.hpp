@@ -16,7 +16,6 @@ namespace chain {
 
 using scorum::protocol::asset;
 using scorum::protocol::asset_symbol_type;
-using scorum::protocol::curve_id;
 
 class escrow_object : public object<escrow_object_type, escrow_object>
 {

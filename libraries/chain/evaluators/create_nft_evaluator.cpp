@@ -35,7 +35,7 @@ void create_nft_evaluator::do_apply(const operation_type& op)
     auto& account = _account_dba.get_by<by_name>(op.owner);
     const auto available_power = account.scorumpower - account.nft_spend_scorumpower;
 
-    share_type requested_sp = op.power * pow(10, SCORUM_CURRENCY_PRECISION);
+    share_type requested_sp = static_cast<share_type>(op.initial_power) * pow(10, SCORUM_CURRENCY_PRECISION);
 
     FC_ASSERT(available_power.amount >= requested_sp,
               R"(Account available power "${available_power}" is less than requested "${requested_sp}".)",
@@ -49,7 +49,7 @@ void create_nft_evaluator::do_apply(const operation_type& op)
         obj.uuid = op.uuid;
         obj.name = op.name;
         obj.owner = op.owner;
-        obj.power += op.power;
+        obj.initial_power = op.initial_power;
         obj.created = _dprop_service.head_block_time();
 
 #ifndef IS_LOW_MEM

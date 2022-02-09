@@ -247,7 +247,7 @@ struct nft_api_obj
         , name(n.name)
         , owner(n.owner)
         , created(n.created)
-        , power(n.power)
+        , power(n.initial_power)
 
 #ifndef IS_LOW_MEM
         , json_metadata(fc::to_string(n.json_metadata))

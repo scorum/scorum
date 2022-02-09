@@ -13,12 +13,12 @@ struct dynamic_global_property_service_i;
 struct data_service_factory_i;
 struct hardfork_property_service_i;
 
-class game_round_result_evaluator : public evaluator_impl<data_service_factory_i, game_round_result_evaluator>
+class update_game_round_result_evaluator : public evaluator_impl<data_service_factory_i, update_game_round_result_evaluator>
 {
 public:
-    using operation_type = scorum::protocol::game_round_result_operation;
+    using operation_type = scorum::protocol::update_game_round_result_operation;
 
-    game_round_result_evaluator(data_service_factory_i&, dba::db_accessor<account_object>&, dba::db_accessor<game_round_object>&);
+    update_game_round_result_evaluator(data_service_factory_i&, dba::db_accessor<account_object>&, dba::db_accessor<game_round_object>&);
 
     void do_apply(const operation_type& op);
 

@@ -2173,7 +2173,7 @@ public:
     annotated_signed_transaction create_nft(const std::string& owner,
                                             const uuid_type& uuid,
                                             const std::string& name,
-                                            const share_type& initial_power,
+                                            int32_t initial_power,
                                             const std::string& json_meta,
                                             bool broadcast) const;
 
@@ -2248,11 +2248,11 @@ public:
      * @param result result
      * @param broadcast true if you wish to broadcast the transaction
      */
-    annotated_signed_transaction game_round_result(const std::string& owner,
+    annotated_signed_transaction update_game_round_result(const std::string& owner,
                                                    const uuid_type& uuid,
                                                    const std::string& proof,
                                                    const std::string& vrf,
-                                                   const share_type& result,
+                                                   int32_t result,
                                                    bool broadcast) const;
 
     /**
@@ -2472,7 +2472,7 @@ FC_API( scorum::wallet::wallet_api,
         (lookup_nft)
 
         (create_game_round)
-        (game_round_result)
+        (update_game_round_result)
         (get_game_round_by_uuid)
         (lookup_game_round)
 

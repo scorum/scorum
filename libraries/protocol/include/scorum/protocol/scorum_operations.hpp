@@ -1175,7 +1175,7 @@ struct create_nft_operation : public base_operation
     uuid_type uuid = boost::uuids::nil_uuid();
     account_name_type name;
     std::string json_metadata;
-    share_type power = 0;
+    int32_t initial_power = 0;
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;
@@ -1229,13 +1229,13 @@ struct create_game_round_operation : public base_operation
  * @ingroup operations
  * @brief This operation update game round results
  */
-struct game_round_result_operation : public base_operation
+struct update_game_round_result_operation : public base_operation
 {
     account_name_type owner;
     uuid_type uuid = boost::uuids::nil_uuid();
     std::string proof;
     std::string vrf;
-    share_type result;
+    int32_t result = 0;
 
     /// @cond DO_NOT_DOCUMENT
     void validate() const;
@@ -1364,7 +1364,7 @@ FC_REFLECT( scorum::protocol::create_nft_operation,
             (uuid)
             (name)
             (json_metadata)
-            (power))
+            (initial_power))
 
 FC_REFLECT( scorum::protocol::update_nft_meta_operation,
             (moderator)
@@ -1377,7 +1377,7 @@ FC_REFLECT( scorum::protocol::create_game_round_operation,
             (verification_key)
             (seed))
 
-FC_REFLECT( scorum::protocol::game_round_result_operation,
+FC_REFLECT( scorum::protocol::update_game_round_result_operation,
             (owner)
             (uuid)
             (proof)

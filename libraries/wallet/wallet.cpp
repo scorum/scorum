@@ -529,7 +529,7 @@ public:
 
         flat_map<std::string, account_api_obj> approving_account_lut;
         size_t i = 0;
-        for (const optional<account_api_obj>& approving_acct : approving_account_objects)
+        for (const optional<account_api_obj> approving_acct : approving_account_objects)
         {
             if (!approving_acct.valid())
             {
@@ -3472,7 +3472,7 @@ std::vector<pending_bet_api_object> wallet_api::get_game_pending_bets(const uuid
 annotated_signed_transaction wallet_api::create_nft(const std::string& owner,
                                                     const uuid_type& uuid,
                                                     const std::string& name,
-                                                    const share_type& power,
+                                                    int32_t initial_power,
                                                     const std::string& json_meta,
                                                     const bool broadcast) const
 {
@@ -3483,7 +3483,7 @@ annotated_signed_transaction wallet_api::create_nft(const std::string& owner,
     op.uuid = uuid;
     op.name = name;
     op.json_metadata = json_meta;
-    op.power = power;
+    op.initial_power = initial_power;
 
     signed_transaction tx;
     tx.operations.emplace_back(op);
@@ -3556,16 +3556,16 @@ annotated_signed_transaction wallet_api::create_game_round(const std::string& ow
     return my->sign_transaction(tx, broadcast);
 }
 
-annotated_signed_transaction wallet_api::game_round_result(const std::string& owner,
+annotated_signed_transaction wallet_api::update_game_round_result(const std::string& owner,
                                                            const uuid_type& uuid,
                                                            const std::string& proof,
                                                            const std::string& vrf,
-                                                           const share_type& result,
+                                                           int32_t result,
                                                            const bool broadcast) const
 {
     FC_ASSERT(!is_locked());
 
-    game_round_result_operation op;
+    update_game_round_result_operation op;
     op.owner = owner;
     op.uuid = uuid;
     op.proof = proof;

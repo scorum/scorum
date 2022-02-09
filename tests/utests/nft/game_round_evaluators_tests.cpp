@@ -9,7 +9,7 @@
 #include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/chain/evaluators/create_game_round_evaluator.hpp>
-#include <scorum/chain/evaluators/game_round_result_evaluator.hpp>
+#include <scorum/chain/evaluators/update_game_round_result_evaluator.hpp>
 
 #include <db_mock.hpp>
 #include <hippomocks.h>
@@ -104,10 +104,10 @@ SCORUM_TEST_CASE(create_game_round)
     BOOST_REQUIRE_EQUAL("038b2fbf4e4f066f309991b9c30cb8f887853e54c76dc705f5ece736ead6c856", round.verification_key);
 }
 
-SCORUM_TEST_CASE(game_round_result_fail_when_round_does_not_exist)
+SCORUM_TEST_CASE(update_game_round_result_fail_when_round_does_not_exist)
 {
-    game_round_result_evaluator ev(*services, account_dba, game_round_dba);
-    game_round_result_operation op;
+    update_game_round_result_evaluator ev(*services, account_dba, game_round_dba);
+    update_game_round_result_operation op;
 
     SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception,
                            R"(Round "00000000-0000-0000-0000-000000000000" must exist.)")
@@ -118,14 +118,14 @@ SCORUM_TEST_CASE(game_round_result_fail_when_round_does_not_exist)
                            R"(Round "aa3b2bdc-176e-5e8a-9b48-7dba3aa10044" must exist.)")
 }
 
-SCORUM_TEST_CASE(game_round_result_fail_when_owner_does_not_exist)
+SCORUM_TEST_CASE(update_game_round_result_fail_when_owner_does_not_exist)
 {
     game_round_dba.create([&](auto& obj){
         obj.uuid = gen_uuid("first");
     });
 
-    game_round_result_evaluator ev(*services, account_dba, game_round_dba);
-    game_round_result_operation op;
+    update_game_round_result_evaluator ev(*services, account_dba, game_round_dba);
+    update_game_round_result_operation op;
     op.uuid = gen_uuid("first");
 
     SCORUM_CHECK_EXCEPTION(ev.do_apply(op), fc::assert_exception, R"(Account "" must exist.)")
@@ -146,8 +146,8 @@ SCORUM_TEST_CASE(game_round_result)
         obj.uuid = gen_uuid("first");
     });
 
-    game_round_result_evaluator ev(*services, account_dba, game_round_dba);
-    game_round_result_operation op;
+    update_game_round_result_evaluator ev(*services, account_dba, game_round_dba);
+    update_game_round_result_operation op;
     op.owner = "operator";
     op.uuid = gen_uuid("first");
     op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70c"
@@ -166,7 +166,7 @@ SCORUM_TEST_CASE(game_round_result)
     BOOST_CHECK_EQUAL(op.result, round.result);
 }
 
-SCORUM_TEST_CASE(game_round_result_update_second_gameround)
+SCORUM_TEST_CASE(update_game_round_result_update_second_gameround)
 {
     account_dba.create([&](auto& obj) {
         obj.name = "operator";
@@ -182,8 +182,8 @@ SCORUM_TEST_CASE(game_round_result_update_second_gameround)
         obj.uuid = gen_uuid("second");
     });
 
-    game_round_result_evaluator ev(*services, account_dba, game_round_dba);
-    game_round_result_operation op;
+    update_game_round_result_evaluator ev(*services, account_dba, game_round_dba);
+    update_game_round_result_operation op;
     op.owner = "operator";
     op.uuid = gen_uuid("second");
     op.proof = "638f675cd4313ae84aede4940b7691acd904dec141e444187dcec59f2a25a7a4ef5aa2fe3f88cf235c0d63aa6935bef69d5b70c"

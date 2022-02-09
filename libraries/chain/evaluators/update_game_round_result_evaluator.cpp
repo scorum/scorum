@@ -1,4 +1,4 @@
-#include <scorum/chain/evaluators/game_round_result_evaluator.hpp>
+#include <scorum/chain/evaluators/update_game_round_result_evaluator.hpp>
 
 #include <scorum/chain/schema/account_objects.hpp>
 #include <scorum/chain/schema/nft_object.hpp>
@@ -12,17 +12,17 @@
 namespace scorum {
 namespace chain {
 
-game_round_result_evaluator::game_round_result_evaluator(data_service_factory_i& services,
+update_game_round_result_evaluator::update_game_round_result_evaluator(data_service_factory_i& services,
                                            dba::db_accessor<account_object>& account_dba,
                                            dba::db_accessor<game_round_object>& game_round_dba)
-    : evaluator_impl<data_service_factory_i, game_round_result_evaluator>(services)
+    : evaluator_impl<data_service_factory_i, update_game_round_result_evaluator>(services)
     , _account_dba(account_dba)
     , _game_round_dba(game_round_dba)
     , _hardfork_service(services.hardfork_property_service())
 {
 }
 
-void game_round_result_evaluator::do_apply(const operation_type& op)
+void update_game_round_result_evaluator::do_apply(const operation_type& op)
 {
     FC_ASSERT(_hardfork_service.has_hardfork(SCORUM_HARDFORK_0_5), "Hardfork #${hf} is required", ("hf", SCORUM_HARDFORK_0_5));
 

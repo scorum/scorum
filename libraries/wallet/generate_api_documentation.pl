@@ -4,8 +4,6 @@ use Text::Wrap;
 use IO::File;
 
 require 'doxygen/perlmod/DoxyDocs.pm';
-# require '/home/alex/projects/scorum/scorum/cmake-build-release-full-testnet/libraries/wallet/doxygen/perlmod/DoxyDocs.pm';
-
 
 my($outputFileName) = @ARGV;
 die "usage: $0 output_file_name" unless $outputFileName;
@@ -97,6 +95,9 @@ sub cleanupDoxygenType
   if ($type eq "const std::string &") { return "string"; }
   if ($type eq "std::string") { return "string"; }
   if ($type eq "uint32_t") { return "uint32"; }
+  if ($type eq "int32_t") { return "int32"; }
+  if ($type eq "uint64_t") { return "uint64"; }
+  if ($type eq "int64_t") { return "int64"; }
   if ($type eq "const account_name_type &") { return "account_name_type"; }
   if ($type eq "const uuid_type &") { return "UUID"; }
 
