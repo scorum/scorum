@@ -24,7 +24,8 @@ update_game_round_result_evaluator::update_game_round_result_evaluator(data_serv
 
 void update_game_round_result_evaluator::do_apply(const operation_type& op)
 {
-    FC_ASSERT(_hardfork_service.has_hardfork(SCORUM_HARDFORK_0_5), "Hardfork #${hf} is required", ("hf", SCORUM_HARDFORK_0_5));
+    FC_ASSERT(_hardfork_service.has_hardfork(SCORUM_HARDFORK_0_5), "Hardfork #5 is required");
+    FC_ASSERT(!_hardfork_service.has_hardfork(SCORUM_HARDFORK_0_6), "Disabled since hardfork #6");
 
     FC_ASSERT(_game_round_dba.is_exists_by<by_uuid>(op.uuid), R"(Round "${uuid}" must exist.)", ("uuid", op.uuid));
     FC_ASSERT(_account_dba.is_exists_by<by_name>(op.owner), R"(Account "${owner}" must exist.)", ("owner", op.owner));

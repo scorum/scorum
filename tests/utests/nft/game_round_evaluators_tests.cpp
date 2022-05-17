@@ -43,7 +43,12 @@ struct game_round_evaluator_fixture
         db.add_index<hardfork_property_index>();
 
         mocks.OnCall(services, data_service_factory_i::hardfork_property_service).ReturnByRef(*hardfork_svc);
-        mocks.OnCall(hardfork_svc, hardfork_property_service_i::has_hardfork).Return(true);
+        mocks.OnCall(hardfork_svc, hardfork_property_service_i::has_hardfork)
+            .With(SCORUM_HARDFORK_0_5)
+            .Return(true); // hf #5
+        mocks.OnCall(hardfork_svc, hardfork_property_service_i::has_hardfork)
+            .With(SCORUM_HARDFORK_0_6)
+            .Return(false); // hf #6
     }
 };
 

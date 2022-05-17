@@ -88,6 +88,7 @@ add_library( scorum_chain
              evaluators/delegate_sp_from_reg_pool_evaluator.cpp
              evaluators/create_nft_evaluator.cpp
              evaluators/update_nft_meta_evaluator.cpp
+             evaluators/adjust_nft_experience_evaluator.cpp
              evaluators/create_game_round_evaluator.cpp
              evaluators/update_game_round_result_evaluator.cpp
 

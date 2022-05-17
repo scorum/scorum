@@ -5,6 +5,7 @@
 !CMakeModules/*.cmake
 CMakeCache.txt
 CMakeFiles
+CMakeUserPresets.json
 Makefile
 compile_commands.json
 moc_*

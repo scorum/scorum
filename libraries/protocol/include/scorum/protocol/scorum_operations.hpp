@@ -1207,6 +1207,25 @@ struct update_nft_meta_operation : public base_operation
 
 /**
  * @ingroup operations
+ * @brief This operation adjust NFT experience
+ */
+struct adjust_nft_experience_operation : public base_operation
+{
+    account_name_type moderator;
+    uuid_type uuid = boost::uuids::nil_uuid();
+    int32_t experience = 0;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(moderator);
+    }
+    /// @endcond
+};
+
+/**
+ * @ingroup operations
  * @brief This operation create new game round
  */
 struct create_game_round_operation : public base_operation
@@ -1370,6 +1389,11 @@ FC_REFLECT( scorum::protocol::update_nft_meta_operation,
             (moderator)
             (uuid)
             (json_metadata))
+
+FC_REFLECT( scorum::protocol::adjust_nft_experience_operation,
+            (moderator)
+            (uuid)
+            (experience))
 
 FC_REFLECT( scorum::protocol::create_game_round_operation,
             (owner)

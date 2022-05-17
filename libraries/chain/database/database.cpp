@@ -97,6 +97,7 @@
 #include <scorum/chain/evaluators/delegate_sp_from_reg_pool_evaluator.hpp>
 #include <scorum/chain/evaluators/create_nft_evaluator.hpp>
 #include <scorum/chain/evaluators/update_nft_meta_evaluator.hpp>
+#include <scorum/chain/evaluators/adjust_nft_experience_evaluator.hpp>
 #include <scorum/chain/evaluators/create_game_round_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_round_result_evaluator.hpp>
 
@@ -1322,6 +1323,8 @@ void database::initialize_evaluators()
     _my->_evaluator_registry.register_evaluator(
         new update_nft_meta_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
     _my->_evaluator_registry.register_evaluator(
+        new adjust_nft_experience_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
+    _my->_evaluator_registry.register_evaluator(
         new create_game_round_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
     _my->_evaluator_registry.register_evaluator(
         new update_game_round_result_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
@@ -2087,6 +2090,10 @@ void database::init_hardforks(time_point_sec genesis_time)
     FC_ASSERT(SCORUM_HARDFORK_0_5 == 5, "Invalid hardfork #5 configuration");
     _hardfork_times[SCORUM_HARDFORK_0_5] = fc::time_point_sec(SCORUM_HARDFORK_0_5_TIME);
     _hardfork_versions[SCORUM_HARDFORK_0_5] = SCORUM_HARDFORK_0_5_VERSION;
+
+    FC_ASSERT(SCORUM_HARDFORK_0_6 == 6, "Invalid hardfork #6 configuration");
+    _hardfork_times[SCORUM_HARDFORK_0_6] = fc::time_point_sec(SCORUM_HARDFORK_0_6_TIME);
+    _hardfork_versions[SCORUM_HARDFORK_0_6] = SCORUM_HARDFORK_0_6_VERSION;
 
     const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",

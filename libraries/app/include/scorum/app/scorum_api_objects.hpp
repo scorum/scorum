@@ -247,7 +247,9 @@ struct nft_api_obj
         , name(n.name)
         , owner(n.owner)
         , created(n.created)
-        , power(n.initial_power)
+        , initial_power(n.initial_power)
+        , experience(n.experience)
+        , total_experience(n.initial_power + n.experience)
 
 #ifndef IS_LOW_MEM
         , json_metadata(fc::to_string(n.json_metadata))
@@ -264,7 +266,9 @@ struct nft_api_obj
     account_name_type name;
     account_name_type owner;
     time_point_sec created;
-    share_type power;
+    int32_t initial_power;
+    share_type experience;
+    share_type total_experience;
     std::string json_metadata;
 };
 
@@ -650,7 +654,9 @@ FC_REFLECT(scorum::app::nft_api_obj,
                         (name)
                         (owner)
                         (created)
-                        (power)
+                        (initial_power)
+                        (experience)
+                        (total_experience)
                         (json_metadata))
 
 FC_REFLECT(scorum::app::game_round_api_obj,

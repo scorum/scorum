@@ -43,13 +43,13 @@ SCORUM_TEST_CASE(create_nft_fail_when_account_name_is_not_set)
     SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception, R"(Account name  is invalid)")
 }
 
-SCORUM_TEST_CASE(create_nft_fail_when_power_is_zero)
+SCORUM_TEST_CASE(create_nft_with_zero_initial_power)
 {
     create_nft_operation op;
     op.uuid = gen_uuid("nft");
     op.owner = "user";
-    SCORUM_CHECK_EXCEPTION(op.validate(), fc::assert_exception,
-                           R"(Cannot create nft with zero or negative initial_power)")
+
+    BOOST_CHECK_NO_THROW(op.validate());
 }
 
 SCORUM_TEST_CASE(create_nft_fail_when_meta_is_not_json)

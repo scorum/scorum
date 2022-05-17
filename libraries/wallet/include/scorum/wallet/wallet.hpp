@@ -2191,6 +2191,19 @@ public:
                                                  bool broadcast) const;
 
     /**
+     * This method will adjust experience of an existing NFT object
+     *
+     * @param moderator moderator account
+     * @param uuid uuid of the NFT object
+     * @param experience experience
+     * @param broadcast true if you wish to broadcast the transaction
+     */
+    annotated_signed_transaction adjust_nft_experience(const std::string& moderator,
+                                                       const uuid_type& uuid,
+                                                       int32_t experience,
+                                                       bool broadcast) const;
+
+    /**
      * Get NFT object by id
      *
      * @param id id of the NFT object
@@ -2466,6 +2479,7 @@ FC_API( scorum::wallet::wallet_api,
         /// nft
         (create_nft)
         (update_nft_meta)
+        (adjust_nft_experience)
         (get_nft_by_id)
         (get_nft_by_name)
         (get_nft_by_uuid)

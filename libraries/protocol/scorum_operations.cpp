@@ -440,8 +440,6 @@ void create_nft_operation::validate() const
     FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");
     validate_account_name(owner);
     validate_json_metadata(json_metadata);
-
-    FC_ASSERT(initial_power > 0, "Cannot create nft with zero or negative initial_power");
 }
 
 void update_nft_meta_operation::validate() const
@@ -449,6 +447,12 @@ void update_nft_meta_operation::validate() const
     FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");
     FC_ASSERT(moderator == SCORUM_NFT_MODERATOR, "invalid moderator account");
     validate_json_metadata(json_metadata);
+}
+
+void adjust_nft_experience_operation::validate() const
+{
+    FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");
+    FC_ASSERT(moderator == SCORUM_NFT_MODERATOR, "invalid moderator account");
 }
 
 void create_game_round_operation::validate() const

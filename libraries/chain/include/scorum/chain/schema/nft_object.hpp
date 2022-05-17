@@ -25,6 +25,7 @@ public:
     account_name_type owner;
     account_name_type name;
     int32_t initial_power;
+    share_type experience;
 
     fc::shared_string json_metadata;
     time_point_sec created;
@@ -67,25 +68,30 @@ using game_round_index = shared_multi_index_container<
 } // namespace chain
 } // namespace scorum
 
-FC_REFLECT(scorum::chain::nft_object,
-    (id)
-    (uuid)
-    (owner)
-    (name)
-    (initial_power)
-    (json_metadata)
-    (created))
+// clang-format off
+
+FC_REFLECT( scorum::chain::nft_object,
+           (id)
+           (uuid)
+           (owner)
+           (name)
+           (initial_power)
+           (experience)
+           (json_metadata)
+           (created))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::nft_object, scorum::chain::nft_index)
 
-FC_REFLECT(scorum::chain::game_round_object,
-    (id)
-    (uuid)
-    (owner)
-    (seed)
-    (verification_key)
-    (vrf)
-    (proof)
-    (result))
+FC_REFLECT( scorum::chain::game_round_object, 
+            (id)
+            (uuid)
+            (owner)
+            (seed)
+            (verification_key)
+            (vrf)
+            (proof)
+            (result))
 
 CHAINBASE_SET_INDEX_TYPE(scorum::chain::game_round_object, scorum::chain::game_round_index)
+
+// clang-format on

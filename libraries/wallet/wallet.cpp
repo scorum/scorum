@@ -3511,6 +3511,25 @@ annotated_signed_transaction wallet_api::update_nft_meta(const std::string& mode
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction wallet_api::adjust_nft_experience(const std::string& moderator,
+                                                               const uuid_type& uuid,
+                                                               int32_t experience,
+                                                               bool broadcast) const
+{
+    FC_ASSERT(!is_locked());
+
+    adjust_nft_experience_operation op;
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.experience = experience;
+
+    signed_transaction tx;
+    tx.operations.emplace_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
 nft_api_obj wallet_api::get_nft_by_id(int64_t id) const
 {
     auto api = my->_remote_api->get_api_by_name(API_DATABASE)->as<database_api>();
@@ -3557,11 +3576,11 @@ annotated_signed_transaction wallet_api::create_game_round(const std::string& ow
 }
 
 annotated_signed_transaction wallet_api::update_game_round_result(const std::string& owner,
-                                                           const uuid_type& uuid,
-                                                           const std::string& proof,
-                                                           const std::string& vrf,
-                                                           int32_t result,
-                                                           const bool broadcast) const
+                                                                  const uuid_type& uuid,
+                                                                  const std::string& proof,
+                                                                  const std::string& vrf,
+                                                                  int32_t result,
+                                                                  const bool broadcast) const
 {
     FC_ASSERT(!is_locked());
 
