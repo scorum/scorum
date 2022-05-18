@@ -10,43 +10,43 @@ ENV LANG=en_US.UTF-8
 ENV LIVE_TESTNET=${LIVE_TESTNET:-OFF}
 
 RUN \
-        apt-get update && \
-        apt-get install -y \
-            autoconf \
-            automake \
-            autotools-dev \
-            bsdmainutils \
-            build-essential \
-            cmake \
-            doxygen \
-            git \
-            libboost-all-dev \
-            libicu-dev \
-            libreadline-dev \
-            libssl-dev \
-            libtool \
-            ncurses-dev \
-            pbzip2 \
-            pkg-config \
-            python3 \
-            python3-dev \
-            python3-jinja2 \
-            python3-pip \
-            python-pip \
-            nginx \
-            fcgiwrap \
-            s3cmd \
-            awscli \
-            jq \
-            wget \
-            gdb \
-        && \
-        apt-get install -y libicu55 libreadline6 && \
-        apt-get install -y curl apt-transport-https ca-certificates && \
-        apt-get --only-upgrade install -y libgnutls-openssl27 libgnutls30 ubuntu-advantage-tools && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-        pip3 install gcovr
+    apt-get update && \
+    apt-get install -y \
+    autoconf \
+    automake \
+    autotools-dev \
+    bsdmainutils \
+    build-essential \
+    cmake \
+    doxygen \
+    git \
+    libboost-all-dev \
+    libicu-dev \
+    libreadline-dev \
+    libssl-dev \
+    libtool \
+    ncurses-dev \
+    pbzip2 \
+    pkg-config \
+    python3 \
+    python3-dev \
+    nginx \
+    fcgiwrap \
+    s3cmd \
+    awscli \
+    jq \
+    wget \
+    gdb \
+    && \
+    apt-get install -y libicu55 libreadline6 && \
+    apt-get install -y curl apt-transport-https ca-certificates && \
+    apt-get --only-upgrade install -y libgnutls-openssl27 libgnutls30 ubuntu-advantage-tools && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    wget https://bootstrap.pypa.io/pip/3.5/get-pip.py && \
+    python3 get-pip.py && \
+    pip3 install gcovr && \
+    pip3 install jinja2
 
 ADD . /usr/local/src/scorum
 
@@ -55,13 +55,13 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DSCORUM_LIVE_TESTNET=${LIVE_TESTNET} \
-        -DSCORUM_LOW_MEMORY_NODE=OFF \
-        -DSCORUM_CLEAR_VOTES=ON \
-        -DSCORUM_SKIP_BY_TX_ID=ON \
-        -DENABLE_COVERAGE_TESTING=ON \
-        .. && \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DSCORUM_LIVE_TESTNET=${LIVE_TESTNET} \
+    -DSCORUM_LOW_MEMORY_NODE=OFF \
+    -DSCORUM_CLEAR_VOTES=ON \
+    -DSCORUM_SKIP_BY_TX_ID=ON \
+    -DENABLE_COVERAGE_TESTING=ON \
+    .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
     ./tests/utests/utests && \
@@ -82,13 +82,13 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
-        -DSCORUM_LIVE_TESTNET=${LIVE_TESTNET} \
-        -DSCORUM_LOW_MEMORY_NODE=ON \
-        -DSCORUM_CLEAR_VOTES=ON \
-        -DSCORUM_SKIP_BY_TX_ID=ON \
-        .. && \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-default \
+    -DSCORUM_LIVE_TESTNET=${LIVE_TESTNET} \
+    -DSCORUM_LOW_MEMORY_NODE=ON \
+    -DSCORUM_CLEAR_VOTES=ON \
+    -DSCORUM_SKIP_BY_TX_ID=ON \
+    .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
     ./tests/utests/utests && \
@@ -103,13 +103,13 @@ RUN \
     mkdir build && \
     cd build && \
     cmake \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
-        -DSCORUM_LIVE_TESTNET=${LIVE_TESTNET} \
-        -DSCORUM_LOW_MEMORY_NODE=OFF \
-        -DSCORUM_CLEAR_VOTES=OFF \
-        -DSCORUM_SKIP_BY_TX_ID=OFF \
-        .. && \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/scorumd-full \
+    -DSCORUM_LIVE_TESTNET=${LIVE_TESTNET} \
+    -DSCORUM_LOW_MEMORY_NODE=OFF \
+    -DSCORUM_CLEAR_VOTES=OFF \
+    -DSCORUM_SKIP_BY_TX_ID=OFF \
+    .. && \
     make -j$(nproc) && \
     ./libraries/chainbase/test/chainbase_test && \
     ./tests/utests/utests && \
@@ -141,13 +141,15 @@ ADD contrib/seeds.testnet.ini /etc/scorumd/seeds.testnet.ini
 ADD contrib/scorumdentrypoint.sh /usr/local/bin/scorumdentrypoint.sh
 
 RUN chmod +x /usr/local/bin/scorumdentrypoint.sh
+RUN mkdir /var/lib/scorumd
 
-# not sure that /var/lib/scorumd and /var/cache/scorumd is needed at all
 RUN \
     useradd -s /bin/bash -m -d /var/lib/scorumd scorumd && \
     mkdir /var/cache/scorumd && \
     chown scorumd:scorumd -R /var/cache/scorumd && \
     chown scorumd:scorumd -R /var/lib/scorumd
+
+WORKDIR /var/lib/scorumd
 
 ENV HOME /var/lib/scorumd
 VOLUME ["/var/lib/scorumd"]
