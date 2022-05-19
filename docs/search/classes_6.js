@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['game_5fapi_5fobject_3797',['game_api_object',['../structscorum_1_1app_1_1game__api__object.html',1,'scorum::app']]],
+  ['game_5fobject_3798',['game_object',['../classscorum_1_1chain_1_1game__object.html',1,'scorum::chain']]],
+  ['game_5fround_5fapi_5fobj_3799',['game_round_api_obj',['../structscorum_1_1app_1_1game__round__api__obj.html',1,'scorum::app']]],
+  ['game_5fround_5fobject_3800',['game_round_object',['../classscorum_1_1chain_1_1game__round__object.html',1,'scorum::chain']]],
+  ['game_5fservice_5fi_3801',['game_service_i',['../structscorum_1_1chain_1_1game__service__i.html',1,'scorum::chain']]],
+  ['game_5fstatus_5fchanged_5foperation_3802',['game_status_changed_operation',['../structscorum_1_1protocol_1_1game__status__changed__operation.html',1,'scorum::protocol']]],
+  ['game_5fuuid_5fhistory_5fobject_3803',['game_uuid_history_object',['../classscorum_1_1chain_1_1game__uuid__history__object.html',1,'scorum::chain']]],
+  ['gelf_5fappender_5fargs_3804',['gelf_appender_args',['../structgelf__appender__args.html',1,'']]],
+  ['genesis_5fchain_5fid_5ftype_3805',['genesis_chain_id_type',['../structscorum_1_1chain_1_1genesis__chain__id__type.html',1,'scorum::chain']]],
+  ['genesis_5fpersistent_5fstate_5ftype_3806',['genesis_persistent_state_type',['../structscorum_1_1chain_1_1genesis__persistent__state__type.html',1,'scorum::chain']]],
+  ['genesis_5fstate_5fservice_5fi_3807',['genesis_state_service_i',['../structscorum_1_1chain_1_1genesis__state__service__i.html',1,'scorum::chain']]],
+  ['genesis_5fstate_5ftype_3808',['genesis_state_type',['../structscorum_1_1chain_1_1genesis__state__type.html',1,'scorum::chain']]],
+  ['get_5favailable_5fscorumpower_5fvisitor_3809',['get_available_scorumpower_visitor',['../classscorum_1_1chain_1_1database__ns_1_1get__available__scorumpower__visitor.html',1,'scorum::chain::database_ns']]],
+  ['get_5fblock_5finfo_5fargs_3810',['get_block_info_args',['../structscorum_1_1plugin_1_1block__info_1_1get__block__info__args.html',1,'scorum::plugin::block_info']]],
+  ['get_5fdev_5fkey_5fargs_3811',['get_dev_key_args',['../structscorum_1_1plugin_1_1debug__node_1_1get__dev__key__args.html',1,'scorum::plugin::debug_node']]],
+  ['get_5fdev_5fkey_5fresult_3812',['get_dev_key_result',['../structscorum_1_1plugin_1_1debug__node_1_1get__dev__key__result.html',1,'scorum::plugin::debug_node']]],
+  ['get_5foperation_5fcommittee_5fvisitor_3813',['get_operation_committee_visitor',['../structscorum_1_1chain_1_1get__operation__committee__visitor.html',1,'scorum::chain']]],
+  ['get_5foperation_5fname_3814',['get_operation_name',['../structfc_1_1get__operation__name.html',1,'fc']]],
+  ['get_5fraw_5fblock_5fargs_3815',['get_raw_block_args',['../structscorum_1_1plugin_1_1raw__block_1_1get__raw__block__args.html',1,'scorum::plugin::raw_block']]],
+  ['get_5fraw_5fblock_5fresult_3816',['get_raw_block_result',['../structscorum_1_1plugin_1_1raw__block_1_1get__raw__block__result.html',1,'scorum::plugin::raw_block']]],
+  ['give_5fbonus_5ffrom_5fregistration_5fpool_5ftask_3817',['give_bonus_from_registration_pool_task',['../classscorum_1_1chain_1_1give__bonus__from__registration__pool__task.html',1,'scorum::chain']]],
+  ['give_5fbonus_5ffrom_5fregistration_5fpool_5ftask_5fcontext_3818',['give_bonus_from_registration_pool_task_context',['../classscorum_1_1chain_1_1give__bonus__from__registration__pool__task__context.html',1,'scorum::chain']]],
+  ['global_5fproperty_5finitializator_5fimpl_3819',['global_property_initializator_impl',['../structscorum_1_1chain_1_1genesis_1_1global__property__initializator__impl.html',1,'scorum::chain::genesis']]]
+];
