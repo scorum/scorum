@@ -98,6 +98,7 @@
 #include <scorum/chain/evaluators/create_nft_evaluator.hpp>
 #include <scorum/chain/evaluators/update_nft_meta_evaluator.hpp>
 #include <scorum/chain/evaluators/adjust_nft_experience_evaluator.hpp>
+#include <scorum/chain/evaluators/update_nft_name_evaluator.hpp>
 #include <scorum/chain/evaluators/create_game_round_evaluator.hpp>
 #include <scorum/chain/evaluators/update_game_round_result_evaluator.hpp>
 
@@ -1322,6 +1323,8 @@ void database::initialize_evaluators()
         new create_nft_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
     _my->_evaluator_registry.register_evaluator(
         new update_nft_meta_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
+    _my->_evaluator_registry.register_evaluator(
+        new update_nft_name_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
     _my->_evaluator_registry.register_evaluator(
         new adjust_nft_experience_evaluator(*this, get_dba<account_object>(), get_dba<nft_object>()));
     _my->_evaluator_registry.register_evaluator(

@@ -455,6 +455,13 @@ void adjust_nft_experience_operation::validate() const
     FC_ASSERT(moderator == SCORUM_NFT_MODERATOR, "invalid moderator account");
 }
 
+void update_nft_name_operation::validate() const
+{
+    FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");
+    FC_ASSERT(moderator == SCORUM_NFT_MODERATOR, "invalid moderator account");
+    validate_account_name(name);
+}
+
 void create_game_round_operation::validate() const
 {
     FC_ASSERT(!uuid.is_nil(), "uuid must not be nil");

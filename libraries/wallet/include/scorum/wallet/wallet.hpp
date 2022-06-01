@@ -2204,6 +2204,18 @@ public:
                                                        bool broadcast) const;
 
     /**
+     * This method will update json metadata of an existing NFT object
+     *
+     * @param moderator moderator account
+     * @param uuid uuid of the NFT object
+     * @param json_meta JSON metadata associated with the NFT
+     * @param broadcast true if you wish to broadcast the transaction
+     */
+    annotated_signed_transaction update_nft_name(const std::string& moderator,
+                                                 const uuid_type& uuid,
+                                                 const std::string& name,
+                                                 bool broadcast) const;
+    /**
      * Get NFT object by id
      *
      * @param id id of the NFT object
@@ -2480,6 +2492,7 @@ FC_API( scorum::wallet::wallet_api,
         (create_nft)
         (update_nft_meta)
         (adjust_nft_experience)
+        (update_nft_name)
         (get_nft_by_id)
         (get_nft_by_name)
         (get_nft_by_uuid)

@@ -3530,6 +3530,25 @@ annotated_signed_transaction wallet_api::adjust_nft_experience(const std::string
     return my->sign_transaction(tx, broadcast);
 }
 
+annotated_signed_transaction wallet_api::update_nft_name(const std::string& moderator,
+                                                         const uuid_type& uuid,
+                                                         const std::string& name,
+                                                         const bool broadcast) const
+{
+    FC_ASSERT(!is_locked());
+
+    update_nft_name_operation op;
+    op.uuid = uuid;
+    op.moderator = moderator;
+    op.name = name;
+
+    signed_transaction tx;
+    tx.operations.emplace_back(op);
+    tx.validate();
+
+    return my->sign_transaction(tx, broadcast);
+}
+
 nft_api_obj wallet_api::get_nft_by_id(int64_t id) const
 {
     auto api = my->_remote_api->get_api_by_name(API_DATABASE)->as<database_api>();
