@@ -202,7 +202,7 @@ $(function() {
 <div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    <span class="keywordtype">void</span> set_wallet_filename(<span class="keyword">const</span> std::string&amp; wallet_filename);</div>
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160; </div>
 <div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160; </div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <a class="code" href="namespacescorum_1_1protocol.html#aa2974ab07a56f55d2b12cef35764af8b">operation</a> get_prototype_operation(<span class="keyword">const</span> std::string&amp; operation_type);</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <a class="code" href="namespacescorum_1_1protocol.html#a2f24a63886e094d21c565098f4492abf">operation</a> get_prototype_operation(<span class="keyword">const</span> std::string&amp; operation_type);</div>
 <div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160; </div>
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    std::string serialize_transaction(<span class="keyword">const</span> <a class="code" href="structscorum_1_1protocol_1_1signed__transaction.html">signed_transaction</a>&amp; tx) <span class="keyword">const</span>;</div>
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160; </div>
@@ -762,236 +762,241 @@ $(function() {
 <div class="line"><a name="l02203"></a><span class="lineno"> 2203</span>&#160;                                                       int32_t experience,</div>
 <div class="line"><a name="l02204"></a><span class="lineno"> 2204</span>&#160;                                                       <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
 <div class="line"><a name="l02205"></a><span class="lineno"> 2205</span>&#160; </div>
-<div class="line"><a name="l02212"></a><span class="lineno"> 2212</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_id(int64_t <span class="keywordtype">id</span>) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02213"></a><span class="lineno"> 2213</span>&#160; </div>
-<div class="line"><a name="l02220"></a><span class="lineno"> 2220</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_name(<span class="keyword">const</span> <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a>&amp; name) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02221"></a><span class="lineno"> 2221</span>&#160; </div>
-<div class="line"><a name="l02228"></a><span class="lineno"> 2228</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_uuid(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02229"></a><span class="lineno"> 2229</span>&#160; </div>
-<div class="line"><a name="l02237"></a><span class="lineno"> 2237</span>&#160;    std::vector&lt;nft_api_obj&gt; lookup_nft(int64_t from, uint32_t limit) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02238"></a><span class="lineno"> 2238</span>&#160; </div>
-<div class="line"><a name="l02248"></a><span class="lineno"> 2248</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_game_round(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
-<div class="line"><a name="l02249"></a><span class="lineno"> 2249</span>&#160;                                                   <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
-<div class="line"><a name="l02250"></a><span class="lineno"> 2250</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; verification_key,</div>
-<div class="line"><a name="l02251"></a><span class="lineno"> 2251</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; seed,</div>
-<div class="line"><a name="l02252"></a><span class="lineno"> 2252</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02253"></a><span class="lineno"> 2253</span>&#160; </div>
-<div class="line"><a name="l02264"></a><span class="lineno"> 2264</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_game_round_result(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
-<div class="line"><a name="l02265"></a><span class="lineno"> 2265</span>&#160;                                                   <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
-<div class="line"><a name="l02266"></a><span class="lineno"> 2266</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; proof,</div>
-<div class="line"><a name="l02267"></a><span class="lineno"> 2267</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; vrf,</div>
-<div class="line"><a name="l02268"></a><span class="lineno"> 2268</span>&#160;                                                   int32_t result,</div>
-<div class="line"><a name="l02269"></a><span class="lineno"> 2269</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02270"></a><span class="lineno"> 2270</span>&#160; </div>
-<div class="line"><a name="l02277"></a><span class="lineno"> 2277</span>&#160;    <a class="code" href="structscorum_1_1app_1_1game__round__api__obj.html">game_round_api_obj</a> get_game_round_by_uuid(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02278"></a><span class="lineno"> 2278</span>&#160; </div>
-<div class="line"><a name="l02286"></a><span class="lineno"> 2286</span>&#160;    std::vector&lt;game_round_api_obj&gt; lookup_game_round(int64_t from, uint32_t limit) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02287"></a><span class="lineno"> 2287</span>&#160; </div>
-<div class="line"><a name="l02289"></a><span class="lineno"> 2289</span>&#160; </div>
-<div class="line"><a name="l02290"></a><span class="lineno"> 2290</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l02291"></a><span class="lineno"><a class="line" href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3"> 2291</a></span>&#160;    fc::signal&lt;void(<span class="keywordtype">bool</span>)&gt; <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3">lock_changed</a>;</div>
-<div class="line"><a name="l02292"></a><span class="lineno"> 2292</span>&#160; </div>
-<div class="line"><a name="l02293"></a><span class="lineno"> 2293</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l02294"></a><span class="lineno"> 2294</span>&#160;    std::shared_ptr&lt;detail::wallet_api_impl&gt; my;</div>
-<div class="line"><a name="l02295"></a><span class="lineno"> 2295</span>&#160;    <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html#a08c93f4a6938b83e67b0f74f9a822075">exit_func_type</a> exit_func;</div>
-<div class="line"><a name="l02296"></a><span class="lineno"> 2296</span>&#160;};</div>
-<div class="line"><a name="l02297"></a><span class="lineno"> 2297</span>&#160; </div>
-<div class="line"><a name="l02298"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html"> 2298</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structscorum_1_1wallet_1_1plain__keys.html">plain_keys</a></div>
-<div class="line"><a name="l02299"></a><span class="lineno"> 2299</span>&#160;{</div>
-<div class="line"><a name="l02300"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4"> 2300</a></span>&#160;    fc::sha512 <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4">checksum</a>;</div>
-<div class="line"><a name="l02301"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a"> 2301</a></span>&#160;    std::map&lt;public_key_type, std::string&gt; <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a">keys</a>;</div>
-<div class="line"><a name="l02302"></a><span class="lineno"> 2302</span>&#160;};</div>
-<div class="line"><a name="l02303"></a><span class="lineno"> 2303</span>&#160;} <span class="comment">// namespace wallet</span></div>
-<div class="line"><a name="l02304"></a><span class="lineno"> 2304</span>&#160;} <span class="comment">// namespace scorum</span></div>
-<div class="line"><a name="l02305"></a><span class="lineno"> 2305</span>&#160; </div>
-<div class="line"><a name="l02306"></a><span class="lineno"> 2306</span>&#160;<span class="comment">// clang-format off</span></div>
-<div class="line"><a name="l02307"></a><span class="lineno"> 2307</span>&#160; </div>
-<div class="line"><a name="l02308"></a><span class="lineno"> 2308</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>(<a class="code" href="structscorum_1_1wallet_1_1wallet__data.html">scorum::wallet::wallet_data</a>,</div>
-<div class="line"><a name="l02309"></a><span class="lineno"> 2309</span>&#160;           (cipher_keys)</div>
-<div class="line"><a name="l02310"></a><span class="lineno"> 2310</span>&#160;           (ws_server)</div>
-<div class="line"><a name="l02311"></a><span class="lineno"> 2311</span>&#160;           (ws_user)</div>
-<div class="line"><a name="l02312"></a><span class="lineno"> 2312</span>&#160;           (ws_password)</div>
-<div class="line"><a name="l02313"></a><span class="lineno"> 2313</span>&#160;           (chain_id))</div>
-<div class="line"><a name="l02314"></a><span class="lineno"> 2314</span>&#160; </div>
-<div class="line"><a name="l02315"></a><span class="lineno"> 2315</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1brain__key__info.html">scorum::wallet::brain_key_info</a>, (brain_priv_key)(wif_priv_key) (pub_key))</div>
-<div class="line"><a name="l02316"></a><span class="lineno"> 2316</span>&#160; </div>
-<div class="line"><a name="l02317"></a><span class="lineno"> 2317</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html">scorum::wallet::plain_keys</a>, (checksum)(keys) )</div>
-<div class="line"><a name="l02318"></a><span class="lineno"> 2318</span>&#160; </div>
-<div class="line"><a name="l02319"></a><span class="lineno"> 2319</span>&#160;<a class="code" href="game__status_8hpp.html#a35075ecd8577f1bc09a3d2f77fc11356">FC_REFLECT_ENUM</a>( <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9">scorum::wallet::authority_type</a>, (<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>)(<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9a528a6948edb442e9b924d9495822095e">active</a>)(<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9a0d7ddd918611a27fc583188be6f46d65">posting</a>) )</div>
-<div class="line"><a name="l02320"></a><span class="lineno"> 2320</span>&#160; </div>
-<div class="line"><a name="l02321"></a><span class="lineno"> 2321</span>&#160;FC_API( <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html">scorum::wallet::wallet_api</a>,</div>
-<div class="line"><a name="l02323"></a><span class="lineno"> 2323</span>&#160;        (help)(gethelp)</div>
-<div class="line"><a name="l02324"></a><span class="lineno"> 2324</span>&#160;        (about)(is_new)(is_locked)(lock)(unlock)(set_password)</div>
-<div class="line"><a name="l02325"></a><span class="lineno"> 2325</span>&#160;        (load_wallet_file)(save_wallet_file)(exit)</div>
+<div class="line"><a name="l02214"></a><span class="lineno"> 2214</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_nft_name(<span class="keyword">const</span> std::string&amp; moderator,</div>
+<div class="line"><a name="l02215"></a><span class="lineno"> 2215</span>&#160;                                                 <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l02216"></a><span class="lineno"> 2216</span>&#160;                                                 <span class="keyword">const</span> std::string&amp; name,</div>
+<div class="line"><a name="l02217"></a><span class="lineno"> 2217</span>&#160;                                                 <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02224"></a><span class="lineno"> 2224</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_id(int64_t <span class="keywordtype">id</span>) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02225"></a><span class="lineno"> 2225</span>&#160; </div>
+<div class="line"><a name="l02232"></a><span class="lineno"> 2232</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_name(<span class="keyword">const</span> <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a>&amp; name) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02233"></a><span class="lineno"> 2233</span>&#160; </div>
+<div class="line"><a name="l02240"></a><span class="lineno"> 2240</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_uuid(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02241"></a><span class="lineno"> 2241</span>&#160; </div>
+<div class="line"><a name="l02249"></a><span class="lineno"> 2249</span>&#160;    std::vector&lt;nft_api_obj&gt; lookup_nft(int64_t from, uint32_t limit) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02250"></a><span class="lineno"> 2250</span>&#160; </div>
+<div class="line"><a name="l02260"></a><span class="lineno"> 2260</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_game_round(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
+<div class="line"><a name="l02261"></a><span class="lineno"> 2261</span>&#160;                                                   <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l02262"></a><span class="lineno"> 2262</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; verification_key,</div>
+<div class="line"><a name="l02263"></a><span class="lineno"> 2263</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; seed,</div>
+<div class="line"><a name="l02264"></a><span class="lineno"> 2264</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02265"></a><span class="lineno"> 2265</span>&#160; </div>
+<div class="line"><a name="l02276"></a><span class="lineno"> 2276</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_game_round_result(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
+<div class="line"><a name="l02277"></a><span class="lineno"> 2277</span>&#160;                                                   <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l02278"></a><span class="lineno"> 2278</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; proof,</div>
+<div class="line"><a name="l02279"></a><span class="lineno"> 2279</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; vrf,</div>
+<div class="line"><a name="l02280"></a><span class="lineno"> 2280</span>&#160;                                                   int32_t result,</div>
+<div class="line"><a name="l02281"></a><span class="lineno"> 2281</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02282"></a><span class="lineno"> 2282</span>&#160; </div>
+<div class="line"><a name="l02289"></a><span class="lineno"> 2289</span>&#160;    <a class="code" href="structscorum_1_1app_1_1game__round__api__obj.html">game_round_api_obj</a> get_game_round_by_uuid(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02290"></a><span class="lineno"> 2290</span>&#160; </div>
+<div class="line"><a name="l02298"></a><span class="lineno"> 2298</span>&#160;    std::vector&lt;game_round_api_obj&gt; lookup_game_round(int64_t from, uint32_t limit) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02299"></a><span class="lineno"> 2299</span>&#160; </div>
+<div class="line"><a name="l02301"></a><span class="lineno"> 2301</span>&#160; </div>
+<div class="line"><a name="l02302"></a><span class="lineno"> 2302</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l02303"></a><span class="lineno"><a class="line" href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3"> 2303</a></span>&#160;    fc::signal&lt;void(<span class="keywordtype">bool</span>)&gt; <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3">lock_changed</a>;</div>
+<div class="line"><a name="l02304"></a><span class="lineno"> 2304</span>&#160; </div>
+<div class="line"><a name="l02305"></a><span class="lineno"> 2305</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l02306"></a><span class="lineno"> 2306</span>&#160;    std::shared_ptr&lt;detail::wallet_api_impl&gt; my;</div>
+<div class="line"><a name="l02307"></a><span class="lineno"> 2307</span>&#160;    <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html#a08c93f4a6938b83e67b0f74f9a822075">exit_func_type</a> exit_func;</div>
+<div class="line"><a name="l02308"></a><span class="lineno"> 2308</span>&#160;};</div>
+<div class="line"><a name="l02309"></a><span class="lineno"> 2309</span>&#160; </div>
+<div class="line"><a name="l02310"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html"> 2310</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structscorum_1_1wallet_1_1plain__keys.html">plain_keys</a></div>
+<div class="line"><a name="l02311"></a><span class="lineno"> 2311</span>&#160;{</div>
+<div class="line"><a name="l02312"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4"> 2312</a></span>&#160;    fc::sha512 <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4">checksum</a>;</div>
+<div class="line"><a name="l02313"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a"> 2313</a></span>&#160;    std::map&lt;public_key_type, std::string&gt; <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a">keys</a>;</div>
+<div class="line"><a name="l02314"></a><span class="lineno"> 2314</span>&#160;};</div>
+<div class="line"><a name="l02315"></a><span class="lineno"> 2315</span>&#160;} <span class="comment">// namespace wallet</span></div>
+<div class="line"><a name="l02316"></a><span class="lineno"> 2316</span>&#160;} <span class="comment">// namespace scorum</span></div>
+<div class="line"><a name="l02317"></a><span class="lineno"> 2317</span>&#160; </div>
+<div class="line"><a name="l02318"></a><span class="lineno"> 2318</span>&#160;<span class="comment">// clang-format off</span></div>
+<div class="line"><a name="l02319"></a><span class="lineno"> 2319</span>&#160; </div>
+<div class="line"><a name="l02320"></a><span class="lineno"> 2320</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>(<a class="code" href="structscorum_1_1wallet_1_1wallet__data.html">scorum::wallet::wallet_data</a>,</div>
+<div class="line"><a name="l02321"></a><span class="lineno"> 2321</span>&#160;           (cipher_keys)</div>
+<div class="line"><a name="l02322"></a><span class="lineno"> 2322</span>&#160;           (ws_server)</div>
+<div class="line"><a name="l02323"></a><span class="lineno"> 2323</span>&#160;           (ws_user)</div>
+<div class="line"><a name="l02324"></a><span class="lineno"> 2324</span>&#160;           (ws_password)</div>
+<div class="line"><a name="l02325"></a><span class="lineno"> 2325</span>&#160;           (chain_id))</div>
 <div class="line"><a name="l02326"></a><span class="lineno"> 2326</span>&#160; </div>
-<div class="line"><a name="l02328"></a><span class="lineno"> 2328</span>&#160;        (import_key)</div>
-<div class="line"><a name="l02329"></a><span class="lineno"> 2329</span>&#160;        (<a class="code" href="namespacescorum_1_1wallet.html#a4a596fb2403c99756dd499d4946b108c">suggest_brain_key</a>)</div>
-<div class="line"><a name="l02330"></a><span class="lineno"> 2330</span>&#160;        (list_keys)</div>
-<div class="line"><a name="l02331"></a><span class="lineno"> 2331</span>&#160;        (get_private_key)</div>
-<div class="line"><a name="l02332"></a><span class="lineno"> 2332</span>&#160;        (get_private_key_from_password)</div>
-<div class="line"><a name="l02333"></a><span class="lineno"> 2333</span>&#160;        (<a class="code" href="namespacescorum_1_1wallet.html#af083e484f1f52ed3ab0493bf0f21b8e0">normalize_brain_key</a>)</div>
-<div class="line"><a name="l02334"></a><span class="lineno"> 2334</span>&#160; </div>
-<div class="line"><a name="l02336"></a><span class="lineno"> 2336</span>&#160;        (get_block_header)</div>
-<div class="line"><a name="l02337"></a><span class="lineno"> 2337</span>&#160;        (get_block)</div>
-<div class="line"><a name="l02338"></a><span class="lineno"> 2338</span>&#160;        (get_block_headers_history)</div>
-<div class="line"><a name="l02339"></a><span class="lineno"> 2339</span>&#160;        (get_blocks_history)</div>
-<div class="line"><a name="l02340"></a><span class="lineno"> 2340</span>&#160;        (get_ops_in_block)</div>
-<div class="line"><a name="l02341"></a><span class="lineno"> 2341</span>&#160;        (get_ops_history)</div>
-<div class="line"><a name="l02342"></a><span class="lineno"> 2342</span>&#160;        (get_ops_history_by_time)</div>
-<div class="line"><a name="l02343"></a><span class="lineno"> 2343</span>&#160;        (get_transaction)</div>
-<div class="line"><a name="l02344"></a><span class="lineno"> 2344</span>&#160; </div>
-<div class="line"><a name="l02346"></a><span class="lineno"> 2346</span>&#160;        (info)</div>
-<div class="line"><a name="l02347"></a><span class="lineno"> 2347</span>&#160;        (get_chain_capital)</div>
-<div class="line"><a name="l02348"></a><span class="lineno"> 2348</span>&#160;        (get_active_witnesses)</div>
-<div class="line"><a name="l02349"></a><span class="lineno"> 2349</span>&#160;        (list_my_accounts)</div>
-<div class="line"><a name="l02350"></a><span class="lineno"> 2350</span>&#160;        (list_accounts)</div>
-<div class="line"><a name="l02351"></a><span class="lineno"> 2351</span>&#160;        (list_witnesses)</div>
-<div class="line"><a name="l02352"></a><span class="lineno"> 2352</span>&#160;        (get_witness)</div>
-<div class="line"><a name="l02353"></a><span class="lineno"> 2353</span>&#160;        (get_account)</div>
-<div class="line"><a name="l02354"></a><span class="lineno"> 2354</span>&#160;        (get_account_balance)</div>
-<div class="line"><a name="l02355"></a><span class="lineno"> 2355</span>&#160;        (get_account_history)</div>
-<div class="line"><a name="l02356"></a><span class="lineno"> 2356</span>&#160;        (get_account_scr_to_scr_transfers)</div>
-<div class="line"><a name="l02357"></a><span class="lineno"> 2357</span>&#160;        (get_account_scr_to_sp_transfers)</div>
-<div class="line"><a name="l02358"></a><span class="lineno"> 2358</span>&#160;        (get_account_sp_to_scr_transfers)</div>
-<div class="line"><a name="l02359"></a><span class="lineno"> 2359</span>&#160;        (get_withdraw_routes)</div>
-<div class="line"><a name="l02360"></a><span class="lineno"> 2360</span>&#160;        (get_owner_history)</div>
-<div class="line"><a name="l02361"></a><span class="lineno"> 2361</span>&#160;        (get_encrypted_memo)</div>
-<div class="line"><a name="l02362"></a><span class="lineno"> 2362</span>&#160; </div>
-<div class="line"><a name="l02363"></a><span class="lineno"> 2363</span>&#160;        (create_account)</div>
-<div class="line"><a name="l02364"></a><span class="lineno"> 2364</span>&#160;        (create_account_with_keys)</div>
-<div class="line"><a name="l02365"></a><span class="lineno"> 2365</span>&#160;        (create_account_delegated)</div>
-<div class="line"><a name="l02366"></a><span class="lineno"> 2366</span>&#160;        (create_account_with_keys_delegated)</div>
-<div class="line"><a name="l02367"></a><span class="lineno"> 2367</span>&#160;        (create_account_by_committee)</div>
-<div class="line"><a name="l02368"></a><span class="lineno"> 2368</span>&#160;        (create_account_by_committee_with_keys)</div>
-<div class="line"><a name="l02369"></a><span class="lineno"> 2369</span>&#160;        (update_account)</div>
-<div class="line"><a name="l02370"></a><span class="lineno"> 2370</span>&#160;        (update_account_auth_key)</div>
-<div class="line"><a name="l02371"></a><span class="lineno"> 2371</span>&#160;        (update_account_auth_account)</div>
-<div class="line"><a name="l02372"></a><span class="lineno"> 2372</span>&#160;        (update_account_auth_threshold)</div>
-<div class="line"><a name="l02373"></a><span class="lineno"> 2373</span>&#160;        (update_account_meta)</div>
-<div class="line"><a name="l02374"></a><span class="lineno"> 2374</span>&#160;        (update_account_memo_key)</div>
-<div class="line"><a name="l02375"></a><span class="lineno"> 2375</span>&#160;        (delegate_scorumpower)</div>
-<div class="line"><a name="l02376"></a><span class="lineno"> 2376</span>&#160;        (delegate_scorumpower_from_reg_pool)</div>
-<div class="line"><a name="l02377"></a><span class="lineno"> 2377</span>&#160;        (update_witness)</div>
-<div class="line"><a name="l02378"></a><span class="lineno"> 2378</span>&#160;        (set_voting_proxy)</div>
-<div class="line"><a name="l02379"></a><span class="lineno"> 2379</span>&#160;        (vote_for_witness)</div>
-<div class="line"><a name="l02380"></a><span class="lineno"> 2380</span>&#160;        (transfer)</div>
-<div class="line"><a name="l02381"></a><span class="lineno"> 2381</span>&#160;        (escrow_transfer)</div>
-<div class="line"><a name="l02382"></a><span class="lineno"> 2382</span>&#160;        (escrow_approve)</div>
-<div class="line"><a name="l02383"></a><span class="lineno"> 2383</span>&#160;        (escrow_dispute)</div>
-<div class="line"><a name="l02384"></a><span class="lineno"> 2384</span>&#160;        (escrow_release)</div>
-<div class="line"><a name="l02385"></a><span class="lineno"> 2385</span>&#160;        (transfer_to_scorumpower)</div>
-<div class="line"><a name="l02386"></a><span class="lineno"> 2386</span>&#160;        (withdraw_scorumpower)</div>
-<div class="line"><a name="l02387"></a><span class="lineno"> 2387</span>&#160;        (set_withdraw_scorumpower_route)</div>
-<div class="line"><a name="l02388"></a><span class="lineno"> 2388</span>&#160;        (post_comment)</div>
-<div class="line"><a name="l02389"></a><span class="lineno"> 2389</span>&#160;        (vote)</div>
-<div class="line"><a name="l02390"></a><span class="lineno"> 2390</span>&#160;        (set_transaction_expiration)</div>
-<div class="line"><a name="l02391"></a><span class="lineno"> 2391</span>&#160;        (challenge)</div>
-<div class="line"><a name="l02392"></a><span class="lineno"> 2392</span>&#160;        (prove)</div>
-<div class="line"><a name="l02393"></a><span class="lineno"> 2393</span>&#160;        (request_account_recovery)</div>
-<div class="line"><a name="l02394"></a><span class="lineno"> 2394</span>&#160;        (recover_account)</div>
-<div class="line"><a name="l02395"></a><span class="lineno"> 2395</span>&#160;        (change_recovery_account)</div>
-<div class="line"><a name="l02396"></a><span class="lineno"> 2396</span>&#160;        (decrypt_memo)</div>
-<div class="line"><a name="l02397"></a><span class="lineno"> 2397</span>&#160;        (decline_voting_rights)</div>
-<div class="line"><a name="l02398"></a><span class="lineno"> 2398</span>&#160; </div>
-<div class="line"><a name="l02400"></a><span class="lineno"> 2400</span>&#160;        (create_budget_for_post)</div>
-<div class="line"><a name="l02401"></a><span class="lineno"> 2401</span>&#160;        (create_budget_for_banner)</div>
-<div class="line"><a name="l02402"></a><span class="lineno"> 2402</span>&#160;        (update_budget_for_banner)</div>
-<div class="line"><a name="l02403"></a><span class="lineno"> 2403</span>&#160;        (update_budget_for_post)</div>
-<div class="line"><a name="l02404"></a><span class="lineno"> 2404</span>&#160;        (close_budget_for_post)</div>
-<div class="line"><a name="l02405"></a><span class="lineno"> 2405</span>&#160;        (close_budget_for_banner)</div>
-<div class="line"><a name="l02406"></a><span class="lineno"> 2406</span>&#160;        (close_budget_for_post_by_moderator)</div>
-<div class="line"><a name="l02407"></a><span class="lineno"> 2407</span>&#160;        (close_budget_for_banner_by_moderator)</div>
-<div class="line"><a name="l02408"></a><span class="lineno"> 2408</span>&#160;        (list_my_budgets)</div>
-<div class="line"><a name="l02409"></a><span class="lineno"> 2409</span>&#160;        (list_post_budget_owners)</div>
-<div class="line"><a name="l02410"></a><span class="lineno"> 2410</span>&#160;        (list_banner_budget_owners)</div>
-<div class="line"><a name="l02411"></a><span class="lineno"> 2411</span>&#160;        (get_post_budgets)</div>
-<div class="line"><a name="l02412"></a><span class="lineno"> 2412</span>&#160;        (get_banner_budgets)</div>
-<div class="line"><a name="l02413"></a><span class="lineno"> 2413</span>&#160; </div>
-<div class="line"><a name="l02415"></a><span class="lineno"> 2415</span>&#160;        (vote_for_committee_proposal)</div>
-<div class="line"><a name="l02416"></a><span class="lineno"> 2416</span>&#160;        (registration_committee_add_member)</div>
-<div class="line"><a name="l02417"></a><span class="lineno"> 2417</span>&#160;        (registration_committee_exclude_member)</div>
-<div class="line"><a name="l02418"></a><span class="lineno"> 2418</span>&#160;        (list_registration_committee)</div>
-<div class="line"><a name="l02419"></a><span class="lineno"> 2419</span>&#160;        (registration_committee_change_add_member_quorum)</div>
-<div class="line"><a name="l02420"></a><span class="lineno"> 2420</span>&#160;        (registration_committee_change_exclude_member_quorum)</div>
-<div class="line"><a name="l02421"></a><span class="lineno"> 2421</span>&#160;        (registration_committee_change_base_quorum)</div>
-<div class="line"><a name="l02422"></a><span class="lineno"> 2422</span>&#160;        (get_registration_committee)</div>
-<div class="line"><a name="l02423"></a><span class="lineno"> 2423</span>&#160;        (list_proposals)</div>
-<div class="line"><a name="l02424"></a><span class="lineno"> 2424</span>&#160;        (get_devcommittee_history)</div>
-<div class="line"><a name="l02425"></a><span class="lineno"> 2425</span>&#160;        (get_devcommittee_scr_to_scr_transfers)</div>
-<div class="line"><a name="l02426"></a><span class="lineno"> 2426</span>&#160;        (get_devcommittee_sp_to_scr_transfers)</div>
-<div class="line"><a name="l02427"></a><span class="lineno"> 2427</span>&#160; </div>
-<div class="line"><a name="l02429"></a><span class="lineno"> 2429</span>&#160;        (development_committee_add_member)</div>
-<div class="line"><a name="l02430"></a><span class="lineno"> 2430</span>&#160;        (development_committee_exclude_member)</div>
-<div class="line"><a name="l02431"></a><span class="lineno"> 2431</span>&#160;        (list_development_committee)</div>
-<div class="line"><a name="l02432"></a><span class="lineno"> 2432</span>&#160;        (development_committee_change_add_member_quorum)</div>
-<div class="line"><a name="l02433"></a><span class="lineno"> 2433</span>&#160;        (development_committee_change_exclude_member_quorum)</div>
-<div class="line"><a name="l02434"></a><span class="lineno"> 2434</span>&#160;        (development_committee_change_base_quorum)</div>
-<div class="line"><a name="l02435"></a><span class="lineno"> 2435</span>&#160;        (development_committee_change_transfer_quorum)</div>
-<div class="line"><a name="l02436"></a><span class="lineno"> 2436</span>&#160;        (development_committee_change_budget_auction_properties_quorum)</div>
-<div class="line"><a name="l02437"></a><span class="lineno"> 2437</span>&#160;        (development_committee_change_advertising_moderator_quorum)</div>
-<div class="line"><a name="l02438"></a><span class="lineno"> 2438</span>&#160;        (development_committee_change_betting_moderator_quorum)</div>
-<div class="line"><a name="l02439"></a><span class="lineno"> 2439</span>&#160;        (development_committee_empower_advertising_moderator)</div>
-<div class="line"><a name="l02440"></a><span class="lineno"> 2440</span>&#160;        (development_committee_empower_betting_moderator)</div>
-<div class="line"><a name="l02441"></a><span class="lineno"> 2441</span>&#160;        (development_committee_change_betting_resolve_delay)</div>
-<div class="line"><a name="l02442"></a><span class="lineno"> 2442</span>&#160;        (get_development_committee)</div>
-<div class="line"><a name="l02443"></a><span class="lineno"> 2443</span>&#160;        (development_pool_transfer)</div>
-<div class="line"><a name="l02444"></a><span class="lineno"> 2444</span>&#160;        (development_pool_withdraw_vesting)</div>
-<div class="line"><a name="l02445"></a><span class="lineno"> 2445</span>&#160;        (development_pool_post_budgets_auction_properties)</div>
-<div class="line"><a name="l02446"></a><span class="lineno"> 2446</span>&#160;        (development_pool_banner_budgets_auction_properties)</div>
-<div class="line"><a name="l02447"></a><span class="lineno"> 2447</span>&#160; </div>
-<div class="line"><a name="l02449"></a><span class="lineno"> 2449</span>&#160;        (atomicswap_initiate)</div>
-<div class="line"><a name="l02450"></a><span class="lineno"> 2450</span>&#160;        (atomicswap_participate)</div>
-<div class="line"><a name="l02451"></a><span class="lineno"> 2451</span>&#160;        (atomicswap_redeem)</div>
-<div class="line"><a name="l02452"></a><span class="lineno"> 2452</span>&#160;        (atomicswap_auditcontract)</div>
-<div class="line"><a name="l02453"></a><span class="lineno"> 2453</span>&#160;        (atomicswap_extractsecret)</div>
-<div class="line"><a name="l02454"></a><span class="lineno"> 2454</span>&#160;        (atomicswap_refund)</div>
-<div class="line"><a name="l02455"></a><span class="lineno"> 2455</span>&#160;        (get_atomicswap_contracts)</div>
-<div class="line"><a name="l02456"></a><span class="lineno"> 2456</span>&#160; </div>
-<div class="line"><a name="l02458"></a><span class="lineno"> 2458</span>&#160;        (create_game)</div>
-<div class="line"><a name="l02459"></a><span class="lineno"> 2459</span>&#160;        (cancel_game)</div>
-<div class="line"><a name="l02460"></a><span class="lineno"> 2460</span>&#160;        (update_game_markets)</div>
-<div class="line"><a name="l02461"></a><span class="lineno"> 2461</span>&#160;        (update_game_start_time)</div>
-<div class="line"><a name="l02462"></a><span class="lineno"> 2462</span>&#160;        (post_game_results)</div>
-<div class="line"><a name="l02463"></a><span class="lineno"> 2463</span>&#160;        (post_bet)</div>
-<div class="line"><a name="l02464"></a><span class="lineno"> 2464</span>&#160;        (cancel_pending_bets)</div>
-<div class="line"><a name="l02465"></a><span class="lineno"> 2465</span>&#160; </div>
-<div class="line"><a name="l02466"></a><span class="lineno"> 2466</span>&#160;        (get_games_by_status)</div>
-<div class="line"><a name="l02467"></a><span class="lineno"> 2467</span>&#160;        (get_games_by_uuids)</div>
-<div class="line"><a name="l02468"></a><span class="lineno"> 2468</span>&#160;        (lookup_games_by_id)</div>
-<div class="line"><a name="l02469"></a><span class="lineno"> 2469</span>&#160;        (lookup_matched_bets)</div>
-<div class="line"><a name="l02470"></a><span class="lineno"> 2470</span>&#160;        (lookup_pending_bets)</div>
-<div class="line"><a name="l02471"></a><span class="lineno"> 2471</span>&#160;        (get_matched_bets)</div>
-<div class="line"><a name="l02472"></a><span class="lineno"> 2472</span>&#160;        (get_pending_bets)</div>
-<div class="line"><a name="l02473"></a><span class="lineno"> 2473</span>&#160;        (get_betting_properties)</div>
-<div class="line"><a name="l02474"></a><span class="lineno"> 2474</span>&#160;        (get_game_returns)</div>
-<div class="line"><a name="l02475"></a><span class="lineno"> 2475</span>&#160;        (get_game_winners)</div>
-<div class="line"><a name="l02476"></a><span class="lineno"> 2476</span>&#160;        (get_game_matched_bets)</div>
-<div class="line"><a name="l02477"></a><span class="lineno"> 2477</span>&#160;        (get_game_pending_bets)</div>
-<div class="line"><a name="l02478"></a><span class="lineno"> 2478</span>&#160; </div>
-<div class="line"><a name="l02480"></a><span class="lineno"> 2480</span>&#160;        (create_nft)</div>
-<div class="line"><a name="l02481"></a><span class="lineno"> 2481</span>&#160;        (update_nft_meta)</div>
-<div class="line"><a name="l02482"></a><span class="lineno"> 2482</span>&#160;        (adjust_nft_experience)</div>
-<div class="line"><a name="l02483"></a><span class="lineno"> 2483</span>&#160;        (get_nft_by_id)</div>
-<div class="line"><a name="l02484"></a><span class="lineno"> 2484</span>&#160;        (get_nft_by_name)</div>
-<div class="line"><a name="l02485"></a><span class="lineno"> 2485</span>&#160;        (get_nft_by_uuid)</div>
-<div class="line"><a name="l02486"></a><span class="lineno"> 2486</span>&#160;        (lookup_nft)</div>
-<div class="line"><a name="l02487"></a><span class="lineno"> 2487</span>&#160; </div>
-<div class="line"><a name="l02488"></a><span class="lineno"> 2488</span>&#160;        (create_game_round)</div>
-<div class="line"><a name="l02489"></a><span class="lineno"> 2489</span>&#160;        (update_game_round_result)</div>
-<div class="line"><a name="l02490"></a><span class="lineno"> 2490</span>&#160;        (get_game_round_by_uuid)</div>
-<div class="line"><a name="l02491"></a><span class="lineno"> 2491</span>&#160;        (lookup_game_round)</div>
-<div class="line"><a name="l02492"></a><span class="lineno"> 2492</span>&#160; </div>
-<div class="line"><a name="l02494"></a><span class="lineno"> 2494</span>&#160;        (get_prototype_operation)</div>
-<div class="line"><a name="l02495"></a><span class="lineno"> 2495</span>&#160;        (serialize_transaction)</div>
-<div class="line"><a name="l02496"></a><span class="lineno"> 2496</span>&#160;        (sign_transaction)</div>
-<div class="line"><a name="l02497"></a><span class="lineno"> 2497</span>&#160; </div>
-<div class="line"><a name="l02498"></a><span class="lineno"> 2498</span>&#160;        (network_add_nodes)</div>
-<div class="line"><a name="l02499"></a><span class="lineno"> 2499</span>&#160;        (network_get_connected_peers)</div>
-<div class="line"><a name="l02500"></a><span class="lineno"> 2500</span>&#160;      )</div>
-<div class="line"><a name="l02501"></a><span class="lineno"> 2501</span>&#160; </div>
-<div class="line"><a name="l02502"></a><span class="lineno"> 2502</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1memo__data.html">scorum::wallet::memo_data</a>, (from)(to)(nonce)(check)(encrypted) )</div>
-<div class="line"><a name="l02503"></a><span class="lineno"> 2503</span>&#160; </div>
-<div class="line"><a name="l02504"></a><span class="lineno"> 2504</span>&#160;<span class="comment">// clang-format on</span></div>
+<div class="line"><a name="l02327"></a><span class="lineno"> 2327</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1brain__key__info.html">scorum::wallet::brain_key_info</a>, (brain_priv_key)(wif_priv_key) (pub_key))</div>
+<div class="line"><a name="l02328"></a><span class="lineno"> 2328</span>&#160; </div>
+<div class="line"><a name="l02329"></a><span class="lineno"> 2329</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html">scorum::wallet::plain_keys</a>, (checksum)(keys) )</div>
+<div class="line"><a name="l02330"></a><span class="lineno"> 2330</span>&#160; </div>
+<div class="line"><a name="l02331"></a><span class="lineno"> 2331</span>&#160;<a class="code" href="game__status_8hpp.html#a35075ecd8577f1bc09a3d2f77fc11356">FC_REFLECT_ENUM</a>( <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9">scorum::wallet::authority_type</a>, (<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>)(<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9a528a6948edb442e9b924d9495822095e">active</a>)(<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9a0d7ddd918611a27fc583188be6f46d65">posting</a>) )</div>
+<div class="line"><a name="l02332"></a><span class="lineno"> 2332</span>&#160; </div>
+<div class="line"><a name="l02333"></a><span class="lineno"> 2333</span>&#160;FC_API( <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html">scorum::wallet::wallet_api</a>,</div>
+<div class="line"><a name="l02335"></a><span class="lineno"> 2335</span>&#160;        (help)(gethelp)</div>
+<div class="line"><a name="l02336"></a><span class="lineno"> 2336</span>&#160;        (about)(is_new)(is_locked)(lock)(unlock)(set_password)</div>
+<div class="line"><a name="l02337"></a><span class="lineno"> 2337</span>&#160;        (load_wallet_file)(save_wallet_file)(exit)</div>
+<div class="line"><a name="l02338"></a><span class="lineno"> 2338</span>&#160; </div>
+<div class="line"><a name="l02340"></a><span class="lineno"> 2340</span>&#160;        (import_key)</div>
+<div class="line"><a name="l02341"></a><span class="lineno"> 2341</span>&#160;        (<a class="code" href="namespacescorum_1_1wallet.html#a4a596fb2403c99756dd499d4946b108c">suggest_brain_key</a>)</div>
+<div class="line"><a name="l02342"></a><span class="lineno"> 2342</span>&#160;        (list_keys)</div>
+<div class="line"><a name="l02343"></a><span class="lineno"> 2343</span>&#160;        (get_private_key)</div>
+<div class="line"><a name="l02344"></a><span class="lineno"> 2344</span>&#160;        (get_private_key_from_password)</div>
+<div class="line"><a name="l02345"></a><span class="lineno"> 2345</span>&#160;        (<a class="code" href="namespacescorum_1_1wallet.html#af083e484f1f52ed3ab0493bf0f21b8e0">normalize_brain_key</a>)</div>
+<div class="line"><a name="l02346"></a><span class="lineno"> 2346</span>&#160; </div>
+<div class="line"><a name="l02348"></a><span class="lineno"> 2348</span>&#160;        (get_block_header)</div>
+<div class="line"><a name="l02349"></a><span class="lineno"> 2349</span>&#160;        (get_block)</div>
+<div class="line"><a name="l02350"></a><span class="lineno"> 2350</span>&#160;        (get_block_headers_history)</div>
+<div class="line"><a name="l02351"></a><span class="lineno"> 2351</span>&#160;        (get_blocks_history)</div>
+<div class="line"><a name="l02352"></a><span class="lineno"> 2352</span>&#160;        (get_ops_in_block)</div>
+<div class="line"><a name="l02353"></a><span class="lineno"> 2353</span>&#160;        (get_ops_history)</div>
+<div class="line"><a name="l02354"></a><span class="lineno"> 2354</span>&#160;        (get_ops_history_by_time)</div>
+<div class="line"><a name="l02355"></a><span class="lineno"> 2355</span>&#160;        (get_transaction)</div>
+<div class="line"><a name="l02356"></a><span class="lineno"> 2356</span>&#160; </div>
+<div class="line"><a name="l02358"></a><span class="lineno"> 2358</span>&#160;        (info)</div>
+<div class="line"><a name="l02359"></a><span class="lineno"> 2359</span>&#160;        (get_chain_capital)</div>
+<div class="line"><a name="l02360"></a><span class="lineno"> 2360</span>&#160;        (get_active_witnesses)</div>
+<div class="line"><a name="l02361"></a><span class="lineno"> 2361</span>&#160;        (list_my_accounts)</div>
+<div class="line"><a name="l02362"></a><span class="lineno"> 2362</span>&#160;        (list_accounts)</div>
+<div class="line"><a name="l02363"></a><span class="lineno"> 2363</span>&#160;        (list_witnesses)</div>
+<div class="line"><a name="l02364"></a><span class="lineno"> 2364</span>&#160;        (get_witness)</div>
+<div class="line"><a name="l02365"></a><span class="lineno"> 2365</span>&#160;        (get_account)</div>
+<div class="line"><a name="l02366"></a><span class="lineno"> 2366</span>&#160;        (get_account_balance)</div>
+<div class="line"><a name="l02367"></a><span class="lineno"> 2367</span>&#160;        (get_account_history)</div>
+<div class="line"><a name="l02368"></a><span class="lineno"> 2368</span>&#160;        (get_account_scr_to_scr_transfers)</div>
+<div class="line"><a name="l02369"></a><span class="lineno"> 2369</span>&#160;        (get_account_scr_to_sp_transfers)</div>
+<div class="line"><a name="l02370"></a><span class="lineno"> 2370</span>&#160;        (get_account_sp_to_scr_transfers)</div>
+<div class="line"><a name="l02371"></a><span class="lineno"> 2371</span>&#160;        (get_withdraw_routes)</div>
+<div class="line"><a name="l02372"></a><span class="lineno"> 2372</span>&#160;        (get_owner_history)</div>
+<div class="line"><a name="l02373"></a><span class="lineno"> 2373</span>&#160;        (get_encrypted_memo)</div>
+<div class="line"><a name="l02374"></a><span class="lineno"> 2374</span>&#160; </div>
+<div class="line"><a name="l02375"></a><span class="lineno"> 2375</span>&#160;        (create_account)</div>
+<div class="line"><a name="l02376"></a><span class="lineno"> 2376</span>&#160;        (create_account_with_keys)</div>
+<div class="line"><a name="l02377"></a><span class="lineno"> 2377</span>&#160;        (create_account_delegated)</div>
+<div class="line"><a name="l02378"></a><span class="lineno"> 2378</span>&#160;        (create_account_with_keys_delegated)</div>
+<div class="line"><a name="l02379"></a><span class="lineno"> 2379</span>&#160;        (create_account_by_committee)</div>
+<div class="line"><a name="l02380"></a><span class="lineno"> 2380</span>&#160;        (create_account_by_committee_with_keys)</div>
+<div class="line"><a name="l02381"></a><span class="lineno"> 2381</span>&#160;        (update_account)</div>
+<div class="line"><a name="l02382"></a><span class="lineno"> 2382</span>&#160;        (update_account_auth_key)</div>
+<div class="line"><a name="l02383"></a><span class="lineno"> 2383</span>&#160;        (update_account_auth_account)</div>
+<div class="line"><a name="l02384"></a><span class="lineno"> 2384</span>&#160;        (update_account_auth_threshold)</div>
+<div class="line"><a name="l02385"></a><span class="lineno"> 2385</span>&#160;        (update_account_meta)</div>
+<div class="line"><a name="l02386"></a><span class="lineno"> 2386</span>&#160;        (update_account_memo_key)</div>
+<div class="line"><a name="l02387"></a><span class="lineno"> 2387</span>&#160;        (delegate_scorumpower)</div>
+<div class="line"><a name="l02388"></a><span class="lineno"> 2388</span>&#160;        (delegate_scorumpower_from_reg_pool)</div>
+<div class="line"><a name="l02389"></a><span class="lineno"> 2389</span>&#160;        (update_witness)</div>
+<div class="line"><a name="l02390"></a><span class="lineno"> 2390</span>&#160;        (set_voting_proxy)</div>
+<div class="line"><a name="l02391"></a><span class="lineno"> 2391</span>&#160;        (vote_for_witness)</div>
+<div class="line"><a name="l02392"></a><span class="lineno"> 2392</span>&#160;        (transfer)</div>
+<div class="line"><a name="l02393"></a><span class="lineno"> 2393</span>&#160;        (escrow_transfer)</div>
+<div class="line"><a name="l02394"></a><span class="lineno"> 2394</span>&#160;        (escrow_approve)</div>
+<div class="line"><a name="l02395"></a><span class="lineno"> 2395</span>&#160;        (escrow_dispute)</div>
+<div class="line"><a name="l02396"></a><span class="lineno"> 2396</span>&#160;        (escrow_release)</div>
+<div class="line"><a name="l02397"></a><span class="lineno"> 2397</span>&#160;        (transfer_to_scorumpower)</div>
+<div class="line"><a name="l02398"></a><span class="lineno"> 2398</span>&#160;        (withdraw_scorumpower)</div>
+<div class="line"><a name="l02399"></a><span class="lineno"> 2399</span>&#160;        (set_withdraw_scorumpower_route)</div>
+<div class="line"><a name="l02400"></a><span class="lineno"> 2400</span>&#160;        (post_comment)</div>
+<div class="line"><a name="l02401"></a><span class="lineno"> 2401</span>&#160;        (vote)</div>
+<div class="line"><a name="l02402"></a><span class="lineno"> 2402</span>&#160;        (set_transaction_expiration)</div>
+<div class="line"><a name="l02403"></a><span class="lineno"> 2403</span>&#160;        (challenge)</div>
+<div class="line"><a name="l02404"></a><span class="lineno"> 2404</span>&#160;        (prove)</div>
+<div class="line"><a name="l02405"></a><span class="lineno"> 2405</span>&#160;        (request_account_recovery)</div>
+<div class="line"><a name="l02406"></a><span class="lineno"> 2406</span>&#160;        (recover_account)</div>
+<div class="line"><a name="l02407"></a><span class="lineno"> 2407</span>&#160;        (change_recovery_account)</div>
+<div class="line"><a name="l02408"></a><span class="lineno"> 2408</span>&#160;        (decrypt_memo)</div>
+<div class="line"><a name="l02409"></a><span class="lineno"> 2409</span>&#160;        (decline_voting_rights)</div>
+<div class="line"><a name="l02410"></a><span class="lineno"> 2410</span>&#160; </div>
+<div class="line"><a name="l02412"></a><span class="lineno"> 2412</span>&#160;        (create_budget_for_post)</div>
+<div class="line"><a name="l02413"></a><span class="lineno"> 2413</span>&#160;        (create_budget_for_banner)</div>
+<div class="line"><a name="l02414"></a><span class="lineno"> 2414</span>&#160;        (update_budget_for_banner)</div>
+<div class="line"><a name="l02415"></a><span class="lineno"> 2415</span>&#160;        (update_budget_for_post)</div>
+<div class="line"><a name="l02416"></a><span class="lineno"> 2416</span>&#160;        (close_budget_for_post)</div>
+<div class="line"><a name="l02417"></a><span class="lineno"> 2417</span>&#160;        (close_budget_for_banner)</div>
+<div class="line"><a name="l02418"></a><span class="lineno"> 2418</span>&#160;        (close_budget_for_post_by_moderator)</div>
+<div class="line"><a name="l02419"></a><span class="lineno"> 2419</span>&#160;        (close_budget_for_banner_by_moderator)</div>
+<div class="line"><a name="l02420"></a><span class="lineno"> 2420</span>&#160;        (list_my_budgets)</div>
+<div class="line"><a name="l02421"></a><span class="lineno"> 2421</span>&#160;        (list_post_budget_owners)</div>
+<div class="line"><a name="l02422"></a><span class="lineno"> 2422</span>&#160;        (list_banner_budget_owners)</div>
+<div class="line"><a name="l02423"></a><span class="lineno"> 2423</span>&#160;        (get_post_budgets)</div>
+<div class="line"><a name="l02424"></a><span class="lineno"> 2424</span>&#160;        (get_banner_budgets)</div>
+<div class="line"><a name="l02425"></a><span class="lineno"> 2425</span>&#160; </div>
+<div class="line"><a name="l02427"></a><span class="lineno"> 2427</span>&#160;        (vote_for_committee_proposal)</div>
+<div class="line"><a name="l02428"></a><span class="lineno"> 2428</span>&#160;        (registration_committee_add_member)</div>
+<div class="line"><a name="l02429"></a><span class="lineno"> 2429</span>&#160;        (registration_committee_exclude_member)</div>
+<div class="line"><a name="l02430"></a><span class="lineno"> 2430</span>&#160;        (list_registration_committee)</div>
+<div class="line"><a name="l02431"></a><span class="lineno"> 2431</span>&#160;        (registration_committee_change_add_member_quorum)</div>
+<div class="line"><a name="l02432"></a><span class="lineno"> 2432</span>&#160;        (registration_committee_change_exclude_member_quorum)</div>
+<div class="line"><a name="l02433"></a><span class="lineno"> 2433</span>&#160;        (registration_committee_change_base_quorum)</div>
+<div class="line"><a name="l02434"></a><span class="lineno"> 2434</span>&#160;        (get_registration_committee)</div>
+<div class="line"><a name="l02435"></a><span class="lineno"> 2435</span>&#160;        (list_proposals)</div>
+<div class="line"><a name="l02436"></a><span class="lineno"> 2436</span>&#160;        (get_devcommittee_history)</div>
+<div class="line"><a name="l02437"></a><span class="lineno"> 2437</span>&#160;        (get_devcommittee_scr_to_scr_transfers)</div>
+<div class="line"><a name="l02438"></a><span class="lineno"> 2438</span>&#160;        (get_devcommittee_sp_to_scr_transfers)</div>
+<div class="line"><a name="l02439"></a><span class="lineno"> 2439</span>&#160; </div>
+<div class="line"><a name="l02441"></a><span class="lineno"> 2441</span>&#160;        (development_committee_add_member)</div>
+<div class="line"><a name="l02442"></a><span class="lineno"> 2442</span>&#160;        (development_committee_exclude_member)</div>
+<div class="line"><a name="l02443"></a><span class="lineno"> 2443</span>&#160;        (list_development_committee)</div>
+<div class="line"><a name="l02444"></a><span class="lineno"> 2444</span>&#160;        (development_committee_change_add_member_quorum)</div>
+<div class="line"><a name="l02445"></a><span class="lineno"> 2445</span>&#160;        (development_committee_change_exclude_member_quorum)</div>
+<div class="line"><a name="l02446"></a><span class="lineno"> 2446</span>&#160;        (development_committee_change_base_quorum)</div>
+<div class="line"><a name="l02447"></a><span class="lineno"> 2447</span>&#160;        (development_committee_change_transfer_quorum)</div>
+<div class="line"><a name="l02448"></a><span class="lineno"> 2448</span>&#160;        (development_committee_change_budget_auction_properties_quorum)</div>
+<div class="line"><a name="l02449"></a><span class="lineno"> 2449</span>&#160;        (development_committee_change_advertising_moderator_quorum)</div>
+<div class="line"><a name="l02450"></a><span class="lineno"> 2450</span>&#160;        (development_committee_change_betting_moderator_quorum)</div>
+<div class="line"><a name="l02451"></a><span class="lineno"> 2451</span>&#160;        (development_committee_empower_advertising_moderator)</div>
+<div class="line"><a name="l02452"></a><span class="lineno"> 2452</span>&#160;        (development_committee_empower_betting_moderator)</div>
+<div class="line"><a name="l02453"></a><span class="lineno"> 2453</span>&#160;        (development_committee_change_betting_resolve_delay)</div>
+<div class="line"><a name="l02454"></a><span class="lineno"> 2454</span>&#160;        (get_development_committee)</div>
+<div class="line"><a name="l02455"></a><span class="lineno"> 2455</span>&#160;        (development_pool_transfer)</div>
+<div class="line"><a name="l02456"></a><span class="lineno"> 2456</span>&#160;        (development_pool_withdraw_vesting)</div>
+<div class="line"><a name="l02457"></a><span class="lineno"> 2457</span>&#160;        (development_pool_post_budgets_auction_properties)</div>
+<div class="line"><a name="l02458"></a><span class="lineno"> 2458</span>&#160;        (development_pool_banner_budgets_auction_properties)</div>
+<div class="line"><a name="l02459"></a><span class="lineno"> 2459</span>&#160; </div>
+<div class="line"><a name="l02461"></a><span class="lineno"> 2461</span>&#160;        (atomicswap_initiate)</div>
+<div class="line"><a name="l02462"></a><span class="lineno"> 2462</span>&#160;        (atomicswap_participate)</div>
+<div class="line"><a name="l02463"></a><span class="lineno"> 2463</span>&#160;        (atomicswap_redeem)</div>
+<div class="line"><a name="l02464"></a><span class="lineno"> 2464</span>&#160;        (atomicswap_auditcontract)</div>
+<div class="line"><a name="l02465"></a><span class="lineno"> 2465</span>&#160;        (atomicswap_extractsecret)</div>
+<div class="line"><a name="l02466"></a><span class="lineno"> 2466</span>&#160;        (atomicswap_refund)</div>
+<div class="line"><a name="l02467"></a><span class="lineno"> 2467</span>&#160;        (get_atomicswap_contracts)</div>
+<div class="line"><a name="l02468"></a><span class="lineno"> 2468</span>&#160; </div>
+<div class="line"><a name="l02470"></a><span class="lineno"> 2470</span>&#160;        (create_game)</div>
+<div class="line"><a name="l02471"></a><span class="lineno"> 2471</span>&#160;        (cancel_game)</div>
+<div class="line"><a name="l02472"></a><span class="lineno"> 2472</span>&#160;        (update_game_markets)</div>
+<div class="line"><a name="l02473"></a><span class="lineno"> 2473</span>&#160;        (update_game_start_time)</div>
+<div class="line"><a name="l02474"></a><span class="lineno"> 2474</span>&#160;        (post_game_results)</div>
+<div class="line"><a name="l02475"></a><span class="lineno"> 2475</span>&#160;        (post_bet)</div>
+<div class="line"><a name="l02476"></a><span class="lineno"> 2476</span>&#160;        (cancel_pending_bets)</div>
+<div class="line"><a name="l02477"></a><span class="lineno"> 2477</span>&#160; </div>
+<div class="line"><a name="l02478"></a><span class="lineno"> 2478</span>&#160;        (get_games_by_status)</div>
+<div class="line"><a name="l02479"></a><span class="lineno"> 2479</span>&#160;        (get_games_by_uuids)</div>
+<div class="line"><a name="l02480"></a><span class="lineno"> 2480</span>&#160;        (lookup_games_by_id)</div>
+<div class="line"><a name="l02481"></a><span class="lineno"> 2481</span>&#160;        (lookup_matched_bets)</div>
+<div class="line"><a name="l02482"></a><span class="lineno"> 2482</span>&#160;        (lookup_pending_bets)</div>
+<div class="line"><a name="l02483"></a><span class="lineno"> 2483</span>&#160;        (get_matched_bets)</div>
+<div class="line"><a name="l02484"></a><span class="lineno"> 2484</span>&#160;        (get_pending_bets)</div>
+<div class="line"><a name="l02485"></a><span class="lineno"> 2485</span>&#160;        (get_betting_properties)</div>
+<div class="line"><a name="l02486"></a><span class="lineno"> 2486</span>&#160;        (get_game_returns)</div>
+<div class="line"><a name="l02487"></a><span class="lineno"> 2487</span>&#160;        (get_game_winners)</div>
+<div class="line"><a name="l02488"></a><span class="lineno"> 2488</span>&#160;        (get_game_matched_bets)</div>
+<div class="line"><a name="l02489"></a><span class="lineno"> 2489</span>&#160;        (get_game_pending_bets)</div>
+<div class="line"><a name="l02490"></a><span class="lineno"> 2490</span>&#160; </div>
+<div class="line"><a name="l02492"></a><span class="lineno"> 2492</span>&#160;        (create_nft)</div>
+<div class="line"><a name="l02493"></a><span class="lineno"> 2493</span>&#160;        (update_nft_meta)</div>
+<div class="line"><a name="l02494"></a><span class="lineno"> 2494</span>&#160;        (adjust_nft_experience)</div>
+<div class="line"><a name="l02495"></a><span class="lineno"> 2495</span>&#160;        (update_nft_name)</div>
+<div class="line"><a name="l02496"></a><span class="lineno"> 2496</span>&#160;        (get_nft_by_id)</div>
+<div class="line"><a name="l02497"></a><span class="lineno"> 2497</span>&#160;        (get_nft_by_name)</div>
+<div class="line"><a name="l02498"></a><span class="lineno"> 2498</span>&#160;        (get_nft_by_uuid)</div>
+<div class="line"><a name="l02499"></a><span class="lineno"> 2499</span>&#160;        (lookup_nft)</div>
+<div class="line"><a name="l02500"></a><span class="lineno"> 2500</span>&#160; </div>
+<div class="line"><a name="l02501"></a><span class="lineno"> 2501</span>&#160;        (create_game_round)</div>
+<div class="line"><a name="l02502"></a><span class="lineno"> 2502</span>&#160;        (update_game_round_result)</div>
+<div class="line"><a name="l02503"></a><span class="lineno"> 2503</span>&#160;        (get_game_round_by_uuid)</div>
+<div class="line"><a name="l02504"></a><span class="lineno"> 2504</span>&#160;        (lookup_game_round)</div>
+<div class="line"><a name="l02505"></a><span class="lineno"> 2505</span>&#160; </div>
+<div class="line"><a name="l02507"></a><span class="lineno"> 2507</span>&#160;        (get_prototype_operation)</div>
+<div class="line"><a name="l02508"></a><span class="lineno"> 2508</span>&#160;        (serialize_transaction)</div>
+<div class="line"><a name="l02509"></a><span class="lineno"> 2509</span>&#160;        (sign_transaction)</div>
+<div class="line"><a name="l02510"></a><span class="lineno"> 2510</span>&#160; </div>
+<div class="line"><a name="l02511"></a><span class="lineno"> 2511</span>&#160;        (network_add_nodes)</div>
+<div class="line"><a name="l02512"></a><span class="lineno"> 2512</span>&#160;        (network_get_connected_peers)</div>
+<div class="line"><a name="l02513"></a><span class="lineno"> 2513</span>&#160;      )</div>
+<div class="line"><a name="l02514"></a><span class="lineno"> 2514</span>&#160; </div>
+<div class="line"><a name="l02515"></a><span class="lineno"> 2515</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1memo__data.html">scorum::wallet::memo_data</a>, (from)(to)(nonce)(check)(encrypted) )</div>
+<div class="line"><a name="l02516"></a><span class="lineno"> 2516</span>&#160; </div>
+<div class="line"><a name="l02517"></a><span class="lineno"> 2517</span>&#160;<span class="comment">// clang-format on</span></div>
 <div class="ttc" id="aapi_8hpp_html"><div class="ttname"><a href="api_8hpp.html">api.hpp</a></div></div>
 <div class="ttc" id="aapi__objects_8hpp_html"><div class="ttname"><a href="api__objects_8hpp.html">api_objects.hpp</a></div></div>
 <div class="ttc" id="aapplied__operation_8hpp_html"><div class="ttname"><a href="applied__operation_8hpp.html">applied_operation.hpp</a></div></div>
@@ -1002,7 +1007,7 @@ $(function() {
 <div class="ttc" id="aclassscorum_1_1protocol_1_1odds_html"><div class="ttname"><a href="classscorum_1_1protocol_1_1odds.html">scorum::protocol::odds</a></div><div class="ttdef"><b>Definition:</b> <a href="odds_8hpp_source.html#l00013">odds.hpp:14</a></div></div>
 <div class="ttc" id="aclassscorum_1_1wallet_1_1wallet__api_html"><div class="ttname"><a href="classscorum_1_1wallet_1_1wallet__api.html">scorum::wallet::wallet_api</a></div><div class="ttdoc">Wallet.</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00106">wallet.hpp:107</a></div></div>
 <div class="ttc" id="aclassscorum_1_1wallet_1_1wallet__api_html_a08c93f4a6938b83e67b0f74f9a822075"><div class="ttname"><a href="classscorum_1_1wallet_1_1wallet__api.html#a08c93f4a6938b83e67b0f74f9a822075">scorum::wallet::wallet_api::exit_func_type</a></div><div class="ttdeci">std::function&lt; void()&gt; exit_func_type</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00112">wallet.hpp:112</a></div></div>
-<div class="ttc" id="aclassscorum_1_1wallet_1_1wallet__api_html_a706eb23f8e28354d69d71cca2dbb00b3"><div class="ttname"><a href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3">scorum::wallet::wallet_api::lock_changed</a></div><div class="ttdeci">fc::signal&lt; void(bool)&gt; lock_changed</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02291">wallet.hpp:2291</a></div></div>
+<div class="ttc" id="aclassscorum_1_1wallet_1_1wallet__api_html_a706eb23f8e28354d69d71cca2dbb00b3"><div class="ttname"><a href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3">scorum::wallet::wallet_api::lock_changed</a></div><div class="ttdeci">fc::signal&lt; void(bool)&gt; lock_changed</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02303">wallet.hpp:2303</a></div></div>
 <div class="ttc" id="agame__status_8hpp_html_a35075ecd8577f1bc09a3d2f77fc11356"><div class="ttname"><a href="game__status_8hpp.html#a35075ecd8577f1bc09a3d2f77fc11356">FC_REFLECT_ENUM</a></div><div class="ttdeci">FC_REFLECT_ENUM(scorum::protocol::game_status,(created)(started)(finished)(resolved)(expired)(cancelled)) namespace fc</div><div class="ttdef"><b>Definition:</b> <a href="game__status_8hpp_source.html#l00018">game_status.hpp:18</a></div></div>
 <div class="ttc" id="alog__configurator_8cpp_html_a3e65f567515582b2a7c38541e6884771"><div class="ttname"><a href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a></div><div class="ttdeci">FC_REFLECT(appender_args,(appender)(stream)) FC_REFLECT_DERIVED(file_appender_args</div></div>
 <div class="ttc" id="anamespacescorum_1_1app_html"><div class="ttname"><a href="namespacescorum_1_1app.html">scorum::app</a></div><div class="ttdef"><b>Definition:</b> <a href="advertising__api_8cpp_source.html#l00005">advertising_api.cpp:5</a></div></div>
@@ -1010,11 +1015,11 @@ $(function() {
 <div class="ttc" id="anamespacescorum_1_1blockchain__history_html_a38b12691cdd1973f20cab91cfb346a8b"><div class="ttname"><a href="namespacescorum_1_1blockchain__history.html#a38b12691cdd1973f20cab91cfb346a8b">scorum::blockchain_history::applied_operation_type</a></div><div class="ttdeci">applied_operation_type</div><div class="ttdef"><b>Definition:</b> <a href="applied__operation_8hpp_source.html#l00042">applied_operation.hpp:43</a></div></div>
 <div class="ttc" id="anamespacescorum_1_1chain_html"><div class="ttname"><a href="namespacescorum_1_1chain.html">scorum::chain</a></div><div class="ttdef"><b>Definition:</b> <a href="advertising__auction_8cpp_source.html#l00016">advertising_auction.cpp:16</a></div></div>
 <div class="ttc" id="anamespacescorum_1_1protocol_html_a224e2da0813ee0570795e51b0c48121e"><div class="ttname"><a href="namespacescorum_1_1protocol.html#a224e2da0813ee0570795e51b0c48121e">scorum::protocol::transaction_id_type</a></div><div class="ttdeci">fc::ripemd160 transaction_id_type</div><div class="ttdef"><b>Definition:</b> <a href="types_8hpp_source.html#l00065">types.hpp:65</a></div></div>
+<div class="ttc" id="anamespacescorum_1_1protocol_html_a2f24a63886e094d21c565098f4492abf"><div class="ttname"><a href="namespacescorum_1_1protocol.html#a2f24a63886e094d21c565098f4492abf">scorum::protocol::operation</a></div><div class="ttdeci">fc::static_variant&lt; vote_operation, comment_operation, transfer_operation, transfer_to_scorumpower_operation, withdraw_scorumpower_operation, account_create_by_committee_operation, account_create_operation, account_create_with_delegation_operation, account_update_operation, witness_update_operation, account_witness_vote_operation, account_witness_proxy_operation, delete_comment_operation, comment_options_operation, set_withdraw_scorumpower_route_to_account_operation, set_withdraw_scorumpower_route_to_dev_pool_operation, prove_authority_operation, request_account_recovery_operation, recover_account_operation, change_recovery_account_operation, escrow_approve_operation, escrow_dispute_operation, escrow_release_operation, escrow_transfer_operation, decline_voting_rights_operation, delegate_scorumpower_operation, create_budget_operation, close_budget_operation, proposal_vote_operation, proposal_create_operation, atomicswap_initiate_operation, atomicswap_redeem_operation, atomicswap_refund_operation, close_budget_by_advertising_moderator_operation, update_budget_operation, create_game_operation, cancel_game_operation, update_game_markets_operation, update_game_start_time_operation, post_game_results_operation, post_bet_operation, cancel_pending_bets_operation, delegate_sp_from_reg_pool_operation, create_nft_operation, update_nft_meta_operation, create_game_round_operation, update_game_round_result_operation, adjust_nft_experience_operation, update_nft_name_operation, author_reward_operation, comment_benefficiary_reward_operation, comment_payout_update_operation, comment_reward_operation, curation_reward_operation, hardfork_operation, producer_reward_operation, active_sp_holders_reward_operation, return_scorumpower_delegation_operation, shutdown_witness_operation, witness_miss_block_operation, expired_contract_refund_operation, acc_finished_vesting_withdraw_operation, devpool_finished_vesting_withdraw_operation, acc_to_acc_vesting_withdraw_operation, devpool_to_acc_vesting_withdraw_operation, acc_to_devpool_vesting_withdraw_operation, devpool_to_devpool_vesting_withdraw_operation, proposal_virtual_operation, budget_outgo_operation, budget_owner_income_operation, active_sp_holders_reward_legacy_operation, budget_closing_operation, bets_matched_operation, game_status_changed_operation, bet_resolved_operation, bet_cancelled_operation, bet_restored_operation, bet_updated_operation &gt; operation</div><div class="ttdef"><b>Definition:</b> <a href="operations_8hpp_source.html#l00013">operations.hpp:112</a></div></div>
 <div class="ttc" id="anamespacescorum_1_1protocol_html_a31347c8415fef0e6bc9edf065c152e7b"><div class="ttname"><a href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">scorum::protocol::account_name_type</a></div><div class="ttdeci">fc::fixed_string_16 account_name_type</div><div class="ttdef"><b>Definition:</b> <a href="types_8hpp_source.html#l00062">types.hpp:62</a></div></div>
 <div class="ttc" id="anamespacescorum_1_1protocol_html_a36933596612b0a5ab72097f05447c109"><div class="ttname"><a href="namespacescorum_1_1protocol.html#a36933596612b0a5ab72097f05447c109">scorum::protocol::chain_id_type</a></div><div class="ttdeci">fc::sha256 chain_id_type</div><div class="ttdef"><b>Definition:</b> <a href="types_8hpp_source.html#l00061">types.hpp:61</a></div></div>
 <div class="ttc" id="anamespacescorum_1_1protocol_html_a43589ae2b5d4cdfac56304ad546761b6"><div class="ttname"><a href="namespacescorum_1_1protocol.html#a43589ae2b5d4cdfac56304ad546761b6">scorum::protocol::authority_weight_type</a></div><div class="ttdeci">uint16_t authority_weight_type</div><div class="ttdef"><b>Definition:</b> <a href="types_8hpp_source.html#l00068">types.hpp:68</a></div></div>
 <div class="ttc" id="anamespacescorum_1_1protocol_html_a7552aa0b59772fc2d112d203403e29ba"><div class="ttname"><a href="namespacescorum_1_1protocol.html#a7552aa0b59772fc2d112d203403e29ba">scorum::protocol::wincase_type</a></div><div class="ttdeci">fc::static_variant&lt; result_home::yes, result_home::no, result_draw::yes, result_draw::no, result_away::yes, result_away::no, round_home::yes, round_home::no, handicap::over, handicap::under, correct_score_home::yes, correct_score_home::no, correct_score_draw::yes, correct_score_draw::no, correct_score_away::yes, correct_score_away::no, correct_score::yes, correct_score::no, goal_home::yes, goal_home::no, goal_both::yes, goal_both::no, goal_away::yes, goal_away::no, total::over, total::under, total_goals_home::over, total_goals_home::under, total_goals_away::over, total_goals_away::under &gt; wincase_type</div><div class="ttdef"><b>Definition:</b> <a href="market_8hpp_source.html#l00099">market.hpp:128</a></div></div>
-<div class="ttc" id="anamespacescorum_1_1protocol_html_aa2974ab07a56f55d2b12cef35764af8b"><div class="ttname"><a href="namespacescorum_1_1protocol.html#aa2974ab07a56f55d2b12cef35764af8b">scorum::protocol::operation</a></div><div class="ttdeci">fc::static_variant&lt; vote_operation, comment_operation, transfer_operation, transfer_to_scorumpower_operation, withdraw_scorumpower_operation, account_create_by_committee_operation, account_create_operation, account_create_with_delegation_operation, account_update_operation, witness_update_operation, account_witness_vote_operation, account_witness_proxy_operation, delete_comment_operation, comment_options_operation, set_withdraw_scorumpower_route_to_account_operation, set_withdraw_scorumpower_route_to_dev_pool_operation, prove_authority_operation, request_account_recovery_operation, recover_account_operation, change_recovery_account_operation, escrow_approve_operation, escrow_dispute_operation, escrow_release_operation, escrow_transfer_operation, decline_voting_rights_operation, delegate_scorumpower_operation, create_budget_operation, close_budget_operation, proposal_vote_operation, proposal_create_operation, atomicswap_initiate_operation, atomicswap_redeem_operation, atomicswap_refund_operation, close_budget_by_advertising_moderator_operation, update_budget_operation, create_game_operation, cancel_game_operation, update_game_markets_operation, update_game_start_time_operation, post_game_results_operation, post_bet_operation, cancel_pending_bets_operation, delegate_sp_from_reg_pool_operation, create_nft_operation, update_nft_meta_operation, create_game_round_operation, update_game_round_result_operation, adjust_nft_experience_operation, author_reward_operation, comment_benefficiary_reward_operation, comment_payout_update_operation, comment_reward_operation, curation_reward_operation, hardfork_operation, producer_reward_operation, active_sp_holders_reward_operation, return_scorumpower_delegation_operation, shutdown_witness_operation, witness_miss_block_operation, expired_contract_refund_operation, acc_finished_vesting_withdraw_operation, devpool_finished_vesting_withdraw_operation, acc_to_acc_vesting_withdraw_operation, devpool_to_acc_vesting_withdraw_operation, acc_to_devpool_vesting_withdraw_operation, devpool_to_devpool_vesting_withdraw_operation, proposal_virtual_operation, budget_outgo_operation, budget_owner_income_operation, active_sp_holders_reward_legacy_operation, budget_closing_operation, bets_matched_operation, game_status_changed_operation, bet_resolved_operation, bet_cancelled_operation, bet_restored_operation, bet_updated_operation &gt; operation</div><div class="ttdef"><b>Definition:</b> <a href="operations_8hpp_source.html#l00013">operations.hpp:111</a></div></div>
 <div class="ttc" id="anamespacescorum_1_1protocol_html_ac9535638d72512bc00346f9a6a1e9e32"><div class="ttname"><a href="namespacescorum_1_1protocol.html#ac9535638d72512bc00346f9a6a1e9e32">scorum::protocol::game_type</a></div><div class="ttdeci">fc::static_variant&lt; soccer_game, hockey_game &gt; game_type</div><div class="ttdef"><b>Definition:</b> <a href="protocol_2include_2scorum_2protocol_2betting_2game_8hpp_source.html#l00014">game.hpp:14</a></div></div>
 <div class="ttc" id="anamespacescorum_1_1wallet_html_a4a596fb2403c99756dd499d4946b108c"><div class="ttname"><a href="namespacescorum_1_1wallet.html#a4a596fb2403c99756dd499d4946b108c">scorum::wallet::suggest_brain_key</a></div><div class="ttdeci">brain_key_info suggest_brain_key()</div><div class="ttdef"><b>Definition:</b> <a href="utils_8cpp_source.html#l00151">utils.cpp:151</a></div></div>
 <div class="ttc" id="anamespacescorum_1_1wallet_html_a6d0285bb71664f82021be01a037100b9"><div class="ttname"><a href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9">scorum::wallet::authority_type</a></div><div class="ttdeci">authority_type</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00074">wallet.hpp:75</a></div></div>
@@ -1052,9 +1057,9 @@ $(function() {
 <div class="ttc" id="astructscorum_1_1wallet_1_1memo__data_html_a9c20af7cfbeefaf10fd0134fb47c40f3"><div class="ttname"><a href="structscorum_1_1wallet_1_1memo__data.html#a9c20af7cfbeefaf10fd0134fb47c40f3">scorum::wallet::memo_data::from</a></div><div class="ttdeci">public_key_type from</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00049">wallet.hpp:49</a></div></div>
 <div class="ttc" id="astructscorum_1_1wallet_1_1memo__data_html_abc0d5e10f752b46e8ce3608a0b0c408d"><div class="ttname"><a href="structscorum_1_1wallet_1_1memo__data.html#abc0d5e10f752b46e8ce3608a0b0c408d">scorum::wallet::memo_data::encrypted</a></div><div class="ttdeci">std::vector&lt; char &gt; encrypted</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00053">wallet.hpp:53</a></div></div>
 <div class="ttc" id="astructscorum_1_1wallet_1_1memo__data_html_ac28aa4e93ab8fb952fda80e4d7201502"><div class="ttname"><a href="structscorum_1_1wallet_1_1memo__data.html#ac28aa4e93ab8fb952fda80e4d7201502">scorum::wallet::memo_data::to</a></div><div class="ttdeci">public_key_type to</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00050">wallet.hpp:50</a></div></div>
-<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html">scorum::wallet::plain_keys</a></div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02298">wallet.hpp:2299</a></div></div>
-<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html_a3a27e055b50cf427e07244b569e5c0c4"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4">scorum::wallet::plain_keys::checksum</a></div><div class="ttdeci">fc::sha512 checksum</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02300">wallet.hpp:2300</a></div></div>
-<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html_a7d44aa27e85ff1998188b5cd5c9f582a"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a">scorum::wallet::plain_keys::keys</a></div><div class="ttdeci">std::map&lt; public_key_type, std::string &gt; keys</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02301">wallet.hpp:2301</a></div></div>
+<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html">scorum::wallet::plain_keys</a></div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02310">wallet.hpp:2311</a></div></div>
+<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html_a3a27e055b50cf427e07244b569e5c0c4"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4">scorum::wallet::plain_keys::checksum</a></div><div class="ttdeci">fc::sha512 checksum</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02312">wallet.hpp:2312</a></div></div>
+<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html_a7d44aa27e85ff1998188b5cd5c9f582a"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a">scorum::wallet::plain_keys::keys</a></div><div class="ttdeci">std::map&lt; public_key_type, std::string &gt; keys</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02313">wallet.hpp:2313</a></div></div>
 <div class="ttc" id="astructscorum_1_1wallet_1_1wallet__data_html"><div class="ttname"><a href="structscorum_1_1wallet_1_1wallet__data.html">scorum::wallet::wallet_data</a></div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00063">wallet.hpp:64</a></div></div>
 <div class="ttc" id="astructscorum_1_1wallet_1_1wallet__data_html_a1ddf53f1346d8d8320aba8d20cca4484"><div class="ttname"><a href="structscorum_1_1wallet_1_1wallet__data.html#a1ddf53f1346d8d8320aba8d20cca4484">scorum::wallet::wallet_data::chain_id</a></div><div class="ttdeci">chain_id_type chain_id</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00071">wallet.hpp:71</a></div></div>
 <div class="ttc" id="astructscorum_1_1wallet_1_1wallet__data_html_a886515a00f1a03bf50a5c8d5784b7529"><div class="ttname"><a href="structscorum_1_1wallet_1_1wallet__data.html#a886515a00f1a03bf50a5c8d5784b7529">scorum::wallet::wallet_data::ws_password</a></div><div class="ttdeci">std::string ws_password</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00069">wallet.hpp:69</a></div></div>
@@ -1064,7 +1069,7 @@ $(function() {
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu May 19 2022 13:53:30 for Scorum by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
+Generated on Wed Jun 1 2022 17:36:56 for Scorum by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
 </small></address>
 </body>
 </html>
