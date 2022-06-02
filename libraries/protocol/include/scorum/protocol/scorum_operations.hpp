@@ -1226,7 +1226,7 @@ struct adjust_nft_experience_operation : public base_operation
 
 /**
  * @ingroup operations
- * @brief This operation update NFT metadata
+ * @brief This operation update NFT name
  */
 struct update_nft_name_operation : public base_operation
 {

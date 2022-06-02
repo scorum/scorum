@@ -2204,11 +2204,11 @@ public:
                                                        bool broadcast) const;
 
     /**
-     * This method will update json metadata of an existing NFT object
+     * This method will update name of an existing NFT object
      *
      * @param moderator moderator account
      * @param uuid uuid of the NFT object
-     * @param json_meta JSON metadata associated with the NFT
+     * @param name name associated with the NFT
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction update_nft_name(const std::string& moderator,
