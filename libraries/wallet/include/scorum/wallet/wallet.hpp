@@ -1362,6 +1362,7 @@ public:
      * @warning The owner account must have sufficient balance for budget
      *
      * @param owner the futrue owner of creating budget
+     * @param uuid budget uuid
      * @param json_metadata the budget target identity (post or other)
      * @param balance
      * @param start the time to start allocation cash from  budget
@@ -1370,6 +1371,7 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction create_budget_for_post(const std::string& owner,
+                                                        const uuid_type& uuid,
                                                         const std::string& json_metadata,
                                                         const asset& balance,
                                                         const time_point_sec& start,
@@ -1383,6 +1385,7 @@ public:
      * @warning The owner account must have sufficient balance for budget
      *
      * @param owner the futrue owner of creating budget
+     * @param uuid budget uuid
      * @param json_metadata the budget target identity (post or other)
      * @param balance
      * @param start the time to start allocation cash from  budget
@@ -1391,6 +1394,7 @@ public:
      * @param broadcast true if you wish to broadcast the transaction
      */
     annotated_signed_transaction create_budget_for_banner(const std::string& owner,
+                                                          const uuid_type& uuid,
                                                           const std::string& json_metadata,
                                                           const asset& balance,
                                                           const time_point_sec& start,

@@ -490,513 +490,515 @@ $(function() {
 <div class="line"><a name="l01349"></a><span class="lineno"> 1349</span>&#160; </div>
 <div class="line"><a name="l01356"></a><span class="lineno"> 1356</span>&#160;    std::vector&lt;budget_api_obj&gt; get_banner_budgets(<span class="keyword">const</span> std::string&amp; account_name);</div>
 <div class="line"><a name="l01357"></a><span class="lineno"> 1357</span>&#160; </div>
-<div class="line"><a name="l01372"></a><span class="lineno"> 1372</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_budget_for_post(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
-<div class="line"><a name="l01373"></a><span class="lineno"> 1373</span>&#160;                                                        <span class="keyword">const</span> std::string&amp; json_metadata,</div>
-<div class="line"><a name="l01374"></a><span class="lineno"> 1374</span>&#160;                                                        <span class="keyword">const</span> <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a>&amp; balance,</div>
-<div class="line"><a name="l01375"></a><span class="lineno"> 1375</span>&#160;                                                        <span class="keyword">const</span> time_point_sec&amp; start,</div>
-<div class="line"><a name="l01376"></a><span class="lineno"> 1376</span>&#160;                                                        <span class="keyword">const</span> time_point_sec&amp; deadline,</div>
-<div class="line"><a name="l01377"></a><span class="lineno"> 1377</span>&#160;                                                        <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01378"></a><span class="lineno"> 1378</span>&#160; </div>
-<div class="line"><a name="l01393"></a><span class="lineno"> 1393</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_budget_for_banner(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
-<div class="line"><a name="l01394"></a><span class="lineno"> 1394</span>&#160;                                                          <span class="keyword">const</span> std::string&amp; json_metadata,</div>
-<div class="line"><a name="l01395"></a><span class="lineno"> 1395</span>&#160;                                                          <span class="keyword">const</span> <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a>&amp; balance,</div>
-<div class="line"><a name="l01396"></a><span class="lineno"> 1396</span>&#160;                                                          <span class="keyword">const</span> time_point_sec&amp; start,</div>
-<div class="line"><a name="l01397"></a><span class="lineno"> 1397</span>&#160;                                                          <span class="keyword">const</span> time_point_sec&amp; deadline,</div>
-<div class="line"><a name="l01398"></a><span class="lineno"> 1398</span>&#160;                                                          <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01399"></a><span class="lineno"> 1399</span>&#160; </div>
-<div class="line"><a name="l01409"></a><span class="lineno"> 1409</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_budget_for_banner(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
-<div class="line"><a name="l01410"></a><span class="lineno"> 1410</span>&#160;                                                          <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
-<div class="line"><a name="l01411"></a><span class="lineno"> 1411</span>&#160;                                                          <span class="keyword">const</span> std::string&amp; json_metadata,</div>
-<div class="line"><a name="l01412"></a><span class="lineno"> 1412</span>&#160;                                                          <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01413"></a><span class="lineno"> 1413</span>&#160; </div>
-<div class="line"><a name="l01423"></a><span class="lineno"> 1423</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_budget_for_post(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
-<div class="line"><a name="l01424"></a><span class="lineno"> 1424</span>&#160;                                                        <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
-<div class="line"><a name="l01425"></a><span class="lineno"> 1425</span>&#160;                                                        <span class="keyword">const</span> std::string&amp; json_metadata,</div>
-<div class="line"><a name="l01426"></a><span class="lineno"> 1426</span>&#160;                                                        <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01427"></a><span class="lineno"> 1427</span>&#160; </div>
-<div class="line"><a name="l01436"></a><span class="lineno"> 1436</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> close_budget_for_post(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid, <span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>, <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01437"></a><span class="lineno"> 1437</span>&#160; </div>
-<div class="line"><a name="l01446"></a><span class="lineno"> 1446</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
-<div class="line"><a name="l01447"></a><span class="lineno"> 1447</span>&#160;    close_budget_for_banner(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid, <span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>, <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01448"></a><span class="lineno"> 1448</span>&#160; </div>
-<div class="line"><a name="l01457"></a><span class="lineno"> 1457</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
-<div class="line"><a name="l01458"></a><span class="lineno"> 1458</span>&#160;    close_budget_for_post_by_moderator(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid, <span class="keyword">const</span> std::string&amp; moderator, <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01459"></a><span class="lineno"> 1459</span>&#160; </div>
-<div class="line"><a name="l01468"></a><span class="lineno"> 1468</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
-<div class="line"><a name="l01469"></a><span class="lineno"> 1469</span>&#160;    close_budget_for_banner_by_moderator(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid, <span class="keyword">const</span> std::string&amp; moderator, <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01470"></a><span class="lineno"> 1470</span>&#160; </div>
-<div class="line"><a name="l01472"></a><span class="lineno"> 1472</span>&#160; </div>
-<div class="line"><a name="l01477"></a><span class="lineno"> 1477</span>&#160; </div>
-<div class="line"><a name="l01485"></a><span class="lineno"> 1485</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
-<div class="line"><a name="l01486"></a><span class="lineno"> 1486</span>&#160;    vote_for_committee_proposal(<span class="keyword">const</span> std::string&amp; account_to_vote_with, int64_t proposal_id, <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01487"></a><span class="lineno"> 1487</span>&#160; </div>
-<div class="line"><a name="l01496"></a><span class="lineno"> 1496</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> registration_committee_add_member(<span class="keyword">const</span> std::string&amp; inviter,</div>
-<div class="line"><a name="l01497"></a><span class="lineno"> 1497</span>&#160;                                                                   <span class="keyword">const</span> std::string&amp; invitee,</div>
-<div class="line"><a name="l01498"></a><span class="lineno"> 1498</span>&#160;                                                                   uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01499"></a><span class="lineno"> 1499</span>&#160;                                                                   <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01500"></a><span class="lineno"> 1500</span>&#160; </div>
-<div class="line"><a name="l01509"></a><span class="lineno"> 1509</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> registration_committee_exclude_member(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01510"></a><span class="lineno"> 1510</span>&#160;                                                                       <span class="keyword">const</span> std::string&amp; dropout,</div>
-<div class="line"><a name="l01511"></a><span class="lineno"> 1511</span>&#160;                                                                       uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01512"></a><span class="lineno"> 1512</span>&#160;                                                                       <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01513"></a><span class="lineno"> 1513</span>&#160; </div>
-<div class="line"><a name="l01521"></a><span class="lineno"> 1521</span>&#160;    std::set&lt;account_name_type&gt; list_registration_committee(<span class="keyword">const</span> std::string&amp; lowerbound, uint32_t limit);</div>
-<div class="line"><a name="l01522"></a><span class="lineno"> 1522</span>&#160; </div>
-<div class="line"><a name="l01528"></a><span class="lineno"> 1528</span>&#160;    <a class="code" href="structscorum_1_1app_1_1registration__committee__api__obj.html">registration_committee_api_obj</a> get_registration_committee();</div>
-<div class="line"><a name="l01529"></a><span class="lineno"> 1529</span>&#160; </div>
-<div class="line"><a name="l01535"></a><span class="lineno"> 1535</span>&#160;    std::vector&lt;proposal_api_obj&gt; list_proposals();</div>
-<div class="line"><a name="l01536"></a><span class="lineno"> 1536</span>&#160; </div>
-<div class="line"><a name="l01546"></a><span class="lineno"> 1546</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> registration_committee_change_add_member_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
-<div class="line"><a name="l01547"></a><span class="lineno"> 1547</span>&#160;                                                                                 uint64_t quorum_percent,</div>
-<div class="line"><a name="l01548"></a><span class="lineno"> 1548</span>&#160;                                                                                 uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01549"></a><span class="lineno"> 1549</span>&#160;                                                                                 <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01550"></a><span class="lineno"> 1550</span>&#160; </div>
-<div class="line"><a name="l01560"></a><span class="lineno"> 1560</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> registration_committee_change_exclude_member_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
-<div class="line"><a name="l01561"></a><span class="lineno"> 1561</span>&#160;                                                                                     uint64_t quorum_percent,</div>
-<div class="line"><a name="l01562"></a><span class="lineno"> 1562</span>&#160;                                                                                     uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01563"></a><span class="lineno"> 1563</span>&#160;                                                                                     <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01564"></a><span class="lineno"> 1564</span>&#160; </div>
-<div class="line"><a name="l01573"></a><span class="lineno"> 1573</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> registration_committee_change_base_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
-<div class="line"><a name="l01574"></a><span class="lineno"> 1574</span>&#160;                                                                           uint64_t quorum_percent,</div>
-<div class="line"><a name="l01575"></a><span class="lineno"> 1575</span>&#160;                                                                           uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01576"></a><span class="lineno"> 1576</span>&#160;                                                                           <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01577"></a><span class="lineno"> 1577</span>&#160; </div>
-<div class="line"><a name="l01586"></a><span class="lineno"> 1586</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_add_member(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01587"></a><span class="lineno"> 1587</span>&#160;                                                                  <span class="keyword">const</span> std::string&amp; invitee,</div>
-<div class="line"><a name="l01588"></a><span class="lineno"> 1588</span>&#160;                                                                  uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01589"></a><span class="lineno"> 1589</span>&#160;                                                                  <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01590"></a><span class="lineno"> 1590</span>&#160; </div>
-<div class="line"><a name="l01599"></a><span class="lineno"> 1599</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_exclude_member(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01600"></a><span class="lineno"> 1600</span>&#160;                                                                      <span class="keyword">const</span> std::string&amp; dropout,</div>
-<div class="line"><a name="l01601"></a><span class="lineno"> 1601</span>&#160;                                                                      uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01602"></a><span class="lineno"> 1602</span>&#160;                                                                      <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01603"></a><span class="lineno"> 1603</span>&#160; </div>
-<div class="line"><a name="l01611"></a><span class="lineno"> 1611</span>&#160;    std::set&lt;account_name_type&gt; list_development_committee(<span class="keyword">const</span> std::string&amp; lowerbound, uint32_t limit);</div>
-<div class="line"><a name="l01612"></a><span class="lineno"> 1612</span>&#160; </div>
-<div class="line"><a name="l01621"></a><span class="lineno"> 1621</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_add_member_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
-<div class="line"><a name="l01622"></a><span class="lineno"> 1622</span>&#160;                                                                                uint64_t quorum_percent,</div>
-<div class="line"><a name="l01623"></a><span class="lineno"> 1623</span>&#160;                                                                                uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01624"></a><span class="lineno"> 1624</span>&#160;                                                                                <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01625"></a><span class="lineno"> 1625</span>&#160; </div>
-<div class="line"><a name="l01634"></a><span class="lineno"> 1634</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_exclude_member_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
-<div class="line"><a name="l01635"></a><span class="lineno"> 1635</span>&#160;                                                                                    uint64_t quorum_percent,</div>
-<div class="line"><a name="l01636"></a><span class="lineno"> 1636</span>&#160;                                                                                    uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01637"></a><span class="lineno"> 1637</span>&#160;                                                                                    <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01638"></a><span class="lineno"> 1638</span>&#160; </div>
-<div class="line"><a name="l01647"></a><span class="lineno"> 1647</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_base_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
-<div class="line"><a name="l01648"></a><span class="lineno"> 1648</span>&#160;                                                                          uint64_t quorum_percent,</div>
-<div class="line"><a name="l01649"></a><span class="lineno"> 1649</span>&#160;                                                                          uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01650"></a><span class="lineno"> 1650</span>&#160;                                                                          <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01651"></a><span class="lineno"> 1651</span>&#160; </div>
-<div class="line"><a name="l01660"></a><span class="lineno"> 1660</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_transfer_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
-<div class="line"><a name="l01661"></a><span class="lineno"> 1661</span>&#160;                                                                              uint64_t quorum_percent,</div>
-<div class="line"><a name="l01662"></a><span class="lineno"> 1662</span>&#160;                                                                              uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01663"></a><span class="lineno"> 1663</span>&#160;                                                                              <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01664"></a><span class="lineno"> 1664</span>&#160; </div>
-<div class="line"><a name="l01673"></a><span class="lineno"> 1673</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_budget_auction_properties_quorum(</div>
-<div class="line"><a name="l01674"></a><span class="lineno"> 1674</span>&#160;        <span class="keyword">const</span> std::string&amp; creator, uint64_t quorum_percent, uint32_t lifetime_sec, <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01675"></a><span class="lineno"> 1675</span>&#160; </div>
-<div class="line"><a name="l01684"></a><span class="lineno"> 1684</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_advertising_moderator_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
-<div class="line"><a name="l01685"></a><span class="lineno"> 1685</span>&#160;                                                                                           uint64_t quorum_percent,</div>
-<div class="line"><a name="l01686"></a><span class="lineno"> 1686</span>&#160;                                                                                           uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01687"></a><span class="lineno"> 1687</span>&#160;                                                                                           <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01696"></a><span class="lineno"> 1696</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_betting_moderator_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
-<div class="line"><a name="l01697"></a><span class="lineno"> 1697</span>&#160;                                                                                       uint64_t quorum_percent,</div>
-<div class="line"><a name="l01698"></a><span class="lineno"> 1698</span>&#160;                                                                                       uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01699"></a><span class="lineno"> 1699</span>&#160;                                                                                       <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01700"></a><span class="lineno"> 1700</span>&#160; </div>
-<div class="line"><a name="l01709"></a><span class="lineno"> 1709</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_empower_advertising_moderator(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01710"></a><span class="lineno"> 1710</span>&#160;                                                                                     <span class="keyword">const</span> std::string&amp; moderator,</div>
-<div class="line"><a name="l01711"></a><span class="lineno"> 1711</span>&#160;                                                                                     uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01712"></a><span class="lineno"> 1712</span>&#160;                                                                                     <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01713"></a><span class="lineno"> 1713</span>&#160; </div>
-<div class="line"><a name="l01722"></a><span class="lineno"> 1722</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_empower_betting_moderator(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01723"></a><span class="lineno"> 1723</span>&#160;                                                                                 <span class="keyword">const</span> std::string&amp; moderator,</div>
-<div class="line"><a name="l01724"></a><span class="lineno"> 1724</span>&#160;                                                                                 uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01725"></a><span class="lineno"> 1725</span>&#160;                                                                                 <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01726"></a><span class="lineno"> 1726</span>&#160; </div>
-<div class="line"><a name="l01736"></a><span class="lineno"> 1736</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_betting_resolve_delay(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01737"></a><span class="lineno"> 1737</span>&#160;                                                                                    uint32_t delay_sec,</div>
-<div class="line"><a name="l01738"></a><span class="lineno"> 1738</span>&#160;                                                                                    uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01739"></a><span class="lineno"> 1739</span>&#160;                                                                                    <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01740"></a><span class="lineno"> 1740</span>&#160; </div>
-<div class="line"><a name="l01750"></a><span class="lineno"> 1750</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_pool_transfer(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01751"></a><span class="lineno"> 1751</span>&#160;                                                           <span class="keyword">const</span> std::string&amp; to_account,</div>
-<div class="line"><a name="l01752"></a><span class="lineno"> 1752</span>&#160;                                                           <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a> amount,</div>
-<div class="line"><a name="l01753"></a><span class="lineno"> 1753</span>&#160;                                                           uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01754"></a><span class="lineno"> 1754</span>&#160;                                                           <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01755"></a><span class="lineno"> 1755</span>&#160; </div>
-<div class="line"><a name="l01764"></a><span class="lineno"> 1764</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_pool_withdraw_vesting(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01765"></a><span class="lineno"> 1765</span>&#160;                                                                   <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a> amount,</div>
-<div class="line"><a name="l01766"></a><span class="lineno"> 1766</span>&#160;                                                                   uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01767"></a><span class="lineno"> 1767</span>&#160;                                                                   <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01768"></a><span class="lineno"> 1768</span>&#160; </div>
-<div class="line"><a name="l01776"></a><span class="lineno"> 1776</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_pool_post_budgets_auction_properties(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01777"></a><span class="lineno"> 1777</span>&#160;                                                                                  <span class="keyword">const</span> std::vector&lt;percent_type&gt;&amp;,</div>
-<div class="line"><a name="l01778"></a><span class="lineno"> 1778</span>&#160;                                                                                  uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01779"></a><span class="lineno"> 1779</span>&#160;                                                                                  <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01780"></a><span class="lineno"> 1780</span>&#160; </div>
-<div class="line"><a name="l01788"></a><span class="lineno"> 1788</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_pool_banner_budgets_auction_properties(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01789"></a><span class="lineno"> 1789</span>&#160;                                                                                    <span class="keyword">const</span> std::vector&lt;percent_type&gt;&amp;,</div>
-<div class="line"><a name="l01790"></a><span class="lineno"> 1790</span>&#160;                                                                                    uint32_t lifetime_sec,</div>
-<div class="line"><a name="l01791"></a><span class="lineno"> 1791</span>&#160;                                                                                    <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01792"></a><span class="lineno"> 1792</span>&#160; </div>
-<div class="line"><a name="l01796"></a><span class="lineno"> 1796</span>&#160;    <a class="code" href="classscorum_1_1app_1_1api__obj.html">development_committee_api_obj</a> get_development_committee();</div>
-<div class="line"><a name="l01797"></a><span class="lineno"> 1797</span>&#160; </div>
-<div class="line"><a name="l01809"></a><span class="lineno"> 1809</span>&#160;    std::vector&lt;applied_operation&gt; get_devcommittee_history(uint64_t from, uint32_t limit);</div>
-<div class="line"><a name="l01810"></a><span class="lineno"> 1810</span>&#160; </div>
-<div class="line"><a name="l01822"></a><span class="lineno"> 1822</span>&#160;    std::vector&lt;applied_operation&gt; get_devcommittee_scr_to_scr_transfers(uint64_t from, uint32_t limit);</div>
-<div class="line"><a name="l01823"></a><span class="lineno"> 1823</span>&#160; </div>
-<div class="line"><a name="l01835"></a><span class="lineno"> 1835</span>&#160;    std::vector&lt;applied_withdraw_operation&gt; get_devcommittee_sp_to_scr_transfers(uint64_t from, uint32_t limit);</div>
-<div class="line"><a name="l01836"></a><span class="lineno"> 1836</span>&#160; </div>
-<div class="line"><a name="l01838"></a><span class="lineno"> 1838</span>&#160; </div>
-<div class="line"><a name="l01843"></a><span class="lineno"> 1843</span>&#160; </div>
-<div class="line"><a name="l01861"></a><span class="lineno"> 1861</span>&#160;    <a class="code" href="structscorum_1_1app_1_1atomicswap__contract__result__api__obj.html">atomicswap_contract_result_api_obj</a> atomicswap_initiate(<span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01862"></a><span class="lineno"> 1862</span>&#160;                                                           <span class="keyword">const</span> std::string&amp; participant,</div>
-<div class="line"><a name="l01863"></a><span class="lineno"> 1863</span>&#160;                                                           <span class="keyword">const</span> <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a>&amp; amount,</div>
-<div class="line"><a name="l01864"></a><span class="lineno"> 1864</span>&#160;                                                           <span class="keyword">const</span> std::string&amp; metadata,</div>
-<div class="line"><a name="l01865"></a><span class="lineno"> 1865</span>&#160;                                                           <span class="keyword">const</span> uint8_t secret_length,</div>
-<div class="line"><a name="l01866"></a><span class="lineno"> 1866</span>&#160;                                                           <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01867"></a><span class="lineno"> 1867</span>&#160; </div>
-<div class="line"><a name="l01883"></a><span class="lineno"> 1883</span>&#160;    <a class="code" href="structscorum_1_1app_1_1atomicswap__contract__result__api__obj.html">atomicswap_contract_result_api_obj</a> atomicswap_participate(<span class="keyword">const</span> std::string&amp; secret_hash,</div>
-<div class="line"><a name="l01884"></a><span class="lineno"> 1884</span>&#160;                                                              <span class="keyword">const</span> std::string&amp; participant,</div>
-<div class="line"><a name="l01885"></a><span class="lineno"> 1885</span>&#160;                                                              <span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01886"></a><span class="lineno"> 1886</span>&#160;                                                              <span class="keyword">const</span> <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a>&amp; amount,</div>
-<div class="line"><a name="l01887"></a><span class="lineno"> 1887</span>&#160;                                                              <span class="keyword">const</span> std::string&amp; metadata,</div>
-<div class="line"><a name="l01888"></a><span class="lineno"> 1888</span>&#160;                                                              <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01889"></a><span class="lineno"> 1889</span>&#160; </div>
-<div class="line"><a name="l01897"></a><span class="lineno"> 1897</span>&#160;    <a class="code" href="structscorum_1_1app_1_1atomicswap__contract__info__api__obj.html">atomicswap_contract_info_api_obj</a></div>
-<div class="line"><a name="l01898"></a><span class="lineno"> 1898</span>&#160;    atomicswap_auditcontract(<span class="keyword">const</span> std::string&amp; from, <span class="keyword">const</span> std::string&amp; to, <span class="keyword">const</span> std::string&amp; secret_hash);</div>
-<div class="line"><a name="l01899"></a><span class="lineno"> 1899</span>&#160; </div>
-<div class="line"><a name="l01912"></a><span class="lineno"> 1912</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
-<div class="line"><a name="l01913"></a><span class="lineno"> 1913</span>&#160;    atomicswap_redeem(<span class="keyword">const</span> std::string&amp; from, <span class="keyword">const</span> std::string&amp; to, <span class="keyword">const</span> std::string&amp; secret, <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01914"></a><span class="lineno"> 1914</span>&#160; </div>
-<div class="line"><a name="l01923"></a><span class="lineno"> 1923</span>&#160;    std::string</div>
-<div class="line"><a name="l01924"></a><span class="lineno"> 1924</span>&#160;    atomicswap_extractsecret(<span class="keyword">const</span> std::string&amp; from, <span class="keyword">const</span> std::string&amp; to, <span class="keyword">const</span> std::string&amp; secret_hash);</div>
-<div class="line"><a name="l01925"></a><span class="lineno"> 1925</span>&#160; </div>
-<div class="line"><a name="l01938"></a><span class="lineno"> 1938</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> atomicswap_refund(<span class="keyword">const</span> std::string&amp; participant,</div>
-<div class="line"><a name="l01939"></a><span class="lineno"> 1939</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; initiator,</div>
-<div class="line"><a name="l01940"></a><span class="lineno"> 1940</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; secret_hash,</div>
-<div class="line"><a name="l01941"></a><span class="lineno"> 1941</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01942"></a><span class="lineno"> 1942</span>&#160; </div>
-<div class="line"><a name="l01948"></a><span class="lineno"> 1948</span>&#160;    std::vector&lt;atomicswap_contract_api_obj&gt; get_atomicswap_contracts(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>);</div>
-<div class="line"><a name="l01949"></a><span class="lineno"> 1949</span>&#160; </div>
-<div class="line"><a name="l01951"></a><span class="lineno"> 1951</span>&#160; </div>
-<div class="line"><a name="l01956"></a><span class="lineno"> 1956</span>&#160; </div>
-<div class="line"><a name="l01971"></a><span class="lineno"> 1971</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_game(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid,</div>
-<div class="line"><a name="l01972"></a><span class="lineno"> 1972</span>&#160;                                             <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> moderator,</div>
-<div class="line"><a name="l01973"></a><span class="lineno"> 1973</span>&#160;                                             <span class="keyword">const</span> std::string&amp; json_metadata,</div>
-<div class="line"><a name="l01974"></a><span class="lineno"> 1974</span>&#160;                                             fc::time_point_sec start_time,</div>
-<div class="line"><a name="l01975"></a><span class="lineno"> 1975</span>&#160;                                             uint32_t auto_resolve_delay_sec,</div>
-<div class="line"><a name="l01976"></a><span class="lineno"> 1976</span>&#160;                                             <a class="code" href="namespacescorum_1_1protocol.html#ac9535638d72512bc00346f9a6a1e9e32">game_type</a> game,</div>
-<div class="line"><a name="l01977"></a><span class="lineno"> 1977</span>&#160;                                             <span class="keyword">const</span> std::vector&lt;market_type&gt;&amp; markets,</div>
-<div class="line"><a name="l01978"></a><span class="lineno"> 1978</span>&#160;                                             <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01979"></a><span class="lineno"> 1979</span>&#160; </div>
-<div class="line"><a name="l01987"></a><span class="lineno"> 1987</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> cancel_game(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid, <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> moderator, <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l01988"></a><span class="lineno"> 1988</span>&#160; </div>
-<div class="line"><a name="l01997"></a><span class="lineno"> 1997</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_game_markets(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid,</div>
-<div class="line"><a name="l01998"></a><span class="lineno"> 1998</span>&#160;                                                     <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> moderator,</div>
-<div class="line"><a name="l01999"></a><span class="lineno"> 1999</span>&#160;                                                     <span class="keyword">const</span> std::vector&lt;market_type&gt;&amp; markets,</div>
-<div class="line"><a name="l02000"></a><span class="lineno"> 2000</span>&#160;                                                     <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l02001"></a><span class="lineno"> 2001</span>&#160; </div>
-<div class="line"><a name="l02010"></a><span class="lineno"> 2010</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
-<div class="line"><a name="l02011"></a><span class="lineno"> 2011</span>&#160;    update_game_start_time(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid, <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> moderator, fc::time_point_sec start_time, <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l02012"></a><span class="lineno"> 2012</span>&#160; </div>
-<div class="line"><a name="l02021"></a><span class="lineno"> 2021</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> post_game_results(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid,</div>
-<div class="line"><a name="l02022"></a><span class="lineno"> 2022</span>&#160;                                                   <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> moderator,</div>
-<div class="line"><a name="l02023"></a><span class="lineno"> 2023</span>&#160;                                                   <span class="keyword">const</span> std::vector&lt;wincase_type&gt;&amp; wincases,</div>
-<div class="line"><a name="l02024"></a><span class="lineno"> 2024</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l02025"></a><span class="lineno"> 2025</span>&#160; </div>
-<div class="line"><a name="l02039"></a><span class="lineno"> 2039</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> post_bet(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid,</div>
-<div class="line"><a name="l02040"></a><span class="lineno"> 2040</span>&#160;                                          <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> better,</div>
-<div class="line"><a name="l02041"></a><span class="lineno"> 2041</span>&#160;                                          <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> game_uuid,</div>
-<div class="line"><a name="l02042"></a><span class="lineno"> 2042</span>&#160;                                          <a class="code" href="namespacescorum_1_1protocol.html#a7552aa0b59772fc2d112d203403e29ba">wincase_type</a> wincase,</div>
-<div class="line"><a name="l02043"></a><span class="lineno"> 2043</span>&#160;                                          <a class="code" href="structscorum_1_1protocol_1_1odds__input.html">odds_input</a> <a class="code" href="classscorum_1_1protocol_1_1odds.html">odds</a>,</div>
-<div class="line"><a name="l02044"></a><span class="lineno"> 2044</span>&#160;                                          <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a> stake,</div>
-<div class="line"><a name="l02045"></a><span class="lineno"> 2045</span>&#160;                                          <span class="keywordtype">bool</span> is_live,</div>
-<div class="line"><a name="l02046"></a><span class="lineno"> 2046</span>&#160;                                          <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l02047"></a><span class="lineno"> 2047</span>&#160; </div>
-<div class="line"><a name="l02055"></a><span class="lineno"> 2055</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
-<div class="line"><a name="l02056"></a><span class="lineno"> 2056</span>&#160;    cancel_pending_bets(<a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> better, <span class="keyword">const</span> std::vector&lt;uuid_type&gt;&amp; bet_uuids, <span class="keywordtype">bool</span> broadcast);</div>
-<div class="line"><a name="l02057"></a><span class="lineno"> 2057</span>&#160; </div>
-<div class="line"><a name="l02064"></a><span class="lineno"> 2064</span>&#160;    std::vector&lt;game_api_object&gt; get_games_by_status(<span class="keyword">const</span> fc::flat_set&lt;game_status&gt;&amp; filter) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02065"></a><span class="lineno"> 2065</span>&#160; </div>
-<div class="line"><a name="l02072"></a><span class="lineno"> 2072</span>&#160;    std::vector&lt;game_api_object&gt; get_games_by_uuids(<span class="keyword">const</span> std::vector&lt;uuid_type&gt;&amp; uuids) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02073"></a><span class="lineno"> 2073</span>&#160; </div>
-<div class="line"><a name="l02081"></a><span class="lineno"> 2081</span>&#160;    std::vector&lt;game_api_object&gt; lookup_games_by_id(<a class="code" href="classchainbase_1_1oid.html">game_id_type</a> from, uint32_t limit) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02082"></a><span class="lineno"> 2082</span>&#160; </div>
-<div class="line"><a name="l02090"></a><span class="lineno"> 2090</span>&#160;    std::vector&lt;matched_bet_api_object&gt; lookup_matched_bets(<a class="code" href="classchainbase_1_1oid.html">matched_bet_id_type</a> from, int64_t limit) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02091"></a><span class="lineno"> 2091</span>&#160; </div>
-<div class="line"><a name="l02099"></a><span class="lineno"> 2099</span>&#160;    std::vector&lt;pending_bet_api_object&gt; lookup_pending_bets(<a class="code" href="classchainbase_1_1oid.html">pending_bet_id_type</a> from, int64_t limit) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02100"></a><span class="lineno"> 2100</span>&#160; </div>
-<div class="line"><a name="l02107"></a><span class="lineno"> 2107</span>&#160;    std::vector&lt;matched_bet_api_object&gt; get_matched_bets(<span class="keyword">const</span> std::vector&lt;uuid_type&gt;&amp; uuids) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02108"></a><span class="lineno"> 2108</span>&#160; </div>
-<div class="line"><a name="l02115"></a><span class="lineno"> 2115</span>&#160;    std::vector&lt;pending_bet_api_object&gt; get_pending_bets(<span class="keyword">const</span> std::vector&lt;uuid_type&gt;&amp; uuids) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02116"></a><span class="lineno"> 2116</span>&#160; </div>
-<div class="line"><a name="l02122"></a><span class="lineno"> 2122</span>&#160;    <a class="code" href="classscorum_1_1app_1_1api__obj.html">betting_property_api_object</a> get_betting_properties() <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02123"></a><span class="lineno"> 2123</span>&#160; </div>
-<div class="line"><a name="l02130"></a><span class="lineno"> 2130</span>&#160;    std::vector&lt;matched_bet_api_object&gt; get_game_returns(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; game_uuid) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02131"></a><span class="lineno"> 2131</span>&#160; </div>
-<div class="line"><a name="l02138"></a><span class="lineno"> 2138</span>&#160;    std::vector&lt;winner_api_object&gt; get_game_winners(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; game_uuid) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02139"></a><span class="lineno"> 2139</span>&#160; </div>
-<div class="line"><a name="l02146"></a><span class="lineno"> 2146</span>&#160;    std::vector&lt;matched_bet_api_object&gt; get_game_matched_bets(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02147"></a><span class="lineno"> 2147</span>&#160; </div>
-<div class="line"><a name="l02154"></a><span class="lineno"> 2154</span>&#160;    std::vector&lt;pending_bet_api_object&gt; get_game_pending_bets(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02155"></a><span class="lineno"> 2155</span>&#160; </div>
-<div class="line"><a name="l02157"></a><span class="lineno"> 2157</span>&#160; </div>
-<div class="line"><a name="l02162"></a><span class="lineno"> 2162</span>&#160; </div>
-<div class="line"><a name="l02173"></a><span class="lineno"> 2173</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_nft(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
-<div class="line"><a name="l02174"></a><span class="lineno"> 2174</span>&#160;                                            <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
-<div class="line"><a name="l02175"></a><span class="lineno"> 2175</span>&#160;                                            <span class="keyword">const</span> std::string&amp; name,</div>
-<div class="line"><a name="l02176"></a><span class="lineno"> 2176</span>&#160;                                            int32_t initial_power,</div>
-<div class="line"><a name="l02177"></a><span class="lineno"> 2177</span>&#160;                                            <span class="keyword">const</span> std::string&amp; json_meta,</div>
-<div class="line"><a name="l02178"></a><span class="lineno"> 2178</span>&#160;                                            <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02179"></a><span class="lineno"> 2179</span>&#160; </div>
-<div class="line"><a name="l02188"></a><span class="lineno"> 2188</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_nft_meta(<span class="keyword">const</span> std::string&amp; moderator,</div>
-<div class="line"><a name="l02189"></a><span class="lineno"> 2189</span>&#160;                                                 <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
-<div class="line"><a name="l02190"></a><span class="lineno"> 2190</span>&#160;                                                 <span class="keyword">const</span> std::string&amp; json_meta,</div>
-<div class="line"><a name="l02191"></a><span class="lineno"> 2191</span>&#160;                                                 <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02192"></a><span class="lineno"> 2192</span>&#160; </div>
-<div class="line"><a name="l02201"></a><span class="lineno"> 2201</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> adjust_nft_experience(<span class="keyword">const</span> std::string&amp; moderator,</div>
-<div class="line"><a name="l02202"></a><span class="lineno"> 2202</span>&#160;                                                       <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
-<div class="line"><a name="l02203"></a><span class="lineno"> 2203</span>&#160;                                                       int32_t experience,</div>
-<div class="line"><a name="l02204"></a><span class="lineno"> 2204</span>&#160;                                                       <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02205"></a><span class="lineno"> 2205</span>&#160; </div>
-<div class="line"><a name="l02214"></a><span class="lineno"> 2214</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_nft_name(<span class="keyword">const</span> std::string&amp; moderator,</div>
-<div class="line"><a name="l02215"></a><span class="lineno"> 2215</span>&#160;                                                 <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
-<div class="line"><a name="l02216"></a><span class="lineno"> 2216</span>&#160;                                                 <span class="keyword">const</span> std::string&amp; name,</div>
-<div class="line"><a name="l02217"></a><span class="lineno"> 2217</span>&#160;                                                 <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02224"></a><span class="lineno"> 2224</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_id(int64_t <span class="keywordtype">id</span>) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02225"></a><span class="lineno"> 2225</span>&#160; </div>
-<div class="line"><a name="l02232"></a><span class="lineno"> 2232</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_name(<span class="keyword">const</span> <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a>&amp; name) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02233"></a><span class="lineno"> 2233</span>&#160; </div>
-<div class="line"><a name="l02240"></a><span class="lineno"> 2240</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_uuid(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02241"></a><span class="lineno"> 2241</span>&#160; </div>
-<div class="line"><a name="l02249"></a><span class="lineno"> 2249</span>&#160;    std::vector&lt;nft_api_obj&gt; lookup_nft(int64_t from, uint32_t limit) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02250"></a><span class="lineno"> 2250</span>&#160; </div>
-<div class="line"><a name="l02260"></a><span class="lineno"> 2260</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_game_round(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
-<div class="line"><a name="l02261"></a><span class="lineno"> 2261</span>&#160;                                                   <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
-<div class="line"><a name="l02262"></a><span class="lineno"> 2262</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; verification_key,</div>
-<div class="line"><a name="l02263"></a><span class="lineno"> 2263</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; seed,</div>
-<div class="line"><a name="l02264"></a><span class="lineno"> 2264</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02265"></a><span class="lineno"> 2265</span>&#160; </div>
-<div class="line"><a name="l02276"></a><span class="lineno"> 2276</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_game_round_result(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
-<div class="line"><a name="l02277"></a><span class="lineno"> 2277</span>&#160;                                                   <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
-<div class="line"><a name="l02278"></a><span class="lineno"> 2278</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; proof,</div>
-<div class="line"><a name="l02279"></a><span class="lineno"> 2279</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; vrf,</div>
-<div class="line"><a name="l02280"></a><span class="lineno"> 2280</span>&#160;                                                   int32_t result,</div>
-<div class="line"><a name="l02281"></a><span class="lineno"> 2281</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02282"></a><span class="lineno"> 2282</span>&#160; </div>
-<div class="line"><a name="l02289"></a><span class="lineno"> 2289</span>&#160;    <a class="code" href="structscorum_1_1app_1_1game__round__api__obj.html">game_round_api_obj</a> get_game_round_by_uuid(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02290"></a><span class="lineno"> 2290</span>&#160; </div>
-<div class="line"><a name="l02298"></a><span class="lineno"> 2298</span>&#160;    std::vector&lt;game_round_api_obj&gt; lookup_game_round(int64_t from, uint32_t limit) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l02299"></a><span class="lineno"> 2299</span>&#160; </div>
-<div class="line"><a name="l02301"></a><span class="lineno"> 2301</span>&#160; </div>
-<div class="line"><a name="l02302"></a><span class="lineno"> 2302</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l02303"></a><span class="lineno"><a class="line" href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3"> 2303</a></span>&#160;    fc::signal&lt;void(<span class="keywordtype">bool</span>)&gt; <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3">lock_changed</a>;</div>
-<div class="line"><a name="l02304"></a><span class="lineno"> 2304</span>&#160; </div>
-<div class="line"><a name="l02305"></a><span class="lineno"> 2305</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l02306"></a><span class="lineno"> 2306</span>&#160;    std::shared_ptr&lt;detail::wallet_api_impl&gt; my;</div>
-<div class="line"><a name="l02307"></a><span class="lineno"> 2307</span>&#160;    <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html#a08c93f4a6938b83e67b0f74f9a822075">exit_func_type</a> exit_func;</div>
-<div class="line"><a name="l02308"></a><span class="lineno"> 2308</span>&#160;};</div>
-<div class="line"><a name="l02309"></a><span class="lineno"> 2309</span>&#160; </div>
-<div class="line"><a name="l02310"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html"> 2310</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structscorum_1_1wallet_1_1plain__keys.html">plain_keys</a></div>
-<div class="line"><a name="l02311"></a><span class="lineno"> 2311</span>&#160;{</div>
-<div class="line"><a name="l02312"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4"> 2312</a></span>&#160;    fc::sha512 <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4">checksum</a>;</div>
-<div class="line"><a name="l02313"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a"> 2313</a></span>&#160;    std::map&lt;public_key_type, std::string&gt; <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a">keys</a>;</div>
-<div class="line"><a name="l02314"></a><span class="lineno"> 2314</span>&#160;};</div>
-<div class="line"><a name="l02315"></a><span class="lineno"> 2315</span>&#160;} <span class="comment">// namespace wallet</span></div>
-<div class="line"><a name="l02316"></a><span class="lineno"> 2316</span>&#160;} <span class="comment">// namespace scorum</span></div>
-<div class="line"><a name="l02317"></a><span class="lineno"> 2317</span>&#160; </div>
-<div class="line"><a name="l02318"></a><span class="lineno"> 2318</span>&#160;<span class="comment">// clang-format off</span></div>
-<div class="line"><a name="l02319"></a><span class="lineno"> 2319</span>&#160; </div>
-<div class="line"><a name="l02320"></a><span class="lineno"> 2320</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>(<a class="code" href="structscorum_1_1wallet_1_1wallet__data.html">scorum::wallet::wallet_data</a>,</div>
-<div class="line"><a name="l02321"></a><span class="lineno"> 2321</span>&#160;           (cipher_keys)</div>
-<div class="line"><a name="l02322"></a><span class="lineno"> 2322</span>&#160;           (ws_server)</div>
-<div class="line"><a name="l02323"></a><span class="lineno"> 2323</span>&#160;           (ws_user)</div>
-<div class="line"><a name="l02324"></a><span class="lineno"> 2324</span>&#160;           (ws_password)</div>
-<div class="line"><a name="l02325"></a><span class="lineno"> 2325</span>&#160;           (chain_id))</div>
-<div class="line"><a name="l02326"></a><span class="lineno"> 2326</span>&#160; </div>
-<div class="line"><a name="l02327"></a><span class="lineno"> 2327</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1brain__key__info.html">scorum::wallet::brain_key_info</a>, (brain_priv_key)(wif_priv_key) (pub_key))</div>
-<div class="line"><a name="l02328"></a><span class="lineno"> 2328</span>&#160; </div>
-<div class="line"><a name="l02329"></a><span class="lineno"> 2329</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html">scorum::wallet::plain_keys</a>, (checksum)(keys) )</div>
+<div class="line"><a name="l01373"></a><span class="lineno"> 1373</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_budget_for_post(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
+<div class="line"><a name="l01374"></a><span class="lineno"> 1374</span>&#160;                                                        <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l01375"></a><span class="lineno"> 1375</span>&#160;                                                        <span class="keyword">const</span> std::string&amp; json_metadata,</div>
+<div class="line"><a name="l01376"></a><span class="lineno"> 1376</span>&#160;                                                        <span class="keyword">const</span> <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a>&amp; balance,</div>
+<div class="line"><a name="l01377"></a><span class="lineno"> 1377</span>&#160;                                                        <span class="keyword">const</span> time_point_sec&amp; start,</div>
+<div class="line"><a name="l01378"></a><span class="lineno"> 1378</span>&#160;                                                        <span class="keyword">const</span> time_point_sec&amp; deadline,</div>
+<div class="line"><a name="l01379"></a><span class="lineno"> 1379</span>&#160;                                                        <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01380"></a><span class="lineno"> 1380</span>&#160; </div>
+<div class="line"><a name="l01396"></a><span class="lineno"> 1396</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_budget_for_banner(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
+<div class="line"><a name="l01397"></a><span class="lineno"> 1397</span>&#160;                                                          <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l01398"></a><span class="lineno"> 1398</span>&#160;                                                          <span class="keyword">const</span> std::string&amp; json_metadata,</div>
+<div class="line"><a name="l01399"></a><span class="lineno"> 1399</span>&#160;                                                          <span class="keyword">const</span> <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a>&amp; balance,</div>
+<div class="line"><a name="l01400"></a><span class="lineno"> 1400</span>&#160;                                                          <span class="keyword">const</span> time_point_sec&amp; start,</div>
+<div class="line"><a name="l01401"></a><span class="lineno"> 1401</span>&#160;                                                          <span class="keyword">const</span> time_point_sec&amp; deadline,</div>
+<div class="line"><a name="l01402"></a><span class="lineno"> 1402</span>&#160;                                                          <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01403"></a><span class="lineno"> 1403</span>&#160; </div>
+<div class="line"><a name="l01413"></a><span class="lineno"> 1413</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_budget_for_banner(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
+<div class="line"><a name="l01414"></a><span class="lineno"> 1414</span>&#160;                                                          <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l01415"></a><span class="lineno"> 1415</span>&#160;                                                          <span class="keyword">const</span> std::string&amp; json_metadata,</div>
+<div class="line"><a name="l01416"></a><span class="lineno"> 1416</span>&#160;                                                          <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01417"></a><span class="lineno"> 1417</span>&#160; </div>
+<div class="line"><a name="l01427"></a><span class="lineno"> 1427</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_budget_for_post(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
+<div class="line"><a name="l01428"></a><span class="lineno"> 1428</span>&#160;                                                        <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l01429"></a><span class="lineno"> 1429</span>&#160;                                                        <span class="keyword">const</span> std::string&amp; json_metadata,</div>
+<div class="line"><a name="l01430"></a><span class="lineno"> 1430</span>&#160;                                                        <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01431"></a><span class="lineno"> 1431</span>&#160; </div>
+<div class="line"><a name="l01440"></a><span class="lineno"> 1440</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> close_budget_for_post(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid, <span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>, <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01441"></a><span class="lineno"> 1441</span>&#160; </div>
+<div class="line"><a name="l01450"></a><span class="lineno"> 1450</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
+<div class="line"><a name="l01451"></a><span class="lineno"> 1451</span>&#160;    close_budget_for_banner(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid, <span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>, <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01452"></a><span class="lineno"> 1452</span>&#160; </div>
+<div class="line"><a name="l01461"></a><span class="lineno"> 1461</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
+<div class="line"><a name="l01462"></a><span class="lineno"> 1462</span>&#160;    close_budget_for_post_by_moderator(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid, <span class="keyword">const</span> std::string&amp; moderator, <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01463"></a><span class="lineno"> 1463</span>&#160; </div>
+<div class="line"><a name="l01472"></a><span class="lineno"> 1472</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
+<div class="line"><a name="l01473"></a><span class="lineno"> 1473</span>&#160;    close_budget_for_banner_by_moderator(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid, <span class="keyword">const</span> std::string&amp; moderator, <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01474"></a><span class="lineno"> 1474</span>&#160; </div>
+<div class="line"><a name="l01476"></a><span class="lineno"> 1476</span>&#160; </div>
+<div class="line"><a name="l01481"></a><span class="lineno"> 1481</span>&#160; </div>
+<div class="line"><a name="l01489"></a><span class="lineno"> 1489</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
+<div class="line"><a name="l01490"></a><span class="lineno"> 1490</span>&#160;    vote_for_committee_proposal(<span class="keyword">const</span> std::string&amp; account_to_vote_with, int64_t proposal_id, <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01491"></a><span class="lineno"> 1491</span>&#160; </div>
+<div class="line"><a name="l01500"></a><span class="lineno"> 1500</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> registration_committee_add_member(<span class="keyword">const</span> std::string&amp; inviter,</div>
+<div class="line"><a name="l01501"></a><span class="lineno"> 1501</span>&#160;                                                                   <span class="keyword">const</span> std::string&amp; invitee,</div>
+<div class="line"><a name="l01502"></a><span class="lineno"> 1502</span>&#160;                                                                   uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01503"></a><span class="lineno"> 1503</span>&#160;                                                                   <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01504"></a><span class="lineno"> 1504</span>&#160; </div>
+<div class="line"><a name="l01513"></a><span class="lineno"> 1513</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> registration_committee_exclude_member(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01514"></a><span class="lineno"> 1514</span>&#160;                                                                       <span class="keyword">const</span> std::string&amp; dropout,</div>
+<div class="line"><a name="l01515"></a><span class="lineno"> 1515</span>&#160;                                                                       uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01516"></a><span class="lineno"> 1516</span>&#160;                                                                       <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01517"></a><span class="lineno"> 1517</span>&#160; </div>
+<div class="line"><a name="l01525"></a><span class="lineno"> 1525</span>&#160;    std::set&lt;account_name_type&gt; list_registration_committee(<span class="keyword">const</span> std::string&amp; lowerbound, uint32_t limit);</div>
+<div class="line"><a name="l01526"></a><span class="lineno"> 1526</span>&#160; </div>
+<div class="line"><a name="l01532"></a><span class="lineno"> 1532</span>&#160;    <a class="code" href="structscorum_1_1app_1_1registration__committee__api__obj.html">registration_committee_api_obj</a> get_registration_committee();</div>
+<div class="line"><a name="l01533"></a><span class="lineno"> 1533</span>&#160; </div>
+<div class="line"><a name="l01539"></a><span class="lineno"> 1539</span>&#160;    std::vector&lt;proposal_api_obj&gt; list_proposals();</div>
+<div class="line"><a name="l01540"></a><span class="lineno"> 1540</span>&#160; </div>
+<div class="line"><a name="l01550"></a><span class="lineno"> 1550</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> registration_committee_change_add_member_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
+<div class="line"><a name="l01551"></a><span class="lineno"> 1551</span>&#160;                                                                                 uint64_t quorum_percent,</div>
+<div class="line"><a name="l01552"></a><span class="lineno"> 1552</span>&#160;                                                                                 uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01553"></a><span class="lineno"> 1553</span>&#160;                                                                                 <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01554"></a><span class="lineno"> 1554</span>&#160; </div>
+<div class="line"><a name="l01564"></a><span class="lineno"> 1564</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> registration_committee_change_exclude_member_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
+<div class="line"><a name="l01565"></a><span class="lineno"> 1565</span>&#160;                                                                                     uint64_t quorum_percent,</div>
+<div class="line"><a name="l01566"></a><span class="lineno"> 1566</span>&#160;                                                                                     uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01567"></a><span class="lineno"> 1567</span>&#160;                                                                                     <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01568"></a><span class="lineno"> 1568</span>&#160; </div>
+<div class="line"><a name="l01577"></a><span class="lineno"> 1577</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> registration_committee_change_base_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
+<div class="line"><a name="l01578"></a><span class="lineno"> 1578</span>&#160;                                                                           uint64_t quorum_percent,</div>
+<div class="line"><a name="l01579"></a><span class="lineno"> 1579</span>&#160;                                                                           uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01580"></a><span class="lineno"> 1580</span>&#160;                                                                           <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01581"></a><span class="lineno"> 1581</span>&#160; </div>
+<div class="line"><a name="l01590"></a><span class="lineno"> 1590</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_add_member(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01591"></a><span class="lineno"> 1591</span>&#160;                                                                  <span class="keyword">const</span> std::string&amp; invitee,</div>
+<div class="line"><a name="l01592"></a><span class="lineno"> 1592</span>&#160;                                                                  uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01593"></a><span class="lineno"> 1593</span>&#160;                                                                  <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01594"></a><span class="lineno"> 1594</span>&#160; </div>
+<div class="line"><a name="l01603"></a><span class="lineno"> 1603</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_exclude_member(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01604"></a><span class="lineno"> 1604</span>&#160;                                                                      <span class="keyword">const</span> std::string&amp; dropout,</div>
+<div class="line"><a name="l01605"></a><span class="lineno"> 1605</span>&#160;                                                                      uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01606"></a><span class="lineno"> 1606</span>&#160;                                                                      <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01607"></a><span class="lineno"> 1607</span>&#160; </div>
+<div class="line"><a name="l01615"></a><span class="lineno"> 1615</span>&#160;    std::set&lt;account_name_type&gt; list_development_committee(<span class="keyword">const</span> std::string&amp; lowerbound, uint32_t limit);</div>
+<div class="line"><a name="l01616"></a><span class="lineno"> 1616</span>&#160; </div>
+<div class="line"><a name="l01625"></a><span class="lineno"> 1625</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_add_member_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
+<div class="line"><a name="l01626"></a><span class="lineno"> 1626</span>&#160;                                                                                uint64_t quorum_percent,</div>
+<div class="line"><a name="l01627"></a><span class="lineno"> 1627</span>&#160;                                                                                uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01628"></a><span class="lineno"> 1628</span>&#160;                                                                                <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01629"></a><span class="lineno"> 1629</span>&#160; </div>
+<div class="line"><a name="l01638"></a><span class="lineno"> 1638</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_exclude_member_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
+<div class="line"><a name="l01639"></a><span class="lineno"> 1639</span>&#160;                                                                                    uint64_t quorum_percent,</div>
+<div class="line"><a name="l01640"></a><span class="lineno"> 1640</span>&#160;                                                                                    uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01641"></a><span class="lineno"> 1641</span>&#160;                                                                                    <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01642"></a><span class="lineno"> 1642</span>&#160; </div>
+<div class="line"><a name="l01651"></a><span class="lineno"> 1651</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_base_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
+<div class="line"><a name="l01652"></a><span class="lineno"> 1652</span>&#160;                                                                          uint64_t quorum_percent,</div>
+<div class="line"><a name="l01653"></a><span class="lineno"> 1653</span>&#160;                                                                          uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01654"></a><span class="lineno"> 1654</span>&#160;                                                                          <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01655"></a><span class="lineno"> 1655</span>&#160; </div>
+<div class="line"><a name="l01664"></a><span class="lineno"> 1664</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_transfer_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
+<div class="line"><a name="l01665"></a><span class="lineno"> 1665</span>&#160;                                                                              uint64_t quorum_percent,</div>
+<div class="line"><a name="l01666"></a><span class="lineno"> 1666</span>&#160;                                                                              uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01667"></a><span class="lineno"> 1667</span>&#160;                                                                              <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01668"></a><span class="lineno"> 1668</span>&#160; </div>
+<div class="line"><a name="l01677"></a><span class="lineno"> 1677</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_budget_auction_properties_quorum(</div>
+<div class="line"><a name="l01678"></a><span class="lineno"> 1678</span>&#160;        <span class="keyword">const</span> std::string&amp; creator, uint64_t quorum_percent, uint32_t lifetime_sec, <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01679"></a><span class="lineno"> 1679</span>&#160; </div>
+<div class="line"><a name="l01688"></a><span class="lineno"> 1688</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_advertising_moderator_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
+<div class="line"><a name="l01689"></a><span class="lineno"> 1689</span>&#160;                                                                                           uint64_t quorum_percent,</div>
+<div class="line"><a name="l01690"></a><span class="lineno"> 1690</span>&#160;                                                                                           uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01691"></a><span class="lineno"> 1691</span>&#160;                                                                                           <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01700"></a><span class="lineno"> 1700</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_betting_moderator_quorum(<span class="keyword">const</span> std::string&amp; creator,</div>
+<div class="line"><a name="l01701"></a><span class="lineno"> 1701</span>&#160;                                                                                       uint64_t quorum_percent,</div>
+<div class="line"><a name="l01702"></a><span class="lineno"> 1702</span>&#160;                                                                                       uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01703"></a><span class="lineno"> 1703</span>&#160;                                                                                       <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01704"></a><span class="lineno"> 1704</span>&#160; </div>
+<div class="line"><a name="l01713"></a><span class="lineno"> 1713</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_empower_advertising_moderator(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01714"></a><span class="lineno"> 1714</span>&#160;                                                                                     <span class="keyword">const</span> std::string&amp; moderator,</div>
+<div class="line"><a name="l01715"></a><span class="lineno"> 1715</span>&#160;                                                                                     uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01716"></a><span class="lineno"> 1716</span>&#160;                                                                                     <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01717"></a><span class="lineno"> 1717</span>&#160; </div>
+<div class="line"><a name="l01726"></a><span class="lineno"> 1726</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_empower_betting_moderator(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01727"></a><span class="lineno"> 1727</span>&#160;                                                                                 <span class="keyword">const</span> std::string&amp; moderator,</div>
+<div class="line"><a name="l01728"></a><span class="lineno"> 1728</span>&#160;                                                                                 uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01729"></a><span class="lineno"> 1729</span>&#160;                                                                                 <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01730"></a><span class="lineno"> 1730</span>&#160; </div>
+<div class="line"><a name="l01740"></a><span class="lineno"> 1740</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_committee_change_betting_resolve_delay(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01741"></a><span class="lineno"> 1741</span>&#160;                                                                                    uint32_t delay_sec,</div>
+<div class="line"><a name="l01742"></a><span class="lineno"> 1742</span>&#160;                                                                                    uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01743"></a><span class="lineno"> 1743</span>&#160;                                                                                    <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01744"></a><span class="lineno"> 1744</span>&#160; </div>
+<div class="line"><a name="l01754"></a><span class="lineno"> 1754</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_pool_transfer(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01755"></a><span class="lineno"> 1755</span>&#160;                                                           <span class="keyword">const</span> std::string&amp; to_account,</div>
+<div class="line"><a name="l01756"></a><span class="lineno"> 1756</span>&#160;                                                           <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a> amount,</div>
+<div class="line"><a name="l01757"></a><span class="lineno"> 1757</span>&#160;                                                           uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01758"></a><span class="lineno"> 1758</span>&#160;                                                           <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01759"></a><span class="lineno"> 1759</span>&#160; </div>
+<div class="line"><a name="l01768"></a><span class="lineno"> 1768</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_pool_withdraw_vesting(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01769"></a><span class="lineno"> 1769</span>&#160;                                                                   <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a> amount,</div>
+<div class="line"><a name="l01770"></a><span class="lineno"> 1770</span>&#160;                                                                   uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01771"></a><span class="lineno"> 1771</span>&#160;                                                                   <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01772"></a><span class="lineno"> 1772</span>&#160; </div>
+<div class="line"><a name="l01780"></a><span class="lineno"> 1780</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_pool_post_budgets_auction_properties(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01781"></a><span class="lineno"> 1781</span>&#160;                                                                                  <span class="keyword">const</span> std::vector&lt;percent_type&gt;&amp;,</div>
+<div class="line"><a name="l01782"></a><span class="lineno"> 1782</span>&#160;                                                                                  uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01783"></a><span class="lineno"> 1783</span>&#160;                                                                                  <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01784"></a><span class="lineno"> 1784</span>&#160; </div>
+<div class="line"><a name="l01792"></a><span class="lineno"> 1792</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> development_pool_banner_budgets_auction_properties(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01793"></a><span class="lineno"> 1793</span>&#160;                                                                                    <span class="keyword">const</span> std::vector&lt;percent_type&gt;&amp;,</div>
+<div class="line"><a name="l01794"></a><span class="lineno"> 1794</span>&#160;                                                                                    uint32_t lifetime_sec,</div>
+<div class="line"><a name="l01795"></a><span class="lineno"> 1795</span>&#160;                                                                                    <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01796"></a><span class="lineno"> 1796</span>&#160; </div>
+<div class="line"><a name="l01800"></a><span class="lineno"> 1800</span>&#160;    <a class="code" href="classscorum_1_1app_1_1api__obj.html">development_committee_api_obj</a> get_development_committee();</div>
+<div class="line"><a name="l01801"></a><span class="lineno"> 1801</span>&#160; </div>
+<div class="line"><a name="l01813"></a><span class="lineno"> 1813</span>&#160;    std::vector&lt;applied_operation&gt; get_devcommittee_history(uint64_t from, uint32_t limit);</div>
+<div class="line"><a name="l01814"></a><span class="lineno"> 1814</span>&#160; </div>
+<div class="line"><a name="l01826"></a><span class="lineno"> 1826</span>&#160;    std::vector&lt;applied_operation&gt; get_devcommittee_scr_to_scr_transfers(uint64_t from, uint32_t limit);</div>
+<div class="line"><a name="l01827"></a><span class="lineno"> 1827</span>&#160; </div>
+<div class="line"><a name="l01839"></a><span class="lineno"> 1839</span>&#160;    std::vector&lt;applied_withdraw_operation&gt; get_devcommittee_sp_to_scr_transfers(uint64_t from, uint32_t limit);</div>
+<div class="line"><a name="l01840"></a><span class="lineno"> 1840</span>&#160; </div>
+<div class="line"><a name="l01842"></a><span class="lineno"> 1842</span>&#160; </div>
+<div class="line"><a name="l01847"></a><span class="lineno"> 1847</span>&#160; </div>
+<div class="line"><a name="l01865"></a><span class="lineno"> 1865</span>&#160;    <a class="code" href="structscorum_1_1app_1_1atomicswap__contract__result__api__obj.html">atomicswap_contract_result_api_obj</a> atomicswap_initiate(<span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01866"></a><span class="lineno"> 1866</span>&#160;                                                           <span class="keyword">const</span> std::string&amp; participant,</div>
+<div class="line"><a name="l01867"></a><span class="lineno"> 1867</span>&#160;                                                           <span class="keyword">const</span> <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a>&amp; amount,</div>
+<div class="line"><a name="l01868"></a><span class="lineno"> 1868</span>&#160;                                                           <span class="keyword">const</span> std::string&amp; metadata,</div>
+<div class="line"><a name="l01869"></a><span class="lineno"> 1869</span>&#160;                                                           <span class="keyword">const</span> uint8_t secret_length,</div>
+<div class="line"><a name="l01870"></a><span class="lineno"> 1870</span>&#160;                                                           <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01871"></a><span class="lineno"> 1871</span>&#160; </div>
+<div class="line"><a name="l01887"></a><span class="lineno"> 1887</span>&#160;    <a class="code" href="structscorum_1_1app_1_1atomicswap__contract__result__api__obj.html">atomicswap_contract_result_api_obj</a> atomicswap_participate(<span class="keyword">const</span> std::string&amp; secret_hash,</div>
+<div class="line"><a name="l01888"></a><span class="lineno"> 1888</span>&#160;                                                              <span class="keyword">const</span> std::string&amp; participant,</div>
+<div class="line"><a name="l01889"></a><span class="lineno"> 1889</span>&#160;                                                              <span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01890"></a><span class="lineno"> 1890</span>&#160;                                                              <span class="keyword">const</span> <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a>&amp; amount,</div>
+<div class="line"><a name="l01891"></a><span class="lineno"> 1891</span>&#160;                                                              <span class="keyword">const</span> std::string&amp; metadata,</div>
+<div class="line"><a name="l01892"></a><span class="lineno"> 1892</span>&#160;                                                              <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01893"></a><span class="lineno"> 1893</span>&#160; </div>
+<div class="line"><a name="l01901"></a><span class="lineno"> 1901</span>&#160;    <a class="code" href="structscorum_1_1app_1_1atomicswap__contract__info__api__obj.html">atomicswap_contract_info_api_obj</a></div>
+<div class="line"><a name="l01902"></a><span class="lineno"> 1902</span>&#160;    atomicswap_auditcontract(<span class="keyword">const</span> std::string&amp; from, <span class="keyword">const</span> std::string&amp; to, <span class="keyword">const</span> std::string&amp; secret_hash);</div>
+<div class="line"><a name="l01903"></a><span class="lineno"> 1903</span>&#160; </div>
+<div class="line"><a name="l01916"></a><span class="lineno"> 1916</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
+<div class="line"><a name="l01917"></a><span class="lineno"> 1917</span>&#160;    atomicswap_redeem(<span class="keyword">const</span> std::string&amp; from, <span class="keyword">const</span> std::string&amp; to, <span class="keyword">const</span> std::string&amp; secret, <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01918"></a><span class="lineno"> 1918</span>&#160; </div>
+<div class="line"><a name="l01927"></a><span class="lineno"> 1927</span>&#160;    std::string</div>
+<div class="line"><a name="l01928"></a><span class="lineno"> 1928</span>&#160;    atomicswap_extractsecret(<span class="keyword">const</span> std::string&amp; from, <span class="keyword">const</span> std::string&amp; to, <span class="keyword">const</span> std::string&amp; secret_hash);</div>
+<div class="line"><a name="l01929"></a><span class="lineno"> 1929</span>&#160; </div>
+<div class="line"><a name="l01942"></a><span class="lineno"> 1942</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> atomicswap_refund(<span class="keyword">const</span> std::string&amp; participant,</div>
+<div class="line"><a name="l01943"></a><span class="lineno"> 1943</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; initiator,</div>
+<div class="line"><a name="l01944"></a><span class="lineno"> 1944</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; secret_hash,</div>
+<div class="line"><a name="l01945"></a><span class="lineno"> 1945</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01946"></a><span class="lineno"> 1946</span>&#160; </div>
+<div class="line"><a name="l01952"></a><span class="lineno"> 1952</span>&#160;    std::vector&lt;atomicswap_contract_api_obj&gt; get_atomicswap_contracts(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>);</div>
+<div class="line"><a name="l01953"></a><span class="lineno"> 1953</span>&#160; </div>
+<div class="line"><a name="l01955"></a><span class="lineno"> 1955</span>&#160; </div>
+<div class="line"><a name="l01960"></a><span class="lineno"> 1960</span>&#160; </div>
+<div class="line"><a name="l01975"></a><span class="lineno"> 1975</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_game(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid,</div>
+<div class="line"><a name="l01976"></a><span class="lineno"> 1976</span>&#160;                                             <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> moderator,</div>
+<div class="line"><a name="l01977"></a><span class="lineno"> 1977</span>&#160;                                             <span class="keyword">const</span> std::string&amp; json_metadata,</div>
+<div class="line"><a name="l01978"></a><span class="lineno"> 1978</span>&#160;                                             fc::time_point_sec start_time,</div>
+<div class="line"><a name="l01979"></a><span class="lineno"> 1979</span>&#160;                                             uint32_t auto_resolve_delay_sec,</div>
+<div class="line"><a name="l01980"></a><span class="lineno"> 1980</span>&#160;                                             <a class="code" href="namespacescorum_1_1protocol.html#ac9535638d72512bc00346f9a6a1e9e32">game_type</a> game,</div>
+<div class="line"><a name="l01981"></a><span class="lineno"> 1981</span>&#160;                                             <span class="keyword">const</span> std::vector&lt;market_type&gt;&amp; markets,</div>
+<div class="line"><a name="l01982"></a><span class="lineno"> 1982</span>&#160;                                             <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01983"></a><span class="lineno"> 1983</span>&#160; </div>
+<div class="line"><a name="l01991"></a><span class="lineno"> 1991</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> cancel_game(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid, <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> moderator, <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l01992"></a><span class="lineno"> 1992</span>&#160; </div>
+<div class="line"><a name="l02001"></a><span class="lineno"> 2001</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_game_markets(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid,</div>
+<div class="line"><a name="l02002"></a><span class="lineno"> 2002</span>&#160;                                                     <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> moderator,</div>
+<div class="line"><a name="l02003"></a><span class="lineno"> 2003</span>&#160;                                                     <span class="keyword">const</span> std::vector&lt;market_type&gt;&amp; markets,</div>
+<div class="line"><a name="l02004"></a><span class="lineno"> 2004</span>&#160;                                                     <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l02005"></a><span class="lineno"> 2005</span>&#160; </div>
+<div class="line"><a name="l02014"></a><span class="lineno"> 2014</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
+<div class="line"><a name="l02015"></a><span class="lineno"> 2015</span>&#160;    update_game_start_time(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid, <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> moderator, fc::time_point_sec start_time, <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l02016"></a><span class="lineno"> 2016</span>&#160; </div>
+<div class="line"><a name="l02025"></a><span class="lineno"> 2025</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> post_game_results(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid,</div>
+<div class="line"><a name="l02026"></a><span class="lineno"> 2026</span>&#160;                                                   <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> moderator,</div>
+<div class="line"><a name="l02027"></a><span class="lineno"> 2027</span>&#160;                                                   <span class="keyword">const</span> std::vector&lt;wincase_type&gt;&amp; wincases,</div>
+<div class="line"><a name="l02028"></a><span class="lineno"> 2028</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l02029"></a><span class="lineno"> 2029</span>&#160; </div>
+<div class="line"><a name="l02043"></a><span class="lineno"> 2043</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> post_bet(<a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> uuid,</div>
+<div class="line"><a name="l02044"></a><span class="lineno"> 2044</span>&#160;                                          <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> better,</div>
+<div class="line"><a name="l02045"></a><span class="lineno"> 2045</span>&#160;                                          <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a> game_uuid,</div>
+<div class="line"><a name="l02046"></a><span class="lineno"> 2046</span>&#160;                                          <a class="code" href="namespacescorum_1_1protocol.html#a7552aa0b59772fc2d112d203403e29ba">wincase_type</a> wincase,</div>
+<div class="line"><a name="l02047"></a><span class="lineno"> 2047</span>&#160;                                          <a class="code" href="structscorum_1_1protocol_1_1odds__input.html">odds_input</a> <a class="code" href="classscorum_1_1protocol_1_1odds.html">odds</a>,</div>
+<div class="line"><a name="l02048"></a><span class="lineno"> 2048</span>&#160;                                          <a class="code" href="structscorum_1_1protocol_1_1asset.html">asset</a> stake,</div>
+<div class="line"><a name="l02049"></a><span class="lineno"> 2049</span>&#160;                                          <span class="keywordtype">bool</span> is_live,</div>
+<div class="line"><a name="l02050"></a><span class="lineno"> 2050</span>&#160;                                          <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l02051"></a><span class="lineno"> 2051</span>&#160; </div>
+<div class="line"><a name="l02059"></a><span class="lineno"> 2059</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a></div>
+<div class="line"><a name="l02060"></a><span class="lineno"> 2060</span>&#160;    cancel_pending_bets(<a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a> better, <span class="keyword">const</span> std::vector&lt;uuid_type&gt;&amp; bet_uuids, <span class="keywordtype">bool</span> broadcast);</div>
+<div class="line"><a name="l02061"></a><span class="lineno"> 2061</span>&#160; </div>
+<div class="line"><a name="l02068"></a><span class="lineno"> 2068</span>&#160;    std::vector&lt;game_api_object&gt; get_games_by_status(<span class="keyword">const</span> fc::flat_set&lt;game_status&gt;&amp; filter) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02069"></a><span class="lineno"> 2069</span>&#160; </div>
+<div class="line"><a name="l02076"></a><span class="lineno"> 2076</span>&#160;    std::vector&lt;game_api_object&gt; get_games_by_uuids(<span class="keyword">const</span> std::vector&lt;uuid_type&gt;&amp; uuids) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02077"></a><span class="lineno"> 2077</span>&#160; </div>
+<div class="line"><a name="l02085"></a><span class="lineno"> 2085</span>&#160;    std::vector&lt;game_api_object&gt; lookup_games_by_id(<a class="code" href="classchainbase_1_1oid.html">game_id_type</a> from, uint32_t limit) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02086"></a><span class="lineno"> 2086</span>&#160; </div>
+<div class="line"><a name="l02094"></a><span class="lineno"> 2094</span>&#160;    std::vector&lt;matched_bet_api_object&gt; lookup_matched_bets(<a class="code" href="classchainbase_1_1oid.html">matched_bet_id_type</a> from, int64_t limit) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02095"></a><span class="lineno"> 2095</span>&#160; </div>
+<div class="line"><a name="l02103"></a><span class="lineno"> 2103</span>&#160;    std::vector&lt;pending_bet_api_object&gt; lookup_pending_bets(<a class="code" href="classchainbase_1_1oid.html">pending_bet_id_type</a> from, int64_t limit) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02104"></a><span class="lineno"> 2104</span>&#160; </div>
+<div class="line"><a name="l02111"></a><span class="lineno"> 2111</span>&#160;    std::vector&lt;matched_bet_api_object&gt; get_matched_bets(<span class="keyword">const</span> std::vector&lt;uuid_type&gt;&amp; uuids) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02112"></a><span class="lineno"> 2112</span>&#160; </div>
+<div class="line"><a name="l02119"></a><span class="lineno"> 2119</span>&#160;    std::vector&lt;pending_bet_api_object&gt; get_pending_bets(<span class="keyword">const</span> std::vector&lt;uuid_type&gt;&amp; uuids) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02120"></a><span class="lineno"> 2120</span>&#160; </div>
+<div class="line"><a name="l02126"></a><span class="lineno"> 2126</span>&#160;    <a class="code" href="classscorum_1_1app_1_1api__obj.html">betting_property_api_object</a> get_betting_properties() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02127"></a><span class="lineno"> 2127</span>&#160; </div>
+<div class="line"><a name="l02134"></a><span class="lineno"> 2134</span>&#160;    std::vector&lt;matched_bet_api_object&gt; get_game_returns(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; game_uuid) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02135"></a><span class="lineno"> 2135</span>&#160; </div>
+<div class="line"><a name="l02142"></a><span class="lineno"> 2142</span>&#160;    std::vector&lt;winner_api_object&gt; get_game_winners(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; game_uuid) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02143"></a><span class="lineno"> 2143</span>&#160; </div>
+<div class="line"><a name="l02150"></a><span class="lineno"> 2150</span>&#160;    std::vector&lt;matched_bet_api_object&gt; get_game_matched_bets(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02151"></a><span class="lineno"> 2151</span>&#160; </div>
+<div class="line"><a name="l02158"></a><span class="lineno"> 2158</span>&#160;    std::vector&lt;pending_bet_api_object&gt; get_game_pending_bets(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02159"></a><span class="lineno"> 2159</span>&#160; </div>
+<div class="line"><a name="l02161"></a><span class="lineno"> 2161</span>&#160; </div>
+<div class="line"><a name="l02166"></a><span class="lineno"> 2166</span>&#160; </div>
+<div class="line"><a name="l02177"></a><span class="lineno"> 2177</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_nft(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
+<div class="line"><a name="l02178"></a><span class="lineno"> 2178</span>&#160;                                            <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l02179"></a><span class="lineno"> 2179</span>&#160;                                            <span class="keyword">const</span> std::string&amp; name,</div>
+<div class="line"><a name="l02180"></a><span class="lineno"> 2180</span>&#160;                                            int32_t initial_power,</div>
+<div class="line"><a name="l02181"></a><span class="lineno"> 2181</span>&#160;                                            <span class="keyword">const</span> std::string&amp; json_meta,</div>
+<div class="line"><a name="l02182"></a><span class="lineno"> 2182</span>&#160;                                            <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02183"></a><span class="lineno"> 2183</span>&#160; </div>
+<div class="line"><a name="l02192"></a><span class="lineno"> 2192</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_nft_meta(<span class="keyword">const</span> std::string&amp; moderator,</div>
+<div class="line"><a name="l02193"></a><span class="lineno"> 2193</span>&#160;                                                 <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l02194"></a><span class="lineno"> 2194</span>&#160;                                                 <span class="keyword">const</span> std::string&amp; json_meta,</div>
+<div class="line"><a name="l02195"></a><span class="lineno"> 2195</span>&#160;                                                 <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02196"></a><span class="lineno"> 2196</span>&#160; </div>
+<div class="line"><a name="l02205"></a><span class="lineno"> 2205</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> adjust_nft_experience(<span class="keyword">const</span> std::string&amp; moderator,</div>
+<div class="line"><a name="l02206"></a><span class="lineno"> 2206</span>&#160;                                                       <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l02207"></a><span class="lineno"> 2207</span>&#160;                                                       int32_t experience,</div>
+<div class="line"><a name="l02208"></a><span class="lineno"> 2208</span>&#160;                                                       <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02209"></a><span class="lineno"> 2209</span>&#160; </div>
+<div class="line"><a name="l02218"></a><span class="lineno"> 2218</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_nft_name(<span class="keyword">const</span> std::string&amp; moderator,</div>
+<div class="line"><a name="l02219"></a><span class="lineno"> 2219</span>&#160;                                                 <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l02220"></a><span class="lineno"> 2220</span>&#160;                                                 <span class="keyword">const</span> std::string&amp; name,</div>
+<div class="line"><a name="l02221"></a><span class="lineno"> 2221</span>&#160;                                                 <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02228"></a><span class="lineno"> 2228</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_id(int64_t <span class="keywordtype">id</span>) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02229"></a><span class="lineno"> 2229</span>&#160; </div>
+<div class="line"><a name="l02236"></a><span class="lineno"> 2236</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_name(<span class="keyword">const</span> <a class="code" href="namespacescorum_1_1protocol.html#a31347c8415fef0e6bc9edf065c152e7b">account_name_type</a>&amp; name) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02237"></a><span class="lineno"> 2237</span>&#160; </div>
+<div class="line"><a name="l02244"></a><span class="lineno"> 2244</span>&#160;    <a class="code" href="structscorum_1_1app_1_1nft__api__obj.html">nft_api_obj</a> get_nft_by_uuid(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02245"></a><span class="lineno"> 2245</span>&#160; </div>
+<div class="line"><a name="l02253"></a><span class="lineno"> 2253</span>&#160;    std::vector&lt;nft_api_obj&gt; lookup_nft(int64_t from, uint32_t limit) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02254"></a><span class="lineno"> 2254</span>&#160; </div>
+<div class="line"><a name="l02264"></a><span class="lineno"> 2264</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> create_game_round(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
+<div class="line"><a name="l02265"></a><span class="lineno"> 2265</span>&#160;                                                   <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l02266"></a><span class="lineno"> 2266</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; verification_key,</div>
+<div class="line"><a name="l02267"></a><span class="lineno"> 2267</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; seed,</div>
+<div class="line"><a name="l02268"></a><span class="lineno"> 2268</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02269"></a><span class="lineno"> 2269</span>&#160; </div>
+<div class="line"><a name="l02280"></a><span class="lineno"> 2280</span>&#160;    <a class="code" href="structscorum_1_1protocol_1_1annotated__signed__transaction.html">annotated_signed_transaction</a> update_game_round_result(<span class="keyword">const</span> std::string&amp; <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>,</div>
+<div class="line"><a name="l02281"></a><span class="lineno"> 2281</span>&#160;                                                   <span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid,</div>
+<div class="line"><a name="l02282"></a><span class="lineno"> 2282</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; proof,</div>
+<div class="line"><a name="l02283"></a><span class="lineno"> 2283</span>&#160;                                                   <span class="keyword">const</span> std::string&amp; vrf,</div>
+<div class="line"><a name="l02284"></a><span class="lineno"> 2284</span>&#160;                                                   int32_t result,</div>
+<div class="line"><a name="l02285"></a><span class="lineno"> 2285</span>&#160;                                                   <span class="keywordtype">bool</span> broadcast) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02286"></a><span class="lineno"> 2286</span>&#160; </div>
+<div class="line"><a name="l02293"></a><span class="lineno"> 2293</span>&#160;    <a class="code" href="structscorum_1_1app_1_1game__round__api__obj.html">game_round_api_obj</a> get_game_round_by_uuid(<span class="keyword">const</span> <a class="code" href="namespacescorum.html#a74534d9c3410fcd3210c94b498500326">uuid_type</a>&amp; uuid) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02294"></a><span class="lineno"> 2294</span>&#160; </div>
+<div class="line"><a name="l02302"></a><span class="lineno"> 2302</span>&#160;    std::vector&lt;game_round_api_obj&gt; lookup_game_round(int64_t from, uint32_t limit) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l02303"></a><span class="lineno"> 2303</span>&#160; </div>
+<div class="line"><a name="l02305"></a><span class="lineno"> 2305</span>&#160; </div>
+<div class="line"><a name="l02306"></a><span class="lineno"> 2306</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l02307"></a><span class="lineno"><a class="line" href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3"> 2307</a></span>&#160;    fc::signal&lt;void(<span class="keywordtype">bool</span>)&gt; <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3">lock_changed</a>;</div>
+<div class="line"><a name="l02308"></a><span class="lineno"> 2308</span>&#160; </div>
+<div class="line"><a name="l02309"></a><span class="lineno"> 2309</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l02310"></a><span class="lineno"> 2310</span>&#160;    std::shared_ptr&lt;detail::wallet_api_impl&gt; my;</div>
+<div class="line"><a name="l02311"></a><span class="lineno"> 2311</span>&#160;    <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html#a08c93f4a6938b83e67b0f74f9a822075">exit_func_type</a> exit_func;</div>
+<div class="line"><a name="l02312"></a><span class="lineno"> 2312</span>&#160;};</div>
+<div class="line"><a name="l02313"></a><span class="lineno"> 2313</span>&#160; </div>
+<div class="line"><a name="l02314"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html"> 2314</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structscorum_1_1wallet_1_1plain__keys.html">plain_keys</a></div>
+<div class="line"><a name="l02315"></a><span class="lineno"> 2315</span>&#160;{</div>
+<div class="line"><a name="l02316"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4"> 2316</a></span>&#160;    fc::sha512 <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4">checksum</a>;</div>
+<div class="line"><a name="l02317"></a><span class="lineno"><a class="line" href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a"> 2317</a></span>&#160;    std::map&lt;public_key_type, std::string&gt; <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a">keys</a>;</div>
+<div class="line"><a name="l02318"></a><span class="lineno"> 2318</span>&#160;};</div>
+<div class="line"><a name="l02319"></a><span class="lineno"> 2319</span>&#160;} <span class="comment">// namespace wallet</span></div>
+<div class="line"><a name="l02320"></a><span class="lineno"> 2320</span>&#160;} <span class="comment">// namespace scorum</span></div>
+<div class="line"><a name="l02321"></a><span class="lineno"> 2321</span>&#160; </div>
+<div class="line"><a name="l02322"></a><span class="lineno"> 2322</span>&#160;<span class="comment">// clang-format off</span></div>
+<div class="line"><a name="l02323"></a><span class="lineno"> 2323</span>&#160; </div>
+<div class="line"><a name="l02324"></a><span class="lineno"> 2324</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>(<a class="code" href="structscorum_1_1wallet_1_1wallet__data.html">scorum::wallet::wallet_data</a>,</div>
+<div class="line"><a name="l02325"></a><span class="lineno"> 2325</span>&#160;           (cipher_keys)</div>
+<div class="line"><a name="l02326"></a><span class="lineno"> 2326</span>&#160;           (ws_server)</div>
+<div class="line"><a name="l02327"></a><span class="lineno"> 2327</span>&#160;           (ws_user)</div>
+<div class="line"><a name="l02328"></a><span class="lineno"> 2328</span>&#160;           (ws_password)</div>
+<div class="line"><a name="l02329"></a><span class="lineno"> 2329</span>&#160;           (chain_id))</div>
 <div class="line"><a name="l02330"></a><span class="lineno"> 2330</span>&#160; </div>
-<div class="line"><a name="l02331"></a><span class="lineno"> 2331</span>&#160;<a class="code" href="game__status_8hpp.html#a35075ecd8577f1bc09a3d2f77fc11356">FC_REFLECT_ENUM</a>( <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9">scorum::wallet::authority_type</a>, (<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>)(<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9a528a6948edb442e9b924d9495822095e">active</a>)(<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9a0d7ddd918611a27fc583188be6f46d65">posting</a>) )</div>
+<div class="line"><a name="l02331"></a><span class="lineno"> 2331</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1brain__key__info.html">scorum::wallet::brain_key_info</a>, (brain_priv_key)(wif_priv_key) (pub_key))</div>
 <div class="line"><a name="l02332"></a><span class="lineno"> 2332</span>&#160; </div>
-<div class="line"><a name="l02333"></a><span class="lineno"> 2333</span>&#160;FC_API( <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html">scorum::wallet::wallet_api</a>,</div>
-<div class="line"><a name="l02335"></a><span class="lineno"> 2335</span>&#160;        (help)(gethelp)</div>
-<div class="line"><a name="l02336"></a><span class="lineno"> 2336</span>&#160;        (about)(is_new)(is_locked)(lock)(unlock)(set_password)</div>
-<div class="line"><a name="l02337"></a><span class="lineno"> 2337</span>&#160;        (load_wallet_file)(save_wallet_file)(exit)</div>
-<div class="line"><a name="l02338"></a><span class="lineno"> 2338</span>&#160; </div>
-<div class="line"><a name="l02340"></a><span class="lineno"> 2340</span>&#160;        (import_key)</div>
-<div class="line"><a name="l02341"></a><span class="lineno"> 2341</span>&#160;        (<a class="code" href="namespacescorum_1_1wallet.html#a4a596fb2403c99756dd499d4946b108c">suggest_brain_key</a>)</div>
-<div class="line"><a name="l02342"></a><span class="lineno"> 2342</span>&#160;        (list_keys)</div>
-<div class="line"><a name="l02343"></a><span class="lineno"> 2343</span>&#160;        (get_private_key)</div>
-<div class="line"><a name="l02344"></a><span class="lineno"> 2344</span>&#160;        (get_private_key_from_password)</div>
-<div class="line"><a name="l02345"></a><span class="lineno"> 2345</span>&#160;        (<a class="code" href="namespacescorum_1_1wallet.html#af083e484f1f52ed3ab0493bf0f21b8e0">normalize_brain_key</a>)</div>
-<div class="line"><a name="l02346"></a><span class="lineno"> 2346</span>&#160; </div>
-<div class="line"><a name="l02348"></a><span class="lineno"> 2348</span>&#160;        (get_block_header)</div>
-<div class="line"><a name="l02349"></a><span class="lineno"> 2349</span>&#160;        (get_block)</div>
-<div class="line"><a name="l02350"></a><span class="lineno"> 2350</span>&#160;        (get_block_headers_history)</div>
-<div class="line"><a name="l02351"></a><span class="lineno"> 2351</span>&#160;        (get_blocks_history)</div>
-<div class="line"><a name="l02352"></a><span class="lineno"> 2352</span>&#160;        (get_ops_in_block)</div>
-<div class="line"><a name="l02353"></a><span class="lineno"> 2353</span>&#160;        (get_ops_history)</div>
-<div class="line"><a name="l02354"></a><span class="lineno"> 2354</span>&#160;        (get_ops_history_by_time)</div>
-<div class="line"><a name="l02355"></a><span class="lineno"> 2355</span>&#160;        (get_transaction)</div>
-<div class="line"><a name="l02356"></a><span class="lineno"> 2356</span>&#160; </div>
-<div class="line"><a name="l02358"></a><span class="lineno"> 2358</span>&#160;        (info)</div>
-<div class="line"><a name="l02359"></a><span class="lineno"> 2359</span>&#160;        (get_chain_capital)</div>
-<div class="line"><a name="l02360"></a><span class="lineno"> 2360</span>&#160;        (get_active_witnesses)</div>
-<div class="line"><a name="l02361"></a><span class="lineno"> 2361</span>&#160;        (list_my_accounts)</div>
-<div class="line"><a name="l02362"></a><span class="lineno"> 2362</span>&#160;        (list_accounts)</div>
-<div class="line"><a name="l02363"></a><span class="lineno"> 2363</span>&#160;        (list_witnesses)</div>
-<div class="line"><a name="l02364"></a><span class="lineno"> 2364</span>&#160;        (get_witness)</div>
-<div class="line"><a name="l02365"></a><span class="lineno"> 2365</span>&#160;        (get_account)</div>
-<div class="line"><a name="l02366"></a><span class="lineno"> 2366</span>&#160;        (get_account_balance)</div>
-<div class="line"><a name="l02367"></a><span class="lineno"> 2367</span>&#160;        (get_account_history)</div>
-<div class="line"><a name="l02368"></a><span class="lineno"> 2368</span>&#160;        (get_account_scr_to_scr_transfers)</div>
-<div class="line"><a name="l02369"></a><span class="lineno"> 2369</span>&#160;        (get_account_scr_to_sp_transfers)</div>
-<div class="line"><a name="l02370"></a><span class="lineno"> 2370</span>&#160;        (get_account_sp_to_scr_transfers)</div>
-<div class="line"><a name="l02371"></a><span class="lineno"> 2371</span>&#160;        (get_withdraw_routes)</div>
-<div class="line"><a name="l02372"></a><span class="lineno"> 2372</span>&#160;        (get_owner_history)</div>
-<div class="line"><a name="l02373"></a><span class="lineno"> 2373</span>&#160;        (get_encrypted_memo)</div>
-<div class="line"><a name="l02374"></a><span class="lineno"> 2374</span>&#160; </div>
-<div class="line"><a name="l02375"></a><span class="lineno"> 2375</span>&#160;        (create_account)</div>
-<div class="line"><a name="l02376"></a><span class="lineno"> 2376</span>&#160;        (create_account_with_keys)</div>
-<div class="line"><a name="l02377"></a><span class="lineno"> 2377</span>&#160;        (create_account_delegated)</div>
-<div class="line"><a name="l02378"></a><span class="lineno"> 2378</span>&#160;        (create_account_with_keys_delegated)</div>
-<div class="line"><a name="l02379"></a><span class="lineno"> 2379</span>&#160;        (create_account_by_committee)</div>
-<div class="line"><a name="l02380"></a><span class="lineno"> 2380</span>&#160;        (create_account_by_committee_with_keys)</div>
-<div class="line"><a name="l02381"></a><span class="lineno"> 2381</span>&#160;        (update_account)</div>
-<div class="line"><a name="l02382"></a><span class="lineno"> 2382</span>&#160;        (update_account_auth_key)</div>
-<div class="line"><a name="l02383"></a><span class="lineno"> 2383</span>&#160;        (update_account_auth_account)</div>
-<div class="line"><a name="l02384"></a><span class="lineno"> 2384</span>&#160;        (update_account_auth_threshold)</div>
-<div class="line"><a name="l02385"></a><span class="lineno"> 2385</span>&#160;        (update_account_meta)</div>
-<div class="line"><a name="l02386"></a><span class="lineno"> 2386</span>&#160;        (update_account_memo_key)</div>
-<div class="line"><a name="l02387"></a><span class="lineno"> 2387</span>&#160;        (delegate_scorumpower)</div>
-<div class="line"><a name="l02388"></a><span class="lineno"> 2388</span>&#160;        (delegate_scorumpower_from_reg_pool)</div>
-<div class="line"><a name="l02389"></a><span class="lineno"> 2389</span>&#160;        (update_witness)</div>
-<div class="line"><a name="l02390"></a><span class="lineno"> 2390</span>&#160;        (set_voting_proxy)</div>
-<div class="line"><a name="l02391"></a><span class="lineno"> 2391</span>&#160;        (vote_for_witness)</div>
-<div class="line"><a name="l02392"></a><span class="lineno"> 2392</span>&#160;        (transfer)</div>
-<div class="line"><a name="l02393"></a><span class="lineno"> 2393</span>&#160;        (escrow_transfer)</div>
-<div class="line"><a name="l02394"></a><span class="lineno"> 2394</span>&#160;        (escrow_approve)</div>
-<div class="line"><a name="l02395"></a><span class="lineno"> 2395</span>&#160;        (escrow_dispute)</div>
-<div class="line"><a name="l02396"></a><span class="lineno"> 2396</span>&#160;        (escrow_release)</div>
-<div class="line"><a name="l02397"></a><span class="lineno"> 2397</span>&#160;        (transfer_to_scorumpower)</div>
-<div class="line"><a name="l02398"></a><span class="lineno"> 2398</span>&#160;        (withdraw_scorumpower)</div>
-<div class="line"><a name="l02399"></a><span class="lineno"> 2399</span>&#160;        (set_withdraw_scorumpower_route)</div>
-<div class="line"><a name="l02400"></a><span class="lineno"> 2400</span>&#160;        (post_comment)</div>
-<div class="line"><a name="l02401"></a><span class="lineno"> 2401</span>&#160;        (vote)</div>
-<div class="line"><a name="l02402"></a><span class="lineno"> 2402</span>&#160;        (set_transaction_expiration)</div>
-<div class="line"><a name="l02403"></a><span class="lineno"> 2403</span>&#160;        (challenge)</div>
-<div class="line"><a name="l02404"></a><span class="lineno"> 2404</span>&#160;        (prove)</div>
-<div class="line"><a name="l02405"></a><span class="lineno"> 2405</span>&#160;        (request_account_recovery)</div>
-<div class="line"><a name="l02406"></a><span class="lineno"> 2406</span>&#160;        (recover_account)</div>
-<div class="line"><a name="l02407"></a><span class="lineno"> 2407</span>&#160;        (change_recovery_account)</div>
-<div class="line"><a name="l02408"></a><span class="lineno"> 2408</span>&#160;        (decrypt_memo)</div>
-<div class="line"><a name="l02409"></a><span class="lineno"> 2409</span>&#160;        (decline_voting_rights)</div>
-<div class="line"><a name="l02410"></a><span class="lineno"> 2410</span>&#160; </div>
-<div class="line"><a name="l02412"></a><span class="lineno"> 2412</span>&#160;        (create_budget_for_post)</div>
-<div class="line"><a name="l02413"></a><span class="lineno"> 2413</span>&#160;        (create_budget_for_banner)</div>
-<div class="line"><a name="l02414"></a><span class="lineno"> 2414</span>&#160;        (update_budget_for_banner)</div>
-<div class="line"><a name="l02415"></a><span class="lineno"> 2415</span>&#160;        (update_budget_for_post)</div>
-<div class="line"><a name="l02416"></a><span class="lineno"> 2416</span>&#160;        (close_budget_for_post)</div>
-<div class="line"><a name="l02417"></a><span class="lineno"> 2417</span>&#160;        (close_budget_for_banner)</div>
-<div class="line"><a name="l02418"></a><span class="lineno"> 2418</span>&#160;        (close_budget_for_post_by_moderator)</div>
-<div class="line"><a name="l02419"></a><span class="lineno"> 2419</span>&#160;        (close_budget_for_banner_by_moderator)</div>
-<div class="line"><a name="l02420"></a><span class="lineno"> 2420</span>&#160;        (list_my_budgets)</div>
-<div class="line"><a name="l02421"></a><span class="lineno"> 2421</span>&#160;        (list_post_budget_owners)</div>
-<div class="line"><a name="l02422"></a><span class="lineno"> 2422</span>&#160;        (list_banner_budget_owners)</div>
-<div class="line"><a name="l02423"></a><span class="lineno"> 2423</span>&#160;        (get_post_budgets)</div>
-<div class="line"><a name="l02424"></a><span class="lineno"> 2424</span>&#160;        (get_banner_budgets)</div>
-<div class="line"><a name="l02425"></a><span class="lineno"> 2425</span>&#160; </div>
-<div class="line"><a name="l02427"></a><span class="lineno"> 2427</span>&#160;        (vote_for_committee_proposal)</div>
-<div class="line"><a name="l02428"></a><span class="lineno"> 2428</span>&#160;        (registration_committee_add_member)</div>
-<div class="line"><a name="l02429"></a><span class="lineno"> 2429</span>&#160;        (registration_committee_exclude_member)</div>
-<div class="line"><a name="l02430"></a><span class="lineno"> 2430</span>&#160;        (list_registration_committee)</div>
-<div class="line"><a name="l02431"></a><span class="lineno"> 2431</span>&#160;        (registration_committee_change_add_member_quorum)</div>
-<div class="line"><a name="l02432"></a><span class="lineno"> 2432</span>&#160;        (registration_committee_change_exclude_member_quorum)</div>
-<div class="line"><a name="l02433"></a><span class="lineno"> 2433</span>&#160;        (registration_committee_change_base_quorum)</div>
-<div class="line"><a name="l02434"></a><span class="lineno"> 2434</span>&#160;        (get_registration_committee)</div>
-<div class="line"><a name="l02435"></a><span class="lineno"> 2435</span>&#160;        (list_proposals)</div>
-<div class="line"><a name="l02436"></a><span class="lineno"> 2436</span>&#160;        (get_devcommittee_history)</div>
-<div class="line"><a name="l02437"></a><span class="lineno"> 2437</span>&#160;        (get_devcommittee_scr_to_scr_transfers)</div>
-<div class="line"><a name="l02438"></a><span class="lineno"> 2438</span>&#160;        (get_devcommittee_sp_to_scr_transfers)</div>
-<div class="line"><a name="l02439"></a><span class="lineno"> 2439</span>&#160; </div>
-<div class="line"><a name="l02441"></a><span class="lineno"> 2441</span>&#160;        (development_committee_add_member)</div>
-<div class="line"><a name="l02442"></a><span class="lineno"> 2442</span>&#160;        (development_committee_exclude_member)</div>
-<div class="line"><a name="l02443"></a><span class="lineno"> 2443</span>&#160;        (list_development_committee)</div>
-<div class="line"><a name="l02444"></a><span class="lineno"> 2444</span>&#160;        (development_committee_change_add_member_quorum)</div>
-<div class="line"><a name="l02445"></a><span class="lineno"> 2445</span>&#160;        (development_committee_change_exclude_member_quorum)</div>
-<div class="line"><a name="l02446"></a><span class="lineno"> 2446</span>&#160;        (development_committee_change_base_quorum)</div>
-<div class="line"><a name="l02447"></a><span class="lineno"> 2447</span>&#160;        (development_committee_change_transfer_quorum)</div>
-<div class="line"><a name="l02448"></a><span class="lineno"> 2448</span>&#160;        (development_committee_change_budget_auction_properties_quorum)</div>
-<div class="line"><a name="l02449"></a><span class="lineno"> 2449</span>&#160;        (development_committee_change_advertising_moderator_quorum)</div>
-<div class="line"><a name="l02450"></a><span class="lineno"> 2450</span>&#160;        (development_committee_change_betting_moderator_quorum)</div>
-<div class="line"><a name="l02451"></a><span class="lineno"> 2451</span>&#160;        (development_committee_empower_advertising_moderator)</div>
-<div class="line"><a name="l02452"></a><span class="lineno"> 2452</span>&#160;        (development_committee_empower_betting_moderator)</div>
-<div class="line"><a name="l02453"></a><span class="lineno"> 2453</span>&#160;        (development_committee_change_betting_resolve_delay)</div>
-<div class="line"><a name="l02454"></a><span class="lineno"> 2454</span>&#160;        (get_development_committee)</div>
-<div class="line"><a name="l02455"></a><span class="lineno"> 2455</span>&#160;        (development_pool_transfer)</div>
-<div class="line"><a name="l02456"></a><span class="lineno"> 2456</span>&#160;        (development_pool_withdraw_vesting)</div>
-<div class="line"><a name="l02457"></a><span class="lineno"> 2457</span>&#160;        (development_pool_post_budgets_auction_properties)</div>
-<div class="line"><a name="l02458"></a><span class="lineno"> 2458</span>&#160;        (development_pool_banner_budgets_auction_properties)</div>
-<div class="line"><a name="l02459"></a><span class="lineno"> 2459</span>&#160; </div>
-<div class="line"><a name="l02461"></a><span class="lineno"> 2461</span>&#160;        (atomicswap_initiate)</div>
-<div class="line"><a name="l02462"></a><span class="lineno"> 2462</span>&#160;        (atomicswap_participate)</div>
-<div class="line"><a name="l02463"></a><span class="lineno"> 2463</span>&#160;        (atomicswap_redeem)</div>
-<div class="line"><a name="l02464"></a><span class="lineno"> 2464</span>&#160;        (atomicswap_auditcontract)</div>
-<div class="line"><a name="l02465"></a><span class="lineno"> 2465</span>&#160;        (atomicswap_extractsecret)</div>
-<div class="line"><a name="l02466"></a><span class="lineno"> 2466</span>&#160;        (atomicswap_refund)</div>
-<div class="line"><a name="l02467"></a><span class="lineno"> 2467</span>&#160;        (get_atomicswap_contracts)</div>
-<div class="line"><a name="l02468"></a><span class="lineno"> 2468</span>&#160; </div>
-<div class="line"><a name="l02470"></a><span class="lineno"> 2470</span>&#160;        (create_game)</div>
-<div class="line"><a name="l02471"></a><span class="lineno"> 2471</span>&#160;        (cancel_game)</div>
-<div class="line"><a name="l02472"></a><span class="lineno"> 2472</span>&#160;        (update_game_markets)</div>
-<div class="line"><a name="l02473"></a><span class="lineno"> 2473</span>&#160;        (update_game_start_time)</div>
-<div class="line"><a name="l02474"></a><span class="lineno"> 2474</span>&#160;        (post_game_results)</div>
-<div class="line"><a name="l02475"></a><span class="lineno"> 2475</span>&#160;        (post_bet)</div>
-<div class="line"><a name="l02476"></a><span class="lineno"> 2476</span>&#160;        (cancel_pending_bets)</div>
-<div class="line"><a name="l02477"></a><span class="lineno"> 2477</span>&#160; </div>
-<div class="line"><a name="l02478"></a><span class="lineno"> 2478</span>&#160;        (get_games_by_status)</div>
-<div class="line"><a name="l02479"></a><span class="lineno"> 2479</span>&#160;        (get_games_by_uuids)</div>
-<div class="line"><a name="l02480"></a><span class="lineno"> 2480</span>&#160;        (lookup_games_by_id)</div>
-<div class="line"><a name="l02481"></a><span class="lineno"> 2481</span>&#160;        (lookup_matched_bets)</div>
-<div class="line"><a name="l02482"></a><span class="lineno"> 2482</span>&#160;        (lookup_pending_bets)</div>
-<div class="line"><a name="l02483"></a><span class="lineno"> 2483</span>&#160;        (get_matched_bets)</div>
-<div class="line"><a name="l02484"></a><span class="lineno"> 2484</span>&#160;        (get_pending_bets)</div>
-<div class="line"><a name="l02485"></a><span class="lineno"> 2485</span>&#160;        (get_betting_properties)</div>
-<div class="line"><a name="l02486"></a><span class="lineno"> 2486</span>&#160;        (get_game_returns)</div>
-<div class="line"><a name="l02487"></a><span class="lineno"> 2487</span>&#160;        (get_game_winners)</div>
-<div class="line"><a name="l02488"></a><span class="lineno"> 2488</span>&#160;        (get_game_matched_bets)</div>
-<div class="line"><a name="l02489"></a><span class="lineno"> 2489</span>&#160;        (get_game_pending_bets)</div>
-<div class="line"><a name="l02490"></a><span class="lineno"> 2490</span>&#160; </div>
-<div class="line"><a name="l02492"></a><span class="lineno"> 2492</span>&#160;        (create_nft)</div>
-<div class="line"><a name="l02493"></a><span class="lineno"> 2493</span>&#160;        (update_nft_meta)</div>
-<div class="line"><a name="l02494"></a><span class="lineno"> 2494</span>&#160;        (adjust_nft_experience)</div>
-<div class="line"><a name="l02495"></a><span class="lineno"> 2495</span>&#160;        (update_nft_name)</div>
-<div class="line"><a name="l02496"></a><span class="lineno"> 2496</span>&#160;        (get_nft_by_id)</div>
-<div class="line"><a name="l02497"></a><span class="lineno"> 2497</span>&#160;        (get_nft_by_name)</div>
-<div class="line"><a name="l02498"></a><span class="lineno"> 2498</span>&#160;        (get_nft_by_uuid)</div>
-<div class="line"><a name="l02499"></a><span class="lineno"> 2499</span>&#160;        (lookup_nft)</div>
-<div class="line"><a name="l02500"></a><span class="lineno"> 2500</span>&#160; </div>
-<div class="line"><a name="l02501"></a><span class="lineno"> 2501</span>&#160;        (create_game_round)</div>
-<div class="line"><a name="l02502"></a><span class="lineno"> 2502</span>&#160;        (update_game_round_result)</div>
-<div class="line"><a name="l02503"></a><span class="lineno"> 2503</span>&#160;        (get_game_round_by_uuid)</div>
-<div class="line"><a name="l02504"></a><span class="lineno"> 2504</span>&#160;        (lookup_game_round)</div>
-<div class="line"><a name="l02505"></a><span class="lineno"> 2505</span>&#160; </div>
-<div class="line"><a name="l02507"></a><span class="lineno"> 2507</span>&#160;        (get_prototype_operation)</div>
-<div class="line"><a name="l02508"></a><span class="lineno"> 2508</span>&#160;        (serialize_transaction)</div>
-<div class="line"><a name="l02509"></a><span class="lineno"> 2509</span>&#160;        (sign_transaction)</div>
-<div class="line"><a name="l02510"></a><span class="lineno"> 2510</span>&#160; </div>
-<div class="line"><a name="l02511"></a><span class="lineno"> 2511</span>&#160;        (network_add_nodes)</div>
-<div class="line"><a name="l02512"></a><span class="lineno"> 2512</span>&#160;        (network_get_connected_peers)</div>
-<div class="line"><a name="l02513"></a><span class="lineno"> 2513</span>&#160;      )</div>
+<div class="line"><a name="l02333"></a><span class="lineno"> 2333</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1plain__keys.html">scorum::wallet::plain_keys</a>, (checksum)(keys) )</div>
+<div class="line"><a name="l02334"></a><span class="lineno"> 2334</span>&#160; </div>
+<div class="line"><a name="l02335"></a><span class="lineno"> 2335</span>&#160;<a class="code" href="game__status_8hpp.html#a35075ecd8577f1bc09a3d2f77fc11356">FC_REFLECT_ENUM</a>( <a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9">scorum::wallet::authority_type</a>, (<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9ab5af0a2c2429c879bd1107a0ea4b39a2">owner</a>)(<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9a528a6948edb442e9b924d9495822095e">active</a>)(<a class="code" href="namespacescorum_1_1wallet.html#a6d0285bb71664f82021be01a037100b9a0d7ddd918611a27fc583188be6f46d65">posting</a>) )</div>
+<div class="line"><a name="l02336"></a><span class="lineno"> 2336</span>&#160; </div>
+<div class="line"><a name="l02337"></a><span class="lineno"> 2337</span>&#160;FC_API( <a class="code" href="classscorum_1_1wallet_1_1wallet__api.html">scorum::wallet::wallet_api</a>,</div>
+<div class="line"><a name="l02339"></a><span class="lineno"> 2339</span>&#160;        (help)(gethelp)</div>
+<div class="line"><a name="l02340"></a><span class="lineno"> 2340</span>&#160;        (about)(is_new)(is_locked)(lock)(unlock)(set_password)</div>
+<div class="line"><a name="l02341"></a><span class="lineno"> 2341</span>&#160;        (load_wallet_file)(save_wallet_file)(exit)</div>
+<div class="line"><a name="l02342"></a><span class="lineno"> 2342</span>&#160; </div>
+<div class="line"><a name="l02344"></a><span class="lineno"> 2344</span>&#160;        (import_key)</div>
+<div class="line"><a name="l02345"></a><span class="lineno"> 2345</span>&#160;        (<a class="code" href="namespacescorum_1_1wallet.html#a4a596fb2403c99756dd499d4946b108c">suggest_brain_key</a>)</div>
+<div class="line"><a name="l02346"></a><span class="lineno"> 2346</span>&#160;        (list_keys)</div>
+<div class="line"><a name="l02347"></a><span class="lineno"> 2347</span>&#160;        (get_private_key)</div>
+<div class="line"><a name="l02348"></a><span class="lineno"> 2348</span>&#160;        (get_private_key_from_password)</div>
+<div class="line"><a name="l02349"></a><span class="lineno"> 2349</span>&#160;        (<a class="code" href="namespacescorum_1_1wallet.html#af083e484f1f52ed3ab0493bf0f21b8e0">normalize_brain_key</a>)</div>
+<div class="line"><a name="l02350"></a><span class="lineno"> 2350</span>&#160; </div>
+<div class="line"><a name="l02352"></a><span class="lineno"> 2352</span>&#160;        (get_block_header)</div>
+<div class="line"><a name="l02353"></a><span class="lineno"> 2353</span>&#160;        (get_block)</div>
+<div class="line"><a name="l02354"></a><span class="lineno"> 2354</span>&#160;        (get_block_headers_history)</div>
+<div class="line"><a name="l02355"></a><span class="lineno"> 2355</span>&#160;        (get_blocks_history)</div>
+<div class="line"><a name="l02356"></a><span class="lineno"> 2356</span>&#160;        (get_ops_in_block)</div>
+<div class="line"><a name="l02357"></a><span class="lineno"> 2357</span>&#160;        (get_ops_history)</div>
+<div class="line"><a name="l02358"></a><span class="lineno"> 2358</span>&#160;        (get_ops_history_by_time)</div>
+<div class="line"><a name="l02359"></a><span class="lineno"> 2359</span>&#160;        (get_transaction)</div>
+<div class="line"><a name="l02360"></a><span class="lineno"> 2360</span>&#160; </div>
+<div class="line"><a name="l02362"></a><span class="lineno"> 2362</span>&#160;        (info)</div>
+<div class="line"><a name="l02363"></a><span class="lineno"> 2363</span>&#160;        (get_chain_capital)</div>
+<div class="line"><a name="l02364"></a><span class="lineno"> 2364</span>&#160;        (get_active_witnesses)</div>
+<div class="line"><a name="l02365"></a><span class="lineno"> 2365</span>&#160;        (list_my_accounts)</div>
+<div class="line"><a name="l02366"></a><span class="lineno"> 2366</span>&#160;        (list_accounts)</div>
+<div class="line"><a name="l02367"></a><span class="lineno"> 2367</span>&#160;        (list_witnesses)</div>
+<div class="line"><a name="l02368"></a><span class="lineno"> 2368</span>&#160;        (get_witness)</div>
+<div class="line"><a name="l02369"></a><span class="lineno"> 2369</span>&#160;        (get_account)</div>
+<div class="line"><a name="l02370"></a><span class="lineno"> 2370</span>&#160;        (get_account_balance)</div>
+<div class="line"><a name="l02371"></a><span class="lineno"> 2371</span>&#160;        (get_account_history)</div>
+<div class="line"><a name="l02372"></a><span class="lineno"> 2372</span>&#160;        (get_account_scr_to_scr_transfers)</div>
+<div class="line"><a name="l02373"></a><span class="lineno"> 2373</span>&#160;        (get_account_scr_to_sp_transfers)</div>
+<div class="line"><a name="l02374"></a><span class="lineno"> 2374</span>&#160;        (get_account_sp_to_scr_transfers)</div>
+<div class="line"><a name="l02375"></a><span class="lineno"> 2375</span>&#160;        (get_withdraw_routes)</div>
+<div class="line"><a name="l02376"></a><span class="lineno"> 2376</span>&#160;        (get_owner_history)</div>
+<div class="line"><a name="l02377"></a><span class="lineno"> 2377</span>&#160;        (get_encrypted_memo)</div>
+<div class="line"><a name="l02378"></a><span class="lineno"> 2378</span>&#160; </div>
+<div class="line"><a name="l02379"></a><span class="lineno"> 2379</span>&#160;        (create_account)</div>
+<div class="line"><a name="l02380"></a><span class="lineno"> 2380</span>&#160;        (create_account_with_keys)</div>
+<div class="line"><a name="l02381"></a><span class="lineno"> 2381</span>&#160;        (create_account_delegated)</div>
+<div class="line"><a name="l02382"></a><span class="lineno"> 2382</span>&#160;        (create_account_with_keys_delegated)</div>
+<div class="line"><a name="l02383"></a><span class="lineno"> 2383</span>&#160;        (create_account_by_committee)</div>
+<div class="line"><a name="l02384"></a><span class="lineno"> 2384</span>&#160;        (create_account_by_committee_with_keys)</div>
+<div class="line"><a name="l02385"></a><span class="lineno"> 2385</span>&#160;        (update_account)</div>
+<div class="line"><a name="l02386"></a><span class="lineno"> 2386</span>&#160;        (update_account_auth_key)</div>
+<div class="line"><a name="l02387"></a><span class="lineno"> 2387</span>&#160;        (update_account_auth_account)</div>
+<div class="line"><a name="l02388"></a><span class="lineno"> 2388</span>&#160;        (update_account_auth_threshold)</div>
+<div class="line"><a name="l02389"></a><span class="lineno"> 2389</span>&#160;        (update_account_meta)</div>
+<div class="line"><a name="l02390"></a><span class="lineno"> 2390</span>&#160;        (update_account_memo_key)</div>
+<div class="line"><a name="l02391"></a><span class="lineno"> 2391</span>&#160;        (delegate_scorumpower)</div>
+<div class="line"><a name="l02392"></a><span class="lineno"> 2392</span>&#160;        (delegate_scorumpower_from_reg_pool)</div>
+<div class="line"><a name="l02393"></a><span class="lineno"> 2393</span>&#160;        (update_witness)</div>
+<div class="line"><a name="l02394"></a><span class="lineno"> 2394</span>&#160;        (set_voting_proxy)</div>
+<div class="line"><a name="l02395"></a><span class="lineno"> 2395</span>&#160;        (vote_for_witness)</div>
+<div class="line"><a name="l02396"></a><span class="lineno"> 2396</span>&#160;        (transfer)</div>
+<div class="line"><a name="l02397"></a><span class="lineno"> 2397</span>&#160;        (escrow_transfer)</div>
+<div class="line"><a name="l02398"></a><span class="lineno"> 2398</span>&#160;        (escrow_approve)</div>
+<div class="line"><a name="l02399"></a><span class="lineno"> 2399</span>&#160;        (escrow_dispute)</div>
+<div class="line"><a name="l02400"></a><span class="lineno"> 2400</span>&#160;        (escrow_release)</div>
+<div class="line"><a name="l02401"></a><span class="lineno"> 2401</span>&#160;        (transfer_to_scorumpower)</div>
+<div class="line"><a name="l02402"></a><span class="lineno"> 2402</span>&#160;        (withdraw_scorumpower)</div>
+<div class="line"><a name="l02403"></a><span class="lineno"> 2403</span>&#160;        (set_withdraw_scorumpower_route)</div>
+<div class="line"><a name="l02404"></a><span class="lineno"> 2404</span>&#160;        (post_comment)</div>
+<div class="line"><a name="l02405"></a><span class="lineno"> 2405</span>&#160;        (vote)</div>
+<div class="line"><a name="l02406"></a><span class="lineno"> 2406</span>&#160;        (set_transaction_expiration)</div>
+<div class="line"><a name="l02407"></a><span class="lineno"> 2407</span>&#160;        (challenge)</div>
+<div class="line"><a name="l02408"></a><span class="lineno"> 2408</span>&#160;        (prove)</div>
+<div class="line"><a name="l02409"></a><span class="lineno"> 2409</span>&#160;        (request_account_recovery)</div>
+<div class="line"><a name="l02410"></a><span class="lineno"> 2410</span>&#160;        (recover_account)</div>
+<div class="line"><a name="l02411"></a><span class="lineno"> 2411</span>&#160;        (change_recovery_account)</div>
+<div class="line"><a name="l02412"></a><span class="lineno"> 2412</span>&#160;        (decrypt_memo)</div>
+<div class="line"><a name="l02413"></a><span class="lineno"> 2413</span>&#160;        (decline_voting_rights)</div>
+<div class="line"><a name="l02414"></a><span class="lineno"> 2414</span>&#160; </div>
+<div class="line"><a name="l02416"></a><span class="lineno"> 2416</span>&#160;        (create_budget_for_post)</div>
+<div class="line"><a name="l02417"></a><span class="lineno"> 2417</span>&#160;        (create_budget_for_banner)</div>
+<div class="line"><a name="l02418"></a><span class="lineno"> 2418</span>&#160;        (update_budget_for_banner)</div>
+<div class="line"><a name="l02419"></a><span class="lineno"> 2419</span>&#160;        (update_budget_for_post)</div>
+<div class="line"><a name="l02420"></a><span class="lineno"> 2420</span>&#160;        (close_budget_for_post)</div>
+<div class="line"><a name="l02421"></a><span class="lineno"> 2421</span>&#160;        (close_budget_for_banner)</div>
+<div class="line"><a name="l02422"></a><span class="lineno"> 2422</span>&#160;        (close_budget_for_post_by_moderator)</div>
+<div class="line"><a name="l02423"></a><span class="lineno"> 2423</span>&#160;        (close_budget_for_banner_by_moderator)</div>
+<div class="line"><a name="l02424"></a><span class="lineno"> 2424</span>&#160;        (list_my_budgets)</div>
+<div class="line"><a name="l02425"></a><span class="lineno"> 2425</span>&#160;        (list_post_budget_owners)</div>
+<div class="line"><a name="l02426"></a><span class="lineno"> 2426</span>&#160;        (list_banner_budget_owners)</div>
+<div class="line"><a name="l02427"></a><span class="lineno"> 2427</span>&#160;        (get_post_budgets)</div>
+<div class="line"><a name="l02428"></a><span class="lineno"> 2428</span>&#160;        (get_banner_budgets)</div>
+<div class="line"><a name="l02429"></a><span class="lineno"> 2429</span>&#160; </div>
+<div class="line"><a name="l02431"></a><span class="lineno"> 2431</span>&#160;        (vote_for_committee_proposal)</div>
+<div class="line"><a name="l02432"></a><span class="lineno"> 2432</span>&#160;        (registration_committee_add_member)</div>
+<div class="line"><a name="l02433"></a><span class="lineno"> 2433</span>&#160;        (registration_committee_exclude_member)</div>
+<div class="line"><a name="l02434"></a><span class="lineno"> 2434</span>&#160;        (list_registration_committee)</div>
+<div class="line"><a name="l02435"></a><span class="lineno"> 2435</span>&#160;        (registration_committee_change_add_member_quorum)</div>
+<div class="line"><a name="l02436"></a><span class="lineno"> 2436</span>&#160;        (registration_committee_change_exclude_member_quorum)</div>
+<div class="line"><a name="l02437"></a><span class="lineno"> 2437</span>&#160;        (registration_committee_change_base_quorum)</div>
+<div class="line"><a name="l02438"></a><span class="lineno"> 2438</span>&#160;        (get_registration_committee)</div>
+<div class="line"><a name="l02439"></a><span class="lineno"> 2439</span>&#160;        (list_proposals)</div>
+<div class="line"><a name="l02440"></a><span class="lineno"> 2440</span>&#160;        (get_devcommittee_history)</div>
+<div class="line"><a name="l02441"></a><span class="lineno"> 2441</span>&#160;        (get_devcommittee_scr_to_scr_transfers)</div>
+<div class="line"><a name="l02442"></a><span class="lineno"> 2442</span>&#160;        (get_devcommittee_sp_to_scr_transfers)</div>
+<div class="line"><a name="l02443"></a><span class="lineno"> 2443</span>&#160; </div>
+<div class="line"><a name="l02445"></a><span class="lineno"> 2445</span>&#160;        (development_committee_add_member)</div>
+<div class="line"><a name="l02446"></a><span class="lineno"> 2446</span>&#160;        (development_committee_exclude_member)</div>
+<div class="line"><a name="l02447"></a><span class="lineno"> 2447</span>&#160;        (list_development_committee)</div>
+<div class="line"><a name="l02448"></a><span class="lineno"> 2448</span>&#160;        (development_committee_change_add_member_quorum)</div>
+<div class="line"><a name="l02449"></a><span class="lineno"> 2449</span>&#160;        (development_committee_change_exclude_member_quorum)</div>
+<div class="line"><a name="l02450"></a><span class="lineno"> 2450</span>&#160;        (development_committee_change_base_quorum)</div>
+<div class="line"><a name="l02451"></a><span class="lineno"> 2451</span>&#160;        (development_committee_change_transfer_quorum)</div>
+<div class="line"><a name="l02452"></a><span class="lineno"> 2452</span>&#160;        (development_committee_change_budget_auction_properties_quorum)</div>
+<div class="line"><a name="l02453"></a><span class="lineno"> 2453</span>&#160;        (development_committee_change_advertising_moderator_quorum)</div>
+<div class="line"><a name="l02454"></a><span class="lineno"> 2454</span>&#160;        (development_committee_change_betting_moderator_quorum)</div>
+<div class="line"><a name="l02455"></a><span class="lineno"> 2455</span>&#160;        (development_committee_empower_advertising_moderator)</div>
+<div class="line"><a name="l02456"></a><span class="lineno"> 2456</span>&#160;        (development_committee_empower_betting_moderator)</div>
+<div class="line"><a name="l02457"></a><span class="lineno"> 2457</span>&#160;        (development_committee_change_betting_resolve_delay)</div>
+<div class="line"><a name="l02458"></a><span class="lineno"> 2458</span>&#160;        (get_development_committee)</div>
+<div class="line"><a name="l02459"></a><span class="lineno"> 2459</span>&#160;        (development_pool_transfer)</div>
+<div class="line"><a name="l02460"></a><span class="lineno"> 2460</span>&#160;        (development_pool_withdraw_vesting)</div>
+<div class="line"><a name="l02461"></a><span class="lineno"> 2461</span>&#160;        (development_pool_post_budgets_auction_properties)</div>
+<div class="line"><a name="l02462"></a><span class="lineno"> 2462</span>&#160;        (development_pool_banner_budgets_auction_properties)</div>
+<div class="line"><a name="l02463"></a><span class="lineno"> 2463</span>&#160; </div>
+<div class="line"><a name="l02465"></a><span class="lineno"> 2465</span>&#160;        (atomicswap_initiate)</div>
+<div class="line"><a name="l02466"></a><span class="lineno"> 2466</span>&#160;        (atomicswap_participate)</div>
+<div class="line"><a name="l02467"></a><span class="lineno"> 2467</span>&#160;        (atomicswap_redeem)</div>
+<div class="line"><a name="l02468"></a><span class="lineno"> 2468</span>&#160;        (atomicswap_auditcontract)</div>
+<div class="line"><a name="l02469"></a><span class="lineno"> 2469</span>&#160;        (atomicswap_extractsecret)</div>
+<div class="line"><a name="l02470"></a><span class="lineno"> 2470</span>&#160;        (atomicswap_refund)</div>
+<div class="line"><a name="l02471"></a><span class="lineno"> 2471</span>&#160;        (get_atomicswap_contracts)</div>
+<div class="line"><a name="l02472"></a><span class="lineno"> 2472</span>&#160; </div>
+<div class="line"><a name="l02474"></a><span class="lineno"> 2474</span>&#160;        (create_game)</div>
+<div class="line"><a name="l02475"></a><span class="lineno"> 2475</span>&#160;        (cancel_game)</div>
+<div class="line"><a name="l02476"></a><span class="lineno"> 2476</span>&#160;        (update_game_markets)</div>
+<div class="line"><a name="l02477"></a><span class="lineno"> 2477</span>&#160;        (update_game_start_time)</div>
+<div class="line"><a name="l02478"></a><span class="lineno"> 2478</span>&#160;        (post_game_results)</div>
+<div class="line"><a name="l02479"></a><span class="lineno"> 2479</span>&#160;        (post_bet)</div>
+<div class="line"><a name="l02480"></a><span class="lineno"> 2480</span>&#160;        (cancel_pending_bets)</div>
+<div class="line"><a name="l02481"></a><span class="lineno"> 2481</span>&#160; </div>
+<div class="line"><a name="l02482"></a><span class="lineno"> 2482</span>&#160;        (get_games_by_status)</div>
+<div class="line"><a name="l02483"></a><span class="lineno"> 2483</span>&#160;        (get_games_by_uuids)</div>
+<div class="line"><a name="l02484"></a><span class="lineno"> 2484</span>&#160;        (lookup_games_by_id)</div>
+<div class="line"><a name="l02485"></a><span class="lineno"> 2485</span>&#160;        (lookup_matched_bets)</div>
+<div class="line"><a name="l02486"></a><span class="lineno"> 2486</span>&#160;        (lookup_pending_bets)</div>
+<div class="line"><a name="l02487"></a><span class="lineno"> 2487</span>&#160;        (get_matched_bets)</div>
+<div class="line"><a name="l02488"></a><span class="lineno"> 2488</span>&#160;        (get_pending_bets)</div>
+<div class="line"><a name="l02489"></a><span class="lineno"> 2489</span>&#160;        (get_betting_properties)</div>
+<div class="line"><a name="l02490"></a><span class="lineno"> 2490</span>&#160;        (get_game_returns)</div>
+<div class="line"><a name="l02491"></a><span class="lineno"> 2491</span>&#160;        (get_game_winners)</div>
+<div class="line"><a name="l02492"></a><span class="lineno"> 2492</span>&#160;        (get_game_matched_bets)</div>
+<div class="line"><a name="l02493"></a><span class="lineno"> 2493</span>&#160;        (get_game_pending_bets)</div>
+<div class="line"><a name="l02494"></a><span class="lineno"> 2494</span>&#160; </div>
+<div class="line"><a name="l02496"></a><span class="lineno"> 2496</span>&#160;        (create_nft)</div>
+<div class="line"><a name="l02497"></a><span class="lineno"> 2497</span>&#160;        (update_nft_meta)</div>
+<div class="line"><a name="l02498"></a><span class="lineno"> 2498</span>&#160;        (adjust_nft_experience)</div>
+<div class="line"><a name="l02499"></a><span class="lineno"> 2499</span>&#160;        (update_nft_name)</div>
+<div class="line"><a name="l02500"></a><span class="lineno"> 2500</span>&#160;        (get_nft_by_id)</div>
+<div class="line"><a name="l02501"></a><span class="lineno"> 2501</span>&#160;        (get_nft_by_name)</div>
+<div class="line"><a name="l02502"></a><span class="lineno"> 2502</span>&#160;        (get_nft_by_uuid)</div>
+<div class="line"><a name="l02503"></a><span class="lineno"> 2503</span>&#160;        (lookup_nft)</div>
+<div class="line"><a name="l02504"></a><span class="lineno"> 2504</span>&#160; </div>
+<div class="line"><a name="l02505"></a><span class="lineno"> 2505</span>&#160;        (create_game_round)</div>
+<div class="line"><a name="l02506"></a><span class="lineno"> 2506</span>&#160;        (update_game_round_result)</div>
+<div class="line"><a name="l02507"></a><span class="lineno"> 2507</span>&#160;        (get_game_round_by_uuid)</div>
+<div class="line"><a name="l02508"></a><span class="lineno"> 2508</span>&#160;        (lookup_game_round)</div>
+<div class="line"><a name="l02509"></a><span class="lineno"> 2509</span>&#160; </div>
+<div class="line"><a name="l02511"></a><span class="lineno"> 2511</span>&#160;        (get_prototype_operation)</div>
+<div class="line"><a name="l02512"></a><span class="lineno"> 2512</span>&#160;        (serialize_transaction)</div>
+<div class="line"><a name="l02513"></a><span class="lineno"> 2513</span>&#160;        (sign_transaction)</div>
 <div class="line"><a name="l02514"></a><span class="lineno"> 2514</span>&#160; </div>
-<div class="line"><a name="l02515"></a><span class="lineno"> 2515</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1memo__data.html">scorum::wallet::memo_data</a>, (from)(to)(nonce)(check)(encrypted) )</div>
-<div class="line"><a name="l02516"></a><span class="lineno"> 2516</span>&#160; </div>
-<div class="line"><a name="l02517"></a><span class="lineno"> 2517</span>&#160;<span class="comment">// clang-format on</span></div>
+<div class="line"><a name="l02515"></a><span class="lineno"> 2515</span>&#160;        (network_add_nodes)</div>
+<div class="line"><a name="l02516"></a><span class="lineno"> 2516</span>&#160;        (network_get_connected_peers)</div>
+<div class="line"><a name="l02517"></a><span class="lineno"> 2517</span>&#160;      )</div>
+<div class="line"><a name="l02518"></a><span class="lineno"> 2518</span>&#160; </div>
+<div class="line"><a name="l02519"></a><span class="lineno"> 2519</span>&#160;<a class="code" href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a>( <a class="code" href="structscorum_1_1wallet_1_1memo__data.html">scorum::wallet::memo_data</a>, (from)(to)(nonce)(check)(encrypted) )</div>
+<div class="line"><a name="l02520"></a><span class="lineno"> 2520</span>&#160; </div>
+<div class="line"><a name="l02521"></a><span class="lineno"> 2521</span>&#160;<span class="comment">// clang-format on</span></div>
 <div class="ttc" id="aapi_8hpp_html"><div class="ttname"><a href="api_8hpp.html">api.hpp</a></div></div>
 <div class="ttc" id="aapi__objects_8hpp_html"><div class="ttname"><a href="api__objects_8hpp.html">api_objects.hpp</a></div></div>
 <div class="ttc" id="aapplied__operation_8hpp_html"><div class="ttname"><a href="applied__operation_8hpp.html">applied_operation.hpp</a></div></div>
@@ -1007,7 +1009,7 @@ $(function() {
 <div class="ttc" id="aclassscorum_1_1protocol_1_1odds_html"><div class="ttname"><a href="classscorum_1_1protocol_1_1odds.html">scorum::protocol::odds</a></div><div class="ttdef"><b>Definition:</b> <a href="odds_8hpp_source.html#l00013">odds.hpp:14</a></div></div>
 <div class="ttc" id="aclassscorum_1_1wallet_1_1wallet__api_html"><div class="ttname"><a href="classscorum_1_1wallet_1_1wallet__api.html">scorum::wallet::wallet_api</a></div><div class="ttdoc">Wallet.</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00106">wallet.hpp:107</a></div></div>
 <div class="ttc" id="aclassscorum_1_1wallet_1_1wallet__api_html_a08c93f4a6938b83e67b0f74f9a822075"><div class="ttname"><a href="classscorum_1_1wallet_1_1wallet__api.html#a08c93f4a6938b83e67b0f74f9a822075">scorum::wallet::wallet_api::exit_func_type</a></div><div class="ttdeci">std::function&lt; void()&gt; exit_func_type</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00112">wallet.hpp:112</a></div></div>
-<div class="ttc" id="aclassscorum_1_1wallet_1_1wallet__api_html_a706eb23f8e28354d69d71cca2dbb00b3"><div class="ttname"><a href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3">scorum::wallet::wallet_api::lock_changed</a></div><div class="ttdeci">fc::signal&lt; void(bool)&gt; lock_changed</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02303">wallet.hpp:2303</a></div></div>
+<div class="ttc" id="aclassscorum_1_1wallet_1_1wallet__api_html_a706eb23f8e28354d69d71cca2dbb00b3"><div class="ttname"><a href="classscorum_1_1wallet_1_1wallet__api.html#a706eb23f8e28354d69d71cca2dbb00b3">scorum::wallet::wallet_api::lock_changed</a></div><div class="ttdeci">fc::signal&lt; void(bool)&gt; lock_changed</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02307">wallet.hpp:2307</a></div></div>
 <div class="ttc" id="agame__status_8hpp_html_a35075ecd8577f1bc09a3d2f77fc11356"><div class="ttname"><a href="game__status_8hpp.html#a35075ecd8577f1bc09a3d2f77fc11356">FC_REFLECT_ENUM</a></div><div class="ttdeci">FC_REFLECT_ENUM(scorum::protocol::game_status,(created)(started)(finished)(resolved)(expired)(cancelled)) namespace fc</div><div class="ttdef"><b>Definition:</b> <a href="game__status_8hpp_source.html#l00018">game_status.hpp:18</a></div></div>
 <div class="ttc" id="alog__configurator_8cpp_html_a3e65f567515582b2a7c38541e6884771"><div class="ttname"><a href="log__configurator_8cpp.html#a3e65f567515582b2a7c38541e6884771">FC_REFLECT</a></div><div class="ttdeci">FC_REFLECT(appender_args,(appender)(stream)) FC_REFLECT_DERIVED(file_appender_args</div></div>
 <div class="ttc" id="anamespacescorum_1_1app_html"><div class="ttname"><a href="namespacescorum_1_1app.html">scorum::app</a></div><div class="ttdef"><b>Definition:</b> <a href="advertising__api_8cpp_source.html#l00005">advertising_api.cpp:5</a></div></div>
@@ -1057,9 +1059,9 @@ $(function() {
 <div class="ttc" id="astructscorum_1_1wallet_1_1memo__data_html_a9c20af7cfbeefaf10fd0134fb47c40f3"><div class="ttname"><a href="structscorum_1_1wallet_1_1memo__data.html#a9c20af7cfbeefaf10fd0134fb47c40f3">scorum::wallet::memo_data::from</a></div><div class="ttdeci">public_key_type from</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00049">wallet.hpp:49</a></div></div>
 <div class="ttc" id="astructscorum_1_1wallet_1_1memo__data_html_abc0d5e10f752b46e8ce3608a0b0c408d"><div class="ttname"><a href="structscorum_1_1wallet_1_1memo__data.html#abc0d5e10f752b46e8ce3608a0b0c408d">scorum::wallet::memo_data::encrypted</a></div><div class="ttdeci">std::vector&lt; char &gt; encrypted</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00053">wallet.hpp:53</a></div></div>
 <div class="ttc" id="astructscorum_1_1wallet_1_1memo__data_html_ac28aa4e93ab8fb952fda80e4d7201502"><div class="ttname"><a href="structscorum_1_1wallet_1_1memo__data.html#ac28aa4e93ab8fb952fda80e4d7201502">scorum::wallet::memo_data::to</a></div><div class="ttdeci">public_key_type to</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00050">wallet.hpp:50</a></div></div>
-<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html">scorum::wallet::plain_keys</a></div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02310">wallet.hpp:2311</a></div></div>
-<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html_a3a27e055b50cf427e07244b569e5c0c4"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4">scorum::wallet::plain_keys::checksum</a></div><div class="ttdeci">fc::sha512 checksum</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02312">wallet.hpp:2312</a></div></div>
-<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html_a7d44aa27e85ff1998188b5cd5c9f582a"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a">scorum::wallet::plain_keys::keys</a></div><div class="ttdeci">std::map&lt; public_key_type, std::string &gt; keys</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02313">wallet.hpp:2313</a></div></div>
+<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html">scorum::wallet::plain_keys</a></div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02314">wallet.hpp:2315</a></div></div>
+<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html_a3a27e055b50cf427e07244b569e5c0c4"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html#a3a27e055b50cf427e07244b569e5c0c4">scorum::wallet::plain_keys::checksum</a></div><div class="ttdeci">fc::sha512 checksum</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02316">wallet.hpp:2316</a></div></div>
+<div class="ttc" id="astructscorum_1_1wallet_1_1plain__keys_html_a7d44aa27e85ff1998188b5cd5c9f582a"><div class="ttname"><a href="structscorum_1_1wallet_1_1plain__keys.html#a7d44aa27e85ff1998188b5cd5c9f582a">scorum::wallet::plain_keys::keys</a></div><div class="ttdeci">std::map&lt; public_key_type, std::string &gt; keys</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l02317">wallet.hpp:2317</a></div></div>
 <div class="ttc" id="astructscorum_1_1wallet_1_1wallet__data_html"><div class="ttname"><a href="structscorum_1_1wallet_1_1wallet__data.html">scorum::wallet::wallet_data</a></div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00063">wallet.hpp:64</a></div></div>
 <div class="ttc" id="astructscorum_1_1wallet_1_1wallet__data_html_a1ddf53f1346d8d8320aba8d20cca4484"><div class="ttname"><a href="structscorum_1_1wallet_1_1wallet__data.html#a1ddf53f1346d8d8320aba8d20cca4484">scorum::wallet::wallet_data::chain_id</a></div><div class="ttdeci">chain_id_type chain_id</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00071">wallet.hpp:71</a></div></div>
 <div class="ttc" id="astructscorum_1_1wallet_1_1wallet__data_html_a886515a00f1a03bf50a5c8d5784b7529"><div class="ttname"><a href="structscorum_1_1wallet_1_1wallet__data.html#a886515a00f1a03bf50a5c8d5784b7529">scorum::wallet::wallet_data::ws_password</a></div><div class="ttdeci">std::string ws_password</div><div class="ttdef"><b>Definition:</b> <a href="wallet_8hpp_source.html#l00069">wallet.hpp:69</a></div></div>
@@ -1069,7 +1071,7 @@ $(function() {
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jun 2 2022 11:45:29 for Scorum by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
+Generated on Thu Jun 9 2022 13:04:26 for Scorum by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
 </small></address>
 </body>
 </html>
