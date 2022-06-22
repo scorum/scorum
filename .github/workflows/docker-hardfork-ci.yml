@@ -21,7 +21,7 @@ jobs:
 
     - name: Build the Docker image
       run: |
-        git submodule update init recursive
+        git submodule update --init --recursive
         echo "Building testnet image"
 
     - name: Export variables
@@ -49,7 +49,7 @@ jobs:
 
     - name: Build the Docker image
       run: |
-        git submodule update init recursive
+        git submodule update --init --recursive
         echo "Building mainnet image"
 
     - name: Export variables
