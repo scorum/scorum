@@ -19,7 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Build the Docker image
+    - name: Update submodules
       run: |
         git submodule update --init --recursive
         echo "Building testnet image"
@@ -28,7 +28,7 @@ jobs:
       run: |
         rm libraries/chain/hardfork.d/0-preamble.hf
         export HF_VERSION=$(ls libraries/chain/hardfork.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)
-        export GIT_COMMIT=$(git revparse short HEAD || echo "GitNotFound")
+        export GIT_COMMIT=$(git rev-parse --short HEAD || echo "GitNotFound")
         export BUILD_VERSION="0.6.0.${GIT_COMMIT}"
         export LIVE_TESTNET="ON"
         export NET_NAME="testnet"
@@ -47,7 +47,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Build the Docker image
+    - name: Update submodules
       run: |
         git submodule update --init --recursive
         echo "Building mainnet image"
@@ -56,7 +56,7 @@ jobs:
       run: |
         rm libraries/chain/hardfork.d/0-preamble.hf
         export HF_VERSION=$(ls libraries/chain/hardfork.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)
-        export GIT_COMMIT=$(git revparse short HEAD || echo "GitNotFound")
+        export GIT_COMMIT=$(git rev-parse --short HEAD || echo "GitNotFound")
         export BUILD_VERSION="0.${HF_VERSION}.0.${GIT_COMMIT}"
         export LIVE_TESTNET="OFF"
         export NET_NAME="release"
