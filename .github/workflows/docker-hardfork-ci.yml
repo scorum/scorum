@@ -42,7 +42,7 @@ jobs:
   build-mainnet:
     runs-on: self-hosted
 
-    if: github.ref == 'refs/heads/release_hf_*'
+    if: github.ref =~ 'refs/heads/release_hf_*'
 
     steps:
     - uses: actions/checkout@v3
