@@ -7,6 +7,7 @@ on:
     - 'release_hf_*'
     paths:
       - 'libraries/chain/hardfork.d/*'
+      - '.github/workflows/docker-hardfork-ci.yml'
 
 
 jobs:
