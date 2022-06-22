@@ -1,0 +1,67 @@
+name: Docker Hardfork CI
+
+on:
+  push:
+    branches:
+    - 'develop'
+    - 'release_hf_*'
+    paths:
+      - 'libraries/chain/hardfork.d/*'
+
+
+jobs:
+  build-testnet:
+    runs-on: self-hosted
+
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build the Docker image
+      run:
+      - git submodule update --init --recursive
+      - echo "Building testnet"
+
+    - name: Export variables
+      run: |
+        rm libraries/chain/hardfork.d/0-preamble.hf
+        export HF_VERSION=$(ls libraries/chain/hardfork.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)
+        export GIT_COMMIT=$(git revparse short HEAD || echo "GitNotFound")
+        export BUILD_VERSION="0.6.0.${GIT_COMMIT}"
+        export LIVE_TESTNET="ON"
+        export NET_NAME="testnet"
+
+    - name: Build the Docker image
+      run: docker build --build-arg LIVE_TESTNET=$LIVE_TESTNET --tag=scorum/${NET_NAME}:${BUILD_VERSION} .
+
+    - name: Push docker image to registry
+      run: docker push scorum/${NET_NAME}:${BUILD_VERSION}
+
+  build-mainnet:
+    runs-on: self-hosted
+
+    if: github.ref == 'refs/heads/release_hf_*'
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build the Docker image
+      run:
+      - git submodule update --init --recursive
+      - echo "Building mainnet"
+
+    - name: Export variables
+      run: |
+        rm libraries/chain/hardfork.d/0-preamble.hf
+        export HF_VERSION=$(ls libraries/chain/hardfork.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)
+        export GIT_COMMIT=$(git revparse short HEAD || echo "GitNotFound")
+        export BUILD_VERSION="0.${HF_VERSION}.0.${GIT_COMMIT}"
+        export LIVE_TESTNET="OFF"
+        export NET_NAME="release"
+
+    - name: Build the Docker image
+      run: docker build --build-arg LIVE_TESTNET=$LIVE_TESTNET --tag=scorum/${NET_NAME}:${BUILD_VERSION} .
+
+    - name: Push docker image to registry
+      run: docker push scorum/${NET_NAME}:${BUILD_VERSION}

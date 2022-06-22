@@ -1,6 +1,6 @@
 #ifndef SCORUM_HARDFORK_0_6
 #define SCORUM_HARDFORK_0_6 6
-// 2022-06-15T08:00:00 GMT
-#define SCORUM_HARDFORK_0_6_TIME 1655280000
+// Date and time (GMT): Thursday, June 30, 2022 7:00:00 AM
+#define SCORUM_HARDFORK_0_6_TIME 1656572400
 #define SCORUM_HARDFORK_0_6_VERSION hardfork_version( 0, 6 )
 #endif
