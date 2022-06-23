@@ -26,7 +26,6 @@ jobs:
 
     - name: Export variables
       run: |
-        rm libraries/chain/hardfork.d/0-preamble.hf
         echo "HF_VERSION=$(ls libraries/chain/hardfork.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)" >> $GITHUB_ENV
         echo "GIT_COMMIT=$(git rev-parse --short HEAD || echo "GitNotFound")" >> $GITHUB_ENV
         echo "LIVE_TESTNET=ON" >> $GITHUB_ENV
@@ -63,7 +62,6 @@ jobs:
 
     - name: Export variables
       run: |
-        rm libraries/chain/hardfork.d/0-preamble.hf
         echo "HF_VERSION=$(ls libraries/chain/hardfork.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)" >> $GITHUB_ENV
         echo "GIT_COMMIT=$(git rev-parse --short HEAD || echo "GitNotFound")" >> $GITHUB_ENV
         echo "LIVE_TESTNET=OFF" >> $GITHUB_ENV
