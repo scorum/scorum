@@ -50,9 +50,6 @@ jobs:
 
     if: startsWith(github.ref, 'refs/heads/release_hf_')
 
-    env:
-      HF_VERSION=$(ls libraries/chain/hardfork.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)
-
     steps:
     - uses: actions/checkout@v3
 
