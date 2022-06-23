@@ -34,7 +34,7 @@ jobs:
       
     - name: Show variables
       run: |
-        printf "HF_VERSION=$HF_VERSION \n GIT_COMMIT=$GIT_COMMIT \n LIVE_TESTNET=$LIVE_TESTNET \n NET_NAME=$NET_NAME"
+        printf "HF_VERSION=$HF_VERSION \nGIT_COMMIT=$GIT_COMMIT \nLIVE_TESTNET=$LIVE_TESTNET \nNET_NAME=$NET_NAME"
 
     - name: Build the Docker image
       run: |
@@ -71,10 +71,16 @@ jobs:
 
     - name: Show variables
       run: |
-        printf "HF_VERSION=$HF_VERSION \n GIT_COMMIT=$GIT_COMMIT \n LIVE_TESTNET=$LIVE_TESTNET \n NET_NAME=$NET_NAME"
+        printf "HF_VERSION=$HF_VERSION \nGIT_COMMIT=$GIT_COMMIT \nLIVE_TESTNET=$LIVE_TESTNET \nNET_NAME=$NET_NAME"
 
     - name: Build the Docker image
-      run: docker build --build-arg LIVE_TESTNET="${LIVE_TESTNET}" -t "scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}" .
+      run: |
+        docker build \
+          --build-arg BRANCH_NAME=master \
+          --build-arg GIT_COMMIT=${GIT_COMMIT} \
+          --build-arg LIVE_TESTNET=${LIVE_TESTNET} \
+          --build-arg BUILD_VERSION=0.${HF_VERSION}.0.${GIT_COMMIT} \
+          -t "scorum/release:0.${HF_VERSION}.0.${GIT_COMMIT}" .
 
     - name: Push docker image to registry
       run: docker push scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}
