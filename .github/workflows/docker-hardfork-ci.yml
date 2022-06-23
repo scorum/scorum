@@ -29,7 +29,6 @@ jobs:
         rm libraries/chain/hardfork.d/0-preamble.hf
         echo "HF_VERSION=$(ls libraries/chain/hardfork.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)" >> $GITHUB_ENV
         echo "GIT_COMMIT=$(git rev-parse --short HEAD || echo "GitNotFound")" >> $GITHUB_ENV
-        echo "BUILD_VERSION=0.6.0.${GIT_COMMIT}" >> $GITHUB_ENV
         echo "LIVE_TESTNET=ON" >> $GITHUB_ENV
         echo "NET_NAME=testnet" >> $GITHUB_ENV
 
@@ -39,11 +38,11 @@ jobs:
         --build-arg BRANCH_NAME=testnet \
         --build-arg GIT_COMMIT=${GIT_COMMIT} \
         --build-arg LIVE_TESTNET=${LIVE_TESTNET} \
-        --build-arg BUILD_VERSION=${BUILD_VERSION} \
-        -t "scorum/${NET_NAME}:${BUILD_VERSION}" .
+        --build-arg BUILD_VERSION=0.${HF_VERSION}.0.${GIT_COMMIT} \
+        -t "scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}" .
 
     - name: Push docker image to registry
-      run: docker push scorum/${NET_NAME}:${BUILD_VERSION}
+      run: docker push scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}
 
   build-mainnet:
     runs-on: self-hosted
@@ -63,16 +62,11 @@ jobs:
         rm libraries/chain/hardfork.d/0-preamble.hf
         echo "HF_VERSION=$(ls libraries/chain/hardfork.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)" >> $GITHUB_ENV
         echo "GIT_COMMIT=$(git rev-parse --short HEAD || echo "GitNotFound")" >> $GITHUB_ENV
-        echo "BUILD_VERSION=0.${HF_VERSION}.0.${GIT_COMMIT}" >> $GITHUB_ENV
         echo "LIVE_TESTNET=OFF" >> $GITHUB_ENV
         echo "NET_NAME=release" >> $GITHUB_ENV
-      
-    - name: Show variables
-      run: |
-        echo "${HF_VERSION} ${GIT_COMMIT} ${LIVE_TESTNET} ${BUILD_VERSION} ${NET_NAME}"
 
     - name: Build the Docker image
-      run: docker build --build-arg LIVE_TESTNET="${LIVE_TESTNET}" -t "scorum/${NET_NAME}:${BUILD_VERSION}" .
+      run: docker build --build-arg LIVE_TESTNET="${LIVE_TESTNET}" -t "scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}" .
 
     - name: Push docker image to registry
-      run: docker push scorum/${NET_NAME}:${BUILD_VERSION}
+      run: docker push scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}
