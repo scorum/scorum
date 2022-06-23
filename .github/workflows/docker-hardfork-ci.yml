@@ -31,6 +31,10 @@ jobs:
         echo "GIT_COMMIT=$(git rev-parse --short HEAD || echo "GitNotFound")" >> $GITHUB_ENV
         echo "LIVE_TESTNET=ON" >> $GITHUB_ENV
         echo "NET_NAME=testnet" >> $GITHUB_ENV
+      
+    - name: Show variables
+      run: |
+        printf "HF_VERSION=$HF_VERSION \n GIT_COMMIT=$GIT_COMMIT \n LIVE_TESTNET=$LIVE_TESTNET \n NET_NAME=$NET_NAME"
 
     - name: Build the Docker image
       run: |
@@ -64,6 +68,10 @@ jobs:
         echo "GIT_COMMIT=$(git rev-parse --short HEAD || echo "GitNotFound")" >> $GITHUB_ENV
         echo "LIVE_TESTNET=OFF" >> $GITHUB_ENV
         echo "NET_NAME=release" >> $GITHUB_ENV
+
+    - name: Show variables
+      run: |
+        printf "HF_VERSION=$HF_VERSION \n GIT_COMMIT=$GIT_COMMIT \n LIVE_TESTNET=$LIVE_TESTNET \n NET_NAME=$NET_NAME"
 
     - name: Build the Docker image
       run: docker build --build-arg LIVE_TESTNET="${LIVE_TESTNET}" -t "scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}" .
