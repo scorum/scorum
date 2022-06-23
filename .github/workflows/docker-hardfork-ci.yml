@@ -22,7 +22,7 @@ jobs:
     - name: Update submodules
       run: |
         git submodule update --init --recursive
-        echo "Building testnet"
+        echo "Building testnet image"
 
     - name: Export variables
       run: |
@@ -55,7 +55,7 @@ jobs:
     - name: Update submodules
       run: |
         git submodule update --init --recursive
-        echo "Building mainnet"
+        echo "Building mainnet image"
 
     - name: Export variables
       run: |
