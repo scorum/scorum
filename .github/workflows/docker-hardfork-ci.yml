@@ -4,7 +4,8 @@ on:
   push:
     branches:
     - 'develop'
-    - 'release_hf_*'
+    - 'master'
+    - 'feature-*'
     paths:
       - 'libraries/chain/hardfork.d/*'
       - '.github/workflows/docker-hardfork-ci.yml'
