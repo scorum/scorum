@@ -109,6 +109,14 @@ public:
      */
     witness_schedule_api_obj get_witness_schedule() const;
 
+
+    /**
+     * @brief Retrieve a full, signed block
+     * @param block_num Height of the block to be returned
+     * @return the referenced block, or null if no matching block was found
+     */
+    optional<signed_block_api_obj> get_block(uint32_t block_num) const;
+
     /// @}
 
     /// @brief Accounts
@@ -400,6 +408,7 @@ FC_API(scorum::app::database_api,
    (get_chain_id)
    (get_dynamic_global_properties)
    (get_witness_schedule)
+   (get_block)
 
    // Accounts
    (get_key_references)

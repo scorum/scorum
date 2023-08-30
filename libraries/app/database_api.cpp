@@ -296,6 +296,11 @@ witness_schedule_api_obj database_api::get_witness_schedule() const
     return my->_db.with_read_lock([&]() { return my->_db.get(witness_schedule_id_type()); });
 }
 
+optional<signed_block_api_obj> database_api::get_block(uint32_t block_num) const
+{
+    return my->_db->with_read_lock([&]() { return my->_db.get_block(block_num); });
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Keys                                                             //
