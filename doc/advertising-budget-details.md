@@ -1,6 +1,6 @@
 # Advertising details
 
-Here are some details and insights abount how advertising budgets work.
+Here are some details and insights about how advertising budgets work.
 
 ## Table of contents
 * [How start_time and deadline will be aligned to blockchain interval?](#advalignment)
@@ -15,7 +15,7 @@ Here are some details and insights abount how advertising budgets work.
 
 User can specify arbitrary `start_time` and `deadline` with no reference to blockchain blocks interval. So we need to align (if they weren't aligned) these parameters by blockchain block interval which is equal 3 sec for now.
 
-Let's say genesis time (block #0) is 0 sec and each following block time is greater then previous block time for 3 sec.
+Let's say genesis time (block #0) is 0 sec and each following block time is greater than previous block time for 3 sec.
 
 |                   |       |       |       |       |       |       |
 |------------------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
@@ -35,7 +35,7 @@ Let's say `start_time` equals 2sec and `deadline` equals 10sec, i.e. `start_time
 
 ## How per-block payment is evaluated?
 
-Let's say we have already aligned `start_time` and `deadline`. Is they are not then we will align them using method described [start_time and deadline alignment](#advalignment) section.
+Let's say we have already aligned `start_time` and `deadline`. If they are not then we will align them using method described [start_time and deadline alignment](#advalignment) section.
 
 In order to evaluate per_block payment we need to divide budget balance on per_block payments count which, in turn, equals:
 
@@ -47,7 +47,7 @@ I.e. per block payment equals:
 per_block = balance / (((deadline - start_time) / block_interval) + 1)
 ```
 
-Fox example, if budget balance equals 100 SCR, `start_time` equals 3sec and `deadline` equals 12 sec, then there will be 4 payments by 25 SCR each in blocks #1,#2,#3,#4.
+For example, if budget balance equals 100 SCR, `start_time` equals 3sec and `deadline` equals 12 sec, then there will be 4 payments by 25 SCR each in blocks #1,#2,#3,#4.
 
 > NOTE:
 > Payments are also occurred in block #1 where budget starts and in block #4 where budgets ends.
@@ -80,7 +80,7 @@ Let's say we are creating budget in block #2 (+6 sec) with `start_time` which eq
 |     Aligned budget bounds |       |       |       |       | start |   -   |   -   | finish |       |
 |              When created |       |       |       |       |   x   |       |       |        |       |
 |              When started |       |       |       |       |   x   |       |       |        |       |
-|           Payment occured |       |       |       |       |   x   |   x   |   x   |   x    |       |
+|          Payment occurred |       |       |       |       |   x   |   x   |   x   |   x    |       |
 |            Budget balance |       |       |       |       |  75   |  50   |  25   |   0    |       |
 |            Payment amount |       |       |       |       |  25   |  25   |  25   |   25   |       |
 
