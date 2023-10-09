@@ -1331,6 +1331,7 @@ void database::initialize_evaluators()
         new create_game_round_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
     _my->_evaluator_registry.register_evaluator(
         new update_game_round_result_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
+    _my->_evaluator_registry.register_evaluator<burn_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -2228,6 +2229,7 @@ void database::validate_invariants() const
         }
 
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
+        total_supply += gpo.total_burned_scr;
         total_supply += obtain_service<dbs_content_reward_scr>().get().balance;
         total_supply += obtain_service<dbs_voters_reward_scr>().get().balance;
         total_supply += obtain_service<dbs_voters_reward_sp>().get().balance.amount;

@@ -18,6 +18,7 @@
 #include <scorum/chain/services/withdraw_scorumpower.hpp>
 #include <scorum/chain/services/account_blogging_statistic.hpp>
 #include <scorum/chain/services/comment_statistic.hpp>
+#include <scorum/chain/services/hardfork_property.hpp>
 
 #include <scorum/chain/data_service_factory.hpp>
 
@@ -1030,6 +1031,25 @@ void atomicswap_refund_evaluator::do_apply(const atomicswap_refund_operation& op
               ("h", SCORUM_ATOMICSWAP_INITIATOR_REFUND_LOCK_SECS / 3600));
 
     atomicswap_service.refund_contract(contract);
+}
+
+void burn_evaluator::do_apply(const burn_operation &o)
+{
+    auto &hardfork_service = db().hardfork_property_service();
+
+    FC_ASSERT(hardfork_service.has_hardfork(SCORUM_HARDFORK_0_7), "Hardfork #7 is required");
+
+    account_service_i& account_service = db().account_service();
+    account_service.check_account_existence(o.owner);
+
+    const auto& owner = account_service.get_account(o.owner);
+    FC_ASSERT(owner.balance >= o.amount,
+              "Account does not have sufficient funds for burn.",
+              ("account", owner.name)
+              ("balance", owner.balance)
+              ("amount", o.amount));
+
+    account_service.burn_scr(owner, o.amount);
 }
 
 } // namespace chain

@@ -479,5 +479,13 @@ void update_game_round_result_operation::validate() const
     FC_ASSERT(result >= 100, "result should be greater or equal 100");
 }
 
+void burn_operation::validate() const
+{
+    validate_account_name(owner);
+
+    FC_ASSERT(is_asset_type(amount, SCORUM_SYMBOL), "Stake must be SCR");
+    FC_ASSERT(amount.amount > 0, "Stake must be greater then 0");
+}
+
 } // namespace protocol
 } // namespace scorum
