@@ -1284,6 +1284,22 @@ struct update_game_round_result_operation : public base_operation
     /// @endcond
 };
 
+struct burn_operation : public base_operation
+{
+    account_name_type owner;
+    std::string to;
+    asset amount;
+
+    /// @cond DO_NOT_DOCUMENT
+    void validate() const;
+
+    void get_required_active_authorities(flat_set<account_name_type>& a) const
+    {
+        a.insert(owner);
+    }
+    /// @endcond
+};
+
 /// @}
 } // namespace protocol
 } // namespace scorum
@@ -1431,5 +1447,10 @@ FC_REFLECT( scorum::protocol::update_game_round_result_operation,
             (proof)
             (vrf)
             (result))
+
+FC_REFLECT( scorum::protocol::burn_operation,
+            (owner)
+            (to)
+            (amount))
 
 // clang-format on

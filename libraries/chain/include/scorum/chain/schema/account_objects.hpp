@@ -54,7 +54,8 @@ public:
     ///SP when account voted to calculate account reward weight
     asset vote_reward_competitive_sp = asset(0, SP_SYMBOL);
 
-    asset balance = asset(0, SCORUM_SYMBOL);    ///< total liquid shares held by this account
+    asset balance = asset(0, SCORUM_SYMBOL);       ///< total liquid shares held by this account
+    asset burned_scr = asset(0, SCORUM_SYMBOL);    ///< total burned SCR
 
     asset scorumpower =              asset(0, SP_SYMBOL); ///< total scorumpower (SP) held by this account, controls its voting power
     asset delegated_scorumpower =    asset(0, SP_SYMBOL);

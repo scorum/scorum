@@ -299,6 +299,21 @@ void dbs_account::decrease_balance(const account_object& account, const asset& a
     increase_balance(account, -amount);
 }
 
+void dbs_account::burn_scr(const account_object& account, const asset& amount)
+{
+    FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
+
+    update(account, [&](account_object& a) {
+        a.burned_scr += amount;
+        a.balance -= amount;
+    });
+
+    _dgp_svc.update([&](dynamic_global_property_object& props) {
+        props.total_burned_scr += amount;
+        props.circulating_capital -= amount;
+    });
+}
+
 void dbs_account::increase_pending_balance(const account_object& account, const asset& amount)
 {
     FC_ASSERT(amount.symbol() == SCORUM_SYMBOL, "invalid asset type (symbol)");
