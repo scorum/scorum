@@ -1,0 +1,6 @@
+#ifndef SCORUM_HARDFORK_0_6
+#define SCORUM_HARDFORK_0_6 6
+// Date and time (GMT):  Friday, July 8, 2022 8:00:00 AM
+#define SCORUM_HARDFORK_0_6_TIME 1657267200
+#define SCORUM_HARDFORK_0_6_VERSION hardfork_version( 0, 6 )
+#endif

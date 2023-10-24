@@ -17,8 +17,15 @@ if( MSVC )
    add_dependencies( build_hardfork_hpp cat-parts )
 else( MSVC )
    set( hardfork_hpp_file "${CMAKE_CURRENT_BINARY_DIR}/include/scorum/chain/hardfork.hpp" )
-   add_custom_target( build_hardfork_hpp
-      COMMAND "${CMAKE_SOURCE_DIR}/programs/build_helpers/cat_parts.py" "${CMAKE_CURRENT_SOURCE_DIR}/hardfork.d" ${hardfork_hpp_file} )
+
+   if(SCORUM_LIVE_TESTNET)
+       add_custom_target( build_hardfork_hpp
+               COMMAND "${CMAKE_SOURCE_DIR}/programs/build_helpers/cat_parts.py" "${CMAKE_CURRENT_SOURCE_DIR}/hardfork.testnet.d" ${hardfork_hpp_file} )
+   else (SCORUM_LIVE_TESTNET)
+       add_custom_target( build_hardfork_hpp
+               COMMAND "${CMAKE_SOURCE_DIR}/programs/build_helpers/cat_parts.py" "${CMAKE_CURRENT_SOURCE_DIR}/hardfork.d" ${hardfork_hpp_file} )
+   endif( SCORUM_LIVE_TESTNET )
+
 endif( MSVC )
 
 
