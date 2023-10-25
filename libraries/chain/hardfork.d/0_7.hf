@@ -1,0 +1,6 @@
+#ifndef SCORUM_HARDFORK_0_7
+#define SCORUM_HARDFORK_0_7 7
+// Date and time (GMT): Wednesday, October 25, 2023 9:00:00 AM
+#define SCORUM_HARDFORK_0_7_TIME 1698224400
+#define SCORUM_HARDFORK_0_7_VERSION hardfork_version( 0, 7 )
+#endif
