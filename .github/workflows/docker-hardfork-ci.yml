@@ -38,7 +38,7 @@ jobs:
         -t "scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}" .
 
     - name: Push docker image to registry
-      if: github.ref == 'refs/heads/testnet' || github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master'
       run: docker push scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}
 
   build-mainnet:
