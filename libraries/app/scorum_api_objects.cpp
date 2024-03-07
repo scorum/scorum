@@ -50,6 +50,7 @@ void account_api_obj::set_account(const chain::account_object& a)
     voting_power = a.voting_power;
     last_vote_time = a.last_vote_time;
     balance = a.balance;
+    burned_scr = a.burned_scr;
     scorumpower = a.scorumpower;
     delegated_scorumpower = a.delegated_scorumpower;
     received_scorumpower = a.received_scorumpower;

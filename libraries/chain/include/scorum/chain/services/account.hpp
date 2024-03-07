@@ -103,6 +103,7 @@ struct account_service_i : public base_service_i<account_object>
     virtual void increase_balance(const account_object& account, const asset& amount) = 0;
     virtual void increase_balance(account_name_type account_name, const asset& amount) = 0;
     virtual void decrease_balance(const account_object& account, const asset& amount) = 0;
+    virtual void burn_scr(const account_object& account, const asset& amount) = 0;
 
     virtual void increase_pending_balance(const account_object& account, const asset& amount) = 0;
     virtual void decrease_pending_balance(const account_object& account, const asset& amount) = 0;
@@ -257,6 +258,7 @@ public:
     virtual void increase_balance(const account_object& account, const asset& amount) override;
     virtual void increase_balance(account_name_type account_name, const asset& amount) override;
     virtual void decrease_balance(const account_object& account, const asset& amount) override;
+    virtual void burn_scr(const account_object& account, const asset& amount) override;
 
     virtual void increase_pending_balance(const account_object& account, const asset& amount) override;
     virtual void decrease_pending_balance(const account_object& account, const asset& amount) override;

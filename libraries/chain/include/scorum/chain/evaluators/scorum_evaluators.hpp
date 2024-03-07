@@ -33,5 +33,6 @@ DEFINE_EVALUATOR(request_account_recovery)
 DEFINE_EVALUATOR(transfer)
 DEFINE_EVALUATOR(transfer_to_scorumpower)
 DEFINE_EVALUATOR(witness_update)
+DEFINE_EVALUATOR(burn)
 } // namespace chain
 } // namespace scorum

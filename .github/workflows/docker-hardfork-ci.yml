@@ -3,18 +3,11 @@ name: Docker Hardfork CI
 on:
   push:
     branches:
-    - 'develop'
-    - 'release_hf_*'
-    paths:
-      - 'libraries/chain/hardfork.d/*'
-      - '.github/workflows/docker-hardfork-ci.yml'
-
+      - '*'
 
 jobs:
   build-testnet:
     runs-on: self-hosted
-
-    if: github.ref == 'refs/heads/develop'
 
     steps:
     - uses: actions/checkout@v3
@@ -26,7 +19,7 @@ jobs:
 
     - name: Export variables
       run: |
-        echo "HF_VERSION=$(ls libraries/chain/hardfork.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)" >> $GITHUB_ENV
+        echo "HF_VERSION=$(ls libraries/chain/hardfork.testnet.d | tr -d '.hf' | tr -d '0_' | sort -nr | head -n1)" >> $GITHUB_ENV
         echo "GIT_COMMIT=$(git rev-parse --short HEAD || echo "GitNotFound")" >> $GITHUB_ENV
         echo "LIVE_TESTNET=ON" >> $GITHUB_ENV
         echo "NET_NAME=testnet" >> $GITHUB_ENV
@@ -45,12 +38,13 @@ jobs:
         -t "scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}" .
 
     - name: Push docker image to registry
+      if: github.ref == 'refs/heads/develop'
       run: docker push scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}
 
   build-mainnet:
     runs-on: self-hosted
 
-    if: startsWith(github.ref, 'refs/heads/release_hf_')
+    if: startsWith(github.ref, 'refs/heads/master')
 
     steps:
     - uses: actions/checkout@v3

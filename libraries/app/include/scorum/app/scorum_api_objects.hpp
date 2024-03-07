@@ -109,6 +109,7 @@ struct account_api_obj
     time_point_sec last_vote_time;
 
     asset balance = asset(0, SCORUM_SYMBOL);
+    asset burned_scr = asset(0, SCORUM_SYMBOL);
 
     asset scorumpower = asset(0, SP_SYMBOL);
     asset delegated_scorumpower = asset(0, SP_SYMBOL);
@@ -557,7 +558,7 @@ FC_REFLECT( scorum::app::account_api_obj,
              (created)(created_by_genesis)
              (owner_challenged)(active_challenged)(last_owner_proved)(last_active_proved)(recovery_account)(last_account_recovery)
              (can_vote)(voting_power)(last_vote_time)
-             (balance)
+             (balance)(burned_scr)
              (scorumpower)(delegated_scorumpower)(received_scorumpower)
              (proxied_vsf_votes)(witnesses_voted_for)
              (average_bandwidth)(lifetime_bandwidth)(last_bandwidth_update)

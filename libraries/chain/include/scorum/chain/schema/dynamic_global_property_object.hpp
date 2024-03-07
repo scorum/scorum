@@ -91,6 +91,9 @@ public:
     /// Total amount of pending SP
     asset total_pending_sp = asset(0, SP_SYMBOL);
 
+    /// Total amount of burned SCR
+    asset total_burned_scr = asset(0, SCORUM_SYMBOL);
+
     /// Chain properties are decided by the set of active witnesses which change every round.
     /// Each witness posts what they think the chain properties should be as part of their witness
     /// properties, the median size is chosen to be the chain properties for the round.
@@ -145,6 +148,7 @@ FC_REFLECT(scorum::chain::dynamic_global_property_object,
           (total_witness_reward_sp)
           (total_pending_scr)
           (total_pending_sp)
+          (total_burned_scr)
           (median_chain_props)
           (majority_version)
           (current_aslot)

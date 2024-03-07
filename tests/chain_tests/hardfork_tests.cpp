@@ -206,7 +206,7 @@ protected:
     virtual void open_database_impl(const genesis_state_type& genesis)
     {
         genesis_state_type genesis_new_timestamp = genesis;
-        genesis_new_timestamp.initial_timestamp = fc::time_point_sec(SCORUM_HARDFORK_0_1_TIME) + fc::days(365 * 5);
+        genesis_new_timestamp.initial_timestamp = fc::time_point_sec(SCORUM_HARDFORK_0_1_TIME) + fc::days(365 * 10);
         database_integration_fixture::open_database_impl(genesis_new_timestamp);
 
         db.pre_apply_operation.connect([&](const operation_notification& note) { on_operation(note); });

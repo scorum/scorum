@@ -1331,6 +1331,7 @@ void database::initialize_evaluators()
         new create_game_round_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
     _my->_evaluator_registry.register_evaluator(
         new update_game_round_result_evaluator(*this, get_dba<account_object>(), get_dba<game_round_object>()));
+    _my->_evaluator_registry.register_evaluator<burn_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -2098,6 +2099,10 @@ void database::init_hardforks(time_point_sec genesis_time)
     _hardfork_times[SCORUM_HARDFORK_0_6] = fc::time_point_sec(SCORUM_HARDFORK_0_6_TIME);
     _hardfork_versions[SCORUM_HARDFORK_0_6] = SCORUM_HARDFORK_0_6_VERSION;
 
+    FC_ASSERT(SCORUM_HARDFORK_0_7 == 7, "Invalid hardfork #7 configuration");
+    _hardfork_times[SCORUM_HARDFORK_0_7] = fc::time_point_sec(SCORUM_HARDFORK_0_7_TIME);
+    _hardfork_versions[SCORUM_HARDFORK_0_7] = SCORUM_HARDFORK_0_7_VERSION;
+
     const auto& hardforks = obtain_service<dbs_hardfork_property>().get();
     FC_ASSERT(hardforks.last_hardfork <= SCORUM_NUM_HARDFORKS, "Chain knows of more hardforks than configuration",
               ("hardforks.last_hardfork", hardforks.last_hardfork)("SCORUM_NUM_HARDFORKS", SCORUM_NUM_HARDFORKS));
@@ -2224,6 +2229,7 @@ void database::validate_invariants() const
         }
 
         total_supply += asset(gpo.total_scorumpower.amount, SCORUM_SYMBOL);
+        total_supply += gpo.total_burned_scr;
         total_supply += obtain_service<dbs_content_reward_scr>().get().balance;
         total_supply += obtain_service<dbs_voters_reward_scr>().get().balance;
         total_supply += obtain_service<dbs_voters_reward_sp>().get().balance.amount;

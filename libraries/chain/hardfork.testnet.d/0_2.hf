@@ -1,0 +1,6 @@
+#ifndef SCORUM_HARDFORK_0_2
+#define SCORUM_HARDFORK_0_2 2
+// 8/23/2018 12:00:00 GMT
+#define SCORUM_HARDFORK_0_2_TIME 1535025600
+#define SCORUM_HARDFORK_0_2_VERSION hardfork_version( 0, 2 )
+#endif
