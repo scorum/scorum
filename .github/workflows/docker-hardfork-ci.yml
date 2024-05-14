@@ -9,6 +9,8 @@ jobs:
   build-testnet:
     runs-on: self-hosted
 
+    if: startsWith(github.ref, 'refs/heads/testnet')
+
     steps:
     - uses: actions/checkout@v3
 
