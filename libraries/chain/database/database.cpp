@@ -1447,7 +1447,12 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
         {
             try
             {
+                fc::time_point begin_time = fc::time_point::now();
                 validate_invariants();
+
+                fc::time_point end_time = fc::time_point::now();
+                fc::microseconds dt = end_time - begin_time;
+                debug_log(ctx, "end validate_invariants ${dt}", ("dt", dt));
             }
 #ifdef DEBUG
             FC_CAPTURE_AND_RETHROW(((std::string)ctx));
@@ -1480,7 +1485,7 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
             if (_next_flush_block == block_num)
             {
                 _next_flush_block = 0;
-                // ilog( "Flushing database shared memory at block ${b}", ("b", block_num) );
+                ilog( "Flushing database shared memory at block ${b}", ("b", block_num) );
                 chainbase::database::flush();
             }
         }
