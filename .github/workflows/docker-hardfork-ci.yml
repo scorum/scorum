@@ -44,7 +44,7 @@ jobs:
   build-mainnet:
     runs-on: self-hosted
 
-    if: startsWith(github.ref, 'refs/heads/master')
+#    if: startsWith(github.ref, 'refs/heads/master')
 
     steps:
     - uses: actions/checkout@v3
