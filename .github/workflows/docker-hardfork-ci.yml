@@ -76,4 +76,3 @@ jobs:
 
     - name: Push docker image to registry
       run: docker push scorum/${NET_NAME}:0.${HF_VERSION}.0.${GIT_COMMIT}
- 
