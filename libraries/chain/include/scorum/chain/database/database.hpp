@@ -320,6 +320,7 @@ public:
 
     void set_flush_interval(uint32_t flush_blocks);
     void show_free_memory(bool force);
+    void set_validate_invariants_on_apply_block(bool validate_invariants_on_apply_block);
 
     // index
 
@@ -407,6 +408,7 @@ private:
     uint32_t _last_free_gb_printed = 0;
 
     fc::time_point_sec _const_genesis_time; // should be const
+    bool _validate_invariants_on_apply_block;
 };
 } // namespace chain
 } // namespace scorum

@@ -172,6 +172,7 @@ database::database(uint32_t options)
     , db_accessor_factory(static_cast<dba::db_index&>(*this))
     , _my(new database_impl(*this))
     , _options(options)
+    , _validate_invariants_on_apply_block(false)
 {
 }
 
@@ -1411,6 +1412,11 @@ void database::set_flush_interval(uint32_t flush_blocks)
     _next_flush_block = 0;
 }
 
+void database::set_validate_invariants_on_apply_block(bool validate_invariants_on_apply_block)
+{
+    _validate_invariants_on_apply_block = validate_invariants_on_apply_block;
+}
+
 //////////////////// private methods ////////////////////
 
 void database::apply_block(const signed_block& next_block, uint32_t skip)
@@ -1443,22 +1449,25 @@ void database::apply_block(const signed_block& next_block, uint32_t skip)
         detail::with_skip_flags(*this, skip, [&]() { _apply_block(next_block); });
 
         /// check invariants
-        if (is_producing() || !(skip & skip_validate_invariants))
+        if (_validate_invariants_on_apply_block)
         {
-            try
+            if (is_producing() || !(skip & skip_validate_invariants))
             {
-                fc::time_point begin_time = fc::time_point::now();
-                validate_invariants();
+                try
+                {
+                    fc::time_point begin_time = fc::time_point::now();
+                    validate_invariants();
 
-                fc::time_point end_time = fc::time_point::now();
-                fc::microseconds dt = end_time - begin_time;
-                debug_log(ctx, "end validate_invariants ${dt}", ("dt", dt));
-            }
+                    fc::time_point end_time = fc::time_point::now();
+                    fc::microseconds dt = end_time - begin_time;
+                    debug_log(ctx, "end validate_invariants ${dt}", ("dt", dt));
+                }
 #ifdef DEBUG
-            FC_CAPTURE_AND_RETHROW(((std::string)ctx));
+                FC_CAPTURE_AND_RETHROW(((std::string)ctx));
 #else
-            FC_CAPTURE_AND_LOG(((std::string)ctx));
+                FC_CAPTURE_AND_LOG(((std::string)ctx));
 #endif
+            }
         }
 
         // fc::time_point end_time = fc::time_point::now();
