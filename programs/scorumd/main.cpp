@@ -11,6 +11,10 @@
 
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include <cstdio>
+#include <execinfo.h>
+#include <cstdlib>
+#include <unistd.h>
 
 #ifdef WIN32
 #include <signal.h>
@@ -22,6 +26,19 @@
 using namespace scorum;
 using scorum::protocol::version;
 namespace bpo = boost::program_options;
+
+void handler(int sig) {
+    void *array[10];
+    size_t size;
+
+    // get void*'s for all entries on the stack
+    size = backtrace(array, 10);
+
+    // print out all the frames to stderr
+    fprintf(stderr, "Error: signal %d:\n", sig);
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    exit(1);
+}
 
 void wait_stop()
 {
@@ -41,6 +58,8 @@ void wait_stop()
             exit_promise->set_value(signal);
         },
         SIGTERM);
+
+    signal(SIGSEGV, handler);
 
     std::cout << std::flush;
     std::cerr << std::flush;
