@@ -372,6 +372,7 @@ public:
                 }
 
                 _chain_db->set_flush_interval(_options->at("flush").as<uint32_t>());
+                _chain_db->set_validate_invariants_on_apply_block(_options->count("validate_invariants_on_apply_block"));
 
                 flat_map<uint32_t, block_id_type> loaded_checkpoints;
                 if (_options->count("checkpoint"))
