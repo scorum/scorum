@@ -97,7 +97,7 @@ becomes a no-op and can be omitted.  This makes the `wordsize` and `ebits` varia
 out.  Making choices for these parameters and allocating extra space at the top of the word
 for exponent bits becomes completely unnecessary!
 
-One subtlety is that the two shift operators result in a net shift of mantissa bits.  The
+One subtlety is that the two shift operators result in a net shift of mantissa bits. They
 are shifted left by `mantissa_bits - msb_x` and then shifted right by `mantissa_bits - msb_z`.  The
 net shift is therefore a right-shift of `msb_x - msb_z`.
 
